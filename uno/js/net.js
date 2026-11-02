@@ -3,6 +3,8 @@ import { createGame, applyAction, viewFor, current, MODES } from './engine.js';
 import { botAction, botCatch } from './bot.js';
 import { S } from './ufx.js';
 import { peerOptions, keepAlive } from './ice.js';
+import { RelayHost, relayConnect } from './relay.js';
+const NS = 'bgvn-uno';
 
 const PREFIX = 'bgvn-uno-';
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -25,8 +27,15 @@ export class Host {
     if (offline) { this.peer = { destroy() {} }; setTimeout(() => this.pushLobby(), 0); return; }
     this.open();
     this.stopKeep = keepAlive(() => this.peer);
+    setTimeout(() => this.pushLobby(), 0);
+  }
+  startRelay() {
+    if (this.relay && this.relayCode === this.code) return;
+    if (this.relay) this.relay.destroy();
+    this.relayCode = this.code; this.relay = new RelayHost(NS, this.code, conn => this.attach(conn));
   }
   async open() {
+    this.startRelay();
     const opt = await peerOptions();
     if (this.dead) return;
     this.peer = new Peer(PREFIX + this.code, opt);
@@ -42,12 +51,11 @@ export class Host {
     });
     this.wire();
   }
-  wire() {
-    this.peer.on('connection', conn => {
-      conn.on('data', msg => this.onMsg(conn, msg));
-      conn.on('close', () => this.onLeave(conn));
-      conn.on('error', () => this.onLeave(conn));
-    });
+  wire() { this.peer.on('connection', conn => this.attach(conn)); }
+  attach(conn) {
+    conn.on('data', msg => this.onMsg(conn, msg));
+    conn.on('close', () => this.onLeave(conn));
+    conn.on('error', () => this.onLeave(conn));
   }
   onMsg(conn, msg) {
     if (msg.t === 'join') {
@@ -139,41 +147,53 @@ export class Host {
       if (a) this.act(pid, a);
     }, p.isBot ? Math.max(Math.round((base + Math.random() * 500) * S()), (this.graceUntil || 0) - Date.now()) : 20000);
   }
-  destroy() { this.dead = true; clearTimeout(this.botTimer); clearTimeout(this.catchTimer); this.stopKeep && this.stopKeep(); try { this.peer.destroy(); } catch (e) {} }
+  destroy() { this.dead = true; clearTimeout(this.botTimer); clearTimeout(this.catchTimer); this.relay && this.relay.destroy(); this.stopKeep && this.stopKeep(); try { this.peer.destroy(); } catch (e) {} }
 }
 
 export class Client {
   constructor(code, name, handlers) {
-    this.h = handlers; this.code = code.toUpperCase().trim(); this.name = name; this.id = null; this.tries = 0;
+    this.h = handlers; this.code = code.toUpperCase().trim(); this.name = name; this.id = null; this.tries = 0; this.viaRelay = false;
     this.init();
   }
+  status(m) { this.h.onStatus ? this.h.onStatus(m) : this.h.onError(m); }
   async init() {
+    if (/[?&]relay=1/.test(location.search)) { this.useRelay(); return; } // để thử đường dự phòng
     const opt = await peerOptions();
     if (this.dead) return;
-    this.peer = new Peer(undefined, opt);
+    // máy chủ PeerJS không phản hồi -> đi đường dự phòng luôn
+    this.initTimer = setTimeout(() => { if (!this.id && !this.connStarted) this.useRelay(); }, 6000);
+    try { this.peer = new Peer(undefined, opt); } catch (e) { this.useRelay(); return; }
     this.stopKeep = keepAlive(() => this.peer);
-    this.peer.on('open', () => { if (!this.conn || !this.conn.open) this.connect(); });
+    this.peer.on('open', () => { clearTimeout(this.initTimer); if (!this.id && !this.viaRelay && (!this.conn || !this.conn.open)) this.connect(); });
     this.peer.on('error', e => {
-      if (e.type === 'peer-unavailable') this.retry('Không tìm thấy phòng ' + this.code + '. Kiểm tra lại mã, hoặc nhờ chủ phòng mở lại tab game.');
-      else if (['network', 'server-error', 'socket-error', 'socket-closed', 'disconnected'].includes(e.type)) { /* tự nối lại */ }
-      else this.h.onError('Lỗi mạng: ' + e.type);
+      if (e.type === 'peer-unavailable') { if (!this.viaRelay) this.useRelay(); }
+      else if (['network', 'server-error', 'socket-error', 'socket-closed', 'disconnected', 'browser-incompatible'].includes(e.type)) { if (!this.id && !this.connStarted) this.useRelay(); }
+      else if (!this.viaRelay) this.h.onError('Lỗi mạng: ' + e.type);
     });
+  }
+  useRelay() {
+    if (this.dead || this.id) return;
+    this.viaRelay = true; this.tries = 0; this.status('Đang nối qua đường dự phòng…'); this.connect();
   }
   retry(finalMsg) {
     if (this.dead || this.id) return;
     clearTimeout(this.joinTimer);
-    if (++this.tries <= 4) { this.h.onError(`Đang thử kết nối lại (${this.tries}/4)…`); setTimeout(() => this.connect(), 2500); }
-    else this.h.onError(finalMsg);
+    if (!this.viaRelay) { this.useRelay(); return; }
+    if (++this.tries <= 3) { this.status(`Đang thử kết nối lại (${this.tries}/3)…`); setTimeout(() => this.connect(), 2500); }
+    else { this.h.onError(finalMsg); this.status('❌ Không vào được phòng. Kiểm tra mã phòng, chủ phòng phải đang mở tab game.'); }
   }
   connect() {
     if (this.dead || this.id) return;
+    this.connStarted = true;
     try { this.conn && this.conn.close(); } catch (e) {}
-    const conn = this.peer.connect(PREFIX + this.code, { reliable: true });
+    const conn = this.viaRelay ? relayConnect(NS, this.code) : this.peer.connect(PREFIX + this.code, { reliable: true });
     this.conn = conn;
     clearTimeout(this.joinTimer);
-    this.joinTimer = setTimeout(() => { if (!this.id) this.retry('Không nối được tới chủ phòng. Thử đổi mạng (wifi ↔ 4G) hoặc để người khác làm chủ phòng.'); }, 12000);
-    conn.on('open', () => conn.send({ t: 'join', name: this.name, token: token() }));
+    // P2P treo (mạng chặn) -> chuyển sang đường dự phòng; dự phòng mà treo -> thử lại
+    this.joinTimer = setTimeout(() => { if (!this.id && conn === this.conn) this.retry('Không tìm thấy phòng ' + this.code + '.'); }, this.viaRelay ? 12000 : 7000);
+    conn.on('open', () => { conn.send({ t: 'join', name: this.name, token: token() }); });
     conn.on('data', msg => {
+      if (conn !== this.conn) return;
       if (msg.t === 'welcome') { clearTimeout(this.joinTimer); this.id = msg.id; this.h.onJoined(msg.id); }
       else if (msg.t === 'lobby') this.h.onLobby(msg.info, msg.code, msg.started);
       else if (msg.t === 'state') this.h.onState(msg.view);
@@ -184,5 +204,5 @@ export class Client {
     conn.on('close', lost); conn.on('error', lost);
   }
   act(a) { if (this.conn && this.conn.open) this.conn.send({ t: 'action', a }); }
-  destroy() { this.dead = true; clearTimeout(this.joinTimer); this.stopKeep && this.stopKeep(); try { this.peer && this.peer.destroy(); } catch (e) {} }
+  destroy() { this.dead = true; clearTimeout(this.joinTimer); clearTimeout(this.initTimer); this.stopKeep && this.stopKeep(); try { this.conn && this.conn.close(); } catch (e) {} try { this.peer && this.peer.destroy(); } catch (e) {} }
 }
