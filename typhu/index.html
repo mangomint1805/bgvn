@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cờ Tỷ Phú Sài Gòn</title>
+<meta name="description" content="Cờ tỷ phú tiếng Việt với các con đường TP.HCM, chơi online cùng bạn bè, có bot.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏙️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/typhu.css?v=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+</head>
+<body>
+<div class="sky"><i class="cloud c1"></i><i class="cloud c2"></i><i class="cloud c3"></i></div>
+
+<section id="screen-home" class="screen active">
+  <a class="back-hub" href="../">← Bàn chơi BGVN</a>
+  <div class="home-card">
+    <div class="home-art"><span>🏙️</span><span>🎲</span><span>💰</span></div>
+    <h1 class="logo">Cờ Tỷ Phú<small>Sài Gòn</small></h1>
+    <p class="tag">Mua đường, xây nhà, thu tiền thuê – ai giàu nhất Sài Gòn?</p>
+    <label class="fld"><span>Tên của bạn</span><input id="name" maxlength="16" placeholder="Nhập tên…"></label>
+    <div class="btn-col">
+      <button class="btn big pri" id="btn-offline">🤖 Chơi với máy</button>
+      <button class="btn big" id="btn-create">✨ Tạo phòng online</button>
+      <div class="join-row"><input id="join-code" maxlength="5" placeholder="MÃ PHÒNG"><button class="btn" id="btn-join">Vào</button></div>
+    </div>
+    <div class="home-tools"><button class="chip" id="btn-guide-home">📖 Hướng dẫn</button><button class="chip" id="btn-music-home">🎵 Nhạc</button></div>
+  </div>
+</section>
+
+<section id="screen-lobby" class="screen">
+  <div class="lobby">
+    <div class="lobby-head">
+      <button class="chip" id="btn-leave-lobby">← Thoát</button>
+      <div class="code-box" id="code-box">Mã phòng <b id="room-code">…</b> <button class="chip sm" id="btn-copy">Sao chép link</button></div>
+    </div>
+    <div class="lobby-grid">
+      <div class="panel"><h3>Người chơi <small id="pcount"></small></h3><ul id="plist" class="plist"></ul><button class="btn" id="btn-addbot">＋ Thêm máy</button></div>
+      <div class="panel"><h3>Tuỳ chọn</h3><div id="opts" class="opts"></div></div>
+    </div>
+    <button class="btn big pri" id="btn-start">▶ Bắt đầu</button>
+    <p class="wait" id="wait-msg">Đang chờ chủ phòng bắt đầu…</p>
+  </div>
+</section>
+
+<section id="screen-game" class="screen">
+  <header class="topbar">
+    <button class="chip" id="btn-leave">←</button>
+    <div class="round-tag" id="round-tag"></div>
+    <div class="timer" id="timer" style="display:none"></div>
+    <div class="tools">
+      <select id="speed" class="chip" title="Tốc độ"></select>
+      <button class="chip" id="btn-music" title="Nhạc">🎵</button>
+      <button class="chip" id="btn-mute" title="Âm thanh">🔊</button>
+      <button class="chip" id="btn-guide" title="Hướng dẫn">📖</button>
+      <button class="chip" id="btn-log" title="Nhật ký">📜</button>
+    </div>
+  </header>
+  <div class="stage" id="stage">
+    <div class="players" id="players"></div>
+    <div class="board-wrap" id="board-wrap">
+      <div class="board" id="board">
+        <div class="center" id="center">
+          <div class="c-logo">Cờ Tỷ Phú<small>Sài Gòn</small></div>
+          <div class="dice" id="dice"><div class="die" id="d1"></div><div class="die" id="d2"></div></div>
+          <div class="c-actions" id="c-actions"></div>
+          <div class="c-hint" id="c-hint"></div>
+          <div class="c-feed" id="c-feed"></div>
+        </div>
+        <div class="tokens" id="tokens"></div>
+      </div>
+    </div>
+  </div>
+  <aside class="log" id="log"><h4>Nhật ký <button class="chip sm" id="btn-log-close">✕</button></h4><ol id="log-list"></ol></aside>
+</section>
+
+<div class="modal" id="modal"><div class="modal-box" id="modal-box"></div></div>
+<div class="toast" id="toast"></div>
+<div id="fx-layer"></div>
+<script type="module" src="js/main.js?v=1"></script>
+</body>
+</html>

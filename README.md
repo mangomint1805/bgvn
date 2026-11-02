@@ -7,6 +7,7 @@ Web tĩnh (GitHub Pages) + PeerJS: một người tạo phòng, bạn bè nhập
 | Game | Đường dẫn | Ghi chú |
 |---|---|---|
 | **BANG!** | [`/bang/`](https://mangomint1805.github.io/bgvn/bang/) | Bản cơ bản 80 lá, 16 nhân vật, 4 vai trò. 4–7 người. 5 chủ đề, nhạc nền, hiệu ứng, âm thanh riêng từng lá. |
+| **Cờ Tỷ Phú** | [`/typhu/`](https://mangomint1805.github.io/bgvn/typhu/) | Luật kiểu ZingPlay, 32 ô đường phố TP.HCM: mua đất, 3 nhà + Landmark, mua lại, Côn Đảo, Lễ hội, sân bay, thẻ Cơ hội, thắng bằng độc quyền hoặc làm cả bàn phá sản. 2–4 người. |
 | **UNO** | [`/uno/`](https://mangomint1805.github.io/bgvn/uno/) | 3 chế độ: Cổ điển (108 lá), Luật rừng (cộng dồn, Cấm chồng Cấm, không chặn ngang), No Mercy (168 lá, +6/+10, Quay màu, 7–0, ≥25 lá bị loại). 2–10 người. |
 
 ## Cấu trúc
