@@ -10,21 +10,22 @@ export const GROUPS = [
   { id: 6, name: 'Xanh lá', color: '#22b573' },
   { id: 7, name: 'Xanh đậm', color: '#3657d6' },
 ];
-const C = (name, group, price) => ({ type: 'city', name, group, price });
-const R = (name, icon) => ({ type: 'resort', name, icon, price: 200 });
+const C = (name, group, price, area) => ({ type: 'city', name, group, price, area });
+const R = (name, icon, area) => ({ type: 'resort', name, icon, price: 200, area });
+// rẻ → đắt: ngoại thành → nội thành → trung tâm Quận 1
 export const SQUARES = [
   { type: 'start', name: 'Khởi hành', icon: '🏁' },
-  C('Bùi Viện', 0, 60), C('Phạm Ngũ Lão', 0, 70), { type: 'chance', name: 'Cơ hội', icon: '❓' },
-  C('Võ Văn Tần', 1, 90), R('Chợ Bến Thành', '🏮'), C('Pasteur', 1, 100), C('Nam Kỳ Khởi Nghĩa', 1, 110),
+  C('Lê Văn Việt', 0, 60, 'TP. Thủ Đức'), C('Kha Vạn Cân', 0, 70, 'TP. Thủ Đức'), { type: 'chance', name: 'Cơ hội', icon: '❓' },
+  C('Âu Cơ', 1, 90, 'Tân Phú'), R('Thảo Cầm Viên', '🦒', 'Quận 1'), C('Quang Trung', 1, 100, 'Gò Vấp'), C('Phan Văn Trị', 1, 110, 'Gò Vấp'),
   { type: 'island', name: 'Côn Đảo', icon: '🏝️' },
-  C('Cách Mạng Tháng 8', 2, 130), C('Điện Biên Phủ', 2, 140), { type: 'chance', name: 'Cơ hội', icon: '❓' },
-  C('Hai Bà Trưng', 2, 150), R('Thảo Cầm Viên', '🦒'), C('Trần Hưng Đạo', 3, 170), C('Nguyễn Trãi', 3, 185),
+  C('Cộng Hòa', 2, 130, 'Tân Bình'), C('Hoàng Văn Thụ', 2, 140, 'Phú Nhuận'), { type: 'chance', name: 'Cơ hội', icon: '❓' },
+  C('Phan Xích Long', 2, 150, 'Phú Nhuận'), R('Cần Giờ', '🏖️', 'Cần Giờ'), C('Nguyễn Trãi', 3, 170, 'Quận 5'), C('Trần Hưng Đạo', 3, 185, 'Quận 1'),
   { type: 'festival', name: 'Lễ hội', icon: '🎉' },
-  C('Nguyễn Du', 4, 200), C('Lý Tự Trọng', 4, 210), { type: 'chance', name: 'Cơ hội', icon: '❓' },
-  C('Lê Thánh Tôn', 4, 225), R('Bến Nhà Rồng', '⚓'), C('Lê Duẩn', 5, 250), C('Tôn Đức Thắng', 5, 265),
+  C('Cách Mạng Tháng 8', 4, 200, 'Quận 3'), C('Điện Biên Phủ', 4, 210, 'Quận 3'), { type: 'chance', name: 'Cơ hội', icon: '❓' },
+  C('Võ Văn Tần', 4, 225, 'Quận 3'), R('Bến Nhà Rồng', '⚓', 'Quận 4'), C('Phạm Ngũ Lão', 5, 250, 'Quận 1'), C('Bùi Viện', 5, 265, 'Phố đi bộ – Quận 1'),
   { type: 'travel', name: 'Tân Sơn Nhất', icon: '✈️' },
-  C('Hàm Nghi', 6, 290), C('Lê Lợi', 6, 310), R('Cần Giờ', '🏖️'), { type: 'chance', name: 'Cơ hội', icon: '❓' },
-  C('Đồng Khởi', 7, 350), { type: 'tax', name: 'Thuế', icon: '💸' }, C('Nguyễn Huệ', 7, 400),
+  C('Hai Bà Trưng', 6, 290, 'Quận 1'), C('Lê Lợi', 6, 310, 'Quận 1'), R('Chợ Bến Thành', '🏮', 'Quận 1'), { type: 'chance', name: 'Cơ hội', icon: '❓' },
+  C('Đồng Khởi', 7, 350, 'Quận 1'), { type: 'tax', name: 'Thuế', icon: '💸' }, C('Nguyễn Huệ', 7, 400, 'Phố đi bộ – Quận 1'),
 ];
 export const N = SQUARES.length; // 32
 export const SIDES = [[1, 7], [9, 15], [17, 23], [25, 31]];
@@ -62,3 +63,7 @@ export const CHANCES = [
   { id: 'repair', text: '🔧 Sửa nhà: trả 20K cho mỗi tầng nhà bạn có.' },
   { id: 'bonus', text: '💼 Thưởng dự án: nhận 150K.' },
 ];
+
+// Nhân vật & màu quân cờ
+export const AVATARS = ['🧑‍💼', '👩‍💼', '👷', '👩‍🍳', '🧑‍🎤', '🕵️', '🧙', '🥷', '🐱', '🐶', '🐼', '🦊', '🐯', '🐸', '🐵', '🤖'];
+export const COLORS = ['#ff5a5f', '#3d8bff', '#2fc76f', '#ffb020', '#a259ff', '#ff7ac8', '#14c4c4', '#8d6e63'];

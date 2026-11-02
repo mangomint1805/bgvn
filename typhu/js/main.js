@@ -1,5 +1,6 @@
 import { Host, Client, MAX } from './net.js?v=1';
-import { SQUARES, N, GROUPS, groupSquares, houseCost, landmarkCost, value, MULT, SALARY, ISLAND_FEE, money } from './board.js';
+import { SQUARES, N, GROUPS, groupSquares, houseCost, landmarkCost, value, MULT, SALARY, ISLAND_FEE, money, AVATARS, COLORS } from './board.js';
+import { skylineSVG } from './skyline.js';
 import { cost } from './engine.js';
 import * as fx from './fx.js';
 import { openGuide } from './guide.js';
@@ -17,13 +18,22 @@ function openModal(html, cls = '', key = null) { $('#modal-box').className = 'mo
 function closeModal() { $('#modal').classList.remove('open'); modalKey = null; }
 window.__closeModal = closeModal;
 $('#modal').addEventListener('click', e => { if (e.target.id === 'modal' && !modalKey) closeModal(); });
-const pawnIc = c => `<span class="pawn-ic" style="background:${c}"></span>`;
+const pawnIc = (c, av = '') => `<span class="pawn-ic" style="background:${c}">${av}</span>`;
 const me = () => view && view.players.find(p => p.id === myId);
 const P = id => view.players.find(p => p.id === id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // ---------- trang chủ / sảnh ----------
 $('#name').value = ls.get('bgvn-name') || '';
+document.querySelector('.sky').insertAdjacentHTML('beforeend', skylineSVG());
+let prof = { avatar: AVATARS.includes(ls.get('typhu-avatar')) ? ls.get('typhu-avatar') : AVATARS[0], color: COLORS.includes(ls.get('typhu-color')) ? ls.get('typhu-color') : COLORS[0] };
+function drawPickers() {
+  $('#av-pick').innerHTML = AVATARS.map(a => `<button class="${a === prof.avatar ? 'on' : ''}" data-av="${a}" style="--pc:${prof.color}">${a}</button>`).join('');
+  $('#col-pick').innerHTML = COLORS.map(c => `<button class="${c === prof.color ? 'on' : ''}" data-col="${c}" style="background:${c}"></button>`).join('');
+  $$('#av-pick [data-av]').forEach(b => b.onclick = () => { prof.avatar = b.dataset.av; ls.set('typhu-avatar', prof.avatar); fx.sfx.hop(); drawPickers(); });
+  $$('#col-pick [data-col]').forEach(b => b.onclick = () => { prof.color = b.dataset.col; ls.set('typhu-color', prof.color); fx.sfx.hop(); drawPickers(); });
+}
+drawPickers();
 const myName = () => { const n = $('#name').value.trim() || 'Bạn'; ls.set('bgvn-name', n); return n; };
 const handlers = {
   onLobby(info, code, started) { lobby = info; $('#room-code').textContent = code; if (!started) { view = null; renderLobby(); if (!$('#screen-lobby').classList.contains('active')) show('screen-lobby'); } },
@@ -41,7 +51,7 @@ const handlers = {
 };
 function startHost(offline) {
   fx.actx(); fx.musicResumeIfOn();
-  net = new Host(myName(), handlers, offline); isHost = true; myId = 'host';
+  net = new Host(myName(), handlers, offline, prof); isHost = true; myId = 'host';
   if (offline) { net.addBot(); net.addBot(); net.addBot(); }
   $('#code-box').style.display = offline ? 'none' : '';
   show('screen-lobby');
@@ -50,7 +60,7 @@ $('#btn-offline').onclick = () => startHost(true);
 $('#btn-create').onclick = () => startHost(false);
 $('#btn-join').onclick = () => {
   const code = $('#join-code').value.trim(); if (code.length < 5) return toast('Nhập mã phòng 5 ký tự nhé.');
-  fx.actx(); fx.musicResumeIfOn(); net = new Client(code, myName(), handlers); isHost = false; $('#code-box').style.display = ''; toast('Đang kết nối…');
+  fx.actx(); fx.musicResumeIfOn(); net = new Client(code, myName(), handlers, prof); isHost = false; $('#code-box').style.display = ''; toast('Đang kết nối…');
 };
 $('#join-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
 const qcode = new URLSearchParams(location.search).get('room'); if (qcode) $('#join-code').value = qcode.toUpperCase();
@@ -68,8 +78,7 @@ function renderLobby() {
   if (!lobby) return;
   const ps = lobby.players;
   $('#pcount').textContent = `${ps.length}/${MAX}`;
-  const COL = ['#ff5a5f', '#3d8bff', '#2fc76f', '#ffb020'];
-  $('#plist').innerHTML = ps.map((p, i) => `<li>${pawnIc(COL[i % 4])}<span>${esc(p.name)}${p.id === myId ? ' <small>(bạn)</small>' : ''}${p.id === 'host' ? ' 👑' : ''}</span>${isHost && p.id !== 'host' ? `<button class="x" data-rm="${p.id}">✕</button>` : ''}</li>`).join('');
+  $('#plist').innerHTML = ps.map((p, i) => `<li>${pawnIc(p.color, p.avatar)}<span>${esc(p.name)}${p.id === myId ? ' <small>(bạn)</small>' : ''}${p.id === 'host' ? ' 👑' : ''}</span>${isHost && p.id !== 'host' ? `<button class="x" data-rm="${p.id}">✕</button>` : ''}</li>`).join('');
   $$('#plist [data-rm]').forEach(b => b.onclick = () => net.removePlayer(b.dataset.rm));
   $('#btn-addbot').style.display = isHost && ps.length < MAX ? '' : 'none';
   $('#opts').innerHTML = OPTS.map(([k, t, ch, note]) => `<div class="opt"><b>${t}</b><div class="seg">${ch.map(([v, l]) => `<button data-k="${k}" data-v='${JSON.stringify(v)}' class="${lobby.opts[k] === v ? 'on' : ''}" ${isHost ? '' : 'disabled'}>${l}</button>`).join('')}</div>${note ? `<small>${note}</small>` : ''}</div>`).join('');
@@ -100,8 +109,13 @@ function gridPos(i) {
 }
 const sideOf = i => i % 8 === 0 ? 'corner' : i < 8 ? 'b' : i < 16 ? 'l' : i < 24 ? 't' : 'r';
 const short = name => name.replace('Cách Mạng Tháng 8', 'CM Tháng 8').replace('Nam Kỳ Khởi Nghĩa', 'Nam Kỳ K.Nghĩa');
+const isoMQ = matchMedia('(min-width: 901px) and (orientation: landscape)');
+function setMode() { $('#board-wrap').classList.toggle('iso', isoMQ.matches); requestAnimationFrame(placeAll); }
+isoMQ.addEventListener ? isoMQ.addEventListener('change', setMode) : isoMQ.addListener(setMode);
 function buildBoard() {
+  setMode();
   const b = $('#board'); $$('#board .cell').forEach(c => c.remove());
+  $('#plaza').innerHTML = [['🌳', 12, 14], ['🌴', 82, 16], ['🌳', 16, 80], ['🌴', 84, 82], ['⛲', 50, 50], ['🌷', 30, 22], ['🌷', 70, 76], ['🏯', 22, 54], ['🗼', 78, 46]].map(([e, x, y]) => `<b class="up deco" style="left:${x}%;top:${y}%">${e}</b>`).join('');
   SQUARES.forEach((q, i) => {
     const [r, c] = gridPos(i), side = sideOf(i);
     const el = document.createElement('div'); el.className = `cell ${q.type} side-${side}${side === 'corner' ? ' corner c-' + q.type : ''}${['chance', 'tax', 'resort'].includes(q.type) ? ' special' : ''}`;
@@ -113,7 +127,7 @@ function buildBoard() {
     b.appendChild(el);
   });
   const t = $('#tokens'); t.innerHTML = '';
-  for (const p of view.players) { const d = document.createElement('div'); d.className = 'pawn' + (p.id === myId ? ' me' : ''); d.dataset.pid = p.id; d.style.setProperty('--pc', p.color); d.innerHTML = '<div class="body"><div class="head"></div><div class="base"></div></div>'; t.appendChild(d); }
+  for (const p of view.players) { const d = document.createElement('div'); d.className = 'pawn' + (p.id === myId ? ' me' : ''); d.dataset.pid = p.id; d.style.setProperty('--pc', p.color); d.innerHTML = `<div class="body"><div class="head">${p.avatar || ''}</div><div class="base"></div></div>`; t.appendChild(d); }
   requestAnimationFrame(placeAll);
 }
 const cellEl = i => $(`#board .cell[data-i="${i}"]`);
@@ -134,7 +148,7 @@ function placeAll() { if (view) view.players.forEach(p => placePawn(p.id, disp[p
 addEventListener('resize', () => requestAnimationFrame(placeAll));
 
 // ---------- vẽ ----------
-const BLD = lv => lv === 4 ? '🏛️' : '🏠'.repeat(lv);
+const BLD = lv => lv === 4 ? '<b class="up lm">🏛️</b>' : '<b class="up">🏠</b>'.repeat(lv);
 function render() {
   const v = view; if (!v) return;
   $('#round-tag').textContent = `Vòng ${v.round}${v.maxRounds ? '/' + v.maxRounds : ''}`;
@@ -144,7 +158,7 @@ function render() {
     const pr = v.props[i]; const owner = pr && P(pr.owner);
     el.classList.toggle('owned', !!pr); el.style.setProperty('--oc', owner ? owner.color : 'transparent');
     el.classList.toggle('fest', v.festival === i);
-    const bld = el.querySelector('.bld'); if (bld) bld.textContent = pr && q.type === 'city' ? BLD(pr.level) : pr ? '🚩' : '';
+    const bld = el.querySelector('.bld'); if (bld) { const h = pr && q.type === 'city' ? BLD(pr.level) : pr ? '<b class="up">🚩</b>' : ''; if (bld.dataset.h !== h) { bld.innerHTML = h; bld.dataset.h = h; } }
     let rent = el.querySelector('.rent');
     if (pr) { if (!rent) { rent = document.createElement('span'); rent.className = 'rent'; el.appendChild(rent); } rent.textContent = money(v.rents[i]); } else if (rent) rent.remove();
   });
@@ -155,7 +169,7 @@ function render() {
     const slot = (i - myIdx + n) % n; const turn = v.phase === 'playing' && (v.pending ? v.pending.player === p.id : v.players[v.turn].id === p.id);
     const props = Object.values(v.props).filter(x => x.owner === p.id).length;
     const badges = [p.island ? `🏝️ ${p.island} lượt` : '', p.travel ? '✈️ sắp bay' : '', p.freeRent ? `🎟️×${p.freeRent}` : '', p.escape ? `🚤×${p.escape}` : ''].filter(Boolean);
-    return `<div class="pcard p${slot} ${turn ? 'turn' : ''} ${p.out ? 'out' : ''}" data-pid="${p.id}" style="--pc:${p.color}">${pawnIc(p.color)}<div class="pn">${esc(p.name)}${p.id === myId ? ' (bạn)' : ''}</div><div class="cash">${p.out ? 'Phá sản' : money(p.cash)}</div>
+    return `<div class="pcard p${slot} ${turn ? 'turn' : ''} ${p.out ? 'out' : ''}" data-pid="${p.id}" style="--pc:${p.color}">${pawnIc(p.color, p.avatar)}<div class="pn">${esc(p.name)}${p.id === myId ? ' (bạn)' : ''}</div><div class="cash">${p.out ? 'Phá sản' : money(p.cash)}</div>
       <div class="sub"><span>🏠 ${props} ô</span><span>💎 ${money(p.assets)}</span></div>${badges.length ? `<div class="badges">${badges.map(b => `<span>${b}</span>`).join('')}</div>` : ''}</div>`;
   }).join('');
   renderCenter();

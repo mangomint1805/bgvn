@@ -1,15 +1,20 @@
 // Luật Cờ tỷ phú kiểu ZingPlay – thuần logic.
-import { SQUARES, N, SIDES, RESORTS, GROUPS, groupSquares, SALARY, ISLAND_FEE, START_MONEY, houseCost, landmarkCost, value, MULT, CHANCES, money } from './board.js';
+import { SQUARES, N, SIDES, RESORTS, GROUPS, groupSquares, SALARY, ISLAND_FEE, START_MONEY, houseCost, landmarkCost, value, MULT, CHANCES, money, AVATARS, COLORS } from './board.js';
 let rand = Math.random;
 export function setRandom(f) { rand = f; }
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 export const TOKENS = ['#ff5a5f', '#3d8bff', '#2fc76f', '#ffb020'];
 
+// mỗi người một màu: trùng thì đổi sang màu còn trống
+function pickColors(list) {
+  const used = new Set();
+  return list.map(p => { let c = COLORS.includes(p.color) && !used.has(p.color) ? p.color : COLORS.find(x => !used.has(x)); used.add(c); return { ...p, color: c }; });
+}
 export function createGame(playerList, opts = {}) {
   const startMoney = opts.startMoney || START_MONEY;
   const s = {
     phase: 'playing', turn: 0, stage: 'roll', round: 1, maxRounds: opts.maxRounds || 0, monopolyWin: opts.monopolyWin !== false,
-    players: playerList.map((p, i) => ({ id: p.id, name: p.name, isBot: !!p.isBot, color: TOKENS[i % 4], pos: 0, cash: startMoney, out: false, island: 0, travel: false, freeRent: 0, escape: 0, doubles: 0 })),
+    players: pickColors(playerList).map((p, i) => ({ id: p.id, name: p.name, isBot: !!p.isBot, color: p.color, avatar: p.avatar || AVATARS[i], pos: 0, cash: startMoney, out: false, island: 0, travel: false, freeRent: 0, escape: 0, doubles: 0 })),
     props: {}, // pos -> { owner, level }
     festival: null, pending: null, dice: null, log: [], logN: 0, winner: null, winReason: '',
     deck: shuffle(CHANCES.map(c => c.id)), lastChance: null, moveSeq: 0, lastMove: null, moves: [],

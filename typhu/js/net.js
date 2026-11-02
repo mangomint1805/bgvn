@@ -1,6 +1,7 @@
 // Lớp mạng cho Cờ tỷ phú: host giữ state, client chỉ gửi action.
 import { createGame, applyAction, viewFor, cur } from './engine.js';
 import { botAction } from './bot.js';
+import { AVATARS, COLORS } from './board.js';
 import { S } from './fx.js';
 export const TURN_TIME = 25; // giây cho mỗi quyết định, hết giờ máy tự đánh thay
 import { peerOptions, keepAlive } from './ice.js';
@@ -20,10 +21,10 @@ const BOT_NAMES = ['Bé Na', 'Chú Tư', 'Cô Ba', 'Anh Sáu', 'Út Mập', 'Bà
 export const MAX = 4;
 
 export class Host {
-  constructor(name, handlers, offline = false) {
+  constructor(name, handlers, offline = false, prof = {}) {
     this.h = handlers;
     this.code = offline ? 'OFFLINE' : makeCode();
-    this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
+    this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true, avatar: prof.avatar, color: prof.color }];
     this.state = null; this.conns = new Map(); this.botTimer = null; this.catchTimer = null;
     this.opts = { startMoney: 2000, maxRounds: 0, monopolyWin: true };
     if (offline) { this.peer = { destroy() {} }; setTimeout(() => this.pushLobby(), 0); return; }
@@ -65,11 +66,11 @@ export class Host {
   onMsg(conn, msg) {
     if (msg.t === 'join') {
       let p = this.players.find(x => x.token === msg.token && !x.isBot && x.id !== 'host');
-      if (p) { if (p.conn && p.conn !== conn) try { p.conn.close(); } catch (e) {} p.conn = conn; p.connected = true; p.name = msg.name || p.name; }
+      if (p) { if (p.conn && p.conn !== conn) try { p.conn.close(); } catch (e) {} p.conn = conn; p.connected = true; p.name = msg.name || p.name; if (!this.state && AVATARS.includes(msg.avatar)) p.avatar = msg.avatar; if (!this.state && COLORS.includes(msg.color)) p.color = msg.color; }
       else {
         if (this.state) { conn.send({ t: 'error', msg: 'Ván đang diễn ra, không thể vào.' }); return; }
         if (this.players.length >= MAX) { conn.send({ t: 'error', msg: `Phòng đã đủ ${MAX} người.` }); return; }
-        p = { id: 'p' + Math.random().toString(36).slice(2, 8), name: String(msg.name || 'Khách').slice(0, 16), isBot: false, token: msg.token, conn, connected: true };
+        p = { id: 'p' + Math.random().toString(36).slice(2, 8), name: String(msg.name || 'Khách').slice(0, 16), isBot: false, token: msg.token, conn, connected: true, avatar: AVATARS.includes(msg.avatar) ? msg.avatar : null, color: COLORS.includes(msg.color) ? msg.color : null };
         this.players.push(p);
       }
       this.conns.set(conn.peer, p);
@@ -87,7 +88,8 @@ export class Host {
     if (!this.state) this.players = this.players.filter(x => x !== p);
     this.pushLobby(); this.scheduleBots();
   }
-  lobbyInfo() { return { players: this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot, connected: p.connected })), opts: this.opts }; }
+  lobbyInfo() { return { players: this.fixColors().map(p => ({ id: p.id, name: p.name, isBot: p.isBot, connected: p.connected, avatar: p.avatar, color: p.color })), opts: this.opts }; }
+  fixColors() { const used = new Set(); for (const p of this.players) { if (!p.color || used.has(p.color)) p.color = COLORS.find(c => !used.has(c)); if (!p.avatar) p.avatar = AVATARS[8 + this.players.indexOf(p)]; used.add(p.color); } return this.players; }
   pushLobby() {
     const info = this.lobbyInfo();
     this.h.onLobby(info, this.code, !!this.state);
@@ -98,7 +100,7 @@ export class Host {
     if (this.state || this.players.length >= MAX) return;
     const used = this.players.map(p => p.name.replace(' 🤖', ''));
     const nm = BOT_NAMES.find(n => !used.includes(n)) || 'Bot' + this.players.length;
-    this.players.push({ id: 'bot' + Math.random().toString(36).slice(2, 7), name: nm + ' 🤖', isBot: true, token: null, conn: null, connected: true });
+    const usedA = this.players.map(p => p.avatar); const av = AVATARS.filter(a => !usedA.includes(a)); this.players.push({ id: 'bot' + Math.random().toString(36).slice(2, 7), name: nm + ' 🤖', isBot: true, token: null, conn: null, connected: true, avatar: av[Math.floor(Math.random() * av.length)] });
     this.pushLobby();
   }
   removePlayer(id) {
@@ -109,7 +111,7 @@ export class Host {
   }
   start() {
     if (this.players.length < 2) { this.h.onError('Cần ít nhất 2 người chơi (thêm bot nhé).'); return; }
-    this.state = createGame(this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot })), this.opts);
+    this.state = createGame(this.fixColors().map(p => ({ id: p.id, name: p.name, isBot: p.isBot, avatar: p.avatar, color: p.color })), this.opts);
     this.graceUntil = Date.now() + 2500 * S();
     this.pushLobby(); this.scheduleBots(); this.broadcast();
   }
@@ -149,7 +151,8 @@ export class Host {
 
 export class Client {
   // Thử lần lượt: Firebase (nếu đã cấu hình) → P2P (PeerJS) → MQTT công cộng
-  constructor(code, name, handlers) {
+  constructor(code, name, handlers, prof = {}) {
+    this.prof = prof;
     this.h = handlers; this.code = code.toUpperCase().trim(); this.name = name; this.id = null; this.tries = 0;
     this.modes = /[?&]relay=1/.test(location.search) ? ['mqtt'] : /[?&]p2p=1/.test(location.search) ? ['p2p'] : (fbEnabled() ? ['fb', 'p2p', 'mqtt'] : ['p2p', 'mqtt']);
     this.mi = 0;
@@ -192,7 +195,7 @@ export class Client {
     this.conn = conn;
     clearTimeout(this.joinTimer);
     this.joinTimer = setTimeout(() => { if (!this.id && conn === this.conn) this.next(); }, mode === 'p2p' ? 7000 : 12000);
-    conn.on('open', () => { if (conn === this.conn) conn.send({ t: 'join', name: this.name, token: token() }); });
+    conn.on('open', () => { if (conn === this.conn) conn.send({ t: 'join', name: this.name, token: token(), avatar: this.prof.avatar, color: this.prof.color }); });
     conn.on('data', msg => {
       if (conn !== this.conn) return;
       if (msg.t === 'welcome') { clearTimeout(this.joinTimer); this.id = msg.id; this.h.onJoined(msg.id); }

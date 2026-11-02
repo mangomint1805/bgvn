@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏙️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/typhu.css?v=1">
+<link rel="stylesheet" href="css/typhu.css?v=2">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
 </head>
 <body>
@@ -21,6 +21,7 @@
     <h1 class="logo">Cờ Tỷ Phú<small>Sài Gòn</small></h1>
     <p class="tag">Mua đường, xây nhà, thu tiền thuê – ai giàu nhất Sài Gòn?</p>
     <label class="fld"><span>Tên của bạn</span><input id="name" maxlength="16" placeholder="Nhập tên…"></label>
+    <div class="fld"><span>Nhân vật</span><div class="av-pick" id="av-pick"></div><div class="col-pick" id="col-pick"></div></div>
     <div class="btn-col">
       <button class="btn big pri" id="btn-offline">🤖 Chơi với máy</button>
       <button class="btn big" id="btn-create">✨ Tạo phòng online</button>
@@ -62,14 +63,16 @@
     <div class="players" id="players"></div>
     <div class="board-wrap" id="board-wrap">
       <div class="board" id="board">
-        <div class="center" id="center">
-          <div class="c-logo">Cờ Tỷ Phú<small>Sài Gòn</small></div>
-          <div class="dice" id="dice"><div class="die" id="d1"></div><div class="die" id="d2"></div></div>
-          <div class="c-actions" id="c-actions"></div>
-          <div class="c-hint" id="c-hint"></div>
-          <div class="c-feed" id="c-feed"></div>
-        </div>
+        <div class="slab s1"></div><div class="slab s2"></div><div class="slab s3"></div>
+        <div class="plaza" id="plaza"></div>
         <div class="tokens" id="tokens"></div>
+      </div>
+      <div class="center" id="center">
+        <div class="c-logo">Cờ Tỷ Phú<small>Sài Gòn</small></div>
+        <div class="dice" id="dice"><div class="die" id="d1"></div><div class="die" id="d2"></div></div>
+        <div class="c-actions" id="c-actions"></div>
+        <div class="c-hint" id="c-hint"></div>
+        <div class="c-feed" id="c-feed"></div>
       </div>
     </div>
   </div>
@@ -79,6 +82,6 @@
 <div class="modal" id="modal"><div class="modal-box" id="modal-box"></div></div>
 <div class="toast" id="toast"></div>
 <div id="fx-layer"></div>
-<script type="module" src="js/main.js?v=1"></script>
+<script type="module" src="js/main.js?v=2"></script>
 </body>
 </html>
