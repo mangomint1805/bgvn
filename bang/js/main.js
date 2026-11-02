@@ -377,10 +377,7 @@ function renderPrompt() {
     const need = me().handCount - me().hp;
     for (const id of [...discardSel]) if (!me().hand.some(c => c.id === id)) discardSel.delete(id);
     p.appendChild(el('div', 'ptitle', `🗑️ Bỏ bớt ${need} lá`));
-    p.appendChild(el('div', 'sub', `Cuối lượt chỉ được giữ số lá bằng số máu (${me().hp}). Chọn ${need} lá muốn bỏ:`));
-    const row = el('div', 'row discard-row');
-    for (const c of me().hand) { const ce = cardEl(c, 'sm'); ce.classList.add('playable'); if (discardSel.has(c.id)) ce.classList.add('to-discard'); attachTip(ce, c); ce.onclick = () => toggleDiscard(c.id); row.appendChild(ce); }
-    p.appendChild(row);
+    p.appendChild(el('div', 'sub', `Cuối lượt chỉ được giữ số lá bằng số máu (${me().hp}). Bấm chọn ${need} lá ở tay bên dưới (lá chọn sẽ có dấu ✕), rồi bấm nút.`));
     const btns = el('div', 'row');
     const ok = el('button', 'btn primary', discardSel.size === need ? `🗑️ Bỏ ${need} lá đã chọn` : `Đã chọn ${discardSel.size}/${need}`);
     ok.disabled = discardSel.size !== need || discardQueue.length > 0;
