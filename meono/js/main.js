@@ -1,9 +1,9 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn } from './net.js?v=4';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn } from './net.js?v=5';
 import { netStatus } from '../../shared/ui/status.js';
-import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat } from './engine.js?v=4';
-import { cardHTML, catSVG, bombSVG, cardIcon, mascotSVG } from './cards.js?v=4';
-import * as fx from './mfx.js?v=4';
-import { openGuide } from './guide.js?v=4';
+import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat } from './engine.js?v=5';
+import { cardHTML, catSVG, bombSVG, cardIcon, mascotSVG } from './cards.js?v=5';
+import * as fx from './mfx.js?v=5';
+import { openGuide } from './guide.js?v=5';
 setSpeedFn(fx.S);
 
 const $ = s => document.querySelector(s);
@@ -15,7 +15,7 @@ const GAME = 'meono';
 let net = null, isHost = false, myId = null, lobby = null, view = null;
 let lastEv = 0, modalKey = null, sel = new Set(), clockEnd = 0, clockTotal = 1, landing = 0, holdUntil = 0, holdT = null;
 let probOn = ls.get('meono-prob') !== '0';
-let freshIds = new Set();
+let freshIds = new Set(), skipped = 0, skippedSeen = 0, landingAt = 0;
 
 // ---------- tiện ích ----------
 const AV_COL = ['#ff6b35', '#ff5d8f', '#e0a800', '#2fbf71', '#14b8a6', '#3a86ff', '#8e5cf7', '#d94dff', '#a0693a', '#5b6b8a'];
@@ -134,12 +134,17 @@ const risk = v => v.peek && v.peek.length ? (v.peek[0].t === 'bomb' ? 1 : 0) : v
 // ---------- nhận state ----------
 function onState(v) {
   if (!v) { view = null; closeModal(); show('screen-lobby'); renderLobby(); fx.setTension(0); return; }
-  const first = !view || !$('#screen-game').classList.contains('active');
+  // state chủ phòng gửi là sự thật duy nhất: luôn vẽ theo state mới nhất; hàng đợi hoạt ảnh chỉ là phần phụ, có thể bỏ
+  const newGame = !!(view && view.gid && v.gid && view.gid !== v.gid);
+  const first = !view || newGame || !$('#screen-game').classList.contains('active');
   const prev = view; view = v;
   if (v.clock) { clockEnd = Date.now() + v.clock.ms; clockTotal = v.clock.total || 1; } else clockEnd = 0;
   if (first) { show('screen-game'); closeModal(); sel.clear(); }
   const hand = (me() && me().hand) || []; for (const id of [...sel]) if (!hand.some(c => c.id === id)) sel.delete(id);
-  const evs = first ? [] : v.ev.filter(e => e.n > lastEv);
+  let evs = first ? [] : v.ev.filter(e => e.n > lastEv);
+  // tụt lại xa (vừa nối lại, tab bị ngủ, sự kiện cũ đã bị cắt) → bỏ dồn hoạt ảnh, nhảy thẳng tới hiện tại
+  if (evs.length && (evs[0].n > lastEv + 1 || evs.length > 8 || document.hidden)) { evs = evs.filter(e => e.k === 'turn' && e.by === myId).slice(-1); skipped++; }
+  if (first || skipped !== skippedSeen) { landing = 0; holdUntil = 0; skippedSeen = skipped; }
   if (first && v.turnNo === 1 && v.evN <= 2) evs.push(...v.ev.filter(e => e.k === 'start'));
   lastEv = v.evN;
   if (evs.some(e => e.k === 'bomb' && e.by === myId)) holdUntil = Date.now() + 1500 * fx.S();
@@ -171,7 +176,7 @@ function render() {
   $('#deck').classList.toggle('can', isMyTurn());
   $('#deck').classList.toggle('low', v.deckCount <= 3);
   $('#deck').onclick = () => { if (isMyTurn()) doDraw(); };
-  if (!landing) renderDiscard();
+  if (!landing || Date.now() - landingAt > 2500) { landing = 0; renderDiscard(); }
   renderMeter(v);
   updateMascot();
   $('#opps').classList.toggle('alert', !!v.window);
@@ -410,7 +415,7 @@ const KIND_FX = {
   alter: ['🪄 CẢI MỆNH', 'alter'], favor: ['🙏 XIN VÍA', 'favor'], bottom: ['🪝 MÓC ĐÁY', 'skip'], pair: ['🐾 ĐÔI MÈO!', 'steal'], triple: ['🎯 BỘ BA MÈO!', 'steal'],
 };
 function flyToDiscard(cards, from, delay = 0) {
-  landing++;
+  landing++; landingAt = Date.now();
   cards.forEach((c, i) => fx.fly(cardHTML(c), from, $('#discard'), { delay: delay + i * 110, duration: 420, rotate: (i - 1) * 8, onEnd: i === cards.length - 1 ? () => { landing = Math.max(0, landing - 1); renderDiscard(); fx.pop($('#discard .top')); } : null }));
 }
 function revealBomb(dur = 1300) {
@@ -484,7 +489,7 @@ function dealAnim() {
   fx.sfx.shuffle();
   setTimeout(() => { fx.banner('Né bom thôi! 💣', 'start'); fx.sfx.meow(0, 1.1, 0.08); }, (k * 40 + 380) * fx.S());
 }
-if (location.hash === '#debug') window.__dbg = () => ({ net, view, sel: [...sel] });
+if (location.hash === '#debug') window.__dbg = () => ({ net, view, sel: [...sel], skipped });
 
 // ---------- Tải lại trang: tự khôi phục phòng / tự vào lại ----------
 (function resume() {

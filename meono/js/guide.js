@@ -1,6 +1,6 @@
 // Hướng dẫn luật Mèo Nổ (tiếng Việt)
-import { cardHTML } from './cards.js?v=4';
-import { CARD } from './engine.js?v=4';
+import { cardHTML } from './cards.js?v=5';
+import { CARD } from './engine.js?v=5';
 const row = items => `<div class="cards-row">${items.map(([t, txt]) => `<div>${cardHTML({ t }, 'sm')}<span><b>${CARD[t].name}</b>: ${txt}</span></div>`).join('')}</div>`;
 
 export function openGuide(openModal) {

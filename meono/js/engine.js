@@ -64,7 +64,7 @@ export function createGame(playerList, opts = {}) {
   const s = {
     phase: 'playing', opts: o, players: playerList.map(p => ({ id: p.id, name: p.name, isBot: !!p.isBot, hand: [], out: false, place: 0 })),
     deck: [], discard: [], turn: 0, turnsLeft: 1, window: null, winSeq: 0, pending: null, peek: {}, log: [], logN: 0, ev: [], evN: 0,
-    winner: null, seq: 0, turnNo: 1, total: 0,
+    winner: null, seq: 0, turnNo: 1, total: 0, gid: Math.random().toString(36).slice(2, 8),
   };
   for (const p of s.players) { for (let k = 0; k < 7; k++) p.hand.push(pool.pop()); p.hand.push(mk('defuse')); }
   s.deck = pool;
@@ -298,7 +298,7 @@ export { validPeek, bombsLeft };
 export function viewFor(s, pid) {
   const w = s.window, pr = s.pending, meP = P(s, pid);
   return {
-    phase: s.phase, opts: s.opts, me: pid, turn: s.turn, turnsLeft: s.turnsLeft, turnNo: s.turnNo, seq: s.seq,
+    phase: s.phase, gid: s.gid, opts: s.opts, me: pid, turn: s.turn, turnsLeft: s.turnsLeft, turnNo: s.turnNo, seq: s.seq,
     players: s.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot, out: p.out, place: p.place, handCount: p.hand.length, hand: p.id === pid || s.phase === 'ended' ? p.hand : undefined })),
     deckCount: s.deck.length, bombsLeft: bombsLeft(s), discardCount: s.discard.length, discardTop: s.discard.slice(-3),
     window: w ? { id: w.id, actor: w.actor, kind: w.kind, cards: w.cards, target: w.target, named: w.named, nopes: w.nopes, last: w.last, chain: w.chain,

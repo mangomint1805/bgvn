@@ -1,5 +1,5 @@
 // Vẽ lá bài Mèo Nổ: SVG mèo tự vẽ + emoji. Không dùng hình của game gốc.
-import { CARD } from './engine.js?v=4';
+import { CARD } from './engine.js?v=5';
 
 let uid = 0;
 // thông số từng giống mèo
