@@ -1,57 +1,473 @@
 {
-  "_ghichu": "BẢN NHÁP chờ duyệt – 40 ô, đường phố TP.HCM. Đơn vị tiền: K. rent = [đất, 1 nhà, 2 nhà, 3 nhà, 4 nhà, Landmark]",
+  "_ghichu": "40 ô – đường gần nhà hội bạn (Tân Bình, Tân Phú) + trung tâm. Giá theo tỉ lệ Cờ tỷ phú cổ điển, đơn vị K. rent = [đất, 1 nhà, 2 nhà, 3 nhà, 4 nhà, Landmark]",
   "groups": [
-    { "id": "brown",  "name": "Nâu",       "color": "#9b6a3c", "house": 50 },
-    { "id": "sky",    "name": "Xanh trời", "color": "#5cc8f5", "house": 50 },
-    { "id": "pink",   "name": "Hồng",      "color": "#e8579a", "house": 100 },
-    { "id": "orange", "name": "Cam",       "color": "#ff9a2e", "house": 100 },
-    { "id": "red",    "name": "Đỏ",        "color": "#e53935", "house": 150 },
-    { "id": "yellow", "name": "Vàng",      "color": "#f5c518", "house": 150 },
-    { "id": "green",  "name": "Xanh lá",   "color": "#1fa463", "house": 200 },
-    { "id": "navy",   "name": "Xanh đậm",  "color": "#2f4fc9", "house": 200 }
+    {
+      "id": "brown",
+      "name": "Nâu",
+      "color": "#9b6a3c",
+      "house": 50
+    },
+    {
+      "id": "sky",
+      "name": "Xanh trời",
+      "color": "#5cc8f5",
+      "house": 50
+    },
+    {
+      "id": "pink",
+      "name": "Hồng",
+      "color": "#e8579a",
+      "house": 100
+    },
+    {
+      "id": "orange",
+      "name": "Cam",
+      "color": "#ff9a2e",
+      "house": 100
+    },
+    {
+      "id": "red",
+      "name": "Đỏ",
+      "color": "#e53935",
+      "house": 150
+    },
+    {
+      "id": "yellow",
+      "name": "Vàng",
+      "color": "#f5c518",
+      "house": 150
+    },
+    {
+      "id": "green",
+      "name": "Xanh lá",
+      "color": "#1fa463",
+      "house": 200
+    },
+    {
+      "id": "navy",
+      "name": "Xanh đậm",
+      "color": "#2f4fc9",
+      "house": 200
+    }
   ],
   "tiles": [
-    { "type": "start",   "name": "Bắt đầu", "note": "Đi qua nhận 200K" },
-    { "type": "city",    "name": "Lê Văn Việt",        "area": "TP. Thủ Đức", "group": "brown",  "price": 60,  "rent": [2, 10, 30, 90, 160, 250] },
-    { "type": "chest",   "name": "Khí vận" },
-    { "type": "city",    "name": "Kha Vạn Cân",        "area": "TP. Thủ Đức", "group": "brown",  "price": 60,  "rent": [4, 20, 60, 180, 320, 450] },
-    { "type": "tax",     "name": "Thuế thu nhập", "amount": 200 },
-    { "type": "station", "name": "Bến xe Miền Đông", "price": 200 },
-    { "type": "city",    "name": "Âu Cơ",              "area": "Tân Phú",     "group": "sky",    "price": 100, "rent": [6, 30, 90, 270, 400, 550] },
-    { "type": "chance",  "name": "Cơ hội" },
-    { "type": "city",    "name": "Lũy Bán Bích",       "area": "Tân Phú",     "group": "sky",    "price": 100, "rent": [6, 30, 90, 270, 400, 550] },
-    { "type": "city",    "name": "Tân Kỳ Tân Quý",     "area": "Tân Phú",     "group": "sky",    "price": 120, "rent": [8, 40, 100, 300, 450, 600] },
-    { "type": "jail",    "name": "Thăm tù / Ở tù" },
-    { "type": "city",    "name": "Quang Trung",        "area": "Gò Vấp",      "group": "pink",   "price": 140, "rent": [10, 50, 150, 450, 625, 750] },
-    { "type": "utility", "name": "Công ty Điện lực", "price": 150 },
-    { "type": "city",    "name": "Phan Văn Trị",       "area": "Gò Vấp",      "group": "pink",   "price": 140, "rent": [10, 50, 150, 450, 625, 750] },
-    { "type": "city",    "name": "Nguyễn Kiệm",        "area": "Gò Vấp",      "group": "pink",   "price": 160, "rent": [12, 60, 180, 500, 700, 900] },
-    { "type": "station", "name": "Bến xe Miền Tây", "price": 200 },
-    { "type": "city",    "name": "Cộng Hòa",           "area": "Tân Bình",    "group": "orange", "price": 180, "rent": [14, 70, 200, 550, 750, 950] },
-    { "type": "chest",   "name": "Khí vận" },
-    { "type": "city",    "name": "Hoàng Văn Thụ",      "area": "Phú Nhuận",   "group": "orange", "price": 180, "rent": [14, 70, 200, 550, 750, 950] },
-    { "type": "city",    "name": "Phan Xích Long",     "area": "Phú Nhuận",   "group": "orange", "price": 200, "rent": [16, 80, 220, 600, 800, 1000] },
-    { "type": "parking", "name": "Bãi đậu xe miễn phí" },
-    { "type": "city",    "name": "Nguyễn Tri Phương",  "area": "Quận 10",     "group": "red",    "price": 220, "rent": [18, 90, 250, 700, 875, 1050] },
-    { "type": "chance",  "name": "Cơ hội" },
-    { "type": "city",    "name": "Nguyễn Trãi",        "area": "Quận 5",      "group": "red",    "price": 220, "rent": [18, 90, 250, 700, 875, 1050] },
-    { "type": "city",    "name": "Trần Hưng Đạo",      "area": "Quận 1",      "group": "red",    "price": 240, "rent": [20, 100, 300, 750, 925, 1100] },
-    { "type": "station", "name": "Bến xe Chợ Lớn", "price": 200 },
-    { "type": "city",    "name": "Cách Mạng Tháng 8",  "area": "Quận 3",      "group": "yellow", "price": 260, "rent": [22, 110, 330, 800, 975, 1150] },
-    { "type": "city",    "name": "Điện Biên Phủ",      "area": "Quận 3",      "group": "yellow", "price": 260, "rent": [22, 110, 330, 800, 975, 1150] },
-    { "type": "utility", "name": "Công ty Cấp nước", "price": 150 },
-    { "type": "city",    "name": "Võ Văn Tần",         "area": "Quận 3",      "group": "yellow", "price": 280, "rent": [24, 120, 360, 850, 1025, 1200] },
-    { "type": "gotojail","name": "Vào tù" },
-    { "type": "city",    "name": "Bùi Viện",           "area": "Phố đi bộ – Quận 1", "group": "green", "price": 300, "rent": [26, 130, 390, 900, 1100, 1275] },
-    { "type": "city",    "name": "Hai Bà Trưng",       "area": "Quận 1",      "group": "green",  "price": 300, "rent": [26, 130, 390, 900, 1100, 1275] },
-    { "type": "chest",   "name": "Khí vận" },
-    { "type": "city",    "name": "Lê Lợi",             "area": "Quận 1",      "group": "green",  "price": 320, "rent": [28, 150, 450, 1000, 1200, 1400] },
-    { "type": "station", "name": "Bến xe An Sương", "price": 200 },
-    { "type": "chance",  "name": "Cơ hội" },
-    { "type": "city",    "name": "Đồng Khởi",          "area": "Quận 1",      "group": "navy",   "price": 350, "rent": [35, 175, 500, 1100, 1300, 1500] },
-    { "type": "tax",     "name": "Thuế đặc biệt", "amount": 100 },
-    { "type": "city",    "name": "Nguyễn Huệ",         "area": "Phố đi bộ – Quận 1", "group": "navy", "price": 400, "rent": [50, 200, 600, 1400, 1700, 2000] }
+    {
+      "type": "start",
+      "name": "Bắt đầu",
+      "note": "Đi qua nhận 200K"
+    },
+    {
+      "type": "city",
+      "name": "Phú Thọ Hòa",
+      "area": "Tân Phú",
+      "group": "brown",
+      "price": 60,
+      "rent": [
+        2,
+        10,
+        30,
+        90,
+        160,
+        250
+      ]
+    },
+    {
+      "type": "chest",
+      "name": "Khí vận"
+    },
+    {
+      "type": "city",
+      "name": "Vườn Lài",
+      "area": "Tân Phú",
+      "group": "brown",
+      "price": 60,
+      "rent": [
+        4,
+        20,
+        60,
+        180,
+        320,
+        450
+      ]
+    },
+    {
+      "type": "tax",
+      "name": "Thuế thu nhập",
+      "amount": 200
+    },
+    {
+      "type": "station",
+      "name": "Bến xe Miền Đông",
+      "price": 200
+    },
+    {
+      "type": "city",
+      "name": "Phú Hòa",
+      "area": "Tân Bình",
+      "group": "sky",
+      "price": 100,
+      "rent": [
+        6,
+        30,
+        90,
+        270,
+        400,
+        550
+      ]
+    },
+    {
+      "type": "chance",
+      "name": "Cơ hội"
+    },
+    {
+      "type": "city",
+      "name": "Bảy Hiền",
+      "area": "Tân Bình",
+      "group": "sky",
+      "price": 100,
+      "rent": [
+        6,
+        30,
+        90,
+        270,
+        400,
+        550
+      ]
+    },
+    {
+      "type": "city",
+      "name": "Lũy Bán Bích",
+      "area": "Tân Phú",
+      "group": "sky",
+      "price": 120,
+      "rent": [
+        8,
+        40,
+        100,
+        300,
+        450,
+        600
+      ]
+    },
+    {
+      "type": "jail",
+      "name": "Thăm tù / Ở tù"
+    },
+    {
+      "type": "city",
+      "name": "Âu Cơ",
+      "area": "Tân Phú",
+      "group": "pink",
+      "price": 140,
+      "rent": [
+        10,
+        50,
+        150,
+        450,
+        625,
+        750
+      ]
+    },
+    {
+      "type": "utility",
+      "name": "Công ty Điện lực",
+      "price": 150
+    },
+    {
+      "type": "city",
+      "name": "Tân Kỳ Tân Quý",
+      "area": "Tân Phú",
+      "group": "pink",
+      "price": 140,
+      "rent": [
+        10,
+        50,
+        150,
+        450,
+        625,
+        750
+      ]
+    },
+    {
+      "type": "city",
+      "name": "Trường Chinh",
+      "area": "Tân Bình",
+      "group": "pink",
+      "price": 160,
+      "rent": [
+        12,
+        60,
+        180,
+        500,
+        700,
+        900
+      ]
+    },
+    {
+      "type": "station",
+      "name": "Bến xe Miền Tây",
+      "price": 200
+    },
+    {
+      "type": "city",
+      "name": "Hoàng Hoa Thám",
+      "area": "Tân Bình",
+      "group": "orange",
+      "price": 180,
+      "rent": [
+        14,
+        70,
+        200,
+        550,
+        750,
+        950
+      ]
+    },
+    {
+      "type": "chest",
+      "name": "Khí vận"
+    },
+    {
+      "type": "city",
+      "name": "Cộng Hòa",
+      "area": "Tân Bình",
+      "group": "orange",
+      "price": 180,
+      "rent": [
+        14,
+        70,
+        200,
+        550,
+        750,
+        950
+      ]
+    },
+    {
+      "type": "city",
+      "name": "Hoàng Văn Thụ",
+      "area": "Tân Bình",
+      "group": "orange",
+      "price": 200,
+      "rent": [
+        16,
+        80,
+        220,
+        600,
+        800,
+        1000
+      ]
+    },
+    {
+      "type": "parking",
+      "name": "Bãi đậu xe miễn phí"
+    },
+    {
+      "type": "city",
+      "name": "Lý Thường Kiệt",
+      "area": "Tân Bình",
+      "group": "red",
+      "price": 220,
+      "rent": [
+        18,
+        90,
+        250,
+        700,
+        875,
+        1050
+      ]
+    },
+    {
+      "type": "chance",
+      "name": "Cơ hội"
+    },
+    {
+      "type": "city",
+      "name": "Cách Mạng Tháng 8",
+      "area": "Quận 3",
+      "group": "red",
+      "price": 220,
+      "rent": [
+        18,
+        90,
+        250,
+        700,
+        875,
+        1050
+      ]
+    },
+    {
+      "type": "city",
+      "name": "Trần Hưng Đạo",
+      "area": "Quận 1",
+      "group": "red",
+      "price": 240,
+      "rent": [
+        20,
+        100,
+        300,
+        750,
+        925,
+        1100
+      ]
+    },
+    {
+      "type": "station",
+      "name": "Bến xe Chợ Lớn",
+      "price": 200
+    },
+    {
+      "type": "city",
+      "name": "Điện Biên Phủ",
+      "area": "Quận 3",
+      "group": "yellow",
+      "price": 260,
+      "rent": [
+        22,
+        110,
+        330,
+        800,
+        975,
+        1150
+      ]
+    },
+    {
+      "type": "city",
+      "name": "Võ Văn Tần",
+      "area": "Quận 3",
+      "group": "yellow",
+      "price": 260,
+      "rent": [
+        22,
+        110,
+        330,
+        800,
+        975,
+        1150
+      ]
+    },
+    {
+      "type": "utility",
+      "name": "Công ty Cấp nước",
+      "price": 150
+    },
+    {
+      "type": "city",
+      "name": "Nam Kỳ Khởi Nghĩa",
+      "area": "Quận 3",
+      "group": "yellow",
+      "price": 280,
+      "rent": [
+        24,
+        120,
+        360,
+        850,
+        1025,
+        1200
+      ]
+    },
+    {
+      "type": "gotojail",
+      "name": "Vào tù"
+    },
+    {
+      "type": "city",
+      "name": "Bùi Viện",
+      "area": "Phố đi bộ – Quận 1",
+      "group": "green",
+      "price": 300,
+      "rent": [
+        26,
+        130,
+        390,
+        900,
+        1100,
+        1275
+      ]
+    },
+    {
+      "type": "city",
+      "name": "Hai Bà Trưng",
+      "area": "Quận 1",
+      "group": "green",
+      "price": 300,
+      "rent": [
+        26,
+        130,
+        390,
+        900,
+        1100,
+        1275
+      ]
+    },
+    {
+      "type": "chest",
+      "name": "Khí vận"
+    },
+    {
+      "type": "city",
+      "name": "Lê Lợi",
+      "area": "Quận 1",
+      "group": "green",
+      "price": 320,
+      "rent": [
+        28,
+        150,
+        450,
+        1000,
+        1200,
+        1400
+      ]
+    },
+    {
+      "type": "station",
+      "name": "Bến xe An Sương",
+      "price": 200
+    },
+    {
+      "type": "chance",
+      "name": "Cơ hội"
+    },
+    {
+      "type": "city",
+      "name": "Đồng Khởi",
+      "area": "Quận 1",
+      "group": "navy",
+      "price": 350,
+      "rent": [
+        35,
+        175,
+        500,
+        1100,
+        1300,
+        1500
+      ]
+    },
+    {
+      "type": "tax",
+      "name": "Thuế đặc biệt",
+      "amount": 100
+    },
+    {
+      "type": "city",
+      "name": "Nguyễn Huệ",
+      "area": "Phố đi bộ – Quận 1",
+      "group": "navy",
+      "price": 400,
+      "rent": [
+        50,
+        200,
+        600,
+        1400,
+        1700,
+        2000
+      ]
+    }
   ],
-  "stationRent": [25, 50, 100, 200],
+  "stationRent": [
+    25,
+    50,
+    100,
+    200
+  ],
   "utilityRent": "đổ xúc xắc × 4 (có 1 công ty) hoặc × 10 (có cả 2)"
 }
