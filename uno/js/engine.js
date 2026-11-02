@@ -12,9 +12,9 @@ export const CARD_NAME = {
   wild: 'Đổi màu', wd4: 'Đổi màu +4', wtd4: 'Cộng nhắm +4', wup: 'Up', tornado: 'Bão tố', wrd4: 'Đổi màu đảo chiều +4', wd6: 'Đổi màu +6', wd10: 'Đổi màu +10', roulette: 'Vòng quay màu', nou: 'No U', shield: 'Khiên', dq: '+?', gift: 'Tặng quà', steal: 'Móc túi', wswap: 'Đổi tay',
 };
 export const MODES = {
-  classic: { name: 'Cổ điển', rules: { stackDraw: false, stackSkip: false, sevenZero: false, drawUntil: false, mercy: false, noActionFinish: false } },
-  house:   { name: 'Luật rừng', rules: { stackDraw: true, stackSkip: true, sevenZero: false, drawUntil: false, mercy: false, noActionFinish: true } },
-  nomercy: { name: 'No Mercy', rules: { stackDraw: true, stackSkip: false, sevenZero: true, drawUntil: true, mercy: true, noActionFinish: false } },
+  classic: { name: 'Cổ điển', rules: { stackDraw: false, stackAny: false, stackSkip: false, sevenZero: false, drawUntil: false, mercy: false, noActionFinish: false } },
+  house:   { name: 'Luật rừng', rules: { stackDraw: true, stackAny: true, stackSkip: true, sevenZero: false, drawUntil: false, mercy: false, noActionFinish: true } },
+  nomercy: { name: 'No Mercy', rules: { stackDraw: true, stackAny: false, stackSkip: false, sevenZero: true, drawUntil: true, mercy: true, noActionFinish: false } },
 };
 export const isWild = c => c.color === 'W';
 
@@ -122,7 +122,7 @@ export function canPlay(s, p, c) {
     if (c.type === 'shield') return true; // Khiên: chặn lá cộng, chuyền phạt sang người kế
     if (c.type === 'nou') { const f = s.stack.from && getPlayer(s, s.stack.from); return !!(f && !f.out && f !== p); } // No U: dội phạt ngược lại, màu nào cũng được
     if (!s.rules.stackDraw || !DRAW_VALUE[c.type]) return false;
-    return DRAW_VALUE[c.type] >= s.stack.last;
+    return s.rules.stackAny || DRAW_VALUE[c.type] >= s.stack.last; // stackAny: +2 và +4 chồng lẫn nhau thoải mái
   }
   if (s.skipStack) return s.rules.stackSkip && c.type === 'skip';
   if (s.up) { // chuỗi Up: chỉ lá số, màu nào cũng được, số phải bằng hoặc lớn hơn

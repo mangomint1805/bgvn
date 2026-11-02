@@ -1,6 +1,6 @@
-import { Host, Client, MAX, loadSnapshot, session } from './net.js?v=10';
+import { Host, Client, MAX, loadSnapshot, session } from './net.js?v=14';
 import { netStatus } from '../../shared/ui/status.js';
-import { MODES, COLOR_NAME, cardText, DRAW_VALUE } from './engine.js?v=10';
+import { MODES, COLOR_NAME, cardText, DRAW_VALUE } from './engine.js?v=14';
 import * as fx from './ufx.js';
 import { openGuide } from './guide.js';
 
@@ -77,6 +77,7 @@ $('#btn-copy').onclick = () => { const url = location.origin + location.pathname
 // ---------- sảnh ----------
 const RULE_INFO = {
   stackDraw: ['Cộng dồn lá rút', 'Bị +2/+4… thì chồng lá rút bằng hoặc lớn hơn để đẩy phạt đi tiếp.'],
+  stackAny: ['+2 / +4 chồng lẫn nhau', 'Lá rút nào chồng lên lá rút nào cũng được (+2 lên +4 vẫn được).'],
   stackSkip: ['Chồng Khoá mõm', 'Bị khoá mõm thì đánh Khoá mõm để chuyền cho người kế.'],
   sevenZero: ['Luật 7 – 0', 'Đánh 7: đổi bài với 1 người. Đánh 0: mọi người chuyền bài theo chiều chơi.'],
   drawUntil: ['Rút tới khi đánh được', 'Không có lá hợp thì rút liên tục tới khi ra lá đánh được (bắt buộc đánh).'],
@@ -253,7 +254,7 @@ function renderHint(v, meP) {
   const cur = v.players[v.turn];
   if (cur.id !== myId) { h.innerHTML = `Lượt của <b>${esc(cur.name)}</b> · màu ${dot}`; return; }
   h.classList.add('mine');
-  if (v.stack) h.innerHTML = v.playable.length ? `🔥 Bị dồn <b>+${v.stack.total}</b>! Chồng lá rút ≥ +${v.stack.last}${v.rules.extras ? ', giơ <b>Khiên</b> để chuyền tiếp, hoặc <b>No U</b> để dội ngược' : ''}, hoặc chịu phạt.` : `😵 Không có lá để chồng – bấm <b>Chịu phạt +${v.stack.total}</b>.`;
+  if (v.stack) h.innerHTML = v.playable.length ? `🔥 Bị dồn <b>+${v.stack.total}</b>! Chồng ${v.rules.stackAny ? 'lá +2/+4 bất kỳ' : `lá rút ≥ +${v.stack.last}`}${v.rules.extras ? ', giơ <b>Khiên</b> để chuyền tiếp, hoặc <b>No U</b> để dội ngược' : ''}, hoặc chịu phạt.` : `😵 Không có lá để chồng – bấm <b>Chịu phạt +${v.stack.total}</b>.`;
   else if (v.skipStack) h.innerHTML = '🤐 Bạn bị khoá mõm! Đánh Khoá mõm để chuyền, hoặc chịu mất lượt.';
   else if (v.up) h.innerHTML = v.up.first ? '⬆️ Up! Đánh 1 lá số bất kỳ (màu nào cũng được), không có thì chịu rút 2.' : `⬆️ Up! Đánh lá số <b>≥ ${v.up.n}</b> (màu nào cũng được), không có thì rút ${Math.max(1, v.up.n)} lá.`;
   else if (v.mustPlay) h.innerHTML = '✨ Lá vừa rút đánh được – bấm vào nó để đánh' + (v.canPass ? ', hoặc Giữ lại.' : '!');
@@ -278,7 +279,7 @@ function renderActions(v, meP) {
 function onCardClick(id) {
   const v = view; if (!isMyTurn()) { toast('Chưa tới lượt bạn 😤'); return; }
   const c = me().hand.find(x => x.id === id); if (!c) return;
-  if (!v.playable.includes(id)) { fx.sfx.bad(); fx.shake($(`#hand [data-id="${id}"]`)); toast(v.rules.noActionFinish && (me().hand.length === 1 || (c.type === 'discall' && me().hand.every(x => x.color === c.color))) && c.type !== 'n' ? 'Không được về bằng lá chức năng – lá cuối phải là lá số!' : v.stack ? `Phải chồng lá rút ≥ +${v.stack.last}` : v.mustPlay ? 'Chỉ được đánh lá vừa rút' : 'Lá này không hợp màu/số'); return; }
+  if (!v.playable.includes(id)) { fx.sfx.bad(); fx.shake($(`#hand [data-id="${id}"]`)); toast(v.rules.noActionFinish && (me().hand.length === 1 || (c.type === 'discall' && me().hand.every(x => x.color === c.color))) && c.type !== 'n' ? 'Không được về bằng lá chức năng – lá cuối phải là lá số!' : v.stack ? (v.rules.stackAny ? 'Đang bị dồn: chỉ chồng được lá +2/+4' : `Phải chồng lá rút ≥ +${v.stack.last}`) : v.mustPlay ? 'Chỉ được đánh lá vừa rút' : 'Lá này không hợp màu/số'); return; }
   if (c.type === 'wtd4') { pickColor('Chọn màu tiếp theo', Object.assign(col => pickTarget('🎯 Nhắm ai rút 4 lá?', t => send({ type: 'play', cardId: id, color: col, target: t })), { cancel: true })); return; }
   if (c.type === 'wswap') { pickColor('Chọn màu tiếp theo', Object.assign(col => pickTarget('🤝 Đổi nguyên tay bài với ai?', t => send({ type: 'play', cardId: id, color: col, target: t })), { cancel: true })); return; }
   if (c.type === 'steal') { pickTarget('🫳 Móc túi ai? (lấy ngẫu nhiên 1 lá)', t => send({ type: 'play', cardId: id, target: t }), null, 2); return; }

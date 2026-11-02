@@ -44,7 +44,7 @@ export function openGuide(openModal, cardHTML) {
     modes: ['⚙️ Chế độ', () => `
       <h3>🎴 Cổ điển</h3><p>Luật chuẩn. Bị +2/+4 thì rút luôn, không được chồng.</p>
       <h3>🔥 Luật rừng</h3><ul>
-        <li><b>Cộng dồn</b>: bị +2 thì đánh +2 hoặc +4 đẩy sang người kế, tổng phạt cộng dồn. Lá chồng phải <b>bằng hoặc lớn hơn</b> lá trước (+4 không chồng được +2).</li>
+        <li><b>Cộng dồn</b>: bị +2 thì đánh +2 hoặc +4 đẩy sang người kế, tổng phạt cộng dồn. <b>+2 và +4 chồng lẫn nhau thoải mái</b> (+2 lên +4 cũng được).</li>
         <li><b>Khoá mõm chồng Khoá mõm</b>: bị khoá mõm mà có lá Khoá mõm thì đánh để chuyền cho người kế.</li>
         <li><b>Tự bốc phạt</b>: bị cộng bao nhiêu lá thì tự bấm bốc từng lá, mỗi lá cách nhau 1 giây. Cho thấm 😈</li>
         <li><b>Không về bằng lá chức năng</b>: lá cuối cùng phải là lá số. Còn mỗi lá Khoá mõm/Đảo/+2/Đổi màu… thì phải rút bài.</li>
