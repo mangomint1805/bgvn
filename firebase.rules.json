@@ -1,0 +1,28 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      "$ns": {
+        ".validate": "$ns.matches(/^bgvn-[a-z0-9]{2,12}$/)",
+        "$code": {
+          ".read": "$code.matches(/^[A-Z0-9]{5}$/)",
+          ".write": "$code.matches(/^[A-Z0-9]{5}$/)",
+          "alive": { ".validate": "newData.isNumber()" },
+          "h": {
+            "$id": {
+              ".validate": "newData.hasChild('from') && newData.child('from').isString() && newData.child('from').val().length < 20 && (newData.child('bye').exists() || (newData.child('s').isString() && newData.child('s').val().length < 200000))"
+            }
+          },
+          "c": {
+            "$client": {
+              ".validate": "$client.length < 20",
+              "$id": { ".validate": "newData.child('s').isString() && newData.child('s').val().length < 200000" }
+            }
+          },
+          "$other": { ".validate": false }
+        }
+      }
+    }
+  }
+}

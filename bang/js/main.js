@@ -106,6 +106,36 @@ function renderThemeUI() {
 }
 function renderMusicUI() { const o = musicIsOn(); $('#btn-music-home').textContent = `🎵 Nhạc nền: ${o ? 'bật' : 'tắt'}`; $('#btn-music-home').classList.toggle('on', o); $('#btn-music').style.opacity = o ? 1 : .45; }
 $('#theme-select').onchange = e => setTheme(e.target.value);
+// Điện thoại: gom chủ đề / tốc độ / âm lượng vào nút ⚙️
+$('#btn-more').onclick = e => { e.stopPropagation(); $('#tb-opts').classList.toggle('open'); };
+document.addEventListener('click', e => { if (!e.target.closest('#tb-opts') && !e.target.closest('#btn-more')) $('#tb-opts').classList.remove('open'); });
+// Đẩy khu giữa bàn xuống nếu bị ghế phía trên đè lên
+function fitCenter() {
+  const table = $('#table'), c = table && table.querySelector('.center'); if (!c) return;
+  c.style.setProperty('--cpush', '0px'); c.style.maxWidth = '';
+  // lời nhắc có hàng lá bài để chọn: hiện nổi lên giữa màn hình (như hộp thoại) thay vì nhét vào giữa bàn
+  const big = innerWidth <= 760 && !!c.querySelector('.prompt .pcard');
+  c.classList.toggle('big', big); if (big) return;
+  const tr = table.getBoundingClientRect(), cr = c.getBoundingClientRect(); let push = 0;
+  for (const s of table.querySelectorAll('.seat')) {
+    const r = s.getBoundingClientRect();
+    if (r.right < cr.left + 4 || r.left > cr.right - 4) continue;
+    if (r.top + r.height / 2 < cr.top + cr.height / 2) push = Math.max(push, r.bottom + 8 - cr.top);
+  }
+  const room = Math.max(0, tr.bottom - cr.bottom);
+  c.style.setProperty('--cpush', Math.round(Math.min(push, room)) + 'px');
+  // ghế hai bên đè vào chữ ở giữa: thu hẹp khu giữa
+  c.style.maxWidth = '';
+  const r2 = c.getBoundingClientRect(), mid = r2.left + r2.width / 2; let half = r2.width / 2;
+  for (const s of table.querySelectorAll('.seat')) {
+    const r = s.getBoundingClientRect();
+    if (r.bottom < r2.top || r.top > r2.bottom) continue;
+    if (r.right > r2.left && r.right < mid) half = Math.min(half, mid - r.right - 4);
+    if (r.left < r2.right && r.left > mid) half = Math.min(half, r.left - mid - 4);
+  }
+  if (half < r2.width / 2) c.style.maxWidth = Math.max(120, Math.round(half * 2)) + 'px';
+}
+addEventListener('resize', () => requestAnimationFrame(fitCenter));
 function renderSpeedUI() {
   const k = getSpeed();
   $('#speed-pick').innerHTML = '<span class="pick-lbl">Tốc độ hiệu ứng:</span>' + Object.entries(SPEEDS).map(([key, v]) => `<button data-s="${key}" class="${key === k ? 'on' : ''}">${v.name}</button>`).join('');
@@ -294,6 +324,7 @@ function render() {
     else seat.onclick = () => showCharacter(p);
     table.appendChild(seat);
   });
+  requestAnimationFrame(fitCenter);
 
   // ---- Giữa bàn ----
   $('#deck').innerHTML = backHTML('sm') + `<div class="pile-count">${v.deckCount}</div>`;

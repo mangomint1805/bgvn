@@ -6,7 +6,7 @@
 <title>BANG! Việt hóa – chơi online với bạn bè</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rye&family=Bevan&family=Oswald:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=11">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A4%A0%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -62,11 +62,14 @@
     <span class="logo small">BANG!</span>
     <span id="turn-info"></span>
     <span id="turn-timer" style="display:none"></span>
-    <select id="theme-select" title="Chủ đề"></select>
-    <select id="speed-select" title="Tốc độ hiệu ứng"></select>
-    <button id="btn-music" class="btn icon ghost" title="Nhạc nền">🎵</button>
-    <input id="music-vol" class="vol" type="range" min="0" max="1" step="0.05" title="Âm lượng nhạc">
-    <button id="btn-mute" class="btn icon ghost" title="Hiệu ứng âm thanh">🔊</button>
+    <button id="btn-more" class="btn icon ghost" title="Cài đặt">⚙️</button>
+    <div id="tb-opts" class="tb-opts">
+      <select id="theme-select" title="Chủ đề"></select>
+      <select id="speed-select" title="Tốc độ hiệu ứng"></select>
+      <button id="btn-music" class="btn icon ghost" title="Nhạc nền">🎵</button>
+      <input id="music-vol" class="vol" type="range" min="0" max="1" step="0.05" title="Âm lượng nhạc">
+      <button id="btn-mute" class="btn icon ghost" title="Hiệu ứng âm thanh">🔊</button>
+    </div>
     <button id="btn-guide" class="btn icon ghost" title="Hướng dẫn">📖</button>
     <button id="btn-log-toggle" class="btn small ghost" title="Nhật ký ván">📜<span class="hide-m"> Nhật ký</span></button>
   </header>
@@ -101,6 +104,6 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
-<script type="module" src="js/main.js?v=10"></script>
+<script type="module" src="js/main.js?v=11"></script>
 </body>
 </html>
