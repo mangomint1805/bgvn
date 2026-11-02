@@ -1,6 +1,6 @@
 // Lớp mạng Mèo Nổ: chủ phòng giữ state, người vào chỉ gửi action. Kết nối dùng chung shared/net/room.js
-import { createGame, applyAction, viewFor, resolveWindow, waitingOn, getPlayer, DEFAULT_OPTS } from './engine.js?v=2';
-import { botAction, botNope } from './bot.js?v=2';
+import { createGame, applyAction, viewFor, resolveWindow, waitingOn, getPlayer, DEFAULT_OPTS } from './engine.js?v=3';
+import { botAction, botNope } from './bot.js?v=3';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
 const NS = 'bgvn-meono', PREFIX = 'bgvn-meono-', GAME = 'meono';
 const SNAP = 'bgvn-hostsnap-' + GAME;
@@ -8,7 +8,7 @@ export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem
 export { session };
 const BOT_NAMES = ['Minto', 'Tiến', 'Tuni', 'Thành', 'Khiêm', 'Thái', 'Mochi', 'Bơ'];
 export const MAX = 8;
-export const WINDOW_MS = 3000;     // cửa sổ KHÔNG! khi có người thật
+export const WINDOW_MS = 3000;     // cửa sổ ĐÉO! khi có người thật
 const WINDOW_BOT_MS = 1100;        // chỉ có bot quan tâm
 const PENDING_MS = 25000;          // chọn chỗ nhét bom / chọn lá cho / xếp lại
 const AWAY_MS = 7000;              // người rớt mạng: bot đánh thay sau 7 giây
@@ -113,7 +113,7 @@ export class Host {
   isAuto(pid) { const p = this.players.find(x => x.id === pid); return !p || p.isBot; }
   isAway(pid) { const p = this.players.find(x => x.id === pid); return p && !p.isBot && !p.connected && pid !== 'host'; }
   humansWatching(s) { return s.players.filter(q => !q.out && !this.isAuto(q.id) && !this.isAway(q.id)); }
-  // trung tâm hẹn giờ: cửa sổ KHÔNG!, bot, đồng hồ AFK
+  // trung tâm hẹn giờ: cửa sổ ĐÉO!, bot, đồng hồ AFK
   schedule() {
     this.clearTimers(); this.clock = null;
     const s = this.state; if (!s || s.phase !== 'playing') return;
@@ -125,7 +125,7 @@ export class Host {
       this.clock = { kind: 'window', id: w.id, end: now + grace + len, total: len };
       const wid = w.id;
       this.timers.win = setTimeout(() => { if (this.state && this.state.window && this.state.window.id === wid) { const b = this.state.evN; resolveWindow(this.state); this.afterChange(b); } }, grace + len);
-      // bot cân nhắc KHÔNG!
+      // bot cân nhắc ĐÉO!
       const bots = s.players.filter(q => !q.out && (this.isAuto(q.id) || this.isAway(q.id)) && botNope(s, q.id));
       if (bots.length) {
         const b = bots[Math.floor(Math.random() * bots.length)];

@@ -15,7 +15,7 @@ export const CARD = {
   alter: { name: 'Cải Mệnh', desc: 'Xem 3 lá trên cùng và xếp lại tuỳ ý.' },
   favor: { name: 'Xin Vía', desc: 'Chọn 1 người, họ phải cho bạn 1 lá (họ tự chọn).' },
   bottom: { name: 'Móc Đáy', desc: 'Bốc lá DƯỚI CÙNG thay vì lá trên cùng (hết lượt).' },
-  nope: { name: 'KHÔNG!', desc: 'Huỷ 1 hành động bất kỳ (trừ Mèo Nổ, Gỡ Bom). KHÔNG! chồng KHÔNG! được.' },
+  nope: { name: 'ĐÉO!', desc: 'Huỷ 1 hành động bất kỳ (trừ Mèo Nổ, Gỡ Bom). ĐÉO! chồng ĐÉO! được.' },
   cat1: { name: 'Mèo Ú', desc: 'Mèo thường. Đôi: rút bừa 1 lá. Bộ ba: gọi tên lá.' },
   cat2: { name: 'Mèo Mướp', desc: 'Mèo thường. Đôi: rút bừa 1 lá. Bộ ba: gọi tên lá.' },
   cat3: { name: 'Mèo Tam Thể', desc: 'Mèo thường. Đôi: rút bừa 1 lá. Bộ ba: gọi tên lá.' },
@@ -152,16 +152,16 @@ export function applyAction(s, pid, a) {
 function act(s, p, a) {
   const pid = p.id;
   if (a.type === 'nope') {
-    const w = s.window; if (!w) return { ok: false, reason: 'Không có gì để KHÔNG!' };
+    const w = s.window; if (!w) return { ok: false, reason: 'Không có gì để ĐÉO!' };
     if (w.last === pid) return { ok: false, reason: 'Bạn vừa đánh rồi, chờ người khác.' };
-    const c = p.hand.find(x => x.t === 'nope'); if (!c) return { ok: false, reason: 'Bạn không có lá KHÔNG!' };
+    const c = p.hand.find(x => x.t === 'nope'); if (!c) return { ok: false, reason: 'Bạn không có lá ĐÉO!' };
     p.hand.splice(p.hand.indexOf(c), 1); s.discard.push(c);
     w.nopes++; w.last = pid; w.id = ++s.winSeq; w.chain.push(pid);
-    log(s, `🙅 ${p.name}: KHÔNG!${w.nopes % 2 === 0 ? ' (huỷ lá KHÔNG! trước đó)' : ''}`);
+    log(s, `🙅 ${p.name}: ĐÉO!${w.nopes % 2 === 0 ? ' (huỷ lá ĐÉO! trước đó)' : ''}`);
     ev(s, { k: 'nope', by: pid, nopes: w.nopes, card: c });
     return { ok: true };
   }
-  if (s.window) return { ok: false, reason: 'Đang chờ xem có ai KHÔNG! không…' };
+  if (s.window) return { ok: false, reason: 'Đang chờ xem có ai ĐÉO! không…' };
   const pr = s.pending;
   if (pr) {
     if (pr.player !== pid) return { ok: false, reason: 'Đang chờ người khác.' };
@@ -210,7 +210,7 @@ function act(s, p, a) {
     const cards = ids.map(id => p.hand.find(c => c.id === id));
     if (cards.some(c => !c)) return { ok: false, reason: 'Bạn không có lá này.' };
     const kind = classify(cards);
-    if (!kind) return { ok: false, reason: cards.length > 1 ? 'Combo phải là 2 hoặc 3 lá mèo cùng loại.' : cards[0].t === 'nope' ? 'KHÔNG! chỉ đánh khi ai đó vừa làm gì.' : cards[0].t === 'defuse' ? 'Gỡ Bom chỉ dùng khi bốc trúng Mèo Nổ.' : isCat(cards[0].t) ? 'Mèo thường phải đánh theo đôi hoặc bộ ba.' : 'Không đánh được lá này.' };
+    if (!kind) return { ok: false, reason: cards.length > 1 ? 'Combo phải là 2 hoặc 3 lá mèo cùng loại.' : cards[0].t === 'nope' ? 'ĐÉO! chỉ đánh khi ai đó vừa làm gì.' : cards[0].t === 'defuse' ? 'Gỡ Bom chỉ dùng khi bốc trúng Mèo Nổ.' : isCat(cards[0].t) ? 'Mèo thường phải đánh theo đôi hoặc bộ ba.' : 'Không đánh được lá này.' };
     let target = null, named = null;
     if (needsTarget(kind)) {
       target = a.target; const tp = P(s, target);
@@ -228,13 +228,13 @@ function act(s, p, a) {
   return { ok: false, reason: 'Hành động không hợp lệ.' };
 }
 
-// hết cửa sổ KHÔNG!: thực thi (nếu số KHÔNG! chẵn) – chủ phòng gọi khi hết giờ
+// hết cửa sổ ĐÉO!: thực thi (nếu số ĐÉO! chẵn) – chủ phòng gọi khi hết giờ
 export function resolveWindow(s) {
   const w = s.window; if (!w || s.phase !== 'playing') return false;
   s.window = null; s.seq++;
   const p = P(s, w.actor);
   if (w.nopes % 2 === 1) {
-    log(s, `❌ ${w.kind === 'pair' ? 'Đôi ' + cardName(w.cards[0].t) : w.kind === 'triple' ? 'Bộ ba ' + cardName(w.cards[0].t) : cardName(w.kind)} của ${p.name} đã bị KHÔNG!`);
+    log(s, `❌ ${w.kind === 'pair' ? 'Đôi ' + cardName(w.cards[0].t) : w.kind === 'triple' ? 'Bộ ba ' + cardName(w.cards[0].t) : cardName(w.kind)} của ${p.name} đã bị ĐÉO!`);
     ev(s, { k: 'noped', by: w.actor, kind: w.kind });
     return true;
   }

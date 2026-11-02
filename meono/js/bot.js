@@ -1,5 +1,5 @@
 // Bot Mèo Nổ: chỉ dùng thông tin hợp lệ (bài mình, lá đã soi, số bom/số lá công khai).
-import { getPlayer, current, alive, validPeek, bombsLeft, isCat, CATS, validTargets } from './engine.js?v=2';
+import { getPlayer, current, alive, validPeek, bombsLeft, isCat, CATS, validTargets } from './engine.js?v=3';
 
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const VALUE = { defuse: 100, nope: 40, attack: 35, skip: 30, alter: 28, future: 25, bottom: 22, shuffle: 18, favor: 15 };
@@ -80,7 +80,7 @@ function pairOrFavor(p, richest) {
   return null;
 }
 
-// Bot có KHÔNG! không? (gọi khi cửa sổ đang mở)
+// Bot có ĐÉO! không? (gọi khi cửa sổ đang mở)
 export function botNope(s, pid) {
   const w = s.window; const p = getPlayer(s, pid);
   if (!w || !p || p.out || w.last === pid || !p.hand.some(c => c.t === 'nope')) return false;

@@ -1,9 +1,9 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn } from './net.js?v=2';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn } from './net.js?v=3';
 import { netStatus } from '../../shared/ui/status.js';
-import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat } from './engine.js?v=2';
-import { cardHTML, catSVG, bombSVG, cardIcon } from './cards.js?v=2';
-import * as fx from './mfx.js?v=2';
-import { openGuide } from './guide.js?v=2';
+import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat } from './engine.js?v=3';
+import { cardHTML, catSVG, bombSVG, cardIcon } from './cards.js?v=3';
+import * as fx from './mfx.js?v=3';
+import { openGuide } from './guide.js?v=3';
 setSpeedFn(fx.S);
 
 const $ = s => document.querySelector(s);
@@ -193,7 +193,7 @@ function renderStrip(v, meP) {
       st.dataset.key = key; st.className = 'strip window ' + (cancelled ? 'cancelled' : '');
       st.innerHTML = `<div class="wbox"><div class="wtxt">${w.actor === myId ? 'Bạn' : `<b>${esc(pname(w.actor))}</b>`} đánh <b class="k">${what}</b>${w.target ? ` → ${w.target === myId ? '<b class="you">BẠN</b>' : esc(pname(w.target))}` : ''}${w.named ? ` (đòi ${cardName(w.named)})` : ''} ${nopeTxt}</div>
         <div class="wprog"><i id="wprog"></i></div></div>
-        ${w.canNope ? `<button class="btn nope-btn" id="btn-nope">🙅 KHÔNG!</button>` : `<span class="wwait">${meP && !meP.out ? 'Chờ phản ứng…' : ''}</span>`}`;
+        ${w.canNope ? `<button class="btn nope-btn" id="btn-nope">🙅 ĐÉO!</button>` : `<span class="wwait">${meP && !meP.out ? 'Chờ phản ứng…' : ''}</span>`}`;
       const b = $('#btn-nope'); if (b) b.onclick = () => { send({ type: 'nope' }); b.disabled = true; };
     }
     return;
@@ -220,7 +220,7 @@ function renderActions(v, meP) {
       if (same.length >= 3) a.push(`<button class="btn pri" data-combo="3">🎯 Bộ ba</button>`);
       if (same.length < 2) a.push(`<span class="mini-hint">Cần 2 ${CARD[cards[0].t].name} để đánh đôi</span>`);
     } else if (kind) a.push(`<button class="btn pri" data-play="1">${kind === 'pair' ? '🐾 Đánh đôi' : kind === 'triple' ? '🎯 Bộ ba' : `${cardIcon(kind)} Đánh ${CARD[kind].name}`}</button>`);
-    else if (cards.length) a.push(`<span class="mini-hint">${cards.some(c => c.t === 'nope') ? 'KHÔNG! chỉ dùng khi ai đó vừa đánh' : cards.some(c => c.t === 'defuse') ? 'Gỡ Bom tự dùng khi bốc trúng bom' : 'Chọn 1 lá chức năng hoặc 2–3 mèo cùng loại'}</span>`);
+    else if (cards.length) a.push(`<span class="mini-hint">${cards.some(c => c.t === 'nope') ? 'ĐÉO! chỉ dùng khi ai đó vừa đánh' : cards.some(c => c.t === 'defuse') ? 'Gỡ Bom tự dùng khi bốc trúng bom' : 'Chọn 1 lá chức năng hoặc 2–3 mèo cùng loại'}</span>`);
     a.unshift(`<button class="btn draw big" data-draw="1">🫳 Bốc bài${probOn && !(v.peek || []).length ? ` <small>${Math.round(risk(v) * 100)}%💣</small>` : ''}</button>`);
   }
   $('#actions').innerHTML = a.join('');
@@ -261,7 +261,7 @@ function onCardClick(id) {
     sel.add(id);
   }
   fx.sfx.flip();
-  if (!isMyTurn() && sel.size) { const hint = c.t === 'nope' ? 'KHÔNG! dùng khi ai đó vừa đánh lá' : 'Chưa tới lượt bạn – chọn trước cũng được 😉'; toast(hint); }
+  if (!isMyTurn() && sel.size) { const hint = c.t === 'nope' ? 'ĐÉO! dùng khi ai đó vừa đánh lá' : 'Chưa tới lượt bạn – chọn trước cũng được 😉'; toast(hint); }
   render();
 }
 function doDraw() {
@@ -402,9 +402,9 @@ function playEvents(evs, prev) {
         if (e.to) setTimeout(() => fx.floatText(seatEl(e.to), e.to === myId ? '😨 Bạn!' : '🎯'), 300 * S);
       }); t += 250 * S; break;
       case 'nope': run(() => {
-        flyToDiscard([e.card || { t: 'nope' }], seatEl(e.by)); fx.sfx.nope(); fx.banner('🙅 KHÔNG!', 'nope'); fx.shake($('#strip'));
+        flyToDiscard([e.card || { t: 'nope' }], seatEl(e.by)); fx.sfx.nope(); fx.banner('🙅 ĐÉO!', 'nope'); fx.shake($('#strip'));
       }); t += 250 * S; break;
-      case 'noped': run(() => { fx.sfx.denied(); fx.floatText(seatEl(e.by), '❌ Bị KHÔNG!', 'bad'); }); break;
+      case 'noped': run(() => { fx.sfx.denied(); fx.floatText(seatEl(e.by), '❌ Bị ĐÉO!', 'bad'); }); break;
       case 'resolve': run(() => {
         if (e.kind === 'shuffle') { fx.sfx.shuffle(); fx.pop($('#deck'), 'shuffling'); }
         if (e.kind === 'attack') { fx.sfx.attack(); }
