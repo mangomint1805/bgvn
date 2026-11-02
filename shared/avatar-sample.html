@@ -1,0 +1,60 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tạo nhân vật</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#24314d;--muted:#6b7895;--acc:#ff7a1a}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(180deg,#8fd3ff,#e9f8e3);font:600 15px/1.45 "Be Vietnam Pro",system-ui,sans-serif;color:var(--ink)}
+.wrap{max-width:1000px;margin:0 auto;padding:18px;display:grid;grid-template-columns:360px 1fr;gap:16px}
+@media(max-width:760px){.wrap{grid-template-columns:1fr;padding:10px}}
+h1{font-family:"Baloo 2";font-size:34px;margin:0 0 8px;color:#ff6a1a}
+.card{background:#fffffff0;border-radius:24px;box-shadow:0 10px 26px -12px #1c2b5a55;padding:14px}
+#view{height:380px;border-radius:18px;background:radial-gradient(circle at 50% 40%,#ffffff,#d8efff);position:relative;overflow:hidden}
+#view canvas{width:100%!important;height:100%!important}
+.name{display:flex;gap:8px;margin-top:10px}.name input{flex:1;border:2px solid #e3e9f5;border-radius:14px;padding:9px 12px;font:inherit;font-weight:700}
+.btn{border:0;border-radius:14px;padding:10px 16px;font:800 16px "Be Vietnam Pro";background:linear-gradient(135deg,#ff9a3d,#ff5a5f);color:#fff;cursor:pointer}
+.row{margin-bottom:10px}.row b{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opts button{border:2px solid #e3e9f5;background:#fff;border-radius:12px;padding:5px 10px;font:700 13px "Be Vietnam Pro";cursor:pointer;color:var(--ink)}
+.opts button.on{border-color:var(--acc);background:#fff3e8;color:#c2510a}
+.sw{width:30px;height:30px;border-radius:50%!important;padding:0!important;border:3px solid #fff!important;box-shadow:0 1px 4px #0004}
+.sw.on{outline:3px solid var(--ink);outline-offset:1px}
+.presets{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:8px}
+@media(max-width:760px){.presets{grid-template-columns:repeat(4,1fr)}}
+.presets button{border:2px solid #e3e9f5;background:#fff;border-radius:14px;padding:2px;cursor:pointer;font:700 11px "Be Vietnam Pro";color:var(--ink)}
+.presets button img{width:100%;display:block}
+.presets button.on{border-color:var(--acc)}
+</style></head><body>
+<div class="wrap">
+  <div>
+    <h1>Tạo nhân vật</h1>
+    <div class="card"><div id="view"></div><div class="name"><input id="nm" value="Minto"><button class="btn">Lưu ✓</button></div></div>
+  </div>
+  <div class="card">
+    <div class="row"><b>Mẫu có sẵn</b><div class="presets" id="presets"></div></div>
+    <div id="rows"></div>
+  </div>
+</div>
+<script type="module">
+import * as THREE from './lib/three.module.min.js';
+import { OrbitControls } from './lib/OrbitControls.js';
+import { OPTIONS, PRESETS, buildAvatar, portrait } from './js/avatar3d.js';
+let cfg = { ...PRESETS[5] };
+const view = document.getElementById('view');
+const r = new THREE.WebGLRenderer({ antialias: true, alpha: true }); r.setPixelRatio(Math.min(2, devicePixelRatio)); r.outputColorSpace = THREE.SRGBColorSpace; r.shadowMap.enabled = true; view.appendChild(r.domElement);
+const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xffffff, 0x88aa77, 1.3)); const d = new THREE.DirectionalLight(0xffffff, 1.8); d.position.set(2, 4, 3); d.castShadow = true; sc.add(d);
+const ground = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.8, 0.08, 40), new THREE.MeshStandardMaterial({ color: '#7bd389' })); ground.position.y = -0.04; ground.receiveShadow = true; sc.add(ground);
+const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 20); cam.position.set(1.0, 1.4, 4.0);
+const ctl = new OrbitControls(cam, r.domElement); ctl.target.set(0, 0.62, 0); ctl.enablePan = false; ctl.minDistance = 2; ctl.maxDistance = 5; ctl.update();
+let av = null; function rebuild() { if (av) sc.remove(av); av = buildAvatar(cfg); sc.add(av); renderUI(); }
+function size() { const w = view.clientWidth, h = view.clientHeight; r.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); } size(); addEventListener('resize', size);
+r.setAnimationLoop(t => { if (av) { av.rotation.y = Math.sin(t / 1400) * 0.5; av.userData.head.rotation.z = Math.sin(t / 500) * 0.05; av.position.y = Math.abs(Math.sin(t / 400)) * 0.03; } ctl.update(); r.render(sc, cam); });
+const LBL = { kind: 'Kiểu', skin: 'Màu da / lông', hair: 'Kiểu tóc', hairColor: 'Màu tóc', hat: 'Nón', outfit: 'Áo', acc: 'Phụ kiện', color: 'Màu chủ đạo' };
+function renderUI() {
+  document.getElementById('rows').innerHTML = Object.entries(OPTIONS).map(([k, list]) => `<div class="row"><b>${LBL[k]}</b><div class="opts">${list.map(o => Array.isArray(o) ? `<button data-k="${k}" data-v="${o[0]}" class="${cfg[k] === o[0] ? 'on' : ''}">${o[1]}</button>` : `<button class="sw ${cfg[k] === o ? 'on' : ''}" data-k="${k}" data-v="${o}" style="background:${o}"></button>`).join('')}</div></div>`).join('');
+  document.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { cfg[b.dataset.k] = b.dataset.v; rebuild(); });
+}
+document.getElementById('presets').innerHTML = PRESETS.map((p, i) => `<button data-p="${i}" class="${i === 5 ? 'on' : ''}"><img src="${portrait(p, 96)}" alt="">${p.name}</button>`).join('');
+document.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { cfg = { ...PRESETS[+b.dataset.p] }; document.querySelectorAll('[data-p]').forEach(x => x.classList.toggle('on', x === b)); rebuild(); });
+rebuild();
+</script></body></html>

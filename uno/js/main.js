@@ -1,4 +1,5 @@
-import { Host, Client, MAX } from './net.js?v=8';
+import { Host, Client, MAX, loadSnapshot, session } from './net.js?v=9';
+import { netStatus } from '../../shared/ui/status.js';
 import { MODES, COLOR_NAME, cardText, DRAW_VALUE } from './engine.js';
 import * as fx from './ufx.js';
 import { openGuide } from './guide.js';
@@ -46,11 +47,14 @@ const handlers = {
   onState(v) { if (!v) { view = null; closeModal(); show('screen-lobby'); renderLobby(); return; } prevView = view; view = v; if (!$('#screen-game').classList.contains('active')) { show('screen-game'); prevView = null; } render(); animate(prevView, view); },
   onError(m) { toast(m); fx.sfx.bad(); },
   onJoined(id) { myId = id; },
-  onDisconnect() { toast('Mất kết nối – đang tự vào lại…'); },
+  onDisconnect() {},
+  onNet(t, k, retry) { netStatus(t, k, retry); },
 };
 function startHost(offline) {
   fx.actx(); fx.musicResumeIfOn();
+  if (net && net.leave) net.leave();
   net = new Host(myName(), handlers, offline); isHost = true; myId = 'host';
+  if (offline) session.save('uno', { role: 'host', code: 'OFFLINE' });
   if (offline) { net.addBot(); net.addBot(); net.addBot(); }
   $('#code-box').style.display = offline ? 'none' : '';
   show('screen-lobby');
@@ -64,7 +68,7 @@ $('#btn-join').onclick = () => {
 };
 $('#join-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
 const qcode = new URLSearchParams(location.search).get('room'); if (qcode) $('#join-code').value = qcode.toUpperCase();
-function leave() { if (net) net.destroy(); net = null; view = null; lobby = null; closeModal(); show('screen-home'); }
+function leave() { if (net) (net.leave ? net.leave() : net.destroy()); net = null; view = null; lobby = null; closeModal(); show('screen-home'); }
 $('#btn-leave-lobby').onclick = leave;
 $('#btn-leave').onclick = () => openModal(`<h2>Rời ván?</h2><p style="text-align:center">${isHost ? 'Bạn là chủ phòng – rời đi sẽ kết thúc ván cho mọi người.' : 'Bạn có thể vào lại bằng mã phòng.'}</p><div class="win"><div class="btns"><button class="btn" onclick="__closeModal()">Ở lại</button><button class="btn red" id="m-leave">Rời ván</button></div></div>`);
 document.addEventListener('click', e => { if (e.target.id === 'm-leave') leave(); });
@@ -375,3 +379,17 @@ function dealAnim(v) {
   void n;
 }
 if (location.hash === '#debug') window.__dbg = () => ({ net, view });
+
+// ---------- Tải lại trang: tự khôi phục phòng / tự vào lại ----------
+(function resume() {
+  const snap = loadSnapshot(), ses = session.load('uno');
+  if (snap && ses && ses.role === 'host') {
+    fx.musicResumeIfOn();
+    net = new Host((snap.players.find(p => p.id === 'host') || {}).name || myName(), handlers, !!snap.offline, snap); isHost = true; myId = 'host';
+    $('#code-box').style.display = snap.offline ? 'none' : '';
+    show('screen-lobby'); netStatus('Đã khôi phục phòng ' + snap.code, 'ok'); return;
+  }
+  if (ses && ses.role === 'client' && ses.code) {
+    net = new Client(ses.code, ses.name || myName(), handlers); isHost = false; $('#code-box').style.display = '';
+  }
+})();

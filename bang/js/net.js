@@ -1,63 +1,37 @@
-// Lớp mạng PeerJS: host giữ state + chạy engine, client chỉ gửi action.
+// Lớp mạng BANG!: host giữ state + chạy engine, client chỉ gửi action. Kết nối dùng chung ở shared/net/room.js
 import { createGame, applyAction, viewFor, topPrompt, current, alivePlayers, responseCards, getPlayer } from './engine.js';
 export const TURN_TIME = 60, PROMPT_TIME = 20; // giây: hết giờ thì máy tự đánh thay (chống treo máy)
 import { botAction } from './bot.js';
 import { S } from './fx.js';
-import { peerOptions, keepAlive } from './ice.js';
-import { RelayHost, relayConnect } from './relay.js';
-import { FbHost, fbConnect, fbEnabled } from './fbrelay.js';
-const NS = 'bgvn-bang';
-
-const PREFIX = 'bangvn-';
-const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-function makeCode() { let s = ''; for (let i = 0; i < 5; i++) s += ALPHABET[Math.floor(Math.random() * ALPHABET.length)]; return s; }
-function token() {
-  let t = localStorage.getItem('bangvn-token');
-  if (!t) { t = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('bangvn-token', t); }
-  return t;
-}
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
+const NS = 'bgvn-bang', PREFIX = 'bangvn-', GAME = 'bang';
+const SNAP = 'bgvn-hostsnap-' + GAME;
+export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
+export { session };
 const BOT_NAMES = ['Django', 'Clint', 'Tuco', 'Calamity', 'Doc', 'Billy', 'Wyatt', 'Jesse'];
 
 // ======================= HOST =======================
 export class Host {
-  constructor(name, handlers, offline = false) {
+  constructor(name, handlers, offline = false, restore = null) {
     this.h = handlers; // {onLobby(players, code), onState(view), onError(msg)}
-    this.code = offline ? 'OFFLINE' : makeCode();
+    this.offline = offline;
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null;
     this.conns = new Map(); // peerId -> conn
     this.botTimer = null;
-    if (offline) { this.peer = { destroy() {} }; setTimeout(() => this.pushLobby(), 0); return; }
-    this.open();
-    this.stopKeep = keepAlive(() => this.peer);
-    setTimeout(() => this.pushLobby(), 0);
+    if (restore) { // tải lại trang: dựng lại phòng cũ, mọi người tự vào lại
+      this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));
+      this.state = restore.state; this.code = restore.code;
+    }
+    if (offline) { this.code = 'OFFLINE'; setTimeout(() => { this.pushLobby(); if (this.state) { this.scheduleBots(); this.broadcast(); } }, 0); return; }
+    this.room = new RoomHost({ ns: NS, prefix: PREFIX, code: this.code, keepCode: !!restore, onConn: c => this.attach(c), onReady: code => { this.code = code; session.save(GAME, { role: 'host', code }); this.pushLobby(); }, onError: m => this.h.onError(m) });
+    this.code = this.room.code;
+    setTimeout(() => { this.pushLobby(); if (this.state) { this.graceUntil = Date.now() + 4000; this.scheduleBots(); this.broadcast(); } }, 0);
   }
-  startRelay() {
-    if (this.relay && this.relayCode === this.code) return;
-    if (this.relay) this.relay.destroy();
-    if (this.fb) this.fb.destroy();
-    this.relayCode = this.code;
-    this.fb = new FbHost(NS, this.code, conn => this.attach(conn));
-    this.relay = new RelayHost(NS, this.code, conn => this.attach(conn));
+  saveSnap() {
+    clearTimeout(this.snapT);
+    this.snapT = setTimeout(() => { try { localStorage.setItem(SNAP, JSON.stringify({ ts: Date.now(), code: this.code, offline: this.offline, players: this.players.map(({ conn, ...p }) => p), state: this.state })); } catch (e) {} }, 300);
   }
-  async open() {
-    this.startRelay();
-    const opt = await peerOptions();
-    if (this.dead) return;
-    this.peer = new Peer(PREFIX + this.code, opt);
-    this.peer.on('open', () => { this.opened = true; this.pushLobby(); });
-    this.peer.on('disconnected', () => { if (!this.dead) setTimeout(() => { try { if (this.peer.disconnected && !this.peer.destroyed) this.peer.reconnect(); } catch (e) {} }, 1000); });
-    this.peer.on('error', e => {
-      if (e.type === 'unavailable-id') { // mã bị trùng; nếu là phòng cũ vừa rớt thì giữ nguyên mã, đợi máy chủ nhả ra
-        try { this.peer.destroy(); } catch (x) {}
-        if (this.opened && (this.keepTries = (this.keepTries || 0) + 1) <= 5) setTimeout(() => this.open(), 3000); else { this.code = makeCode(); this.open(); }
-      }
-      else if (['network', 'server-error', 'socket-error', 'socket-closed', 'disconnected'].includes(e.type)) { /* keepAlive sẽ tự nối lại */ }
-      else if (e.type !== 'peer-unavailable') this.h.onError('Lỗi mạng: ' + e.type);
-    });
-    this.wire();
-  }
-  wire() { this.peer.on('connection', conn => this.attach(conn)); }
   attach(conn) {
     conn.on('data', msg => this.onMsg(conn, msg));
     conn.on('close', () => this.onLeave(conn));
@@ -94,7 +68,7 @@ export class Host {
   lobbyInfo() { return this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot, connected: p.connected })); }
   pushLobby() {
     const info = this.lobbyInfo();
-    this.h.onLobby(info, this.code);
+    this.h.onLobby(info, this.code); this.saveSnap();
     for (const p of this.players) if (p.conn) try { p.conn.send({ t: 'lobby', players: info, code: this.code, started: !!this.state }); } catch (e) {}
   }
   addBot() {
@@ -125,6 +99,7 @@ export class Host {
   }
   broadcast() {
     if (!this.state) return;
+    this.saveSnap();
     for (const p of this.players) {
       const view = viewFor(this.state, p.id);
       if (this.deadline) view.timer = { pid: this.deadline.pid, ms: Math.max(0, this.deadline.end - Date.now()) };
@@ -155,72 +130,30 @@ export class Host {
       return null;
     }, ms);
   }
-  destroy() { this.dead = true; clearTimeout(this.botTimer); this.relay && this.relay.destroy(); this.fb && this.fb.destroy(); this.stopKeep && this.stopKeep(); try { this.peer.destroy(); } catch (e) {} }
+  destroy() { this.dead = true; clearTimeout(this.botTimer); clearTimeout(this.snapT); this.room && this.room.destroy(); }
+  // rời phòng hẳn (không tự khôi phục khi tải lại)
+  leave() { this.destroy(); try { localStorage.removeItem(SNAP); } catch (e) {} session.clear(GAME); }
 }
 
 // ======================= CLIENT =======================
 export class Client {
-  // Thử lần lượt: Firebase (nếu đã cấu hình) → P2P (PeerJS) → MQTT công cộng
   constructor(code, name, handlers) {
-    this.h = handlers; this.code = code.toUpperCase().trim(); this.name = name; this.id = null; this.tries = 0;
-    this.modes = /[?&]relay=1/.test(location.search) ? ['mqtt'] : /[?&]p2p=1/.test(location.search) ? ['p2p'] : (fbEnabled() ? ['fb', 'p2p', 'mqtt'] : ['p2p', 'mqtt']);
-    this.mi = 0;
-    if (this.modes.includes('p2p')) this.initPeer();
-    this.connect();
-  }
-  status(m) { this.h.onStatus ? this.h.onStatus(m) : this.h.onError(m); }
-  initPeer() {
-    this.peerOpen = new Promise(async res => {
-      const opt = await peerOptions(); if (this.dead) return;
-      setTimeout(() => res(false), 6000);
-      try { this.peer = new Peer(undefined, opt); } catch (e) { res(false); return; }
-      this.stopKeep = keepAlive(() => this.peer);
-      this.peer.on('open', () => res(true));
-      this.peer.on('error', e => { if (e.type === 'peer-unavailable' && this.mode() === 'p2p' && !this.id) this.next(); else res(false); });
+    this.h = handlers; this.code = code.toUpperCase().trim(); this.name = name; this.id = null;
+    this.room = new RoomClient({
+      ns: NS, prefix: PREFIX, code: this.code, joinMsg: () => ({ name: this.name }),
+      onStatus: (t, k) => { this.h.onNet && this.h.onNet(t, k, () => this.room.retryNow()); this.h.onStatus && k !== 'ok' && this.h.onStatus(t); },
+      onFail: m => { this.h.onError(m); session.clear(GAME); },
+      onWelcome: id => { this.id = id; session.save(GAME, { role: 'client', code: this.code, name: this.name }); this.h.onJoined(id); },
+      onLost: () => this.h.onDisconnect(),
+      onMsg: msg => {
+        if (msg.t === 'lobby') this.h.onLobby(msg.players, msg.code, msg.started);
+        else if (msg.t === 'state') this.h.onState(msg.view);
+        else if (msg.t === 'error') this.h.onError(msg.msg);
+        else if (msg.t === 'kicked') { this.h.onError('Bạn đã bị mời ra khỏi phòng.'); this.leave(); }
+      },
     });
   }
-  mode() { return this.modes[this.mi]; }
-  next(final) {
-    if (this.dead || this.id) return;
-    clearTimeout(this.joinTimer);
-    if (this.mi < this.modes.length - 1) { this.mi++; this.connect(); return; }
-    if (++this.tries <= 2) { this.status(`Đang thử kết nối lại (${this.tries}/2)…`); this.mi = 0; setTimeout(() => this.connect(), 2000); return; }
-    this.h.onError(final || ('Không tìm thấy phòng ' + this.code + '. Kiểm tra lại mã – chủ phòng phải đang mở tab game.'));
-    this.status('❌ Không vào được phòng. Bấm Thoát rồi thử lại nhé.');
-  }
-  async connect() {
-    if (this.dead || this.id) return;
-    const mode = this.mode();
-    try { this.conn && this.conn.close(); } catch (e) {}
-    this.conn = null;
-    let conn;
-    if (mode === 'p2p') {
-      this.status('Đang kết nối…');
-      const ok = await this.peerOpen; if (this.dead || this.id) return;
-      if (!ok || !this.peer || this.peer.disconnected) { this.next(); return; }
-      conn = this.peer.connect(PREFIX + this.code, { reliable: true });
-    } else if (mode === 'fb') { this.status('Đang kết nối…'); conn = fbConnect(NS, this.code); }
-    else { this.status('Đang nối qua đường dự phòng…'); conn = relayConnect(NS, this.code); }
-    this.conn = conn;
-    clearTimeout(this.joinTimer);
-    this.joinTimer = setTimeout(() => { if (!this.id && conn === this.conn) this.next(); }, mode === 'p2p' ? 7000 : 12000);
-    conn.on('open', () => { if (conn === this.conn) conn.send({ t: 'join', name: this.name, token: token() }); });
-    conn.on('data', msg => {
-      if (conn !== this.conn) return;
-      if (msg.t === 'welcome') { clearTimeout(this.joinTimer); this.id = msg.id; this.h.onJoined(msg.id); }
-      else if (msg.t === 'lobby') this.h.onLobby(msg.players, msg.code, msg.started);
-      else if (msg.t === 'state') this.h.onState(msg.view);
-      else if (msg.t === 'error') this.h.onError(msg.msg);
-      else if (msg.t === 'kicked') { this.h.onError('Bạn đã bị mời ra khỏi phòng.'); this.destroy(); }
-    });
-    const lost = () => {
-      if (conn !== this.conn || this.dead) return;
-      if (!this.id) { if (conn.notFound || mode !== 'p2p') this.next(); return; } // chưa vào được: thử đường khác
-      this.h.onDisconnect(); this.id = null; this.tries = 0;
-      setTimeout(() => { if (!this.dead) this.connect(); }, 1500);
-    };
-    conn.on('close', lost); conn.on('error', lost);
-  }
-  act(a) { if (this.conn && this.conn.open) this.conn.send({ t: 'action', a }); }
-  destroy() { this.dead = true; clearTimeout(this.joinTimer); this.stopKeep && this.stopKeep(); try { this.conn && this.conn.close(); } catch (e) {} try { this.peer && this.peer.destroy(); } catch (e) {} }
+  act(a) { this.room.send({ t: 'action', a }); }
+  destroy() { this.room.destroy(); }
+  leave() { this.destroy(); session.clear(GAME); }
 }

@@ -1,6 +1,7 @@
 // Giao diện + nối với lớp mạng
 import { CARD_INFO, CHARACTERS, ROLES, SUIT_SYMBOL, rankLabel, cardLabel, suitify } from './cards.js';
-import { Host, Client } from './net.js?v=9';
+import { Host, Client, loadSnapshot, session } from './net.js?v=10';
+import { netStatus } from '../../shared/ui/status.js';
 import { imgTag, avatarTag } from './images.js';
 import { S, SPEEDS, getSpeed, setSpeed, sfx, cardSfx, gunSfx, fly, shake, flash, floatText, banner, toggleMute, isMuted, shoot, arrows, explode, sparkle, confetti, stamp, screenShake } from './fx.js';
 import { THEMES, getTheme, setTheme, onThemeChange } from './themes.js';
@@ -21,14 +22,14 @@ let toastTimer;
 function toast(msg, info = false) { const t = $('#toast'); t.textContent = msg; t.className = 'toast' + (info ? ' info' : ''); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), 3000); }
 
 // ---------- Home ----------
-try { $('#inp-name').value = localStorage.getItem('bangvn-name') || ''; } catch (e) {}
+try { $('#inp-name').value = localStorage.getItem('bgvn-name') || localStorage.getItem('bangvn-name') || ''; } catch (e) {}
 const urlCode = new URLSearchParams(location.search).get('room');
 if (urlCode) $('#inp-code').value = urlCode.toUpperCase();
 
 function getName() {
   const n = $('#inp-name').value.trim();
   if (!n) { toast('Nhập tên trước đã!'); $('#inp-name').focus(); return null; }
-  try { localStorage.setItem('bangvn-name', n); } catch (e) {}
+  try { localStorage.setItem('bgvn-name', n); } catch (e) {}
   return n;
 }
 const handlers = {
@@ -38,18 +39,37 @@ const handlers = {
   onJoined(id) { myId = id; },
   onDisconnect() { toast('Mất kết nối với chủ phòng – đang tự vào lại…'); },
   onStatus(m) { const el = $('#lobby-msg'); if (el) el.textContent = m; },
+  onNet(t, k, retry) { netStatus(t, k, retry); },
 };
+// ---------- Tải lại trang: tự khôi phục phòng / tự vào lại ----------
+function resume() {
+  const snap = loadSnapshot(), ses = session.load('bang');
+  const name = (() => { try { return localStorage.getItem('bangvn-name') || localStorage.getItem('bgvn-name') || 'Bạn'; } catch (e) { return 'Bạn'; } })();
+  if (snap && ses && ses.role === 'host') {
+    isHost = true; myId = 'host';
+    net = new Host(snap.players.find(p => p.id === 'host')?.name || name, handlers, !!snap.offline, snap);
+    if (location.hash === '#debug') window.__net = net;
+    $('#lobby-host-actions').classList.remove('hidden'); if (snap.offline) $('#btn-copy').classList.add('hidden');
+    show('screen-lobby'); netStatus('Đã khôi phục phòng ' + snap.code, 'ok'); return;
+  }
+  if (ses && ses.role === 'client' && ses.code) {
+    isHost = false; net = new Client(ses.code, ses.name || name, handlers);
+    $('#lobby-host-actions').classList.add('hidden');
+    show('screen-lobby'); $('#lobby-code').textContent = ses.code; $('#lobby-msg').textContent = 'Đang vào lại phòng…';
+  }
+}
+setTimeout(resume, 0);
 $('#btn-create').onclick = () => {
   const n = getName(); if (!n) return;
-  isHost = true; myId = 'host';
+  isHost = true; myId = 'host'; net?.leave?.();
   net = new Host(n, handlers);
   $('#lobby-host-actions').classList.remove('hidden'); $('#lobby-msg').textContent = 'Gửi mã phòng cho bạn bè. Cần 4–7 người (có thể thêm bot).';
   show('screen-lobby'); $('#lobby-code').textContent = '…';
 };
 $('#btn-offline').onclick = () => {
   const n = getName(); if (!n) return;
-  isHost = true; myId = 'host';
-  net = new Host(n, handlers, true);
+  isHost = true; myId = 'host'; net?.leave?.();
+  net = new Host(n, handlers, true); session.save('bang', { role: 'host', code: 'OFFLINE' });
   if (location.hash === '#debug') window.__net = net;
   for (let i = 0; i < 3; i++) net.addBot();
   $('#lobby-host-actions').classList.remove('hidden'); $('#btn-copy').classList.add('hidden');
@@ -70,7 +90,7 @@ $('#btn-copy').onclick = () => {
 };
 $('#btn-add-bot').onclick = () => net?.addBot();
 $('#btn-start').onclick = () => net?.start();
-$('#btn-leave').onclick = () => { net?.destroy(); location.href = location.pathname; };
+$('#btn-leave').onclick = () => { net?.leave ? net.leave() : net?.destroy(); location.href = location.pathname; };
 $('#btn-log-toggle').onclick = () => $('#log').classList.toggle('hidden');
 $('#btn-mute').textContent = isMuted() ? '🔇' : '🔊';
 $('#btn-mute').onclick = () => { $('#btn-mute').textContent = toggleMute() ? '🔇' : '🔊'; };
