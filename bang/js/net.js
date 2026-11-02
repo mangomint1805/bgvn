@@ -4,6 +4,7 @@ import { botAction } from './bot.js';
 import { S } from './fx.js';
 import { peerOptions, keepAlive } from './ice.js';
 import { RelayHost, relayConnect } from './relay.js';
+import { FbHost, fbConnect, fbEnabled } from './fbrelay.js';
 const NS = 'bgvn-bang';
 
 const PREFIX = 'bangvn-';
@@ -33,7 +34,10 @@ export class Host {
   startRelay() {
     if (this.relay && this.relayCode === this.code) return;
     if (this.relay) this.relay.destroy();
-    this.relayCode = this.code; this.relay = new RelayHost(NS, this.code, conn => this.attach(conn));
+    if (this.fb) this.fb.destroy();
+    this.relayCode = this.code;
+    this.fb = new FbHost(NS, this.code, conn => this.attach(conn));
+    this.relay = new RelayHost(NS, this.code, conn => this.attach(conn));
   }
   async open() {
     this.startRelay();
@@ -142,52 +146,56 @@ export class Host {
       if (a) this.act(pid, a); else this.scheduleBots();
     }, p.isBot ? Math.max(Math.round(1150 * S()), (this.graceUntil || 0) - Date.now()) : 20000);
   }
-  destroy() { this.dead = true; clearTimeout(this.botTimer); this.relay && this.relay.destroy(); this.stopKeep && this.stopKeep(); try { this.peer.destroy(); } catch (e) {} }
+  destroy() { this.dead = true; clearTimeout(this.botTimer); this.relay && this.relay.destroy(); this.fb && this.fb.destroy(); this.stopKeep && this.stopKeep(); try { this.peer.destroy(); } catch (e) {} }
 }
 
 // ======================= CLIENT =======================
 export class Client {
+  // Thử lần lượt: Firebase (nếu đã cấu hình) → P2P (PeerJS) → MQTT công cộng
   constructor(code, name, handlers) {
-    this.h = handlers; this.code = code.toUpperCase().trim(); this.name = name; this.id = null; this.tries = 0; this.viaRelay = false;
-    this.init();
+    this.h = handlers; this.code = code.toUpperCase().trim(); this.name = name; this.id = null; this.tries = 0;
+    this.modes = /[?&]relay=1/.test(location.search) ? ['mqtt'] : /[?&]p2p=1/.test(location.search) ? ['p2p'] : (fbEnabled() ? ['fb', 'p2p', 'mqtt'] : ['p2p', 'mqtt']);
+    this.mi = 0;
+    if (this.modes.includes('p2p')) this.initPeer();
+    this.connect();
   }
-  status(m) { this.h.onStatus && this.h.onStatus(m); }
-  async init() {
-    if (/[?&]relay=1/.test(location.search)) { this.useRelay(); return; } // để thử đường dự phòng
-    const opt = await peerOptions();
-    if (this.dead) return;
-    // máy chủ PeerJS không phản hồi -> đi đường dự phòng luôn
-    this.initTimer = setTimeout(() => { if (!this.id && !this.connStarted) this.useRelay(); }, 6000);
-    try { this.peer = new Peer(undefined, opt); } catch (e) { this.useRelay(); return; }
-    this.stopKeep = keepAlive(() => this.peer);
-    this.peer.on('open', () => { clearTimeout(this.initTimer); if (!this.id && !this.viaRelay && (!this.conn || !this.conn.open)) this.connect(); });
-    this.peer.on('error', e => {
-      if (e.type === 'peer-unavailable') { if (!this.viaRelay) this.useRelay(); }
-      else if (['network', 'server-error', 'socket-error', 'socket-closed', 'disconnected', 'browser-incompatible'].includes(e.type)) { if (!this.id && !this.connStarted) this.useRelay(); }
-      else if (!this.viaRelay) this.h.onError('Lỗi mạng: ' + e.type);
+  status(m) { this.h.onStatus ? this.h.onStatus(m) : this.h.onError(m); }
+  initPeer() {
+    this.peerOpen = new Promise(async res => {
+      const opt = await peerOptions(); if (this.dead) return;
+      setTimeout(() => res(false), 6000);
+      try { this.peer = new Peer(undefined, opt); } catch (e) { res(false); return; }
+      this.stopKeep = keepAlive(() => this.peer);
+      this.peer.on('open', () => res(true));
+      this.peer.on('error', e => { if (e.type === 'peer-unavailable' && this.mode() === 'p2p' && !this.id) this.next(); else res(false); });
     });
   }
-  useRelay() {
-    if (this.dead || this.id) return;
-    this.viaRelay = true; this.tries = 0; this.status('Đang nối qua đường dự phòng…'); this.connect();
-  }
-  retry(finalMsg) {
+  mode() { return this.modes[this.mi]; }
+  next(final) {
     if (this.dead || this.id) return;
     clearTimeout(this.joinTimer);
-    if (!this.viaRelay) { this.useRelay(); return; }
-    if (++this.tries <= 3) { this.status(`Đang thử kết nối lại (${this.tries}/3)…`); setTimeout(() => this.connect(), 2500); }
-    else { this.h.onError(finalMsg); this.status('❌ Không vào được phòng. Kiểm tra mã phòng, chủ phòng phải đang mở tab game.'); }
+    if (this.mi < this.modes.length - 1) { this.mi++; this.connect(); return; }
+    if (++this.tries <= 2) { this.status(`Đang thử kết nối lại (${this.tries}/2)…`); this.mi = 0; setTimeout(() => this.connect(), 2000); return; }
+    this.h.onError(final || ('Không tìm thấy phòng ' + this.code + '. Kiểm tra lại mã – chủ phòng phải đang mở tab game.'));
+    this.status('❌ Không vào được phòng. Bấm Thoát rồi thử lại nhé.');
   }
-  connect() {
+  async connect() {
     if (this.dead || this.id) return;
-    this.connStarted = true;
+    const mode = this.mode();
     try { this.conn && this.conn.close(); } catch (e) {}
-    const conn = this.viaRelay ? relayConnect(NS, this.code) : this.peer.connect(PREFIX + this.code, { reliable: true });
+    this.conn = null;
+    let conn;
+    if (mode === 'p2p') {
+      this.status('Đang kết nối…');
+      const ok = await this.peerOpen; if (this.dead || this.id) return;
+      if (!ok || !this.peer || this.peer.disconnected) { this.next(); return; }
+      conn = this.peer.connect(PREFIX + this.code, { reliable: true });
+    } else if (mode === 'fb') { this.status('Đang kết nối…'); conn = fbConnect(NS, this.code); }
+    else { this.status('Đang nối qua đường dự phòng…'); conn = relayConnect(NS, this.code); }
     this.conn = conn;
     clearTimeout(this.joinTimer);
-    // P2P treo (mạng chặn) -> chuyển sang đường dự phòng; dự phòng mà treo -> thử lại
-    this.joinTimer = setTimeout(() => { if (!this.id && conn === this.conn) this.retry('Không tìm thấy phòng ' + this.code + '.'); }, this.viaRelay ? 12000 : 7000);
-    conn.on('open', () => { conn.send({ t: 'join', name: this.name, token: token() }); });
+    this.joinTimer = setTimeout(() => { if (!this.id && conn === this.conn) this.next(); }, mode === 'p2p' ? 7000 : 12000);
+    conn.on('open', () => { if (conn === this.conn) conn.send({ t: 'join', name: this.name, token: token() }); });
     conn.on('data', msg => {
       if (conn !== this.conn) return;
       if (msg.t === 'welcome') { clearTimeout(this.joinTimer); this.id = msg.id; this.h.onJoined(msg.id); }
@@ -196,9 +204,14 @@ export class Client {
       else if (msg.t === 'error') this.h.onError(msg.msg);
       else if (msg.t === 'kicked') { this.h.onError('Bạn đã bị mời ra khỏi phòng.'); this.destroy(); }
     });
-    const lost = () => { if (conn === this.conn && this.id && !this.dead) { this.h.onDisconnect(); this.id = null; this.tries = 0; setTimeout(() => { if (!this.dead) this.connect(); }, 1500); } };
+    const lost = () => {
+      if (conn !== this.conn || this.dead) return;
+      if (!this.id) { if (conn.notFound || mode !== 'p2p') this.next(); return; } // chưa vào được: thử đường khác
+      this.h.onDisconnect(); this.id = null; this.tries = 0;
+      setTimeout(() => { if (!this.dead) this.connect(); }, 1500);
+    };
     conn.on('close', lost); conn.on('error', lost);
   }
   act(a) { if (this.conn && this.conn.open) this.conn.send({ t: 'action', a }); }
-  destroy() { this.dead = true; clearTimeout(this.joinTimer); clearTimeout(this.initTimer); this.stopKeep && this.stopKeep(); try { this.conn && this.conn.close(); } catch (e) {} try { this.peer && this.peer.destroy(); } catch (e) {} }
+  destroy() { this.dead = true; clearTimeout(this.joinTimer); this.stopKeep && this.stopKeep(); try { this.conn && this.conn.close(); } catch (e) {} try { this.peer && this.peer.destroy(); } catch (e) {} }
 }
