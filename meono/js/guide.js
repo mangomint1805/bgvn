@@ -1,6 +1,6 @@
 // Hướng dẫn luật Mèo Nổ (tiếng Việt)
-import { cardHTML } from './cards.js?v=3';
-import { CARD } from './engine.js?v=3';
+import { cardHTML } from './cards.js?v=4';
+import { CARD } from './engine.js?v=4';
 const row = items => `<div class="cards-row">${items.map(([t, txt]) => `<div>${cardHTML({ t }, 'sm')}<span><b>${CARD[t].name}</b>: ${txt}</span></div>`).join('')}</div>`;
 
 export function openGuide(openModal) {
@@ -48,6 +48,7 @@ export function openGuide(openModal) {
       <li>Gỡ bom xong nhét ngay <b>trên cùng</b> để người kế "ăn" – nhất là khi họ không còn Gỡ Bom.</li>
       <li>Hết Gỡ Bom thì gom mèo để đánh <b>bộ ba gọi tên Gỡ Bom</b>.</li>
       <li>Giữ <b>ĐÉO!</b> cho lúc bị Đổ Vỏ hoặc bị đòi Gỡ Bom.</li>
+      <li>Con <b>mèo canh bài</b> giữa hộp ngủ khò khi yên bình, dỏng tai khi tới lượt bạn và xù lông khi bom sắp nổ – nhìn nó là biết tình hình 😼. Chạm vào để vuốt ve.</li>
       <li>Nhạc nền (🎵) <b>căng dần</b> khi tỉ lệ bom tăng. Bấm 📜 xem nhật ký, ⚡ chỉnh tốc độ hiệu ứng.</li></ul>`],
   };
   const draw = k => {

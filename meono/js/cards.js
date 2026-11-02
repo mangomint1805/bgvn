@@ -1,5 +1,5 @@
 // Vẽ lá bài Mèo Nổ: SVG mèo tự vẽ + emoji. Không dùng hình của game gốc.
-import { CARD } from './engine.js?v=3';
+import { CARD } from './engine.js?v=4';
 
 let uid = 0;
 // thông số từng giống mèo
@@ -47,16 +47,53 @@ const SHORT = {
   bottom: 'Bốc lá dưới đáy, hết lượt', nope: 'Huỷ 1 hành động', cat1: 'Đôi: cướp bừa · Ba: gọi tên', cat2: 'Đôi: cướp bừa · Ba: gọi tên',
   cat3: 'Đôi: cướp bừa · Ba: gọi tên', cat4: 'Đôi: cướp bừa · Ba: gọi tên', cat5: 'Đôi: cướp bừa · Ba: gọi tên',
 };
+// tên ngắn 2 dòng – dùng khi tay bài chật (lá chồng lên nhau)
+const TWO = {
+  bomb: ['MÈO', 'NỔ'], defuse: ['GỠ', 'BOM'], attack: ['ĐỔ', 'VỎ'], skip: ['NÉ', 'GẮT'], shuffle: ['XÀO', 'BÀI'], future: ['SOI', 'KÈO'],
+  alter: ['CẢI', 'MỆNH'], favor: ['XIN', 'VÍA'], bottom: ['MÓC', 'ĐÁY'], nope: ['ĐÉO!', ''], cat1: ['MÈO', 'Ú'], cat2: ['MÈO', 'MƯỚP'],
+  cat3: ['TAM', 'THỂ'], cat4: ['MÈO', 'XIÊM'], cat5: ['MÈO', 'BÔNG'],
+};
+const PAW_COL = { cat1: '#e67a12', cat2: '#5e6672', cat3: '#ff9a3c', cat4: '#6b4a3a', cat5: '#a06cd5' };
+const paw = (c, cls = '') => `<svg viewBox="0 0 24 24" class="${cls}" aria-hidden="true"><g fill="${c}"><ellipse cx="12" cy="15.5" rx="5.6" ry="4.6"/><circle cx="5.4" cy="9.6" r="2.3"/><circle cx="9.4" cy="5.8" r="2.3"/><circle cx="14.6" cy="5.8" r="2.3"/><circle cx="18.6" cy="9.6" r="2.3"/></g></svg>`;
 function artFor(t) {
   if (t === 'bomb') return bombSVG();
   if (t.startsWith('cat')) return catSVG(t);
-  if (t === 'defuse') return `<div class="emo">${ICON[t]}</div><div class="emo2">🥫</div>`;
+  if (t === 'defuse') return `<div class="emo">${ICON[t]}</div><div class="emo2">🐟</div>`;
   return `<div class="emo">${ICON[t] || '❓'}</div>`;
 }
+const badge = t => t === 'bomb' ? '💣' : t.startsWith('cat') ? paw(PAW_COL[t]) : ICON[t];
 export function cardHTML(c, cls = '', attrs = '') {
-  if (!c) return `<div class="mcard back ${cls}" ${attrs}><div class="back-art">🐾</div></div>`;
-  const t = c.t || c;
-  return `<div class="mcard t-${t} ${t.startsWith('cat') ? 'is-cat' : ''} ${cls}" ${c.id ? `data-id="${c.id}"` : ''} data-t="${t}" ${attrs}>
-    <div class="mc-art">${artFor(t)}</div><div class="mc-name">${CARD[t].name}</div><div class="mc-desc">${SHORT[t]}</div></div>`;
+  if (!c) return `<div class="mcard back ${cls}" ${attrs}><i class="tape"></i><div class="back-art">🐾</div></div>`;
+  const t = c.t || c; const two = TWO[t] || [CARD[t].name, ''];
+  return `<div class="mcard t-${t} ${t.startsWith('cat') ? 'is-cat' : 'is-act'} ${cls}" ${c.id ? `data-id="${c.id}"` : ''} data-t="${t}" ${attrs}>
+    <i class="mc-pat"></i><span class="mc-badge">${badge(t)}</span><div class="mc-art">${artFor(t)}</div>
+    <div class="mc-name"><span class="full">${CARD[t].name}</span><span class="two">${two[0]}${two[1] ? '<br>' + two[1] : ''}</span></div><div class="mc-desc">${SHORT[t]}</div></div>`;
 }
 export const cardIcon = t => t === 'bomb' ? '💣' : t.startsWith('cat') ? '🐱' : ICON[t] || '🃏';
+
+// Mèo linh vật nằm cạnh chồng bài: ngủ / tỉnh / hoảng / sướng / choáng (đổi bằng class m-*)
+export function mascotSVG() {
+  return `<svg viewBox="0 0 120 100" class="mascot-svg" aria-hidden="true">
+    <ellipse cx="60" cy="93" rx="44" ry="5" fill="#0000001c"/>
+    <path class="m-tail" d="M96 80 q20 -2 16 -22 q-2 -9 -9 -6" stroke="#2d2a32" stroke-width="11" fill="none" stroke-linecap="round"/>
+    <path class="m-tail" d="M96 80 q20 -2 16 -22 q-2 -9 -9 -6" stroke="#ffa53d" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <g class="m-body"><path d="M16 90 q-4 -44 44 -46 q48 2 44 46 z" fill="#ffa53d" stroke="#2d2a32" stroke-width="3.5"/>
+      <path d="M40 52 q4 8 0 16 M60 46 v14 M80 52 q-4 8 0 16" stroke="#e67a12" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="36" cy="88" rx="10" ry="5" fill="#fff4e6" stroke="#2d2a32" stroke-width="3"/><ellipse cx="84" cy="88" rx="10" ry="5" fill="#fff4e6" stroke="#2d2a32" stroke-width="3"/></g>
+    <g class="m-head"><g class="m-ears"><path d="M30 40 L28 10 L52 26 Z M90 40 L92 10 L68 26 Z" fill="#ffa53d" stroke="#2d2a32" stroke-width="3.5" stroke-linejoin="round"/><path d="M34 32 L33 18 L46 27 Z M86 32 L87 18 L74 27 Z" fill="#ff9eb5"/></g>
+      <ellipse cx="60" cy="44" rx="34" ry="27" fill="#ffa53d" stroke="#2d2a32" stroke-width="3.5"/>
+      <path d="M60 18 v8 M52 19 l2 7 M68 19 l-2 7" stroke="#e67a12" stroke-width="3.5" stroke-linecap="round"/>
+      <ellipse cx="38" cy="54" rx="6" ry="3.5" fill="#ff8c8c" opacity=".7"/><ellipse cx="82" cy="54" rx="6" ry="3.5" fill="#ff8c8c" opacity=".7"/>
+      <g class="ey ey-sleep" stroke="#2d2a32" stroke-width="3.2" fill="none" stroke-linecap="round"><path d="M40 44 q6 5 12 0 M68 44 q6 5 12 0"/></g>
+      <g class="ey ey-open"><ellipse cx="46" cy="43" rx="6" ry="7" fill="#2d2a32"/><ellipse cx="74" cy="43" rx="6" ry="7" fill="#2d2a32"/><circle cx="48" cy="40" r="2.2" fill="#fff"/><circle cx="76" cy="40" r="2.2" fill="#fff"/></g>
+      <g class="ey ey-panic"><circle cx="45" cy="42" r="9" fill="#fff" stroke="#2d2a32" stroke-width="3"/><circle cx="75" cy="42" r="9" fill="#fff" stroke="#2d2a32" stroke-width="3"/><circle cx="45" cy="43" r="2.6" fill="#2d2a32"/><circle cx="75" cy="43" r="2.6" fill="#2d2a32"/><path d="M98 26 q5 8 0 11 q-5 -3 0 -11z" fill="#6ec6ff" stroke="#2d2a32" stroke-width="1.5"/></g>
+      <g class="ey ey-happy" stroke="#2d2a32" stroke-width="3.4" fill="none" stroke-linecap="round"><path d="M40 46 q6 -8 12 0 M68 46 q6 -8 12 0"/></g>
+      <g class="ey ey-dizzy" stroke="#2d2a32" stroke-width="3" stroke-linecap="round"><path d="M40 37 l11 11 M51 37 l-11 11 M69 37 l11 11 M80 37 l-11 11"/></g>
+      <path d="M56.5 51 h7 l-3.5 3.5 z" fill="#ff6f91"/>
+      <path class="mo mo-calm" d="M60 55 q-3 4 -6 2 M60 55 q3 4 6 2" stroke="#2d2a32" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <ellipse class="mo mo-o" cx="60" cy="60" rx="4.5" ry="5.5" fill="#7a1f35" stroke="#2d2a32" stroke-width="2"/>
+      <path d="M26 50 l-14 -3 M26 55 l-14 2 M94 50 l14 -3 M94 55 l14 2" stroke="#2d2a32" stroke-width="2" stroke-linecap="round" opacity=".55"/></g>
+    <g class="m-zz" font-family="Baloo 2,sans-serif" font-weight="800" fill="#7a6f80"><text x="96" y="16" font-size="15">z</text><text x="106" y="6" font-size="11">z</text></g>
+    <g class="m-bang"><path d="M10 6 l6 22 l-6 -2 z" fill="#e5383b" stroke="#2d2a32" stroke-width="2" stroke-linejoin="round"/><circle cx="14" cy="33" r="3" fill="#e5383b" stroke="#2d2a32" stroke-width="2"/></g>
+    <g class="m-heart"><path d="M100 14 c-4 -6 -12 -2 -9 4 l9 8 l9 -8 c3 -6 -5 -10 -9 -4z" fill="#ff5d8f" stroke="#2d2a32" stroke-width="2"/></g></svg>`;
+}

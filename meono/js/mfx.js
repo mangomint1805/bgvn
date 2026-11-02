@@ -33,13 +33,42 @@ function noise(d, freq, g, at = 0, type = 'bandpass', q = 1, sweep = 0) {
   const gn = a.createGain(); gn.gain.value = g; s.connect(f); f.connect(gn); gn.connect(master); s.start(t);
 }
 // tiếng "meo" tổng hợp
-function meow(at = 0, pitch = 1, g = 0.09) {
+function meow(at = 0, pitch = 1, g = 0.09, dest) {
   const a = actx(); if (!a || muted) return; const t = a.currentTime + at;
   const o = a.createOscillator(); o.type = 'sawtooth';
   o.frequency.setValueAtTime(520 * pitch, t); o.frequency.linearRampToValueAtTime(820 * pitch, t + 0.12); o.frequency.linearRampToValueAtTime(460 * pitch, t + 0.42);
   const f = a.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 3; f.frequency.setValueAtTime(900, t); f.frequency.linearRampToValueAtTime(1800, t + 0.15); f.frequency.linearRampToValueAtTime(700, t + 0.42);
   const gn = a.createGain(); gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.05); gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
-  o.connect(f); f.connect(gn); gn.connect(master); o.start(t); o.stop(t + 0.5);
+  o.connect(f); f.connect(gn); gn.connect(dest || master); o.start(t); o.stop(t + 0.5);
+}
+// rừ rừ: tiếng ồn trầm, rung biên độ ~24 lần/giây
+function purr(d = 0.9, g = 0.5, at = 0) {
+  const a = actx(); if (!a || muted) return; const t = a.currentTime + at;
+  const b = a.createBuffer(1, Math.floor(a.sampleRate * d), a.sampleRate); const x = b.getChannelData(0);
+  for (let i = 0; i < x.length; i++) x[i] = Math.random() * 2 - 1;
+  const s = a.createBufferSource(); s.buffer = b; const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 320; f.Q.value = 2;
+  const am = a.createGain(); am.gain.value = 0.5; const lfo = a.createOscillator(); lfo.frequency.value = 24; const lg = a.createGain(); lg.gain.value = 0.5;
+  lfo.connect(lg); lg.connect(am.gain);
+  const env = a.createGain(); env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(g, t + 0.12); env.gain.setValueAtTime(g, t + d - 0.25); env.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  s.connect(f); f.connect(am); am.connect(env); env.connect(master); s.start(t); lfo.start(t); s.stop(t + d); lfo.stop(t + d);
+}
+// khè (hiss): ồn cao, bật mạnh rồi tắt dần
+function hiss(d = 0.55, g = 0.32, at = 0) {
+  const a = actx(); if (!a || muted) return; const t = a.currentTime + at;
+  const b = a.createBuffer(1, Math.floor(a.sampleRate * d), a.sampleRate); const x = b.getChannelData(0);
+  for (let i = 0; i < x.length; i++) x[i] = Math.random() * 2 - 1;
+  const s = a.createBufferSource(); s.buffer = b; const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.setValueAtTime(5200, t); f.frequency.linearRampToValueAtTime(3600, t + d); f.Q.value = 0.8;
+  const env = a.createGain(); env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(g, t + 0.025); env.gain.exponentialRampToValueAtTime(g * 0.5, t + d * 0.5); env.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  s.connect(f); f.connect(env); env.connect(master); s.start(t);
+}
+// "mrrp" – tiếng gù hỏi han của mèo
+function chirp(at = 0, pitch = 1, g = 0.07) {
+  const a = actx(); if (!a || muted) return; const t = a.currentTime + at;
+  const o = a.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(380 * pitch, t); o.frequency.linearRampToValueAtTime(720 * pitch, t + 0.16);
+  const f = a.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 4; f.frequency.value = 1100;
+  const am = a.createGain(); am.gain.value = 0.55; const lfo = a.createOscillator(); lfo.frequency.value = 32; const lg = a.createGain(); lg.gain.value = 0.45; lfo.connect(lg); lg.connect(am.gain);
+  const gn = a.createGain(); gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.03); gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+  o.connect(f); f.connect(am); am.connect(gn); gn.connect(master); o.start(t); lfo.start(t); o.stop(t + 0.25); lfo.stop(t + 0.25);
 }
 const arp = (notes, step = 0.07, type = 'triangle', g = 0.1) => notes.forEach((f, i) => tone(f, 0.2, type, g, 0, i * step));
 export const sfx = {
@@ -47,27 +76,28 @@ export const sfx = {
   draw() { noise(0.1, 1700, 0.3); tone(300, 0.1, 'sine', 0.05, -60); },
   flip() { noise(0.06, 3200, 0.3); },
   shuffle() { for (let i = 0; i < 9; i++) noise(0.04, 2200 + (i % 3) * 400, 0.25, i * 0.045); },
-  attack() { tone(180, 0.25, 'sawtooth', 0.08, 220); noise(0.18, 600, 0.4, 0.05, 'lowpass'); meow(0.12, 1.15, 0.06); },
+  attack() { tone(180, 0.25, 'sawtooth', 0.08, 220); noise(0.18, 600, 0.4, 0.05, 'lowpass'); meow(0.1, 0.8, 0.08); },
   skip() { tone(500, 0.08, 'square', 0.05, 400); tone(900, 0.12, 'square', 0.04, 400, 0.08); },
   future() { arp([659, 784, 988, 1319, 1568], 0.06, 'sine', 0.07); },
   alter() { arp([1568, 1319, 988, 1175, 1568], 0.06, 'triangle', 0.06); },
   favor() { meow(0, 1.3, 0.07); arp([784, 988], 0.1, 'sine', 0.05); },
-  steal() { noise(0.25, 1200, 0.35, 0, 'bandpass', 2, 1800); tone(400, 0.2, 'triangle', 0.06, 500, 0.05); },
-  nope() { tone(330, 0.16, 'square', 0.08); tone(247, 0.3, 'square', 0.08, -40, 0.15); noise(0.1, 500, 0.3, 0, 'lowpass'); },
+  steal() { noise(0.25, 1200, 0.35, 0, 'bandpass', 2, 1800); tone(400, 0.2, 'triangle', 0.06, 500, 0.05); chirp(0.2, 1.2, 0.05); },
+  nope() { hiss(0.5, 0.3); tone(330, 0.16, 'square', 0.07, 0, 0.08); tone(247, 0.3, 'square', 0.07, -40, 0.22); },
   denied() { tone(200, 0.4, 'sawtooth', 0.05, -80); },
-  fuse() { noise(1.1, 4200, 0.18, 0, 'highpass', 0.7); for (let i = 0; i < 6; i++) noise(0.03, 5000, 0.3, 0.1 + i * 0.15 + Math.random() * 0.05, 'highpass'); },
+  fuse() { hiss(0.4, 0.22, 0.05); noise(1.1, 4200, 0.18, 0, 'highpass', 0.7); for (let i = 0; i < 6; i++) noise(0.03, 5000, 0.3, 0.1 + i * 0.15 + Math.random() * 0.05, 'highpass'); },
   boom() {
     noise(1.8, 900, 1.4, 0, 'lowpass', 0.7, -820); noise(0.5, 3000, 0.6, 0, 'bandpass', 0.5, -2500);
     tone(120, 1.1, 'sine', 0.5, -90); tone(60, 1.4, 'sine', 0.4, -30, 0.05);
     meow(0.5, 1.6, 0.06); meow(0.75, 1.9, 0.05);
   },
-  defuse() { noise(0.03, 5000, 0.5, 0, 'highpass'); noise(0.03, 5000, 0.5, 0.12, 'highpass'); arp([523, 659, 784, 1047], 0.08, 'sine', 0.08); meow(0.4, 1.1, 0.06); },
+  defuse() { noise(0.03, 5000, 0.5, 0, 'highpass'); noise(0.03, 5000, 0.5, 0.12, 'highpass'); arp([523, 659, 784, 1047], 0.08, 'sine', 0.08); purr(1.1, 0.45, 0.35); },
   heartbeat(g = 0.35) { tone(70, 0.13, 'sine', g, -20); tone(64, 0.15, 'sine', g * 0.8, -20, 0.2); },
   drumroll() { for (let i = 0; i < 12; i++) noise(0.05, 300, 0.25 + i * 0.03, i * 0.04, 'lowpass'); },
   tick() { tone(1500, 0.03, 'square', 0.03); },
-  turn() { tone(988, 0.1, 'sine', 0.07); tone(1319, 0.14, 'sine', 0.06, 0, 0.08); },
+  turn() { chirp(0, 1, 0.07); tone(1319, 0.12, 'sine', 0.04, 0, 0.12); },
   bad() { tone(200, 0.15, 'sawtooth', 0.05); },
-  meow,
+  meow, purr, hiss, chirp,
+  pet() { const r = Math.random(); if (r < 0.4) purr(1, 0.5); else if (r < 0.75) meow(0, 1.1 + Math.random() * 0.4, 0.08); else chirp(0, 1.1, 0.08); },
   win() { arp([523, 659, 784, 1047, 784, 1047, 1319], 0.11, 'triangle', 0.1); meow(0.8, 1.2, 0.07); },
 };
 
@@ -110,7 +140,16 @@ export function explode(el, catsHTML = []) {
   const c = el ? ctr(el) : { x: innerWidth / 2, y: innerHeight / 2 };
   const L = layer();
   const flash = document.createElement('div'); flash.className = 'boom-flash'; L.appendChild(flash); setTimeout(() => flash.remove(), 900);
-  const word = document.createElement('div'); word.className = 'boom-word'; word.textContent = 'BÙM!'; L.appendChild(word); setTimeout(() => word.remove(), 1700);
+  // bong bóng truyện tranh: tia nắng + nổ răng cưa chấm bi + chữ BÙM! viền đậm
+  const rays = document.createElement('div'); rays.className = 'boom-rays'; rays.style.setProperty('--x', c.x + 'px'); rays.style.setProperty('--y', c.y + 'px'); L.appendChild(rays); setTimeout(() => rays.remove(), 1500);
+  const word = document.createElement('div'); word.className = 'boom-word';
+  word.innerHTML = comicBurst('#ffd23f', '#e5383b', 16) + '<span>BÙM!</span>'; L.appendChild(word); setTimeout(() => word.remove(), 1700);
+  const SFXW = ['ĐOÀNG!', 'MEOOO!', 'XÈO!', 'ẦM!', 'NGAO!'];
+  for (let i = 0; i < 3; i++) {
+    const w2 = document.createElement('div'); w2.className = 'boom-sub'; w2.textContent = SFXW[(i + Math.floor(Math.random() * 5)) % 5];
+    w2.style.left = [18, 78, 30][i] + 'vw'; w2.style.top = [22, 30, 66][i] + 'vh'; w2.style.setProperty('--r', [-14, 12, -6][i] + 'deg'); w2.style.animationDelay = 180 + i * 140 + 'ms';
+    L.appendChild(w2); setTimeout(() => w2.remove(), 1700);
+  }
   if (reduced()) return;
   document.body.classList.remove('quake'); void document.body.offsetWidth; document.body.classList.add('quake');
   setTimeout(() => document.body.classList.remove('quake'), 900);
@@ -129,6 +168,14 @@ export function explode(el, catsHTML = []) {
     m.style.setProperty('--dx', Math.cos(ang) * r + 'px'); m.style.setProperty('--dy', Math.sin(ang) * r + 'px'); m.style.setProperty('--r', (Math.random() * 1080 - 540) + 'deg');
     m.style.animationDelay = 60 + i * 50 + 'ms'; L.appendChild(m); setTimeout(() => m.remove(), 2200);
   }
+}
+// hình nổ răng cưa kiểu truyện tranh, tô chấm bi (halftone)
+let cbId = 0;
+export function comicBurst(fill = '#ffd23f', dot = '#e5383b', spikes = 14) {
+  const id = 'ht' + (cbId++); const pts = [];
+  for (let k = 0; k < spikes * 2; k++) { const r = k % 2 ? 60 + Math.random() * 6 : 92 + Math.random() * 8; const an = (k / (spikes * 2)) * Math.PI * 2; pts.push((100 + Math.cos(an) * r).toFixed(1) + ',' + (100 + Math.sin(an) * r * 0.8).toFixed(1)); }
+  return `<svg viewBox="0 0 200 200" class="burst" aria-hidden="true"><defs><pattern id="${id}" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><rect width="9" height="9" fill="${fill}"/><circle cx="4.5" cy="4.5" r="2" fill="${dot}" opacity=".55"/></pattern></defs>
+    <polygon points="${pts.join(' ')}" fill="#2d2a32" transform="translate(5 6)"/><polygon points="${pts.join(' ')}" fill="url(#${id})" stroke="#2d2a32" stroke-width="5" stroke-linejoin="round"/></svg>`;
 }
 export function confetti() {
   if (reduced()) return;
@@ -150,19 +197,30 @@ function nextB() {
   setTimeout(() => { n.remove(); nextB(); }, 1050 * S());
 }
 
-// ---------- nhạc nền "rình mò" – căng dần theo độ nguy hiểm ----------
+// ---------- nhạc nền "mèo quậy" – tung tăng, căng dần theo độ nguy hiểm ----------
 let musicOn = ls.get('meono-music') === '1', vol = +(ls.get('meono-music-vol') || 0.5);
 let mGain = null, tension = 0, schedT = null, nextT = 0, step = 0, pad = null;
-// âm giai thứ ngũ cung (A minor pentatonic) – chất "mèo lén lút"
-const BASS = [110, 110, 130.8, 110, 146.8, 130.8, 98, 103.8];
-const MEL = [440, 523.3, 587.3, 659.3, 784, 880];
-const PAT = [0, -1, 2, -1, 3, 2, -1, 1, 0, -1, 4, 3, 2, -1, 1, -1];
-export function setTension(t) { tension = Math.max(0, Math.min(1, t)); if (pad && ac) pad.g.gain.setTargetAtTime(0.0001 + tension * tension * 0.05, ac.currentTime, 0.6); }
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+// vòng hợp âm C – Am – F – G (vui) / Cm – Ab – Bb – G (khi sắp toang)
+const CH_HAPPY = [[48, 52, 55], [45, 48, 52], [41, 45, 48], [43, 47, 50]];
+const CH_TENSE = [[48, 51, 55], [44, 48, 51], [46, 50, 53], [43, 47, 50]];
+const SC_HAPPY = [0, 2, 4, 7, 9, 12, 14, 16, 19];   // ngũ cung trưởng
+const SC_TENSE = [0, 3, 5, 6, 7, 10, 12, 15, 17];   // blues "rình mò"
+// motif 2 ô nhịp (16 móc đơn), -1 = nghỉ
+const MOTIF = [[0, 2, 4, -1, 5, 4, 2, -1, 3, -1, 4, 5, 7, -1, 6, -1], [4, -1, 5, 7, 8, 7, 5, -1, 4, 2, -1, 3, 2, -1, 0, -1]];
+export function setTension(t) { tension = Math.max(0, Math.min(1, t)); if (pad && ac) pad.g.gain.setTargetAtTime(0.0001 + Math.max(0, tension - 0.4) * 0.07, ac.currentTime, 0.6); }
 export const getTension = () => tension;
 function mnote(f, t, d, type, g) {
   const o = ac.createOscillator(); o.type = type; o.frequency.value = f; const gn = ac.createGain();
-  gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.015); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.012); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
   o.connect(gn); gn.connect(mGain); o.start(t); o.stop(t + d + 0.05);
+}
+// tiếng gảy dây (pizzicato) – có chút "boing" đầu nốt
+function pluck(f, t, d, g) {
+  const o = ac.createOscillator(); o.type = 'triangle'; o.frequency.setValueAtTime(f * 1.02, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.03);
+  const o2 = ac.createOscillator(); o2.type = 'sine'; o2.frequency.value = f * 2; const g2 = ac.createGain(); g2.gain.value = 0.3; o2.connect(g2);
+  const gn = ac.createGain(); gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.006); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  o.connect(gn); g2.connect(gn); gn.connect(mGain); o.start(t); o2.start(t); o.stop(t + d + 0.05); o2.stop(t + d + 0.05);
 }
 function mnoise(t, d, f, g) {
   const b = ac.createBuffer(1, Math.floor(ac.sampleRate * d), ac.sampleRate); const x = b.getChannelData(0);
@@ -170,18 +228,30 @@ function mnoise(t, d, f, g) {
   const s = ac.createBufferSource(); s.buffer = b; const fl = ac.createBiquadFilter(); fl.type = 'highpass'; fl.frequency.value = f;
   const gn = ac.createGain(); gn.gain.value = g; s.connect(fl); fl.connect(gn); gn.connect(mGain); s.start(t);
 }
+function kick(t, g) { const o = ac.createOscillator(); o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12); const gn = ac.createGain(); gn.gain.setValueAtTime(g, t); gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.2); o.connect(gn); gn.connect(mGain); o.start(t); o.stop(t + 0.22); }
 function schedule() {
-  const lookahead = 1.5;
+  const lookahead = 1.2;
   while (nextT < ac.currentTime + lookahead) {
-    const bpm = 92 + tension * 70, st = 60 / bpm / 2; // nốt móc đơn
-    const t = nextT, i = step % 16, bar = Math.floor(step / 16) % 8;
-    if (i % 4 === 0) mnote(BASS[bar], t, st * 3, 'triangle', 0.22);
-    if (i % 4 === 2) mnote(BASS[bar] * 2, t, st * 0.8, 'triangle', 0.07);
-    const m = PAT[(i + (bar % 2) * 3) % 16];
-    if (m >= 0 && (tension < 0.75 || i % 2 === 0)) mnote(MEL[(m + bar) % MEL.length], t, st * 0.9, 'sine', 0.06);
-    if (tension > 0.25 && i % 2 === 1) mnoise(t, 0.03, 7000, 0.05 + tension * 0.08);
-    if (tension > 0.45 && (i === 0 || i === 3 || i === 8 || i === 11)) { mnote(68, t, 0.14, 'sine', 0.25 + tension * 0.2); }
-    if (tension > 0.7 && i % 4 === 0) mnote(MEL[5] * 2, t, 0.05, 'square', 0.02);
+    const T = tension, bpm = 118 + T * 46, st = 60 / bpm / 2;   // móc đơn
+    const i = step % 8, bar = Math.floor(step / 8), tense = T > 0.55;
+    const ch = (tense ? CH_TENSE : CH_HAPPY)[bar % 4], sc = T > 0.35 ? SC_TENSE : SC_HAPPY;
+    const t = nextT + (i % 2 ? st * 0.2 : 0);                   // nhịp "swing" nhún nhảy
+    // bass "bùm-chát": gốc ở phách 1, quãng 5 ở phách 3; hợp âm gảy ở phách sau
+    if (i === 0) pluck(mtof(ch[0] - 12), t, st * 1.8, 0.24);
+    if (i === 4) pluck(mtof(ch[2] - 12), t, st * 1.6, 0.2);
+    if (i === 2 || i === 6) ch.forEach((m, k) => pluck(mtof(m + 12), t + k * 0.008, st * 0.6, 0.045));
+    // giai điệu
+    const mel = MOTIF[(bar >> 1) % 2][(bar % 2) * 8 + i];
+    if (mel >= 0 && !(T > 0.75 && i % 2)) pluck(mtof(72 + sc[Math.min(sc.length - 1, mel)]), t, st * 1.1, 0.075);
+    // leng keng chuông nhỏ đầu mỗi 2 ô nhịp khi còn yên bình
+    if (T < 0.4 && i === 0 && bar % 2 === 0) mnote(mtof(96 + sc[(bar >> 1) % 5]), t, 0.5, 'sine', 0.025);
+    // "meo~" cuối câu nhạc (mỗi 4 ô nhịp)
+    if (T < 0.6 && bar % 4 === 3 && i === 6) meow(Math.max(0, t - ac.currentTime), 1.15, 0.035, mGain);
+    // trống: lắc lư nhẹ → hi-hat dày + tim đập khi căng
+    if (i % 2 === 1) mnoise(t, 0.025, 8000, 0.03 + T * 0.07);
+    if (T > 0.3 && i % 2 === 0) mnoise(t, 0.02, 9000, 0.02 + T * 0.04);
+    if (i === 0 || (i === 4 && T > 0.2)) kick(t, 0.12 + T * 0.18);
+    if (T > 0.7 && i === 1) kick(t, 0.18);
     nextT += st; step++;
   }
 }

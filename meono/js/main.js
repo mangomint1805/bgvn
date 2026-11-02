@@ -1,9 +1,9 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn } from './net.js?v=3';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn } from './net.js?v=4';
 import { netStatus } from '../../shared/ui/status.js';
-import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat } from './engine.js?v=3';
-import { cardHTML, catSVG, bombSVG, cardIcon } from './cards.js?v=3';
-import * as fx from './mfx.js?v=3';
-import { openGuide } from './guide.js?v=3';
+import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat } from './engine.js?v=4';
+import { cardHTML, catSVG, bombSVG, cardIcon, mascotSVG } from './cards.js?v=4';
+import * as fx from './mfx.js?v=4';
+import { openGuide } from './guide.js?v=4';
 setSpeedFn(fx.S);
 
 const $ = s => document.querySelector(s);
@@ -21,7 +21,7 @@ let freshIds = new Set();
 const AV_COL = ['#ff6b35', '#ff5d8f', '#e0a800', '#2fbf71', '#14b8a6', '#3a86ff', '#8e5cf7', '#d94dff', '#a0693a', '#5b6b8a'];
 const avColor = name => { let h = 0; for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return AV_COL[h % AV_COL.length]; };
 const clean = n => String(n).replace(' 🤖', '').trim();
-const avatar = (name, extra = '') => `<div class="av" style="background:${avColor(clean(name))}">${esc([...clean(name)][0] || '?').toUpperCase()}${extra}</div>`;
+const avatar = (name, extra = '') => `<div class="av" style="background:${avColor(clean(name))}"><i class="ears"></i><b>${esc([...clean(name)][0] || '?').toUpperCase()}</b>${extra}</div>`;
 function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
 let toastT;
 function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
@@ -29,6 +29,26 @@ function openModal(html, cls = '', key = null) { $('#modal-box').className = 'mo
 function closeModal() { $('#modal').classList.remove('open'); modalKey = null; }
 $('#modal').addEventListener('click', e => { if (e.target.id === 'modal' && !modalKey) closeModal(); });
 window.__closeModal = closeModal;
+
+// ---------- mèo linh vật (ngủ / tỉnh / hoảng / sướng / choáng) ----------
+for (const id of ['#mascot', '#home-cat', '#lobby-cat']) $(id).innerHTML = mascotSVG();
+let moodOv = null, moodUntil = 0, moodT = null;
+function setMood(m, ms) { moodOv = m; moodUntil = Date.now() + ms * fx.S(); updateMascot(); clearTimeout(moodT); moodT = setTimeout(updateMascot, ms * fx.S() + 30); }
+function updateMascot() {
+  const el = $('#mascot'); if (!view) { el.className = 'mascot m-sleep'; return; }
+  let m;
+  if (Date.now() < moodUntil) m = moodOv;
+  else if (view.phase === 'ended') m = 'happy';
+  else {
+    const r = risk(view);
+    m = (view.pending && view.pending.type === 'bomb') || r >= 0.34 ? 'panic' : isMyTurn() || r >= 0.15 || view.window ? 'alert' : 'sleep';
+  }
+  el.className = 'mascot m-' + m;
+}
+const pet = (el, txt = '💕') => { fx.actx(); fx.sfx.pet(); fx.floatText(el, txt, 'ok'); };
+$('#mascot').onclick = () => { pet($('#mascot')); setMood('happy', 1400); };
+$('#home-cat').onclick = () => { pet($('#home-cat')); fx.pop($('#home-cat'), 'woke'); };
+$('#lobby-cat').onclick = () => { pet($('#lobby-cat')); fx.pop($('#lobby-cat'), 'woke'); };
 
 // ---------- trang chủ ----------
 $('#name').value = ls.get('bgvn-name') || '';
@@ -153,6 +173,8 @@ function render() {
   $('#deck').onclick = () => { if (isMyTurn()) doDraw(); };
   if (!landing) renderDiscard();
   renderMeter(v);
+  updateMascot();
+  $('#opps').classList.toggle('alert', !!v.window);
   renderStrip(v, meP);
   renderActions(v, meP);
   renderHand(v, meP);
@@ -163,7 +185,7 @@ function render() {
 }
 function renderDiscard() {
   const top = view.discardTop || [];
-  $('#discard').innerHTML = top.length ? top.map((c, i) => { let h = 0; for (const ch of c.id) h = (h * 17 + ch.charCodeAt(0)) % 360; return cardHTML(c, i === top.length - 1 ? 'top' : 'under', `style="--rot:${(h % 22) - 11}deg"`); }).join('') : '<div class="empty-pile">Bỏ bài</div>';
+  $('#discard').innerHTML = top.length ? top.map((c, i) => { let h = 0; for (const ch of c.id) h = (h * 17 + ch.charCodeAt(0)) % 360; return cardHTML(c, i === top.length - 1 ? 'top' : 'under', `style="--rot:${(h % 22) - 11}deg"`); }).join('') : '<div class="empty-pile"><svg viewBox="0 0 60 30" class="fishbone" aria-hidden="true"><path d="M6 15 h40 M14 7 l4 8 l-4 8 M24 6 l4 9 l-4 9 M34 7 l4 8 l-4 8" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M46 15 l10 -8 v16 z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><circle cx="6" cy="15" r="4" fill="currentColor"/></svg>Bỏ bài</div>';
 }
 function renderMeter(v) {
   const m = $('#meter');
@@ -240,13 +262,20 @@ function renderHand(v, meP) {
   $$('#hand .mcard').forEach(el => el.onclick = () => onCardClick(el.dataset.id));
 }
 function fitHand() {
-  const hEl = $('#hand'); const cards = [...hEl.querySelectorAll('.mcard')]; const nn = cards.length; if (!nn) return;
-  const cw = cards[0].offsetWidth; const avail = hEl.clientWidth - 16;
-  let ov = nn > 1 ? (avail - cw) / (nn - 1) - cw : 0;
-  ov = Math.min(ov, 6); ov = Math.max(ov, -cw * 0.3); // chồng quá thì cho vuốt ngang trong tay bài
-  hEl.style.setProperty('--ov', ov + 'px');
-  hEl.classList.toggle('tight', ov < -4);
-  hEl.style.justifyContent = nn * (cw + ov) - ov > avail ? 'flex-start' : 'center';
+  // tay bài chật: lá chồng lên nhau, tên rút gọn 2 dòng; quá chật trên điện thoại thì thu nhỏ lá, vẫn chật nữa mới cho vuốt ngang
+  const hEl = $('#hand'); hEl.classList.remove('tiny', 'tight');
+  const calc = () => {
+    const cards = [...hEl.querySelectorAll('.mcard')]; const nn = cards.length; if (!nn) return null;
+    const cw = cards[0].offsetWidth; const avail = hEl.clientWidth - 16;
+    let ov = nn > 1 ? (avail - cw) / (nn - 1) - cw : 0; ov = Math.min(ov, 6);
+    const minOv = -cw * 0.44, over = ov < minOv; ov = Math.max(ov, minOv);
+    return { nn, cw, ov, over, avail };
+  };
+  let r = calc(); if (!r) return;
+  if (r.over && innerWidth < 700) { hEl.classList.add('tiny'); r = calc(); }
+  hEl.style.setProperty('--ov', r.ov + 'px');
+  hEl.classList.toggle('tight', r.ov < -4);
+  hEl.style.justifyContent = r.nn * (r.cw + r.ov) - r.ov > r.avail ? 'flex-start' : 'center';
 }
 addEventListener('resize', () => view && render());
 function onCardClick(id) {
@@ -385,7 +414,7 @@ function flyToDiscard(cards, from, delay = 0) {
   cards.forEach((c, i) => fx.fly(cardHTML(c), from, $('#discard'), { delay: delay + i * 110, duration: 420, rotate: (i - 1) * 8, onEnd: i === cards.length - 1 ? () => { landing = Math.max(0, landing - 1); renderDiscard(); fx.pop($('#discard .top')); } : null }));
 }
 function revealBomb(dur = 1300) {
-  const n = document.createElement('div'); n.className = 'reveal'; n.innerHTML = cardHTML({ t: 'bomb' }, 'lg');
+  const n = document.createElement('div'); n.className = 'reveal'; n.innerHTML = fx.comicBurst('#fff3b0', '#ff8a00', 12) + cardHTML({ t: 'bomb' }, 'lg') + '<b class="reveal-bang">!!</b>';
   $('#fx-layer').appendChild(n); setTimeout(() => n.remove(), dur * fx.S());
 }
 function playEvents(evs, prev) {
@@ -399,10 +428,11 @@ function playEvents(evs, prev) {
         flyToDiscard(e.cards || [], seatEl(e.by));
         const [txt, s] = KIND_FX[e.kind] || ['', 'play']; fx.sfx.play(); setTimeout(() => (fx.sfx[s] || fx.sfx.play)(), 200 * S);
         fx.banner(txt, 'k-' + e.kind);
+        if (e.kind === 'pair' || e.kind === 'triple') fx.sfx.meow(0.15, e.kind === 'triple' ? 0.9 : 1.3, 0.07);
         if (e.to) setTimeout(() => fx.floatText(seatEl(e.to), e.to === myId ? '😨 Bạn!' : '🎯'), 300 * S);
       }); t += 250 * S; break;
       case 'nope': run(() => {
-        flyToDiscard([e.card || { t: 'nope' }], seatEl(e.by)); fx.sfx.nope(); fx.banner('🙅 ĐÉO!', 'nope'); fx.shake($('#strip'));
+        flyToDiscard([e.card || { t: 'nope' }], seatEl(e.by)); fx.sfx.nope(); setMood('panic', 900); fx.banner('🙅 ĐÉO!', 'nope'); fx.shake($('#strip'));
       }); t += 250 * S; break;
       case 'noped': run(() => { fx.sfx.denied(); fx.floatText(seatEl(e.by), '❌ Bị ĐÉO!', 'bad'); }); break;
       case 'resolve': run(() => {
@@ -418,16 +448,16 @@ function playEvents(evs, prev) {
         if (mine && e.card) { freshIds = new Set([e.card.id]); setTimeout(() => { freshIds.clear(); $$('#hand .fresh').forEach(x => x.classList.remove('fresh')); }, 2500 * S); setTimeout(() => { fx.floatText($('#hand'), 'Phù… an toàn 😮‍💨', 'ok'); }, 450 * S); render(); }
       }); t += 300 * S; break;
       case 'bomb': {
-        run(() => { revealBomb(1400); fx.sfx.fuse(); fx.shake($('#table')); fx.banner(e.by === myId ? '💣 BẠN BỐC TRÚNG MÈO NỔ!' : `💣 ${pname(e.by)} bốc trúng Mèo Nổ!`, 'bomb'); });
+        run(() => { revealBomb(1400); fx.sfx.fuse(); fx.shake($('#table')); setMood('panic', 1800); fx.banner(e.by === myId ? '💣 BẠN BỐC TRÚNG MÈO NỔ!' : `💣 ${pname(e.by)} bốc trúng Mèo Nổ!`, 'bomb'); });
         t += 1500 * S; break;
       }
       case 'boom': {
         run(() => { revealBomb(1100); fx.sfx.fuse(); fx.banner(e.by === myId ? '💣 MÈO NỔ… không có Gỡ Bom!' : `💣 ${pname(e.by)} bốc trúng Mèo Nổ!`, 'bomb'); });
-        setTimeout(() => { fx.sfx.boom(); fx.explode(seatEl(e.by) || $('#deck'), [catSVG('cat1'), catSVG('cat2'), catSVG('cat3'), catSVG('cat4'), catSVG('cat5')]); fx.banner(e.by === myId ? '💥 Bạn đã nổ tung!' : `💥 ${pname(e.by)} nổ tung!`, 'boom'); }, at + 1100 * S);
+        setTimeout(() => { setMood('dizzy', 2600); fx.sfx.boom(); fx.explode(seatEl(e.by) || $('#deck'), [catSVG('cat1'), catSVG('cat2'), catSVG('cat3'), catSVG('cat4'), catSVG('cat5')]); fx.banner(e.by === myId ? '💥 Bạn đã nổ tung!' : `💥 ${pname(e.by)} nổ tung!`, 'boom'); }, at + 1100 * S);
         t += 2600 * S; break;
       }
       case 'defuse': run(() => {
-        fx.sfx.defuse(); fx.banner('✂️ Gỡ bom thành công!', 'defuse');
+        fx.sfx.defuse(); fx.banner('✂️ Gỡ bom thành công!', 'defuse'); setMood('happy', 1500);
         fx.fly(cardHTML(null), seatEl(e.by), $('#deck .top'), { duration: 520, cls: 'sneak' }); setTimeout(() => fx.floatText($('#deck'), '🤫'), 500 * S);
         if (e.by === myId && e.pos != null) toast(`Bạn đã nhét bom ở: ${posLabel(e.pos, view.deckCount - 1).split(' –')[0].toLowerCase()} 🤫`);
       }); t += 500 * S; break;
