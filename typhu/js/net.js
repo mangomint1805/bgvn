@@ -1,84 +1,83 @@
-// Lớp mạng cho Cờ tỷ phú: host giữ state, client chỉ gửi action.
-import { createGame, applyAction, viewFor, cur } from './engine.js';
-import { botAction } from './bot.js';
-import { AVATARS, COLORS } from './board.js';
-import { S } from './fx.js';
-export const TURN_TIME = 25; // giây cho mỗi quyết định, hết giờ máy tự đánh thay
-import { peerOptions, keepAlive } from './ice.js';
-import { RelayHost, relayConnect } from './relay.js';
-import { FbHost, fbConnect, fbEnabled } from './fbrelay.js';
-const NS = 'bgvn-typhu';
-
-const PREFIX = 'bgvn-typhu-';
-const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-function makeCode() { let s = ''; for (let i = 0; i < 5; i++) s += ALPHABET[Math.floor(Math.random() * ALPHABET.length)]; return s; }
-function token() {
-  let t = null; try { t = localStorage.getItem('bgvn-token'); } catch (e) {}
-  if (!t) { t = Math.random().toString(36).slice(2) + Date.now().toString(36); try { localStorage.setItem('bgvn-token', t); } catch (e) {} }
-  return t;
+// Lớp mạng Cờ Tỷ Phú: host giữ state (luật + xúc xắc do host quyết định), client chỉ gửi action.
+// Kết nối dùng chung shared/net/room.js (Firebase → PeerJS → MQTT), tự vào lại khi tải trang.
+import { createGame, applyAction, viewFor, actorOf, P } from './engine.js?v=40';
+import { botAction } from './bot.js?v=40';
+import { S } from './fx.js?v=40';
+import { OPTIONS, PRESETS } from '../../shared/js/avatar3d.js';
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
+const NS = 'bgvn-typhu', PREFIX = 'bgvn-typhu-', GAME = 'typhu', SNAP = 'bgvn-hostsnap-' + GAME;
+export { session };
+export const MAX = 6;
+export const COLORS = ['#ff5a5f', '#3d8bff', '#2fc76f', '#ffb020', '#a259ff', '#ff7ac8', '#14c4c4', '#8d6e63'];
+const BOT_NAMES = ['Tiến', 'Tuni', 'Thành', 'Khiêm', 'Thái', 'Minto', 'Bé Na', 'Chú Tư'];
+export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
+// chỉ nhận cấu hình nhân vật hợp lệ (không tin dữ liệu từ máy khác)
+export function cleanAvatar(a) {
+  const base = { ...PRESETS[0] }, out = {}, hex = /^#[0-9a-f]{6}$/i;
+  for (const k of [...Object.keys(OPTIONS), 'horns']) {
+    const list = OPTIONS[k] || [['none']], vals = list.map(o => Array.isArray(o) ? o[0] : o), colorField = !Array.isArray(list[0]);
+    const v = a && a[k];
+    out[k] = (colorField ? hex.test(v || '') : vals.includes(v)) ? v : (base[k] ?? vals[0]);
+  }
+  return out;
 }
-const BOT_NAMES = ['Bé Na', 'Chú Tư', 'Cô Ba', 'Anh Sáu', 'Út Mập', 'Bà Năm'];
-export const MAX = 4;
+// thời gian hoạt ảnh ước lượng cho các sự kiện (để bot chờ người xem kịp)
+export function animTime(evs) {
+  let ms = 0;
+  for (const e of evs) {
+    if (e.t === 'roll') ms += 1350;
+    else if (e.t === 'move') ms += e.kind === 'walk' && e.steps <= 12 ? e.steps * 235 + 350 : e.kind === 'back' ? 3 * 235 + 300 : 1100;
+    else if (e.t === 'card') ms += 3000;
+    else if (e.t === 'build') ms += e.h === 5 ? 1600 : 450;
+    else if (['buy', 'sold', 'pay', 'buyback', 'traded', 'bankrupt', 'debt', 'auction'].includes(e.t)) ms += 700;
+    else if (e.t === 'win') ms += 400;
+    else ms += 120;
+  }
+  return ms * S();
+}
+const randomPreset = () => ({ ...PRESETS[Math.floor(Math.random() * PRESETS.length)] });
 
 export class Host {
-  constructor(name, handlers, offline = false, prof = {}) {
-    this.h = handlers;
-    this.code = offline ? 'OFFLINE' : makeCode();
-    this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true, avatar: prof.avatar, color: prof.color }];
-    this.state = null; this.conns = new Map(); this.botTimer = null; this.catchTimer = null;
-    this.opts = { startMoney: 2000, maxRounds: 0, monopolyWin: true };
-    if (offline) { this.peer = { destroy() {} }; setTimeout(() => this.pushLobby(), 0); return; }
-    this.open();
-    this.stopKeep = keepAlive(() => this.peer);
-    setTimeout(() => this.pushLobby(), 0);
+  // me: { name, avatar }
+  constructor(me, handlers, offline = false, restore = null) {
+    this.h = handlers; this.offline = offline;
+    this.players = [{ id: 'host', name: me.name, avatar: cleanAvatar(me.avatar), isBot: false, local: false, token: token(), conn: null, connected: true }];
+    this.state = null; this.conns = new Map(); this.timer = null; this.afk = null;
+    this.opts = { startMoney: 1500, maxRounds: 0, monopolyWin: true, auction: true, buyback: true, turnTime: offline ? 0 : 60 };
+    if (restore) {
+      this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.local || p.id === 'host' }));
+      this.state = restore.state; this.code = restore.code; this.opts = restore.opts || this.opts;
+    }
+    if (offline) { this.code = 'OFFLINE'; setTimeout(() => { this.pushLobby(); if (this.state) { this.schedule(1500); this.broadcast(); } }, 0); return; }
+    this.room = new RoomHost({ ns: NS, prefix: PREFIX, code: this.code, keepCode: !!restore, onConn: c => this.attach(c), onReady: code => { this.code = code; session.save(GAME, { role: 'host', code }); this.pushLobby(); }, onError: m => this.h.onError(m) });
+    this.code = this.room.code;
+    setTimeout(() => { this.pushLobby(); if (this.state) { this.schedule(4000); this.broadcast(); } }, 0);
   }
-  startRelay() {
-    if (this.relay && this.relayCode === this.code) return;
-    if (this.relay) this.relay.destroy();
-    if (this.fb) this.fb.destroy();
-    this.relayCode = this.code;
-    this.fb = new FbHost(NS, this.code, conn => this.attach(conn));
-    this.relay = new RelayHost(NS, this.code, conn => this.attach(conn));
+  // id người trên máy này điều khiển (chủ phòng + người chơi cùng máy)
+  controlled() { return this.players.filter(p => p.id === 'host' || p.local).map(p => p.id); }
+  saveSnap() {
+    clearTimeout(this.snapT);
+    this.snapT = setTimeout(() => { try { localStorage.setItem(SNAP, JSON.stringify({ ts: Date.now(), code: this.code, offline: this.offline, opts: this.opts, players: this.players.map(({ conn, ...p }) => p), state: this.state })); } catch (e) {} }, 300);
   }
-  async open() {
-    this.startRelay();
-    const opt = await peerOptions();
-    if (this.dead) return;
-    this.peer = new Peer(PREFIX + this.code, opt);
-    this.peer.on('open', () => { this.opened = true; this.pushLobby(); });
-    this.peer.on('disconnected', () => { if (!this.dead) setTimeout(() => { try { if (this.peer.disconnected && !this.peer.destroyed) this.peer.reconnect(); } catch (e) {} }, 1000); });
-    this.peer.on('error', e => {
-      if (e.type === 'unavailable-id') {
-        try { this.peer.destroy(); } catch (x) {}
-        if (this.opened && (this.keepTries = (this.keepTries || 0) + 1) <= 5) setTimeout(() => this.open(), 3000); else { this.code = makeCode(); this.open(); }
-      }
-      else if (['network', 'server-error', 'socket-error', 'socket-closed', 'disconnected'].includes(e.type)) { /* tự nối lại */ }
-      else if (e.type !== 'peer-unavailable') this.h.onError('Lỗi mạng: ' + e.type);
-    });
-    this.wire();
-  }
-  wire() { this.peer.on('connection', conn => this.attach(conn)); }
-  attach(conn) {
-    conn.on('data', msg => this.onMsg(conn, msg));
-    conn.on('close', () => this.onLeave(conn));
-    conn.on('error', () => this.onLeave(conn));
-  }
+  attach(conn) { conn.on('data', msg => this.onMsg(conn, msg)); conn.on('close', () => this.onLeave(conn)); conn.on('error', () => this.onLeave(conn)); }
   onMsg(conn, msg) {
+    if (!msg) return;
     if (msg.t === 'join') {
-      let p = this.players.find(x => x.token === msg.token && !x.isBot && x.id !== 'host');
-      if (p) { if (p.conn && p.conn !== conn) try { p.conn.close(); } catch (e) {} p.conn = conn; p.connected = true; p.name = msg.name || p.name; if (!this.state && AVATARS.includes(msg.avatar)) p.avatar = msg.avatar; if (!this.state && COLORS.includes(msg.color)) p.color = msg.color; }
+      let p = this.players.find(x => x.token === msg.token && !x.isBot && !x.local && x.id !== 'host');
+      if (p) { if (p.conn && p.conn !== conn) try { p.conn.close(); } catch (e) {} p.conn = conn; p.connected = true; if (!this.state) { p.name = String(msg.name || p.name).slice(0, 16); p.avatar = cleanAvatar(msg.avatar); } }
       else {
         if (this.state) { conn.send({ t: 'error', msg: 'Ván đang diễn ra, không thể vào.' }); return; }
         if (this.players.length >= MAX) { conn.send({ t: 'error', msg: `Phòng đã đủ ${MAX} người.` }); return; }
-        p = { id: 'p' + Math.random().toString(36).slice(2, 8), name: String(msg.name || 'Khách').slice(0, 16), isBot: false, token: msg.token, conn, connected: true, avatar: AVATARS.includes(msg.avatar) ? msg.avatar : null, color: COLORS.includes(msg.color) ? msg.color : null };
+        p = { id: 'p' + Math.random().toString(36).slice(2, 8), name: String(msg.name || 'Khách').slice(0, 16), avatar: cleanAvatar(msg.avatar), isBot: false, local: false, token: msg.token, conn, connected: true };
         this.players.push(p);
       }
       this.conns.set(conn.peer, p);
       conn.send({ t: 'welcome', id: p.id, code: this.code });
-      if (this.state) conn.send({ t: 'state', view: viewFor(this.state, p.id) });
-      this.pushLobby();
+      this.pushLobby(); if (this.state) { this.schedule(1000); this.broadcast(); }
     } else if (msg.t === 'action') {
       const p = this.conns.get(conn.peer); if (p) this.act(p.id, msg.a);
+    } else if (msg.t === 'profile' && !this.state) {
+      const p = this.conns.get(conn.peer); if (p) { p.name = String(msg.name || p.name).slice(0, 16); p.avatar = cleanAvatar(msg.avatar); this.pushLobby(); }
     }
   }
   onLeave(conn) {
@@ -86,21 +85,27 @@ export class Host {
     this.conns.delete(conn.peer);
     if (p.conn === conn) { p.conn = null; p.connected = false; }
     if (!this.state) this.players = this.players.filter(x => x !== p);
-    this.pushLobby(); this.scheduleBots();
+    this.pushLobby(); if (this.state) { this.schedule(); this.broadcast(); }
   }
-  lobbyInfo() { return { players: this.fixColors().map(p => ({ id: p.id, name: p.name, isBot: p.isBot, connected: p.connected, avatar: p.avatar, color: p.color })), opts: this.opts }; }
-  fixColors() { const used = new Set(); for (const p of this.players) { if (!p.color || used.has(p.color)) p.color = COLORS.find(c => !used.has(c)); if (!p.avatar) p.avatar = AVATARS[8 + this.players.indexOf(p)]; used.add(p.color); } return this.players; }
+  lobbyInfo() { return { players: this.players.map(p => ({ id: p.id, name: p.name, avatar: p.avatar, isBot: p.isBot, local: p.local, connected: p.connected })), opts: this.opts }; }
   pushLobby() {
     const info = this.lobbyInfo();
-    this.h.onLobby(info, this.code, !!this.state);
+    this.h.onLobby(info, this.code, !!this.state); this.saveSnap();
     for (const p of this.players) if (p.conn) try { p.conn.send({ t: 'lobby', info, code: this.code, started: !!this.state }); } catch (e) {}
   }
+  setProfile(me) { const p = this.players[0]; if (this.state) return; p.name = me.name; p.avatar = cleanAvatar(me.avatar); this.pushLobby(); }
   setOpt(k, v) { if (this.state || !(k in this.opts)) return; this.opts[k] = v; this.pushLobby(); }
   addBot() {
     if (this.state || this.players.length >= MAX) return;
     const used = this.players.map(p => p.name.replace(' 🤖', ''));
-    const nm = BOT_NAMES.find(n => !used.includes(n)) || 'Bot' + this.players.length;
-    const usedA = this.players.map(p => p.avatar); const av = AVATARS.filter(a => !usedA.includes(a)); this.players.push({ id: 'bot' + Math.random().toString(36).slice(2, 7), name: nm + ' 🤖', isBot: true, token: null, conn: null, connected: true, avatar: av[Math.floor(Math.random() * av.length)] });
+    const nm = BOT_NAMES.find(n => !used.includes(n)) || 'Máy ' + this.players.length;
+    const usedAv = this.players.map(p => JSON.stringify(p.avatar)), free = PRESETS.map(cleanAvatar).filter(a => !usedAv.includes(JSON.stringify(a)));
+    this.players.push({ id: 'bot' + Math.random().toString(36).slice(2, 7), name: nm + ' 🤖', avatar: free.length ? free[Math.floor(Math.random() * free.length)] : randomPreset(), isBot: true, local: false, token: null, conn: null, connected: true });
+    this.pushLobby();
+  }
+  addLocal(name, avatar) {
+    if (this.state || this.players.length >= MAX) return;
+    this.players.push({ id: 'l' + Math.random().toString(36).slice(2, 7), name: String(name || 'Người chơi ' + (this.players.length + 1)).slice(0, 16), avatar: cleanAvatar(avatar || randomPreset()), isBot: false, local: true, token: null, conn: null, connected: true });
     this.pushLobby();
   }
   removePlayer(id) {
@@ -110,108 +115,69 @@ export class Host {
     this.players = this.players.filter(x => x !== p); this.pushLobby();
   }
   start() {
-    if (this.players.length < 2) { this.h.onError('Cần ít nhất 2 người chơi (thêm bot nhé).'); return; }
-    this.state = createGame(this.fixColors().map(p => ({ id: p.id, name: p.name, isBot: p.isBot, avatar: p.avatar, color: p.color })), this.opts);
-    this.graceUntil = Date.now() + 2500 * S();
-    this.pushLobby(); this.scheduleBots(); this.broadcast();
+    if (this.players.length < 2) { this.h.onError('Cần ít nhất 2 người chơi (thêm máy nhé).'); return; }
+    const used = new Set(), cols = this.players.map(p => { let c = p.avatar && p.avatar.color; if (!COLORS.includes(c) || used.has(c)) c = COLORS.find(x => !used.has(x)); used.add(c); return c; });
+    // thứ tự lượt ngẫu nhiên
+    const order = this.players.map((p, i) => ({ p, c: cols[i], r: Math.random() })).sort((a, b) => a.r - b.r);
+    this.state = createGame(order.map(({ p, c }) => ({ id: p.id, name: p.name, isBot: p.isBot, avatar: p.avatar, color: c })), this.opts);
+    this.lastEv = 0;
+    this.pushLobby(); this.schedule(1800); this.broadcast();
   }
-  restart() { clearTimeout(this.botTimer); clearTimeout(this.catchTimer); this.state = null; this.pushLobby(); for (const p of this.players) if (p.conn) p.conn.send({ t: 'state', view: null }); this.h.onState(null); }
-  act(pid, a) {
+  restart() { clearTimeout(this.timer); clearTimeout(this.afk); this.state = null; this.pushLobby(); for (const p of this.players) if (p.conn) p.conn.send({ t: 'state', view: null }); this.h.onState(null); }
+  act(pid, a, auto = false) {
     if (!this.state) return;
+    if (!auto && pid !== 'host' && !this.players.find(p => p.id === pid)) return;
+    const before = this.state.evn;
     const r = applyAction(this.state, pid, a);
-    if (!r.ok) { const p = this.players.find(x => x.id === pid); if (p && p.conn) p.conn.send({ t: 'error', msg: r.reason }); else if (pid === 'host') this.h.onError(r.reason); }
-    this.scheduleBots(); this.broadcast();
+    if (!r.ok) { if (auto) return; const p = this.players.find(x => x.id === pid); if (p && p.conn) p.conn.send({ t: 'error', msg: r.reason }); else this.h.onError(r.reason); return; }
+    const evs = this.state.ev.filter(e => e.n > before);
+    this.schedule(animTime(evs)); this.broadcast();
   }
+  // người cần quyết định + hạn chót
+  deadline() { return this.afkAt ? Math.max(0, this.afkAt - Date.now()) : 0; }
+
   broadcast() {
     if (!this.state) return;
-    for (const p of this.players) {
-      const view = viewFor(this.state, p.id);
-      if (this.deadline) view.timer = { pid: this.deadline.pid, ms: Math.max(0, this.deadline.end - Date.now()) };
-      if (p.id === 'host') this.h.onState(JSON.parse(JSON.stringify(view)));
-      else if (p.conn) try { p.conn.send({ t: 'state', view }); } catch (e) {}
-    }
+    this.saveSnap();
+    const v = viewFor(this.state, 'host'); v.controlled = this.controlled();
+    v.away = this.players.filter(p => !p.isBot && !p.local && p.id !== 'host' && !p.connected).map(p => p.id);
+    this.h.onState(JSON.parse(JSON.stringify(v)), this.deadline());
+    for (const p of this.players) if (p.conn) { const pv = viewFor(this.state, p.id); pv.controlled = [p.id]; pv.away = v.away; try { p.conn.send({ t: 'state', view: pv, tmo: this.deadline() }); } catch (e) {} }
   }
-  scheduleBots() {
-    clearTimeout(this.botTimer); this.deadline = null;
+  schedule(wait = 0) {
+    clearTimeout(this.timer); clearTimeout(this.afk); this.afkAt = 0;
     const s = this.state; if (!s || s.phase !== 'playing') return;
-    const pid = s.pending ? s.pending.player : cur(s).id;
-    const p = this.players.find(x => x.id === pid); if (!p) return;
-    let ms;
-    if (p.isBot) ms = Math.max(Math.round((s.pending ? 900 : 1100) * S() + Math.random() * 300), (this.graceUntil || 0) - Date.now());
-    else { ms = (!p.connected && pid !== 'host') ? 15000 : TURN_TIME * 1000; this.deadline = { pid, end: Date.now() + ms }; }
-    // chờ hoạt ảnh quân cờ chạy xong rồi bot mới đi tiếp
-    if (p.isBot && s.lastMove && s.lastMove.seq !== this.seenMove) { this.seenMove = s.lastMove.seq; ms += Math.min(3200, (Math.abs(s.lastMove.steps) || 3) * 190) * S(); }
-    this.botTimer = setTimeout(() => {
-      const a = this.state && botAction(this.state, pid);
-      if (a) this.act(pid, a);
-    }, ms);
+    const pid = actorOf(s), p = this.players.find(x => x.id === pid); if (!p) return;
+    const away = !p.isBot && !p.local && p.id !== 'host' && !p.connected;
+    const go = () => { if (!this.state || actorOf(this.state) !== pid) return; const a = botAction(this.state, pid); if (a) this.act(pid, a, true); };
+    if (p.isBot) { this.timer = setTimeout(go, wait + (550 + Math.random() * 450) * S()); return; }
+    if (away) { this.timer = setTimeout(go, wait + 3500); return; }
+    const tt = +this.opts.turnTime || 0;
+    if (tt > 0) { const ms = wait + tt * 1000; this.afkAt = Date.now() + ms; this.afk = setTimeout(() => { this.h.onAfk && this.h.onAfk(pid); go(); }, ms); }
   }
-  destroy() { this.dead = true; clearTimeout(this.botTimer); clearTimeout(this.catchTimer); this.relay && this.relay.destroy(); this.fb && this.fb.destroy(); this.stopKeep && this.stopKeep(); try { this.peer.destroy(); } catch (e) {} }
+  destroy() { this.dead = true; clearTimeout(this.timer); clearTimeout(this.afk); clearTimeout(this.snapT); this.room && this.room.destroy(); }
+  leave() { this.destroy(); try { localStorage.removeItem(SNAP); } catch (e) {} session.clear(GAME); }
 }
 
 export class Client {
-  // Thử lần lượt: Firebase (nếu đã cấu hình) → P2P (PeerJS) → MQTT công cộng
-  constructor(code, name, handlers, prof = {}) {
-    this.prof = prof;
-    this.h = handlers; this.code = code.toUpperCase().trim(); this.name = name; this.id = null; this.tries = 0;
-    this.modes = /[?&]relay=1/.test(location.search) ? ['mqtt'] : /[?&]p2p=1/.test(location.search) ? ['p2p'] : (fbEnabled() ? ['fb', 'p2p', 'mqtt'] : ['p2p', 'mqtt']);
-    this.mi = 0;
-    if (this.modes.includes('p2p')) this.initPeer();
-    this.connect();
-  }
-  status(m) { this.h.onStatus ? this.h.onStatus(m) : this.h.onError(m); }
-  initPeer() {
-    this.peerOpen = new Promise(async res => {
-      const opt = await peerOptions(); if (this.dead) return;
-      setTimeout(() => res(false), 6000);
-      try { this.peer = new Peer(undefined, opt); } catch (e) { res(false); return; }
-      this.stopKeep = keepAlive(() => this.peer);
-      this.peer.on('open', () => res(true));
-      this.peer.on('error', e => { if (e.type === 'peer-unavailable' && this.mode() === 'p2p' && !this.id) this.next(); else res(false); });
+  constructor(code, me, handlers) {
+    this.h = handlers; this.code = code.toUpperCase().trim(); this.me = me; this.id = null;
+    this.room = new RoomClient({
+      ns: NS, prefix: PREFIX, code: this.code, joinMsg: () => ({ name: this.me.name, avatar: this.me.avatar }),
+      onStatus: (t, k) => { this.h.onNet && this.h.onNet(t, k, () => this.room.retryNow()); },
+      onFail: m => { this.h.onError(m); session.clear(GAME); this.h.onFail && this.h.onFail(); },
+      onWelcome: id => { this.id = id; session.save(GAME, { role: 'client', code: this.code, name: this.me.name }); this.h.onJoined(id); },
+      onLost: () => this.h.onDisconnect(),
+      onMsg: msg => {
+        if (msg.t === 'lobby') this.h.onLobby(msg.info, msg.code, msg.started);
+        else if (msg.t === 'state') this.h.onState(msg.view, msg.tmo);
+        else if (msg.t === 'error') this.h.onError(msg.msg);
+        else if (msg.t === 'kicked') { this.h.onError('Bạn đã bị mời ra khỏi phòng.'); this.leave(); this.h.onFail && this.h.onFail(); }
+      },
     });
   }
-  mode() { return this.modes[this.mi]; }
-  next(final) {
-    if (this.dead || this.id) return;
-    clearTimeout(this.joinTimer);
-    if (this.mi < this.modes.length - 1) { this.mi++; this.connect(); return; }
-    if (++this.tries <= 2) { this.status(`Đang thử kết nối lại (${this.tries}/2)…`); this.mi = 0; setTimeout(() => this.connect(), 2000); return; }
-    this.h.onError(final || ('Không tìm thấy phòng ' + this.code + '. Kiểm tra lại mã – chủ phòng phải đang mở tab game.'));
-    this.status('❌ Không vào được phòng. Bấm Thoát rồi thử lại nhé.');
-  }
-  async connect() {
-    if (this.dead || this.id) return;
-    const mode = this.mode();
-    try { this.conn && this.conn.close(); } catch (e) {}
-    this.conn = null;
-    let conn;
-    if (mode === 'p2p') {
-      this.status('Đang kết nối…');
-      const ok = await this.peerOpen; if (this.dead || this.id) return;
-      if (!ok || !this.peer || this.peer.disconnected) { this.next(); return; }
-      conn = this.peer.connect(PREFIX + this.code, { reliable: true });
-    } else if (mode === 'fb') { this.status('Đang kết nối…'); conn = fbConnect(NS, this.code); }
-    else { this.status('Đang nối qua đường dự phòng…'); conn = relayConnect(NS, this.code); }
-    this.conn = conn;
-    clearTimeout(this.joinTimer);
-    this.joinTimer = setTimeout(() => { if (!this.id && conn === this.conn) this.next(); }, mode === 'p2p' ? 7000 : 12000);
-    conn.on('open', () => { if (conn === this.conn) conn.send({ t: 'join', name: this.name, token: token(), avatar: this.prof.avatar, color: this.prof.color }); });
-    conn.on('data', msg => {
-      if (conn !== this.conn) return;
-      if (msg.t === 'welcome') { clearTimeout(this.joinTimer); this.id = msg.id; this.h.onJoined(msg.id); }
-      else if (msg.t === 'lobby') this.h.onLobby(msg.info, msg.code, msg.started);
-      else if (msg.t === 'state') this.h.onState(msg.view);
-      else if (msg.t === 'error') this.h.onError(msg.msg);
-      else if (msg.t === 'kicked') { this.h.onError('Bạn đã bị mời ra khỏi phòng.'); this.destroy(); }
-    });
-    const lost = () => {
-      if (conn !== this.conn || this.dead) return;
-      if (!this.id) { if (conn.notFound || mode !== 'p2p') this.next(); return; } // chưa vào được: thử đường khác
-      this.h.onDisconnect(); this.id = null; this.tries = 0;
-      setTimeout(() => { if (!this.dead) this.connect(); }, 1500);
-    };
-    conn.on('close', lost); conn.on('error', lost);
-  }
-  act(a) { if (this.conn && this.conn.open) this.conn.send({ t: 'action', a }); }
-  destroy() { this.dead = true; clearTimeout(this.joinTimer); this.stopKeep && this.stopKeep(); try { this.conn && this.conn.close(); } catch (e) {} try { this.peer && this.peer.destroy(); } catch (e) {} }
+  setProfile(me) { this.me = me; this.room.send({ t: 'profile', name: me.name, avatar: me.avatar }); }
+  act(a) { this.room.send({ t: 'action', a }); }
+  destroy() { this.room.destroy(); }
+  leave() { this.destroy(); session.clear(GAME); }
 }

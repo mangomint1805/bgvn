@@ -1,7 +1,7 @@
 // Unit test luật Cờ Tỷ Phú. Chạy: node typhu/test/rules.mjs
 import './load.mjs';
 import assert from 'assert/strict';
-import { createGame, applyAction, setRandom, TILES, CARDS, actorOf, rentOf, buybackPrice, netWorth } from '../js/engine.js';
+import { createGame, applyAction, setRandom, TILES, CARDS, actorOf, rentOf, buybackPrice, netWorth } from '../js/engine.js?v=40';
 
 let pass = 0, fail = 0;
 function test(name, fn) { try { fn(); pass++; console.log('  ✓ ' + name); } catch (e) { fail++; console.log('  ✗ ' + name + '\n    ' + (e.stack || e).toString().split('\n').slice(0, 3).join('\n    ')); } }
