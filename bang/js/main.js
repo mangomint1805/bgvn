@@ -1,6 +1,6 @@
 // Giao diện + nối với lớp mạng
 import { CARD_INFO, CHARACTERS, ROLES, SUIT_SYMBOL, rankLabel, cardLabel, suitify } from './cards.js';
-import { Host, Client } from './net.js?v=4';
+import { Host, Client } from './net.js?v=5';
 import { imgTag, avatarTag } from './images.js';
 import { S, SPEEDS, getSpeed, setSpeed, sfx, cardSfx, gunSfx, fly, shake, flash, floatText, banner, toggleMute, isMuted, shoot, arrows, explode, sparkle, confetti, stamp, screenShake } from './fx.js';
 import { THEMES, getTheme, setTheme, onThemeChange } from './themes.js';

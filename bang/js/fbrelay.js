@@ -2,9 +2,11 @@
 // Giao diện giả lập "conn" của PeerJS giống relay.js: on('open'|'data'|'close'|'error'), send(msg), close(), open, peer.
 // Dữ liệu: rooms/<ns>/<code>/alive (chủ phòng còn mở), /h/<id> (tin gửi chủ phòng), /c/<client>/<id> (tin gửi từng người).
 export const FIREBASE = {
-  apiKey: '',
-  databaseURL: '',
-  projectId: '',
+  apiKey: 'AIzaSyD2Mzc0gA8GoWAWPpTdkXcq6o7kywvkOHU',
+  authDomain: 'bgvn-game.firebaseapp.com',
+  databaseURL: 'https://bgvn-game-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'bgvn-game',
+  appId: '1:550604100613:web:e136736b8206712269f86c',
 };
 const V = '10.12.2';
 let sdk = null;

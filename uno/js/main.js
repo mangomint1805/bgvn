@@ -1,4 +1,4 @@
-import { Host, Client, MAX } from './net.js?v=4';
+import { Host, Client, MAX } from './net.js?v=5';
 import { MODES, COLOR_NAME, cardText, DRAW_VALUE } from './engine.js';
 import * as fx from './ufx.js';
 import { openGuide } from './guide.js';
