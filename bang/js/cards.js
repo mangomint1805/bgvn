@@ -10,10 +10,10 @@ export function rankLabel(r) {
 
 // Thông tin từng loại lá
 export const CARD_INFO = {
-  bang:       { name: 'Bắn!',            en: 'BANG!',          kind: 'brown', icon: '💥',
-    desc: 'Bắn 1 người trong tầm súng. Họ phải đánh Hụt! nếu không sẽ mất 1 máu. Mỗi lượt chỉ đánh được 1 lá Bắn! (trừ khi có Volcanic hoặc là Willy the Kid).' },
+  bang:       { name: 'BANG!',            en: 'BANG!',          kind: 'brown', icon: '💥',
+    desc: 'Bắn 1 người trong tầm súng. Họ phải đánh Hụt! nếu không sẽ mất 1 máu. Mỗi lượt chỉ đánh được 1 lá BANG! (trừ khi có Volcanic hoặc là Willy the Kid).' },
   missed:     { name: 'Hụt!',            en: 'Missed!',        kind: 'brown', icon: '💨',
-    desc: 'Né một phát Bắn! nhắm vào bạn, kể cả ngoài lượt. Không dùng được để chống Thổ dân! hay Đấu súng.' },
+    desc: 'Né một phát BANG! nhắm vào bạn, kể cả ngoài lượt. Không dùng được để chống Indians! hay Đấu súng.' },
   beer:       { name: 'Bia',             en: 'Beer',           kind: 'brown', icon: '🍺',
     desc: 'Hồi 1 máu, không vượt quá máu tối đa. Chỉ dùng cho bản thân. Ngoài lượt chỉ được dùng khi sắp mất máu cuối (game tự dùng). Vô hiệu khi chỉ còn 2 người.' },
   panic:      { name: 'Hoảng loạn!',     en: 'Panic!',         kind: 'brown', icon: '😱',
@@ -28,24 +28,24 @@ export const CARD_INFO = {
     desc: 'Lật số lá bằng số người còn sống. Bắt đầu từ bạn, theo chiều kim đồng hồ, mỗi người chọn 1 lá.' },
   saloon:     { name: 'Quán rượu',       en: 'Saloon',         kind: 'brown', icon: '🥃',
     desc: 'Mọi người còn sống hồi 1 máu. Chỉ đánh được trong lượt của mình.' },
-  indians:    { name: 'Thổ dân!',        en: 'Indians!',       kind: 'brown', icon: '🏹',
-    desc: 'Mọi người khác phải bỏ 1 lá Bắn! hoặc mất 1 máu. Hụt! và Thùng rượu không có tác dụng.' },
+  indians:    { name: 'Indians!',        en: 'Indians!',       kind: 'brown', icon: '🏹',
+    desc: 'Mọi người khác phải bỏ 1 lá BANG! hoặc mất 1 máu. Hụt! và Thùng rượu không có tác dụng.' },
   duel:       { name: 'Đấu súng',        en: 'Duel',           kind: 'brown', icon: '⚔️',
-    desc: 'Thách 1 người bất kỳ (không kể khoảng cách). Lần lượt bỏ lá Bắn!, người bị thách bỏ trước. Ai không bỏ được thì mất 1 máu. Hụt! và Thùng rượu không có tác dụng.' },
+    desc: 'Thách 1 người bất kỳ (không kể khoảng cách). Lần lượt bỏ lá BANG!, người bị thách bỏ trước. Ai không bỏ được thì mất 1 máu. Hụt! và Thùng rượu không có tác dụng.' },
   gatling:    { name: 'Súng Gatling',    en: 'Gatling',        kind: 'brown', icon: '🔫',
-    desc: 'Bắn tất cả người khác, không kể khoảng cách. Mỗi người phải Hụt! hoặc mất 1 máu. Không tính vào giới hạn 1 lá Bắn! mỗi lượt.' },
+    desc: 'Bắn tất cả người khác, không kể khoảng cách. Mỗi người phải Hụt! hoặc mất 1 máu. Không tính vào giới hạn 1 lá BANG! mỗi lượt.' },
   dynamite:   { name: 'Thuốc nổ',        en: 'Dynamite',       kind: 'blue',  icon: '🧨',
     desc: 'Đặt trước mặt mình. Đầu lượt người đang giữ lật bài: ra ♠ từ 2 đến 9 thì nổ, mất 3 máu; không thì chuyền sang người bên trái. Xét trước Nhà tù.' },
   jail:       { name: 'Nhà tù',          en: 'Jail',           kind: 'blue',  icon: '⛓️',
     desc: 'Đặt trước mặt 1 người khác (không phải Cảnh sát trưởng, không kể khoảng cách). Đầu lượt họ lật bài: ra ♥ thì thoát và chơi bình thường, không thì mất lượt. Lá Nhà tù bị bỏ sau khi lật.' },
   barrel:     { name: 'Thùng rượu',      en: 'Barrel',         kind: 'blue',  icon: '🛢️',
-    desc: 'Khi bị Bắn!, lật bài: ra ♥ thì coi như đã né. Không có tác dụng với Thổ dân! và Đấu súng.' },
+    desc: 'Khi bị BANG!, lật bài: ra ♥ thì coi như đã né. Không có tác dụng với Indians! và Đấu súng.' },
   scope:      { name: 'Ống ngắm',        en: 'Scope',          kind: 'blue',  icon: '🔭',
     desc: 'Bạn nhìn mọi người gần hơn 1 khoảng cách (tối thiểu là 1).' },
   mustang:    { name: 'Ngựa Mustang',    en: 'Mustang',        kind: 'blue',  icon: '🐎',
     desc: 'Mọi người nhìn bạn xa hơn 1 khoảng cách.' },
   volcanic:   { name: 'Volcanic',        en: 'Volcanic',       kind: 'gun',   icon: '🔫', range: 1,
-    desc: 'Súng tầm 1. Đánh được bao nhiêu lá Bắn! tuỳ thích trong lượt.' },
+    desc: 'Súng tầm 1. Đánh được bao nhiêu lá BANG! tuỳ thích trong lượt.' },
   schofield:  { name: 'Schofield',       en: 'Schofield',      kind: 'gun',   icon: '🔫', range: 2,
     desc: 'Súng tầm 2.' },
   remington:  { name: 'Remington',       en: 'Remington',      kind: 'gun',   icon: '🔫', range: 3,
@@ -58,7 +58,7 @@ export const CARD_INFO = {
 
 // Bộ bài 80 lá: [type, suit, rank]
 const DECK_SPEC = [
-  // Bắn! x25
+  // BANG! x25
   ['bang','S',14], ...[2,3,4,5,6,7,8,9,10,11,12,13,14].map(r => ['bang','D',r]),
   ...[2,3,4,5,6,7,8,9].map(r => ['bang','C',r]), ['bang','H',12], ['bang','H',13], ['bang','H',14],
   // Hụt! x12
@@ -77,7 +77,7 @@ const DECK_SPEC = [
   ['store','C',9], ['store','S',12],
   // Quán rượu x1
   ['saloon','H',5],
-  // Thổ dân x2
+  // Indians x2
   ['indians','D',13], ['indians','D',14],
   // Đấu súng x3
   ['duel','D',12], ['duel','S',11], ['duel','C',8],
@@ -123,7 +123,7 @@ export function rolesFor(n) {
 export const CHARACTERS = {
   bartcassidy:    { name: 'Bart Cassidy',     hp: 4, icon: '🩸', desc: 'Mỗi lần mất máu, rút 1 lá.' },
   blackjack:      { name: 'Black Jack',       hp: 4, icon: '🃏', desc: 'Khi rút bài đầu lượt, lật lá thứ 2 cho mọi người xem: nếu là ♥ hoặc ♦ thì rút thêm 1 lá.' },
-  calamityjanet:  { name: 'Calamity Janet',   hp: 4, icon: '🔄', desc: 'Dùng Bắn! như Hụt! và Hụt! như Bắn!. Hụt! dùng thay Bắn! vẫn tính vào giới hạn 1 lần bắn mỗi lượt.' },
+  calamityjanet:  { name: 'Calamity Janet',   hp: 4, icon: '🔄', desc: 'Dùng BANG! như Hụt! và Hụt! như BANG!. Hụt! dùng thay BANG! vẫn tính vào giới hạn 1 lần bắn mỗi lượt.' },
   elgringo:       { name: 'El Gringo',        hp: 3, icon: '🤏', desc: 'Mỗi khi mất 1 máu vì lá bài của người khác, rút ngẫu nhiên 1 lá từ tay người đó.' },
   jessejones:     { name: 'Jesse Jones',      hp: 4, icon: '🕵️', desc: 'Khi rút bài đầu lượt, lá đầu tiên có thể rút ngẫu nhiên từ tay 1 người khác.' },
   jourdonnais:    { name: 'Jourdonnais',      hp: 4, icon: '🛢️', desc: 'Luôn có sẵn hiệu ứng Thùng rượu. Nếu có thêm lá Thùng rượu thì được lật 2 lần.' },
@@ -133,10 +133,10 @@ export const CHARACTERS = {
   pedroramirez:   { name: 'Pedro Ramirez',    hp: 4, icon: '🗑️', desc: 'Khi rút bài đầu lượt, lá đầu tiên có thể lấy từ chồng bài bỏ.' },
   rosedoolan:     { name: 'Rose Doolan',      hp: 4, icon: '🔭', desc: 'Luôn có sẵn 1 Ống ngắm.' },
   sidketchum:     { name: 'Sid Ketchum',      hp: 4, icon: '💊', desc: 'Bỏ 2 lá trên tay để hồi 1 máu, dùng bao nhiêu lần cũng được.' },
-  slabthekiller:  { name: 'Slab the Killer',  hp: 4, icon: '☠️', desc: 'Người bị bạn Bắn! cần 2 lá Hụt! mới né được. Thùng rượu chỉ tính là 1 lần né.' },
+  slabthekiller:  { name: 'Slab the Killer',  hp: 4, icon: '☠️', desc: 'Người bị bạn BANG! cần 2 lá Hụt! mới né được. Thùng rượu chỉ tính là 1 lần né.' },
   suzylafayette:  { name: 'Suzy Lafayette',   hp: 4, icon: '✨', desc: 'Hết bài trên tay thì rút ngay 1 lá.' },
   vulturesam:     { name: 'Vulture Sam',      hp: 4, icon: '🦅', desc: 'Khi có người bị loại, lấy toàn bộ bài trên tay và trước mặt của người đó.' },
-  willythekid:    { name: 'Willy the Kid',    hp: 4, icon: '🔥', desc: 'Đánh được bao nhiêu lá Bắn! tuỳ thích trong lượt.' },
+  willythekid:    { name: 'Willy the Kid',    hp: 4, icon: '🔥', desc: 'Đánh được bao nhiêu lá BANG! tuỳ thích trong lượt.' },
 };
 
 export function cardName(c) { return CARD_INFO[c.type].name; }
@@ -149,9 +149,9 @@ export function suitify(html) {
 
 // Mô tả ngắn in trên mặt lá
 const SHORT = {
-  bang: 'Bắn 1 người trong tầm', missed: 'Né 1 phát Bắn!', beer: 'Hồi 1 máu', panic: 'Lấy 1 lá của người cách 1',
+  bang: 'Bắn 1 người trong tầm', missed: 'Né 1 phát BANG!', beer: 'Hồi 1 máu', panic: 'Lấy 1 lá của người cách 1',
   catbalou: 'Bắt 1 người bỏ 1 lá', stagecoach: 'Rút 2 lá', wellsfargo: 'Rút 3 lá', store: 'Mỗi người chọn 1 lá',
-  saloon: 'Mọi người hồi 1 máu', indians: 'Ai không bỏ Bắn! mất 1 máu', duel: 'Thi bỏ Bắn!, ai thua mất 1 máu', gatling: 'Bắn tất cả người khác',
+  saloon: 'Mọi người hồi 1 máu', indians: 'Ai không bỏ BANG! mất 1 máu', duel: 'Thi bỏ BANG!, ai thua mất 1 máu', gatling: 'Bắn tất cả người khác',
   dynamite: 'Lật ra ♠2–9 thì nổ, mất 3 máu', jail: 'Nhốt 1 người, lật ♥ mới thoát', barrel: 'Bị bắn: lật ra ♥ là né', scope: 'Thấy người khác gần hơn 1',
   mustang: 'Người khác thấy bạn xa hơn 1', volcanic: 'Tầm 1 · bắn không giới hạn', schofield: 'Súng · bắn xa 2', remington: 'Súng · bắn xa 3',
   carabine: 'Súng · bắn xa 4', winchester: 'Súng · bắn xa 5',

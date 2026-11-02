@@ -65,14 +65,14 @@ export function guideHTML() {
 
 <section id="g-turn"><h3>3. Một lượt chơi gồm 3 bước</h3>
 <ol class="g-steps"><li><b>Rút 2 lá</b> từ chồng bài. Hết chồng bài thì xào chồng bài bỏ làm chồng mới.</li>
-<li><b>Đánh bài</b> tuỳ thích, nhưng:<ul><li>Mỗi lượt chỉ được đánh <b>1 lá Bắn!</b></li><li>Không được có 2 lá cùng tên trước mặt.</li><li>Chỉ được có 1 khẩu súng (đánh súng mới thì súng cũ bị bỏ).</li></ul></li>
+<li><b>Đánh bài</b> tuỳ thích, nhưng:<ul><li>Mỗi lượt chỉ được đánh <b>1 lá BANG!</b></li><li>Không được có 2 lá cùng tên trước mặt.</li><li>Chỉ được có 1 khẩu súng (đánh súng mới thì súng cũ bị bỏ).</li></ul></li>
 <li><b>Bỏ bớt bài</b>: cuối lượt, số lá trên tay không được nhiều hơn số máu hiện tại.</li></ol>
 <p class="g-note">Lá <b>nâu</b> dùng ngay rồi bỏ. Lá <b>xanh</b> đặt trước mặt và có tác dụng lâu dài cho đến khi bị lấy hoặc bỏ đi.</p></section>
 
 <section id="g-dist"><h3>4. Khoảng cách và tầm bắn</h3>
 <div class="g-flex">${distanceSVG()}<div><ul>
 <li><b>Khoảng cách</b> giữa 2 người = số ghế ít nhất phải đi qua quanh bàn (người ngồi cạnh là 1). Người đã bị loại không tính.</li>
-<li>Bạn chỉ <b>Bắn!</b> được người có khoảng cách ≤ <b>tầm súng</b>. Không có súng thì dùng Colt .45 tầm 1.</li>
+<li>Bạn chỉ <b>BANG!</b> được người có khoảng cách ≤ <b>tầm súng</b>. Không có súng thì dùng Colt .45 tầm 1.</li>
 <li><b>Ngựa Mustang</b>: người khác thấy bạn xa thêm 1. <b>Ống ngắm</b>: bạn thấy người khác gần đi 1.</li>
 <li>Súng <b>không</b> làm thay đổi khoảng cách, nên <b>Hoảng loạn!</b> vẫn chỉ dùng được với người cách 1.</li>
 <li>Trên bàn, số trong vòng tròn vàng cạnh mỗi người là khoảng cách từ bạn tới họ.</li></ul></div></div></section>

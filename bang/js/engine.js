@@ -354,7 +354,7 @@ function playCard(s, p, a) {
       break;
     }
     case 'indians': {
-      discardCard(s, p, c.id); log(s, `${name(p)} gọi Thổ dân! tấn công tất cả.`);
+      discardCard(s, p, c.id); log(s, `${name(p)} gọi Indians! tấn công tất cả.`);
       const queue = orderFrom(s, p).map(q => q.id);
       if (queue.length) s.pending.push({ type: 'respond', kind: 'indians', source: p.id, player: queue[0], queue, need: 1 });
       break;
@@ -487,7 +487,7 @@ function handleRespond(s, p, pr, a) {
     log(s, `${name(p)} bỏ ${cardLabel(c)} trong Đấu súng.`);
     const other = pr.other; pr.other = pr.player; pr.player = other; return { ok: true };
   }
-  if (pr.kind === 'indians') { log(s, `${name(p)} bỏ Bắn! chống Thổ dân.`); advanceQueue(); return { ok: true }; }
+  if (pr.kind === 'indians') { log(s, `${name(p)} bỏ BANG! chống Indians.`); advanceQueue(); return { ok: true }; }
   // bang / gatling
   pr.need--;
   log(s, `${name(p)} đánh ${cardLabel(c)} né đạn.`);

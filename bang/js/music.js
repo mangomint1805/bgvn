@@ -111,24 +111,43 @@ function scheduleStep(t) {
   if (m && step >= 16) INST[p.lead](N(m.n), t, e8 * m.len * .95);
   step++;
 }
-function loop() {
-  while (nextT < ac.currentTime + .25) { scheduleStep(nextT); nextT += 60 / preset.bpm / 2; }
+// Dựng sẵn cả vòng nhạc thành 1 đoạn âm thanh rồi phát lặp: không phụ thuộc bộ hẹn giờ,
+// nên chuyển tab/thu nhỏ cửa sổ nhạc vẫn chạy đều (trình duyệt làm chậm hẹn giờ ở tab nền).
+const cacheBuf = {}; let src = null, srcGain = null, themeKey = 'desert', want = 0;
+async function renderLoop(key) {
+  if (cacheBuf[key]) return cacheBuf[key];
+  const p = PRESETS[key]; const mel = buildMelody(p); const e8 = 60 / p.bpm / 2;
+  const steps = mel.length, sr = ac.sampleRate, L = Math.round(steps * e8 * sr), tail = Math.round(2.5 * sr);
+  const off = new OfflineAudioContext(2, L + tail, sr);
+  const save = [ac, master, preset, melody, step];
+  ac = off; master = off.createGain(); master.connect(off.destination); preset = p; melody = mel; step = steps;
+  try { for (let k = 0; k < steps; k++) scheduleStep(k * e8); } finally { [ac, master, preset, melody, step] = save; }
+  const r = await off.startRendering();
+  const out = ac.createBuffer(2, L, sr);
+  for (let c = 0; c < 2; c++) { const d = r.getChannelData(c), o = out.getChannelData(c); o.set(d.subarray(0, L)); for (let i = 0; i < tail; i++) o[i] += d[L + i]; } // nốt ngân cuối vòng nối vào đầu vòng
+  return (cacheBuf[key] = out);
+}
+async function play() {
+  const my = ++want; const buf = await renderLoop(themeKey); if (my !== want || !on) return;
+  const old = src, oldG = srcGain, t = ac.currentTime;
+  srcGain = ac.createGain(); srcGain.gain.setValueAtTime(0.0001, t); srcGain.gain.exponentialRampToValueAtTime(1, t + 0.8); srcGain.connect(master);
+  src = ac.createBufferSource(); src.buffer = buf; src.loop = true; src.connect(srcGain); src.start(t + 0.05);
+  if (old) { oldG.gain.setValueAtTime(oldG.gain.value, t); oldG.gain.exponentialRampToValueAtTime(0.0001, t + 0.8); old.stop(t + 0.9); }
 }
 
 export function musicSetTheme(theme) {
-  preset = PRESETS[theme] || PRESETS.desert; melody = buildMelody(preset);
-  if (on && ac) { step = 0; nextT = ac.currentTime + .1; }
+  themeKey = PRESETS[theme] ? theme : 'desert';
+  if (on && ac && src) play();
 }
 export function musicStart() {
-  if (!preset) musicSetTheme('desert');
-  ctx(); if (timer) return;
-  step = 0; nextT = ac.currentTime + .1;
-  timer = setInterval(loop, 60);
+  ctx(); if (src) return;
+  play();
 }
-export function musicStop() { clearInterval(timer); timer = null; }
+export function musicStop() { want++; if (src) { try { src.stop(); } catch (e) {} src = null; } }
 export function musicIsOn() { return on; }
 export function musicToggle() { on = !on; try { localStorage.setItem('bangvn-music', on ? '1' : '0'); } catch (e) {} if (on) musicStart(); else musicStop(); return on; }
 export function musicVolume(v) { if (v == null) return vol; vol = v; try { localStorage.setItem('bangvn-music-vol', String(v)); } catch (e) {} if (master) master.gain.value = vol * .35; }
 // gọi khi người dùng tương tác lần đầu (trình duyệt chặn tự phát âm thanh)
 export function musicResumeIfOn() { if (on) musicStart(); }
-document.addEventListener('visibilitychange', () => { if (!ac) return; if (document.hidden) ac.suspend(); else if (on) ac.resume(); });
+// quay lại tab: nếu trình duyệt lỡ tạm dừng âm thanh thì bật lại
+document.addEventListener('visibilitychange', () => { if (ac && !document.hidden && on && ac.state !== 'running') ac.resume(); });

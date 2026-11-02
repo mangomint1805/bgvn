@@ -105,31 +105,42 @@ function nextB() {
 export function shake(el) { pop(el, 'shake'); }
 
 // ---------- nhạc nền pop vui ----------
-let musicOn = ls.get('uno-music') === '1', mTimer = null, mGain = null, vol = +(ls.get('uno-music-vol') || 0.5), step = 0;
+let musicOn = ls.get('uno-music') === '1', mGain = null, vol = +(ls.get('uno-music-vol') || 0.5);
 const PROG = [[261.6, 329.6, 392], [220, 261.6, 329.6], [174.6, 220, 261.6], [196, 246.9, 293.7]];
 const MEL = [0, 2, 4, 2, 5, 4, 2, 0, 4, 5, 7, 5, 4, 2, 4, -1];
 const SCALE = [523.3, 587.3, 659.3, 698.5, 784, 880, 987.8, 1046.5];
-function mtone(f, d, type, g, at) {
-  const a = actx(); if (!a) return; const t = a.currentTime + at;
-  const o = a.createOscillator(); o.type = type; o.frequency.value = f; const gn = a.createGain();
+function mtone(c, dest, f, d, type, g, t) {
+  const o = c.createOscillator(); o.type = type; o.frequency.value = f; const gn = c.createGain();
   gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.02); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
-  o.connect(gn); gn.connect(mGain); o.start(t); o.stop(t + d + 0.05);
+  o.connect(gn); gn.connect(dest); o.start(t); o.stop(t + d + 0.05);
 }
-function tick() {
-  const a = actx(); if (!a) return;
-  if (!mGain) { mGain = a.createGain(); mGain.connect(a.destination); }
-  mGain.gain.value = vol * 0.3;
-  const bt = 0.2; const ch = PROG[Math.floor(step / 8) % 4];
-  for (let i = 0; i < 8; i++) {
-    const at = i * bt;
-    if (i % 2 === 0) mtone(ch[0] / 2, 0.3, 'triangle', 0.25, at);
-    if (i % 4 === 2) mtone(ch[(i / 2) % 3], 0.15, 'square', 0.04, at);
-    const m = MEL[(step + i) % 16]; if (m >= 0 && (i % 2 === 0 || Math.random() < 0.3)) mtone(SCALE[m], 0.18, 'sine', 0.08, at);
+// Dựng sẵn vòng nhạc thành đoạn âm thanh lặp: chuyển tab vẫn không mất nhạc
+let mBuf = null, mSrc = null;
+async function renderMusic(a) {
+  if (mBuf) return mBuf;
+  const sr = a.sampleRate, bt = 0.2, L = Math.round(4 * 8 * bt * sr), tail = Math.round(sr);
+  const off = new OfflineAudioContext(2, L + tail, sr); const dest = off.destination;
+  for (let k = 0; k < 4; k++) {
+    const st = k * 8, ch = PROG[k], base = k * 8 * bt;
+    for (let i = 0; i < 8; i++) {
+      const at = base + i * bt;
+      if (i % 2 === 0) mtone(off, dest, ch[0] / 2, 0.3, 'triangle', 0.25, at);
+      if (i % 4 === 2) mtone(off, dest, ch[(i / 2) % 3], 0.15, 'square', 0.04, at);
+      const m = MEL[(st + i) % 16]; if (m >= 0 && (i % 2 === 0 || (st * 7 + i * 3) % 10 < 3)) mtone(off, dest, SCALE[m], 0.18, 'sine', 0.08, at);
+    }
   }
-  step += 8;
+  const r = await off.startRendering(); const out = a.createBuffer(2, L, sr);
+  for (let c = 0; c < 2; c++) { const d = r.getChannelData(c), o = out.getChannelData(c); o.set(d.subarray(0, L)); for (let i = 0; i < tail; i++) o[i] += d[L + i]; }
+  return (mBuf = out);
 }
-export function musicStart() { if (mTimer) return; tick(); mTimer = setInterval(tick, 1600); }
-export function musicStop() { clearInterval(mTimer); mTimer = null; }
+export async function musicStart() {
+  const a = actx(); if (!a || mSrc) return;
+  if (!mGain) { mGain = a.createGain(); mGain.connect(a.destination); } mGain.gain.value = vol * 0.3;
+  mSrc = true; const buf = await renderMusic(a); if (mSrc !== true || !musicOn) { if (mSrc === true) mSrc = null; return; }
+  mSrc = a.createBufferSource(); mSrc.buffer = buf; mSrc.loop = true; mSrc.connect(mGain); mSrc.start();
+}
+export function musicStop() { if (mSrc && mSrc !== true) try { mSrc.stop(); } catch (e) {} mSrc = null; }
+document.addEventListener('visibilitychange', () => { if (ac && !document.hidden && ac.state !== 'running') ac.resume(); });
 export const musicIsOn = () => musicOn;
 export function musicToggle() { musicOn = !musicOn; ls.set('uno-music', musicOn ? '1' : '0'); musicOn ? musicStart() : musicStop(); return musicOn; }
 export function musicVolume(v) { if (v == null) return vol; vol = v; ls.set('uno-music-vol', String(v)); if (mGain) mGain.gain.value = vol * 0.3; }
