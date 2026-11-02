@@ -1,4 +1,4 @@
-import { Host, Client, MAX } from './net.js?v=7';
+import { Host, Client, MAX } from './net.js?v=8';
 import { MODES, COLOR_NAME, cardText, DRAW_VALUE } from './engine.js';
 import * as fx from './ufx.js';
 import { openGuide } from './guide.js';
@@ -177,7 +177,7 @@ function render() {
   $('#dir').classList.toggle('ccw', v.dir < 0);
   $('#dir').style.color = (COL_HEX[v.color] || '#7a5cff') + '66';
   const sb = $('#stack-badge');
-  sb.textContent = v.stack ? `+${v.stack.total} lá!` : v.skipStack ? '⛔ Cấm lượt' : v.up ? (v.up.first ? `⬆ UP: lá số màu ${COLOR_NAME[v.up.color]}` : `⬆ UP ≥ ${v.up.n}`) : '';
+  sb.textContent = v.stack ? `+${v.stack.total} lá!` : v.skipStack ? '⛔ Cấm lượt' : v.up ? (v.up.first ? '⬆ UP: đánh lá số' : `⬆ UP ≥ ${v.up.n}`) : '';
   sb.classList.toggle('show', !!(v.stack || v.skipStack || v.up));
   // gợi ý
   renderHint(v, meP);
@@ -229,7 +229,7 @@ function renderHint(v, meP) {
   h.classList.add('mine');
   if (v.stack) h.innerHTML = v.playable.length ? `🔥 Bị dồn <b>+${v.stack.total}</b>! Chồng lá rút ≥ +${v.stack.last} để đẩy đi, hoặc chịu phạt.` : `😵 Không có lá để chồng – bấm <b>Chịu phạt +${v.stack.total}</b>.`;
   else if (v.skipStack) h.innerHTML = '⛔ Bạn bị Cấm! Đánh Cấm lượt để chuyền, hoặc chịu mất lượt.';
-  else if (v.up) h.innerHTML = v.up.first ? `⬆️ Up! Đánh 1 lá số màu <b>${COLOR_NAME[v.up.color]}</b>, không có thì chịu rút 2.` : `⬆️ Up! Đánh lá số <b>≥ ${v.up.n}</b> (cùng màu thì phải <b>lớn hơn</b>), không có thì rút ${Math.max(1, v.up.n)} lá.`;
+  else if (v.up) h.innerHTML = v.up.first ? '⬆️ Up! Đánh 1 lá số bất kỳ (màu nào cũng được), không có thì chịu rút 2.' : `⬆️ Up! Đánh lá số <b>≥ ${v.up.n}</b> (màu nào cũng được), không có thì rút ${Math.max(1, v.up.n)} lá.`;
   else if (v.mustPlay) h.innerHTML = '✨ Lá vừa rút đánh được – bấm vào nó để đánh' + (v.canPass ? ', hoặc Giữ lại.' : '!');
   else if (v.playable.length) h.innerHTML = `🎯 Lượt bạn! Đánh lá cùng màu ${dot}, cùng số/ký hiệu, hoặc lá Đổi màu.`;
   else if (v.rules.noActionFinish && meP.hand.length === 1 && meP.hand[0].type !== 'n') h.innerHTML = '🚫 Lá cuối không được là lá chức năng – bấm <b>Rút bài</b>.';

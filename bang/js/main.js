@@ -1,6 +1,6 @@
 // Giao diện + nối với lớp mạng
 import { CARD_INFO, CHARACTERS, ROLES, SUIT_SYMBOL, rankLabel, cardLabel, suitify } from './cards.js';
-import { Host, Client } from './net.js?v=5';
+import { Host, Client } from './net.js?v=9';
 import { imgTag, avatarTag } from './images.js';
 import { S, SPEEDS, getSpeed, setSpeed, sfx, cardSfx, gunSfx, fly, shake, flash, floatText, banner, toggleMute, isMuted, shoot, arrows, explode, sparkle, confetti, stamp, screenShake } from './fx.js';
 import { THEMES, getTheme, setTheme, onThemeChange } from './themes.js';
@@ -33,7 +33,7 @@ function getName() {
 }
 const handlers = {
   onLobby(players, code, started) { lobby = players; renderLobby(code); if (!started && !view) show('screen-lobby'); },
-  onState(v) { prevView = view; view = v; markFresh(prevView, v); if (!v) { prevView = null; show('screen-lobby'); return; } const first = !$('#screen-game').classList.contains('active'); show('screen-game'); render(); if (first) dealAnimation(); else animateDiff(prevView, view); },
+  onState(v) { if (discardQueue.length) setTimeout(sendNextDiscard, 120); else if (!(v && v.prompt && v.prompt.type === 'discard')) discardSel.clear(); setTimer(v && v.phase === 'playing' ? v.timer : null); prevView = view; view = v; markFresh(prevView, v); if (!v) { prevView = null; show('screen-lobby'); return; } const first = !$('#screen-game').classList.contains('active'); show('screen-game'); render(); if (first) dealAnimation(); else animateDiff(prevView, view); },
   onError(msg) { toast(msg); },
   onJoined(id) { myId = id; },
   onDisconnect() { toast('Mất kết nối với chủ phòng – đang tự vào lại…'); },
@@ -289,17 +289,21 @@ function render() {
   const responding = pr && pr.player === myId && pr.type === 'respond';
   const discarding = pr && pr.player === myId && pr.type === 'discard';
   const cards = m.hand || []; const cnt = cards.length;
-  hand.style.setProperty('--overlap', cnt <= 4 ? '-2px' : cnt <= 6 ? '-12px' : '-24px');
+  { // xếp thẳng hàng: nhiều lá thì thu nhỏ bớt trước, hết cỡ mới chồng mép
+    const mob = innerWidth <= 760, max = mob ? 82 : 118, min = mob ? 62 : 86, avail = Math.max(200, mob ? innerWidth - 24 : innerWidth - (($('#me-info') || hand).getBoundingClientRect().right || 0) - 60);
+    const w = Math.max(min, Math.min(max, (avail - (cnt - 1) * 6) / Math.max(1, cnt)));
+    const ov = cnt > 1 ? Math.min(3, ((avail - w) / (cnt - 1) - w) / 2) : 3;
+    hand.style.setProperty('--hw', w + 'px'); hand.style.setProperty('--overlap', Math.max(-w * 0.3, ov) + 'px');
+  }
   cards.forEach((c, i) => {
     const ce = cardEl(c);
     const mid = (cnt - 1) / 2; const off = i - mid;
-    ce.style.setProperty('--rot', (cnt > 1 ? off * Math.min(5, 24 / cnt) : 0) + 'deg');
-    ce.style.setProperty('--lift', (Math.abs(off) * Math.abs(off) * (cnt > 5 ? 1.6 : 2.4)) + 'px');
+    void off;
     if (responding) {
       if (v.myResponses.includes(c.id)) { ce.classList.add('respond', 'playable'); ce.onclick = () => send({ type: 'respond_card', cardId: c.id }); }
       else ce.classList.add('disabled');
     } else if (discarding) {
-      ce.classList.add('playable', 'discardable'); ce.onclick = () => send({ type: 'discard_card', cardId: c.id });
+      ce.classList.add('playable', 'discardable'); if (discardSel.has(c.id)) ce.classList.add('to-discard'); ce.onclick = () => toggleDiscard(c.id);
     } else if (sidMode && v.myOptions) {
       ce.classList.add('playable'); if (sidPick.includes(c.id)) ce.classList.add('selected');
       ce.onclick = () => { sidPick = sidPick.includes(c.id) ? sidPick.filter(x => x !== c.id) : [...sidPick, c.id].slice(-2); if (sidPick.length === 2) { send({ type: 'ability_sid', cardIds: sidPick }); sidMode = false; sidPick = []; } else render(); };
@@ -368,7 +372,22 @@ function renderPrompt() {
     } else p.appendChild(el('div', 'sub', `Đang chờ ${who.name}…`));
     return;
   }
-  if (pr.type === 'discard') { p.appendChild(el('div', 'ptitle', mine ? `Bỏ bớt ${me().handCount - me().hp} lá` : `${who.name} đang bỏ bớt bài…`)); if (mine) p.appendChild(el('div', 'sub', 'Bấm vào lá muốn bỏ.')); return; }
+  if (pr.type === 'discard') {
+    if (!mine) { p.appendChild(el('div', 'ptitle', `${esc(who.name)} đang bỏ bớt bài…`)); return; }
+    const need = me().handCount - me().hp;
+    for (const id of [...discardSel]) if (!me().hand.some(c => c.id === id)) discardSel.delete(id);
+    p.appendChild(el('div', 'ptitle', `🗑️ Bỏ bớt ${need} lá`));
+    p.appendChild(el('div', 'sub', `Cuối lượt chỉ được giữ số lá bằng số máu (${me().hp}). Chọn ${need} lá muốn bỏ:`));
+    const row = el('div', 'row discard-row');
+    for (const c of me().hand) { const ce = cardEl(c, 'sm'); ce.classList.add('playable'); if (discardSel.has(c.id)) ce.classList.add('to-discard'); attachTip(ce, c); ce.onclick = () => toggleDiscard(c.id); row.appendChild(ce); }
+    p.appendChild(row);
+    const btns = el('div', 'row');
+    const ok = el('button', 'btn primary', discardSel.size === need ? `🗑️ Bỏ ${need} lá đã chọn` : `Đã chọn ${discardSel.size}/${need}`);
+    ok.disabled = discardSel.size !== need || discardQueue.length > 0;
+    ok.onclick = () => { discardQueue = [...discardSel]; discardSel.clear(); sendNextDiscard(); };
+    btns.appendChild(ok); p.appendChild(btns);
+    return;
+  }
   if (pr.type === 'store') {
     p.appendChild(el('div', 'ptitle', `🏪 General Store – ${mine ? 'bạn chọn 1 lá' : esc(who.name) + ' đang chọn'}`));
     const row = el('div', 'row store-row' + (mine ? '' : ' peek'));
@@ -556,3 +575,37 @@ window.addEventListener('beforeunload', e => { if (net && view && view.phase ===
   const hero = $('#hero-cards'); const pick = [['bang', 'S', 14], ['stagecoach', 'S', 9], ['beer', 'H', 8], ['winchester', 'S', 8], ['saloon', 'H', 5]];
   pick.forEach(([type, suit, rank], i) => { const c = cardEl({ id: 'h' + i, type, suit, rank }); const off = i - 2; c.style.setProperty('--r', off * 8 + 'deg'); c.style.setProperty('--y', Math.abs(off) * 10 + 'px'); c.style.setProperty('--d', i * 80 + 'ms'); hero.appendChild(c); });
 })();
+
+// ---------- Đồng hồ đếm giờ (chống treo máy) ----------
+let timerEnd = 0, timerPid = null, timerIv = null, lastBeep = 0;
+function setTimer(t) {
+  let el = document.getElementById('turn-timer');
+  if (!t) { timerEnd = 0; el.style.display = 'none'; clearInterval(timerIv); timerIv = null; return; }
+  timerEnd = Date.now() + t.ms; timerPid = t.pid;
+  if (!timerIv) timerIv = setInterval(tickTimer, 250);
+  tickTimer();
+}
+function tickTimer() {
+  const el = document.getElementById('turn-timer'); if (!el || !view) return;
+  const left = Math.max(0, Math.ceil((timerEnd - Date.now()) / 1000));
+  if (!timerEnd) { el.style.display = 'none'; return; }
+  const mine = timerPid === myId; const p = view.players.find(x => x.id === timerPid);
+  el.style.display = '';
+  el.className = (mine ? 'mine ' : '') + (left <= 10 ? 'low' : '');
+  el.innerHTML = `⏳ ${mine ? 'Bạn còn' : esc(p ? p.name : '?') + ':'} <b>${left}s</b>`;
+  if (mine && left <= 5 && left > 0 && left !== lastBeep) { lastBeep = left; sfx.turn(); }
+}
+
+// ---------- Bỏ bớt bài cuối lượt: chọn đủ rồi bỏ một lần ----------
+let discardSel = new Set(), discardQueue = [];
+function toggleDiscard(id) {
+  const need = me().handCount - me().hp;
+  if (discardSel.has(id)) discardSel.delete(id);
+  else { if (discardSel.size >= need) discardSel.delete([...discardSel][0]); discardSel.add(id); }
+  sfx.card(); render();
+}
+function sendNextDiscard() {
+  const pr = view && view.prompt;
+  if (!pr || pr.type !== 'discard' || pr.player !== myId) { discardQueue = []; return; }
+  const id = discardQueue.shift(); if (id) send({ type: 'discard_card', cardId: id });
+}

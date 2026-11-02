@@ -30,10 +30,10 @@ export function openGuide(openModal, cardHTML) {
         [C('W', 'roulette'), '<b>Quay màu</b>: người kế chọn 1 màu rồi lật bài tới khi ra màu đó – lật bao nhiêu giữ bấy nhiêu!'],
       ])}
       <h3>Lá mở rộng (chủ phòng bật trong sảnh)</h3>${row(cardHTML, [
-        [C('W', 'wtd4'), '<b>Cộng nhắm +4</b>: đổi màu và chọn <b>bất kỳ ai</b> phải rút 4 lá.'],
+        [C('W', 'wtd4'), '<b>Cộng nhắm +4</b>: đổi màu và chọn <b>bất kỳ ai</b> phải rút 4 lá. Có luật cộng dồn thì người bị nhắm được chồng lá rút để đẩy tiếp.'],
         [C('B', 'tornado'), '<b>Bão tố</b>: chỉ đánh lên lá <b>cùng màu</b>. Người kế lật bài tới khi ra lá cùng màu Bão tố (hoặc lá Đổi màu), giữ hết và mất lượt.'],
         [C('Y', 'discall'), '<b>Xả màu</b>: xả luôn mọi lá cùng màu trên tay.'],
-        [C('W', 'wup'), '<b>Up</b>: đổi màu. Người kế đánh lá số màu đó, rồi cứ thế mỗi người phải đánh lá số <b>lớn hơn</b> (cùng màu) hoặc <b>bằng/lớn hơn</b> (khác màu). Ai không theo được rút số lá bằng con số đang thách.'],
+        [C('W', 'wup'), '<b>Up</b>: đổi màu, rồi từ người kế mỗi người đánh 1 lá số (màu nào cũng được), số sau phải <b>bằng hoặc lớn hơn</b> số trước. Ai không theo được rút số lá bằng con số đang thách.'],
       ])}`],
     modes: ['⚙️ Chế độ', () => `
       <h3>🎴 Cổ điển</h3><p>Luật chuẩn. Bị +2/+4 thì rút luôn, không được chồng.</p>

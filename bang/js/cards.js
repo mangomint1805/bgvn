@@ -15,7 +15,7 @@ export const CARD_INFO = {
   missed:     { name: 'Missed!',            en: 'Missed!',        kind: 'brown', icon: '💨',
     desc: 'Né một phát BANG! nhắm vào bạn, kể cả ngoài lượt. Không dùng được để chống Indians! hay Duel.' },
   beer:       { name: 'Beer',             en: 'Beer',           kind: 'brown', icon: '🍺',
-    desc: 'Hồi 1 máu, không vượt quá máu tối đa. Chỉ dùng cho bản thân. Ngoài lượt chỉ được dùng khi sắp mất máu cuối (game tự dùng). Vô hiệu khi chỉ còn 2 người.' },
+    desc: 'Hồi 1 máu, không vượt quá máu tối đa. Chỉ dùng cho bản thân. Ngoài lượt chỉ được dùng khi sắp mất máu cuối (game tự dùng).' },
   panic:      { name: 'Panic!',     en: 'Panic!',         kind: 'brown', icon: '😱',
     desc: 'Lấy 1 lá của người cách bạn đúng khoảng cách 1 (trên tay hoặc trước mặt). Chỉ tính khoảng cách, súng không giúp được; Mustang và Scope vẫn có tác dụng.' },
   catbalou:   { name: 'Cat Balou',       en: 'Cat Balou',      kind: 'brown', icon: '🐈',

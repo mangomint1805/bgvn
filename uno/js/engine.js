@@ -6,7 +6,7 @@ const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.f
 export const COLORS = ['R', 'Y', 'G', 'B'];
 export const COLOR_NAME = { R: 'Đỏ', Y: 'Vàng', G: 'Xanh lá', B: 'Xanh dương' };
 // Giá trị phạt rút của lá rút
-export const DRAW_VALUE = { d2: 2, d4: 4, wd4: 4, wrd4: 4, wd6: 6, wd10: 10 };
+export const DRAW_VALUE = { d2: 2, d4: 4, wd4: 4, wrd4: 4, wd6: 6, wd10: 10, wtd4: 4 };
 export const CARD_NAME = {
   n: 'Số', skip: 'Cấm lượt', rev: 'Đảo chiều', d2: '+2', d4: '+4', skipall: 'Cấm tất cả', discall: 'Bỏ hết màu',
   wild: 'Đổi màu', wd4: 'Đổi màu +4', wtd4: 'Cộng nhắm +4', wup: 'Up', tornado: 'Bão tố', wrd4: 'Đổi màu đảo chiều +4', wd6: 'Đổi màu +6', wd10: 'Đổi màu +10', roulette: 'Vòng quay màu',
@@ -106,10 +106,9 @@ export function canPlay(s, p, c) {
     return DRAW_VALUE[c.type] >= s.stack.last;
   }
   if (s.skipStack) return s.rules.stackSkip && c.type === 'skip';
-  if (s.up) { // chuỗi Up: chỉ lá số; cùng màu phải lớn hơn, khác màu bằng hoặc lớn hơn
+  if (s.up) { // chuỗi Up: chỉ lá số, màu nào cũng được, số phải bằng hoặc lớn hơn
     if (c.type !== 'n') return false;
-    if (s.up.first) return c.color === s.up.color;
-    return c.color === t.color ? c.num > s.up.n : c.num >= s.up.n;
+    return s.up.first || c.num >= s.up.n;
   }
   if (s.mustPlay) return c.id === s.mustPlay;
   if (c.type === 'tornado') return c.color === s.color; // Bão tố chỉ đánh lên lá cùng màu
@@ -222,10 +221,15 @@ export function applyAction(s, pid, a) {
 
 function finishEffect(s, c, p) {
   const n = alive(s).length; s.lastDraw = null; s.drewPlayable = null;
-  if (s.up && c.type === 'n') { s.up.first = false; s.up.n = c.num; log(s, `⬆️ Up! Người kế phải đánh lá số ≥ ${c.num} (cùng màu thì phải lớn hơn).`); return endTurn(s, 1); }
+  if (s.up && c.type === 'n') { s.up.first = false; s.up.n = c.num; log(s, `⬆️ Up! Người kế phải đánh lá số ≥ ${c.num}.`); return endTurn(s, 1); }
   if (c.type === 'wtd4') {
     const t = getPlayer(s, s._target); s._target = null;
     if (!t || t.out || t === p) { s.pending = { type: 'target', player: p.id, card: c }; return; }
+    if (s.rules.stackDraw) { // cộng dồn như lá rút thường, nhưng phạt bay thẳng tới người bị nhắm
+      s.stack = { total: (s.stack ? s.stack.total : 0) + 4, last: 4 };
+      log(s, `🎯 ${p.name} nhắm ${t.name}: dồn phạt ${s.stack.total} lá!`);
+      s.turn = s.players.indexOf(t); return endTurn(s, 0);
+    }
     const got = give(s, t, 4); log(s, `🎯 ${p.name} nhắm ${t.name}: rút ${got} lá!`);
     return endTurn(s, 1);
   }
@@ -235,7 +239,7 @@ function finishEffect(s, c, p) {
     t.saidUno = false; log(s, `🌪️ Bão tố! ${t.name} lật ${k} lá mới ra màu ${COLOR_NAME[c.color]} và mất lượt.`);
     checkMercy(s, t); return endTurn(s, 2);
   }
-  if (c.type === 'wup') { s.up = { color: s.color, n: 0, first: true }; log(s, `⬆️ Up! ${nameAt(s, 1)} phải đánh lá số màu ${COLOR_NAME[s.color]}.`); return endTurn(s, 1); }
+  if (c.type === 'wup') { s.up = { color: s.color, n: 0, first: true }; log(s, `⬆️ Up! Từ ${nameAt(s, 1)}: mỗi người đánh 1 lá số, số sau phải bằng hoặc lớn hơn số trước.`); return endTurn(s, 1); }
   const v = DRAW_VALUE[c.type];
   if (c.type === 'wrd4' || c.type === 'rev') {
     s.dir *= -1; log(s, `🔁 Đảo chiều!`);

@@ -86,7 +86,7 @@ export function guideHTML() {
 <section id="g-guns"><h3>8. Súng</h3><div class="g-cards">${guns.map(cardRow).join('')}</div></section>
 
 <section id="g-death"><h3>9. Hết máu và bị loại</h3><ul>
-<li>Mất máu cuối cùng thì bị loại, trừ khi dùng ngay 1 lá <b>Beer</b> (game tự dùng giúp bạn). Beer vô hiệu khi chỉ còn 2 người.</li>
+<li>Mất máu cuối cùng thì bị loại, trừ khi dùng ngay 1 lá <b>Beer</b> (game tự dùng giúp bạn).</li>
 <li>Người bị loại lật vai trò lên, bỏ hết bài trên tay và trước mặt.</li>
 <li><b>Thưởng:</b> ai hạ một Tội phạm thì được rút 3 lá (kể cả người hạ là Tội phạm khác).</li>
 <li><b>Phạt:</b> Cảnh sát trưởng lỡ hạ Phó cảnh sát thì phải bỏ hết bài trên tay và trước mặt.</li></ul></section>

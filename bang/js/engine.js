@@ -160,7 +160,7 @@ function damage(s, target, amount, source) {
   log(s, `${name(target)} mất ${amount} máu (còn ${Math.max(0, target.hp)}).`);
   if (target.hp <= 0) {
     // Tự dùng Beer cứu mạng
-    while (target.hp <= 0 && alivePlayers(s).length > 2) {
+    while (target.hp <= 0) {
       const beer = target.hand.find(c => c.type === 'beer');
       if (!beer) break;
       discardCard(s, target, beer.id); target.hp++;
@@ -225,7 +225,6 @@ export function getPlayOptions(s, pid, cardId) {
     }
     case 'missed': return { ok: false, reason: 'Missed! chỉ dùng khi bị bắn.' };
     case 'beer':
-      if (alivePlayers(s).length <= 2) return { ok: false, reason: 'Còn 2 người, Beer vô hiệu.' };
       if (p.hp >= p.maxHp) return { ok: false, reason: 'Máu đã đầy.' };
       return { ok: true, targetMode: 'none' };
     case 'panic': {
