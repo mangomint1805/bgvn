@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Scribble it! – vẽ đoán cùng hội bạn</title>
+<meta name="description" content="Game vẽ – đoán hình tiếng Việt chơi online cùng bạn bè: Đoán hình và Tam sao thất bản.">
+<meta name="theme-color" content="#fff8e8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='8' y='8' width='84' height='84' rx='20' fill='%23fff8e8' stroke='%231f2340' stroke-width='7'/><path d='M22 68c10-24 22-38 30-30s-10 26 4 26 18-30 24-40' fill='none' stroke='%23ef2b3a' stroke-width='9' stroke-linecap='round'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/scribble.css?v=2">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+</head>
+<body>
+<div class="paper-bg" aria-hidden="true"></div>
+
+<!-- TRANG CHỦ -->
+<section id="screen-home" class="screen active">
+  <a class="back-hub" href="../">← Bàn chơi BGVN</a>
+  <div class="home-card">
+    <div class="doodles" aria-hidden="true">
+      <svg viewBox="0 0 320 110" class="hero-svg">
+        <path class="dl d1" d="M18 82c18-40 40-62 58-50s-16 46 8 44 30-52 46-60"/>
+        <circle class="dl d2" cx="196" cy="44" r="22"/>
+        <path class="dl d3" d="M188 40h0M204 40h0M186 52c6 8 14 8 20 0"/>
+        <path class="dl d4" d="M250 86l14-44 14 44-38-28h48z"/>
+        <g class="pencil"><path d="M226 98l58-58 12 12-58 58-16 4z" fill="#ffd21f" stroke="#1f2340" stroke-width="4" stroke-linejoin="round"/><path d="M222 114l4-16 12 12z" fill="#f6d2a8" stroke="#1f2340" stroke-width="4" stroke-linejoin="round"/><path d="M284 40l8-8 12 12-8 8z" fill="#ef2b3a" stroke="#1f2340" stroke-width="4" stroke-linejoin="round"/></g>
+      </svg>
+    </div>
+    <h1 class="logo"><span class="l1">Scribble</span> <span class="l2">it!</span></h1>
+    <p class="tag">Vẽ bậy – đoán bừa – cười xỉu 🤣</p>
+    <label class="fld"><span>Tên của bạn</span><input id="name" maxlength="16" placeholder="Nhập tên…" autocomplete="nickname"></label>
+    <div class="btn-col">
+      <button class="btn big pri" id="btn-create">✨ Tạo phòng online</button>
+      <div class="join-row"><input id="join-code" maxlength="5" placeholder="MÃ PHÒNG" autocomplete="off" aria-label="Mã phòng"><button class="btn" id="btn-join">Vào</button></div>
+      <button class="btn big ghost" id="btn-practice">✏️ Vẽ thử một mình</button>
+    </div>
+    <div class="home-tools">
+      <button class="chip" id="btn-guide-home">📖 Hướng dẫn</button>
+      <button class="chip" id="btn-music-home">🎵 Nhạc</button>
+      <button class="chip snd-btn" id="btn-sound-home">🔊 Âm thanh</button>
+    </div>
+    <p class="note">Bản fan-made phi thương mại. Chơi vui là chính, vẽ xấu là mười 🖍️</p>
+  </div>
+</section>
+
+<!-- SẢNH -->
+<section id="screen-lobby" class="screen">
+  <div class="lobby">
+    <div class="lobby-head">
+      <button class="chip" id="btn-leave-lobby">← Thoát</button>
+      <div class="code-box" id="code-box">Mã phòng <b id="room-code">…</b> <button class="chip sm" id="btn-copy">Chép link mời</button></div>
+    </div>
+    <div class="lobby-grid">
+      <div class="panel">
+        <h3>Người chơi <small id="pcount"></small></h3>
+        <ul id="plist" class="plist"></ul>
+        <p class="hint-txt" id="lobby-tip"></p>
+      </div>
+      <div class="panel">
+        <h3>Chế độ</h3>
+        <div id="modes" class="modes"></div>
+        <div id="settings" class="settings"></div>
+      </div>
+    </div>
+    <div class="lobby-foot">
+      <button class="btn big pri" id="btn-start">▶ Bắt đầu</button>
+      <p class="wait" id="wait-msg">Đang chờ chủ phòng bắt đầu… ✏️</p>
+    </div>
+  </div>
+</section>
+
+<!-- ĐOÁN HÌNH -->
+<section id="screen-game" class="screen game">
+  <header class="topbar">
+    <button class="ic" id="g-leave" aria-label="Rời ván">←</button>
+    <div class="hintbox"><small id="g-cap">Vòng 1/3</small><div class="mask" id="g-hint"></div></div>
+    <div class="timer" id="g-timer"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="19" class="bg"/><circle cx="22" cy="22" r="19" class="fg" id="g-ring"/></svg><b id="g-secs">–</b></div>
+    <button class="ic snd-btn" id="g-sound" aria-label="Âm thanh">🔊</button>
+    <button class="ic wide-only" id="g-guide" aria-label="Hướng dẫn">📖</button>
+  </header>
+  <div class="stage">
+    <div class="board-col">
+      <div class="board-wrap" id="g-board"><div class="overlay" id="g-overlay" hidden></div></div>
+      <div class="tool-slot" id="g-tools"></div>
+    </div>
+    <aside class="players" id="g-players"></aside>
+    <div class="chat">
+      <ol class="chat-log" id="g-chat" aria-live="polite"></ol>
+      <form class="chat-in" id="g-form" autocomplete="off"><input id="g-input" maxlength="100" placeholder="Gõ đáp án ở đây…" enterkeyhint="send" aria-label="Khung chat"><button class="btn sm pri" aria-label="Gửi">➤</button></form>
+    </div>
+  </div>
+</section>
+
+<!-- TAM SAO THẤT BẢN -->
+<section id="screen-gartic" class="screen game">
+  <header class="topbar">
+    <button class="ic" id="t-leave" aria-label="Rời ván">←</button>
+    <div class="hintbox"><small id="t-cap">Bước 1/4</small><div class="steps" id="t-steps"></div></div>
+    <div class="timer" id="t-timer"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="19" class="bg"/><circle cx="22" cy="22" r="19" class="fg" id="t-ring"/></svg><b id="t-secs">–</b></div>
+    <button class="ic snd-btn" id="t-sound" aria-label="Âm thanh">🔊</button>
+    <button class="ic wide-only" id="t-guide" aria-label="Hướng dẫn">📖</button>
+  </header>
+  <div class="tbody">
+    <div class="t-play" id="t-play">
+      <div class="t-prompt" id="t-prompt"></div>
+      <div class="board-wrap" id="t-board"></div>
+      <div class="tool-slot" id="t-tools"></div>
+      <form class="t-text" id="t-form" autocomplete="off"><input id="t-input" maxlength="120" enterkeyhint="done" aria-label="Câu của bạn"><button type="button" class="btn sm" id="t-dice" title="Gợi ý ngẫu nhiên">🎲</button></form>
+      <button class="btn big pri" id="t-done">Xong ✓</button>
+    </div>
+    <div class="t-wait" id="t-wait" hidden></div>
+    <div class="t-reveal" id="t-reveal" hidden></div>
+  </div>
+</section>
+
+<!-- VẼ THỬ -->
+<section id="screen-practice" class="screen game">
+  <header class="topbar">
+    <button class="ic" id="p-leave" aria-label="Về trang chủ">←</button>
+    <div class="hintbox"><small>Vẽ thử một mình</small><div class="pword" id="p-word"></div></div>
+    <button class="ic" id="p-next" title="Từ khác" aria-label="Từ khác">🎲</button>
+    <button class="ic" id="p-save" title="Lưu PNG" aria-label="Lưu ảnh">⬇</button>
+  </header>
+  <div class="tbody">
+    <div class="board-wrap" id="p-board"></div>
+    <div class="tool-slot" id="p-tools"></div>
+  </div>
+</section>
+
+<div class="modal" id="modal"><div class="modal-box" id="modal-box"></div></div>
+<div class="toast" id="toast" role="status"></div>
+<div id="fx-layer"></div>
+<script type="module" src="js/main.js?v=2"></script>
+</body>
+</html>
