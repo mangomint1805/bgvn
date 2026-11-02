@@ -1,5 +1,5 @@
 // Hướng dẫn luật Cờ Tỷ Phú Sài Gòn (tiếng Việt)
-import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=40';
+import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=41';
 
 export function guideHTML() {
   const taxes = TILES.filter(t => t.type === 'tax').map(t => `${t.name} ${money(t.amount)}`).join(', ');
@@ -25,8 +25,9 @@ export function guideHTML() {
     <li><b>Điện lực, Cấp nước</b>: có 1 công ty thu <b>4 ×</b> tổng xúc xắc, có cả 2 thu <b>10 ×</b>.</li>
     <li>Ô đang <b>thế chấp</b> không thu tiền thuê. Ở tù vẫn thu tiền thuê bình thường.</li></ul>
   <h3>🏠 Xây nhà & Landmark</h3><ul>
-    <li>Phải có <b>đủ nhóm màu</b> và không ô nào trong nhóm đang thế chấp.</li>
-    <li><b>Xây đều tay</b>: ô ít nhà nhất trong nhóm phải được xây trước. Tối đa 4 nhà, sau đó nâng lên <b>🏛️ Landmark</b> (thuê cực đắt).</li>
+    <li>Mặc định (kiểu ZingPlay): <b>đường của mình là xây được</b>, không cần đủ nhóm màu. Bấm vào ô hoặc mở <b>🏗️ Tài sản</b> trong lượt của mình để xây.</li>
+    <li>Chủ phòng có thể chọn luật cổ điển "Phải đủ bộ màu" trong sảnh.</li>
+    <li>Khi đã <b>đủ nhóm màu</b> thì phải <b>xây đều tay</b> (ô ít nhà nhất trong nhóm xây trước) và không ô nào trong nhóm đang thế chấp. Tối đa 4 nhà, sau đó nâng lên <b>🏛️ Landmark</b> (thuê cực đắt).</li>
     <li>Bán nhà lại cho ngân hàng được <b>nửa giá</b>, cũng phải bán đều tay.</li></ul>
   <h3>💥 Mua lại đất (kiểu ZingPlay)</h3><ul>
     <li>Trả tiền thuê ở <b>đường</b> của người khác xong, bạn được quyền <b>mua lại</b> ô đó với giá <b>gấp đôi giá trị</b> (giá đất + nhà). Nhà trên đất giữ nguyên.</li>

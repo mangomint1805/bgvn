@@ -1,12 +1,12 @@
 // Cờ Tỷ Phú Sài Gòn – giao diện: trang chủ, tạo nhân vật, sảnh, ván chơi 3D, hoạt ảnh sự kiện.
-import { Host, Client, MAX, loadSnapshot, session, cleanAvatar } from './net.js?v=40';
+import { Host, Client, MAX, loadSnapshot, session, cleanAvatar } from './net.js?v=41';
 import {
   setData, TILES, GROUPS, GROUP_LIST, STATION_RENT, money, rentOf, canBuild, canSell, canMortgage, canUnmortgage, houseCost, mortgageValue,
-  unmortgageCost, tradable, tradeError, buybackPrice, netWorth, tilesOf, ownsGroup, JAIL_FINE, MAX_TRADES, isProp,
-} from './engine.js?v=40';
-import { Board3D, THEMES } from './scene3d.js?v=40';
-import * as fx from './fx.js?v=40';
-import { guideHTML } from './guide.js?v=40';
+  unmortgageCost, buildBlock, tradable, tradeError, buybackPrice, netWorth, tilesOf, ownsGroup, JAIL_FINE, MAX_TRADES, isProp,
+} from './engine.js?v=41';
+import { Board3D, THEMES } from './scene3d.js?v=41';
+import * as fx from './fx.js?v=41';
+import { guideHTML } from './guide.js?v=41';
 import { OPTIONS, PRESETS, buildAvatar, portrait } from '../../shared/js/avatar3d.js';
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
@@ -19,7 +19,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const settings = fx.settings;
 
 // ---------- dữ liệu bàn cờ ----------
-const [tilesData, cardsData] = await Promise.all(['tiles.json?v=40', 'cards.json?v=40'].map(u => fetch(u).then(r => r.json())));
+const [tilesData, cardsData] = await Promise.all(['tiles.json?v=41', 'cards.json?v=41'].map(u => fetch(u).then(r => r.json())));
 setData(tilesData, cardsData);
 const VN = 'ẮẰẲẴẶẤẦẨẪẬĐđơưƯƠếềểễệ';
 const fontsReady = Promise.race([
@@ -174,6 +174,7 @@ const OPTS = [
   ['maxRounds', '⏱️ Giới hạn vòng', [[0, 'Không'], [20, '20'], [30, '30'], [50, '50']], 'Hết vòng thì ai nhiều tài sản nhất thắng.'],
   ['monopolyWin', '🏆 Thắng độc quyền', [[true, 'Bật'], [false, 'Tắt']], 'Trọn 3 nhóm màu hoặc cả 4 bến xe là thắng luôn.'],
   ['auction', '🔨 Đấu giá', [[true, 'Bật'], [false, 'Tắt']], 'Không mua thì đem ô đó ra đấu giá.'],
+  ['freeBuild', '🏗️ Xây nhà', [[true, 'Không cần đủ bộ'], [false, 'Phải đủ bộ màu']], 'Kiểu ZingPlay: đất của mình là xây được. Cổ điển: phải gom đủ nhóm màu mới xây.'],
   ['buyback', '💥 Mua lại đất', [[true, 'Bật'], [false, 'Tắt']], 'Trả thuê xong được mua lại đường đó với giá gấp đôi.'],
   ['turnTime', '⏳ Thời gian suy nghĩ', [[0, 'Không'], [30, '30s'], [60, '60s'], [90, '90s']], 'Hết giờ máy đánh giúp (chơi online).', true],
 ];
@@ -530,7 +531,7 @@ const statusOf = (v, i) => { const pr = v.props[i]; if (!pr) return ''; return p
 function manageBtns(v, pid, i, scope = 'modal') {
   const st = v.stage, ok1 = ['roll', 'end'].includes(st), ok2 = ['roll', 'end', 'debt'].includes(st), pr = v.props[i], out = [];
   if (!pr || pr.owner !== pid || v.actor !== pid || cur(v).id !== pid) return '';
-  if (TILES[i].type === 'city' && ok1 && canBuild(v, pid, i)) out.push(btn(scope, pr.h === 4 ? `🏛️ Landmark -${money(houseCost(i))}` : `🏠 Xây -${money(houseCost(i))}`, () => send(pid, { type: 'build', tile: i }), 'green sm'));
+  if (TILES[i].type === 'city' && ok1 && pr.h < 5) { const why = buildBlock(v, pid, i); out.push(btn(scope, pr.h === 4 ? `🏛️ Landmark -${money(houseCost(i))}` : `🏠 Xây -${money(houseCost(i))}`, () => send(pid, { type: 'build', tile: i }), 'green sm', !!why)); if (why) out.push(`<small class="why">⚠️ ${esc(why)}</small>`); }
   if (ok2 && canSell(v, pid, i)) out.push(btn(scope, `🔨 Bán nhà +${money(Math.floor(houseCost(i) / 2))}`, () => send(pid, { type: 'sell', tile: i }), 'gold sm'));
   if (ok2 && canMortgage(v, pid, i)) out.push(btn(scope, `🏦 Thế chấp +${money(mortgageValue(i))}`, () => send(pid, { type: 'mortgage', tile: i }), 'ghost sm'));
   if (ok1 && pr.mort) out.push(btn(scope, `🔑 Chuộc -${money(unmortgageCost(i))}`, () => send(pid, { type: 'unmortgage', tile: i }), 'blue sm', !canUnmortgage(v, pid, i)));

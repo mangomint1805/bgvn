@@ -19,7 +19,7 @@ export function setRandom(f) { rand = f || Math.random; }
 const d6 = () => 1 + Math.floor(rand() * 6);
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-export const DEFAULTS = { startMoney: 1500, maxRounds: 0, monopolyWin: true, auction: true, buyback: true, turnTime: 0 };
+export const DEFAULTS = { startMoney: 1500, maxRounds: 0, monopolyWin: true, auction: true, buyback: true, freeBuild: true, turnTime: 0 };
 export const SALARY = 200, JAIL_FINE = 50, MAX_TRADES = 3;
 export const houseCost = i => (GROUPS[TILES[i].group] || {}).house || 0;
 export const mortgageValue = i => Math.round(TILES[i].price / 2);
@@ -84,15 +84,21 @@ export function liquidity(s, pid) {
 }
 
 // ---------------- kiểm tra hành động quản lý tài sản ----------------
-export function canBuild(s, pid, i) {
+// lý do không xây được ('' = xây được). freeBuild (mặc định, kiểu ZingPlay): đất của mình là xây được, không cần đủ bộ màu;
+// đủ bộ màu thì vẫn phải xây đều tay. Tắt freeBuild = luật cổ điển (phải đủ bộ màu).
+export function buildBlock(s, pid, i) {
   const pr = s.props[i], t = TILES[i];
-  if (!pr || pr.owner !== pid || t.type !== 'city' || pr.mort || pr.h >= 5) return false;
-  if (!ownsGroup(s, pid, t.group)) return false;
-  const g = GROUPS[t.group].tiles;
-  if (g.some(j => s.props[j].mort)) return false;
-  if (pr.h > Math.min(...g.map(j => s.props[j].h))) return false; // xây đều tay
-  return P(s, pid).cash >= houseCost(i);
+  if (!pr || pr.owner !== pid || t.type !== 'city') return 'Không phải đường của bạn';
+  if (pr.h >= 5) return 'Đã lên Landmark rồi';
+  if (pr.mort) return 'Đất đang thế chấp – chuộc lại trước';
+  const g = GROUPS[t.group].tiles, full = ownsGroup(s, pid, t.group);
+  if (!full && s.opts.freeBuild === false) return 'Cần sở hữu đủ cả nhóm màu mới xây được';
+  if (full && g.some(j => s.props[j].mort)) return 'Có đất cùng màu đang thế chấp';
+  if (full && pr.h > Math.min(...g.map(j => s.props[j].h))) return 'Đủ bộ màu thì phải xây đều tay – xây các đường cùng màu trước';
+  if (P(s, pid).cash < houseCost(i)) return 'Không đủ tiền';
+  return '';
 }
+export const canBuild = (s, pid, i) => !buildBlock(s, pid, i);
 export function canSell(s, pid, i) {
   const pr = s.props[i]; if (!pr || pr.owner !== pid || !pr.h) return false;
   const g = GROUPS[TILES[i].group].tiles; return pr.h >= Math.max(...g.map(j => s.props[j].h)); // bán đều tay

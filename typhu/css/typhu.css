@@ -204,3 +204,4 @@ input:focus{border-color:var(--acc)}
 .flip .front.chest{background:radial-gradient(circle at 50% 0,#fff4cc,#fff 65%);border-color:#ffe08a}
 @media (max-width:420px){.timer .tn{display:none}}
 .modal-box h2{padding:0 38px}
+.why{display:block;width:100%;font-size:12px;color:#b3261e;margin-top:2px}

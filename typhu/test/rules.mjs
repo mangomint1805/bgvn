@@ -37,9 +37,13 @@ test('xây nhà đều tay, Landmark sau 4 nhà', () => {
   s.props[3].h = 4; act(s, 'p0', { type: 'build', tile: 1 }); assert.equal(s.props[1].h, 5);
   assert.equal(applyAction(s, 'p0', { type: 'build', tile: 1 }).ok, false);
 });
-test('không xây khi chưa đủ nhóm hoặc có ô thế chấp', () => {
-  const s = game(); own(s, 'p0', 1); assert.equal(applyAction(s, 'p0', { type: 'build', tile: 1 }).ok, false);
+test('luật cổ điển (freeBuild tắt): không xây khi chưa đủ nhóm hoặc có ô thế chấp', () => {
+  const s = game(); s.opts.freeBuild = false; own(s, 'p0', 1); assert.equal(applyAction(s, 'p0', { type: 'build', tile: 1 }).ok, false);
   own(s, 'p0', 3, 0, true); assert.equal(applyAction(s, 'p0', { type: 'build', tile: 1 }).ok, false);
+});
+test('kiểu ZingPlay (mặc định): xây được khi chưa đủ nhóm; đủ nhóm mà có ô thế chấp thì không', () => {
+  const s = game(); own(s, 'p0', 1); assert.equal(applyAction(s, 'p0', { type: 'build', tile: 1 }).ok, true);
+  const s2 = game(); own(s2, 'p0', 1); own(s2, 'p0', 3, 0, true); assert.equal(applyAction(s2, 'p0', { type: 'build', tile: 1 }).ok, false);
 });
 test('bán nhà đều tay, nửa giá', () => {
   const s = game(); own(s, 'p0', 1, 2); own(s, 'p0', 3, 1);

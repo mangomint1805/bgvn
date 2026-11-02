@@ -2,7 +2,7 @@
 import {
   TILES, GROUPS, GROUP_LIST, P, current, actorOf, alive, tilesOf, ownerOf, ownsGroup, rentOf, canBuild, canSell, canMortgage, canUnmortgage,
   houseCost, unmortgageCost, mortgageValue, tradable, tradeError, buybackPrice, isProp, JAIL_FINE, MAX_TRADES,
-} from './engine.js?v=40';
+} from './engine.js?v=41';
 
 // tiền nên giữ lại để trả tiền thuê bất ngờ
 function reserve(s, pid) {
