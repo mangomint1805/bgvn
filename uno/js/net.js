@@ -1,6 +1,6 @@
 // Lớp mạng UNO: host giữ state, client chỉ gửi action. Kết nối dùng chung ở shared/net/room.js
-import { createGame, applyAction, viewFor, current, MODES } from './engine.js';
-import { botAction, botCatch } from './bot.js';
+import { createGame, applyAction, viewFor, current, MODES } from './engine.js?v=10';
+import { botAction, botCatch } from './bot.js?v=10';
 import { S } from './ufx.js';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
 const NS = 'bgvn-uno', PREFIX = 'bgvn-uno-', GAME = 'uno';
@@ -9,6 +9,7 @@ export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem
 export { session };
 const BOT_NAMES = ['Mochi', 'Bơ', 'Kem', 'Su Su', 'Tôm', 'Bắp', 'Mít', 'Na', 'Xoài'];
 export const MAX = 10;
+export const PULL_CD = 1000; // giãn cách giữa 2 lần tự bốc phạt
 
 export class Host {
   constructor(name, handlers, offline = false, restore = null) {
@@ -89,6 +90,11 @@ export class Host {
   restart() { clearTimeout(this.botTimer); clearTimeout(this.catchTimer); this.state = null; this.pushLobby(); for (const p of this.players) if (p.conn) p.conn.send({ t: 'state', view: null }); this.h.onState(null); }
   act(pid, a) {
     if (!this.state) return;
+    if (a && a.type === 'pull') { // mỗi lần bốc cách nhau 1 giây – cho nó thấm 😈
+      this.lastPull = this.lastPull || {}; const now = Date.now();
+      if (now - (this.lastPull[pid] || 0) < PULL_CD - 60) return;
+      this.lastPull[pid] = now;
+    }
     const r = applyAction(this.state, pid, a);
     if (!r.ok) { const p = this.players.find(x => x.id === pid); if (p && p.conn) p.conn.send({ t: 'error', msg: r.reason }); else if (pid === 'host') this.h.onError(r.reason); }
     this.broadcast(); this.scheduleBots();
@@ -113,10 +119,11 @@ export class Host {
         this.catchTimer = setTimeout(() => { this.catchTimer = null; const a = this.state && botCatch(this.state, b.id); if (a) this.act(b.id, a); }, (900 + Math.random() * 1400) * S());
       }
     }
-    const pid = s.pending ? s.pending.player : current(s).id;
+    const pid = s.owe ? s.owe.player : s.pending ? s.pending.player : current(s).id;
     const p = this.players.find(x => x.id === pid); if (!p) return;
     const auto = p.isBot || (!p.connected && pid !== 'host');
     if (!auto) return;
+    if (s.owe) { this.botTimer = setTimeout(() => this.act(pid, { type: 'pull' }), Math.max(PULL_CD + 80, (this.graceUntil || 0) - Date.now())); return; }
     const human = this.players.some(x => !x.isBot);
     const base = s.unoWatch && human ? 2600 : 1000; // chừa thời gian cho người thật bắt lỗi
     this.botTimer = setTimeout(() => {

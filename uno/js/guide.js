@@ -14,15 +14,15 @@ export function openGuide(openModal, cardHTML) {
     cards: ['🃏 Các lá bài', () => `
       <h3>Bộ cổ điển (108 lá)</h3>${row(cardHTML, [
         [C('R', 'n', 7), 'Lá số 0–9: đánh theo màu hoặc theo số.'],
-        [C('Y', 'skip'), '<b>Cấm lượt</b>: người kế tiếp mất lượt.'],
-        [C('G', 'rev'), '<b>Đảo chiều</b>: đổi chiều chơi. Còn 2 người thì như Cấm lượt.'],
+        [C('Y', 'skip'), '<b>Khoá mõm</b>: người kế tiếp mất lượt.'],
+        [C('G', 'rev'), '<b>Đổi gay thành les</b>: đổi chiều chơi. Còn 2 người thì như Khoá mõm.'],
         [C('B', 'd2'), '<b>+2</b>: người kế rút 2 lá và mất lượt.'],
         [C('W', 'wild'), '<b>Đổi màu</b>: bạn chọn màu tiếp theo.'],
         [C('W', 'wd4'), '<b>Đổi màu +4</b>: chọn màu, người kế rút 4 lá và mất lượt.'],
       ])}
       <h3>Lá riêng của No Mercy (168 lá)</h3>${row(cardHTML, [
         [C('R', 'd4'), '<b>+4 có màu</b>: như +2 nhưng rút 4.'],
-        [C('Y', 'skipall'), '<b>Cấm hết</b>: tất cả mất lượt, bạn đi tiếp ngay.'],
+        [C('Y', 'skipall'), '<b>Khoá mõm cả bàn</b>: tất cả mất lượt, bạn đi tiếp ngay.'],
         [C('G', 'discall'), '<b>Xả màu</b>: bỏ luôn mọi lá cùng màu trên tay.'],
         [C('W', 'wrd4'), '<b>Đảo chiều +4</b>: đảo chiều, người kế (theo chiều mới) rút 4.'],
         [C('W', 'wd6'), '<b>Đổi màu +6</b>: người kế rút 6.'],
@@ -31,7 +31,7 @@ export function openGuide(openModal, cardHTML) {
       ])}
       <h3>Lá mở rộng (chủ phòng bật trong sảnh)</h3>${row(cardHTML, [
         [C('W', 'wtd4'), '<b>Cộng nhắm +4</b>: đổi màu và chọn <b>bất kỳ ai</b> phải rút 4 lá. Có luật cộng dồn thì người bị nhắm được chồng lá rút để đẩy tiếp.'],
-        [C('B', 'tornado'), '<b>Bão tố</b>: chỉ đánh lên lá <b>cùng màu</b>. Người kế lật bài tới khi ra lá cùng màu Bão tố (hoặc lá Đổi màu), giữ hết và mất lượt.'],
+        [C('B', 'tornado'), '<b>Bão tố</b>: chỉ đánh lên lá <b>cùng màu</b>. Người kế phải <b>tự bốc từng lá</b> (mỗi lá cách nhau 1 giây 😈) tới khi ra lá cùng màu Bão tố (hoặc lá Đổi màu), giữ hết và mất lượt.'],
         [C('Y', 'discall'), '<b>Xả màu</b>: xả luôn mọi lá cùng màu trên tay.'],
         [C('W', 'wup'), '<b>Up</b>: đổi màu, rồi từ người kế mỗi người đánh 1 lá số (màu nào cũng được), số sau phải <b>bằng hoặc lớn hơn</b> số trước. Ai không theo được rút số lá bằng con số đang thách.'],
       ])}`],
@@ -39,11 +39,12 @@ export function openGuide(openModal, cardHTML) {
       <h3>🎴 Cổ điển</h3><p>Luật chuẩn. Bị +2/+4 thì rút luôn, không được chồng.</p>
       <h3>🔥 Luật rừng</h3><ul>
         <li><b>Cộng dồn</b>: bị +2 thì đánh +2 hoặc +4 đẩy sang người kế, tổng phạt cộng dồn. Lá chồng phải <b>bằng hoặc lớn hơn</b> lá trước (+4 không chồng được +2).</li>
-        <li><b>Cấm chồng Cấm</b>: bị Cấm lượt mà có lá Cấm thì đánh để chuyền cho người kế.</li>
-        <li><b>Không về bằng lá chức năng</b>: lá cuối cùng phải là lá số. Còn mỗi lá Cấm/Đảo/+2/Đổi màu… thì phải rút bài.</li>
+        <li><b>Khoá mõm chồng Khoá mõm</b>: bị khoá mõm mà có lá Khoá mõm thì đánh để chuyền cho người kế.</li>
+        <li><b>Tự bốc phạt</b>: bị cộng bao nhiêu lá thì tự bấm bốc từng lá, mỗi lá cách nhau 1 giây. Cho thấm 😈</li>
+        <li><b>Không về bằng lá chức năng</b>: lá cuối cùng phải là lá số. Còn mỗi lá Khoá mõm/Gay⇄Les/+2/Đổi màu… thì phải rút bài.</li>
         <li>Không có lá thì rút 1 lá, hợp thì đánh luôn. <b>Không có chặn ngang</b>.</li></ul>
       <h3>💀 No Mercy</h3><ul>
-        <li>Bộ 168 lá với +6, +10, Quay màu, Xả màu, Cấm hết.</li>
+        <li>Bộ 168 lá với +6, +10, Quay màu, Xả màu, Khoá mõm cả bàn.</li>
         <li>Cộng dồn lá rút (bằng hoặc lớn hơn).</li>
         <li>Không có lá hợp thì <b>rút tới khi ra lá đánh được</b> và phải đánh nó.</li>
         <li><b>Luật 7–0</b>: đánh 7 thì đổi bài với 1 người; đánh 0 thì cả bàn chuyền bài theo chiều chơi.</li>
@@ -51,7 +52,7 @@ export function openGuide(openModal, cardHTML) {
       <p>Chủ phòng có thể bật/tắt từng luật trong sảnh để chơi kiểu riêng của hội mình.</p>`],
     tips: ['💡 Mẹo', () => `<ul>
       <li>Giữ lá <b>Đổi màu</b> cho lúc bí, đừng xài sớm.</li>
-      <li>Người kế còn ít bài? Tung <b>+2, Cấm</b> vào mặt họ 😈</li>
+      <li>Người kế còn ít bài? Tung <b>+2, Khoá mõm</b> vào mặt họ 😈</li>
       <li>Đổi sang màu bạn đang có nhiều nhất (bảng chọn màu có đếm số lá giúp bạn).</li>
       <li>Nhớ bấm <b>UNO!</b> trước khi đánh lá áp chót. Thấy ai còn 1 lá mà chưa hô thì bấm <b>🚨 Bắt lỗi</b> ngay!</li>
       <li>Bấm 📜 để xem nhật ký, ⚡ để chỉnh tốc độ hiệu ứng.</li></ul>`],

@@ -1,6 +1,6 @@
-import { Host, Client, MAX, loadSnapshot, session } from './net.js?v=9';
+import { Host, Client, MAX, loadSnapshot, session } from './net.js?v=10';
 import { netStatus } from '../../shared/ui/status.js';
-import { MODES, COLOR_NAME, cardText, DRAW_VALUE } from './engine.js';
+import { MODES, COLOR_NAME, cardText, DRAW_VALUE } from './engine.js?v=10';
 import * as fx from './ufx.js';
 import { openGuide } from './guide.js';
 
@@ -14,7 +14,7 @@ let shownTop = null, freshIds = new Set(), modalKey = null, landing = false;
 
 // ---------- lá bài ----------
 export const SYM = { skip: '⊘', rev: '⇄', d2: '+2', d4: '+4', skipall: '⊘⊘', discall: '✕', wild: '', wd4: '+4', wrd4: '⇄4', wd6: '+6', wd10: '+10', roulette: '?', wtd4: '🎯4', wup: '⬆', tornado: '🌀' };
-export const LBL = { skip: 'CẤM LƯỢT', rev: 'ĐẢO CHIỀU', d2: 'RÚT 2', d4: 'RÚT 4', skipall: 'CẤM HẾT', discall: 'XẢ MÀU', wild: 'ĐỔI MÀU', wd4: 'RÚT 4', wrd4: 'ĐẢO + RÚT 4', wd6: 'RÚT 6', wd10: 'RÚT 10', roulette: 'QUAY MÀU', wtd4: 'NHẮM +4', wup: 'UP', tornado: 'BÃO TỐ' };
+export const LBL = { skip: 'KHOÁ MÕM', rev: 'GAY ⇄ LES', d2: 'RÚT 2', d4: 'RÚT 4', skipall: 'KHOÁ CẢ BÀN', discall: 'XẢ MÀU', wild: 'ĐỔI MÀU', wd4: 'RÚT 4', wrd4: 'ĐẢO + RÚT 4', wd6: 'RÚT 6', wd10: 'RÚT 10', roulette: 'QUAY MÀU', wtd4: 'NHẮM +4', wup: 'UP', tornado: 'BÃO TỐ' };
 export function cardHTML(c, cls = '', attrs = '') {
   if (!c) return `<div class="ucard back ${cls}" ${attrs}></div>`;
   const sym = c.type === 'n' ? String(c.num) : SYM[c.type];
@@ -77,7 +77,7 @@ $('#btn-copy').onclick = () => { const url = location.origin + location.pathname
 // ---------- sảnh ----------
 const RULE_INFO = {
   stackDraw: ['Cộng dồn lá rút', 'Bị +2/+4… thì chồng lá rút bằng hoặc lớn hơn để đẩy phạt đi tiếp.'],
-  stackSkip: ['Chồng lá Cấm', 'Bị Cấm lượt thì đánh Cấm lượt để chuyền cho người kế.'],
+  stackSkip: ['Chồng Khoá mõm', 'Bị khoá mõm thì đánh Khoá mõm để chuyền cho người kế.'],
   sevenZero: ['Luật 7 – 0', 'Đánh 7: đổi bài với 1 người. Đánh 0: mọi người chuyền bài theo chiều chơi.'],
   drawUntil: ['Rút tới khi đánh được', 'Không có lá hợp thì rút liên tục tới khi ra lá đánh được (bắt buộc đánh).'],
   mercy: ['Luật không khoan nhượng', 'Ai giữ từ 25 lá trở lên bị loại.'],
@@ -86,7 +86,7 @@ const RULE_INFO = {
 };
 const MODE_DESC = {
   classic: 'Luật chuẩn 108 lá. Không có lá đánh được thì rút 1 lá, hợp thì đánh luôn.',
-  house: 'Luật rừng quen thuộc: cộng dồn +2/+4, Cấm chồng Cấm, không về bằng lá chức năng, không chặn ngang.',
+  house: 'Luật rừng quen thuộc: cộng dồn +2/+4, Khoá mõm chồng Khoá mõm, tự bốc phạt từng lá, không về bằng lá chức năng, không chặn ngang.',
   nomercy: 'Bộ 168 lá cực gắt: +6, +10, Quay màu, Xả màu, 7–0, ≥ 25 lá là bị loại!',
 };
 function renderLobby() {
@@ -121,7 +121,16 @@ $('#btn-log-close').onclick = () => $('#log').classList.remove('open');
 // ---------- gửi hành động ----------
 function send(a) { if (!net) return; if (isHost) net.act('host', a); else net.act(a); }
 const me = () => view && view.players.find(p => p.id === myId);
-const isMyTurn = () => view && view.phase === 'playing' && view.players[view.turn].id === myId && !view.pending;
+const isMyTurn = () => view && view.phase === 'playing' && view.players[view.turn].id === myId && !view.pending && !view.owe;
+const iOwe = () => view && view.phase === 'playing' && view.owe && view.owe.player === myId;
+// tự bốc phạt: mỗi lần cách nhau 1 giây
+const PULL_CD = 1000; let pullReadyAt = 0, pullT = null;
+function pull() {
+  if (!iOwe()) return;
+  const now = Date.now(); if (now < pullReadyAt) { fx.sfx.bad(); fx.shake($('#deck')); return; }
+  pullReadyAt = now + PULL_CD; send({ type: 'pull' }); renderActions(view, me());
+  clearTimeout(pullT); pullT = setTimeout(() => view && renderActions(view, me()), PULL_CD + 20);
+}
 const pname = id => (view.players.find(p => p.id === id) || {}).name || '?';
 
 function pickColor(title, cb) {
@@ -173,16 +182,17 @@ function render() {
   // giữa bàn
   $('#deck-cnt').textContent = v.deckCount + ' lá';
   const canDraw = isMyTurn() && !v.stack && !v.skipStack && !v.up && !v.mustPlay && !v.canPass;
-  $('#deck').classList.toggle('can', canDraw);
-  $('#deck').onclick = () => { if (canDraw) send({ type: 'draw' }); };
+  $('#deck').classList.toggle('can', canDraw || !!iOwe());
+  $('#deck').onclick = () => { if (iOwe()) pull(); else if (canDraw) send({ type: 'draw' }); };
   if (!landing) renderDiscard(v.top);
   $('#color-dot').style.setProperty('--cc', COL_HEX[v.color] || '#ccc');
   $('#color-dot').title = 'Màu hiện tại: ' + COLOR_NAME[v.color];
   $('#dir').classList.toggle('ccw', v.dir < 0);
   $('#dir').style.color = (COL_HEX[v.color] || '#7a5cff') + '66';
   const sb = $('#stack-badge');
-  sb.textContent = v.stack ? `+${v.stack.total} lá!` : v.skipStack ? '⛔ Cấm lượt' : v.up ? (v.up.first ? '⬆ UP: đánh lá số' : `⬆ UP ≥ ${v.up.n}`) : '';
-  sb.classList.toggle('show', !!(v.stack || v.skipStack || v.up));
+  sb.textContent = v.stack ? `+${v.stack.total} lá!` : v.skipStack ? '🤐 Khoá mõm' : v.up ? (v.up.first ? '⬆ UP: đánh lá số' : `⬆ UP ≥ ${v.up.n}`) : '';
+  if (v.owe) sb.textContent = v.owe.until ? `🌪️ Bốc tới ${COLOR_NAME[v.owe.until]}` : `🃏 Còn ${v.owe.left} lá`;
+  sb.classList.toggle('show', !!(v.stack || v.skipStack || v.up || v.owe));
   // gợi ý
   renderHint(v, meP);
   // tay bài
@@ -227,12 +237,18 @@ function renderHint(v, meP) {
   h.style.display = '';
   const dot = `<span class="cc" style="background:${COL_HEX[v.color]}"></span> <b>${COLOR_NAME[v.color]}</b>`;
   if (meP && meP.out) { h.innerHTML = '💀 Bạn đã bị loại – ngồi xem tiếp nhé.'; return; }
+  if (v.owe) {
+    const o = v.owe, col = o.until ? `<span class="cc" style="background:${COL_HEX[o.until]}"></span> <b>${COLOR_NAME[o.until]}</b>` : '';
+    if (o.player === myId) { h.classList.add('mine'); h.innerHTML = o.until ? `🌪️ Tự bốc từng lá tới khi ra màu ${col} (hoặc lá Đổi màu)! Đã bốc <b>${o.got}</b>.` : `😵 Tự bốc phạt đi! Còn <b>${o.left}</b> lá.`; }
+    else h.innerHTML = `😈 <b>${esc(pname(o.player))}</b> đang bốc phạt… ${o.until ? `tìm màu ${col}, ` : `còn ${o.left} lá, `}đã bốc ${o.got}`;
+    return;
+  }
   if (v.pending) { h.innerHTML = v.pending.player === myId ? '👉 Bạn đang chọn…' : `⏳ ${esc(pname(v.pending.player))} đang ${v.pending.type === 'swap' ? 'chọn người đổi bài' : 'chọn màu'}…`; return; }
   const cur = v.players[v.turn];
   if (cur.id !== myId) { h.innerHTML = `Lượt của <b>${esc(cur.name)}</b> · màu ${dot}`; return; }
   h.classList.add('mine');
   if (v.stack) h.innerHTML = v.playable.length ? `🔥 Bị dồn <b>+${v.stack.total}</b>! Chồng lá rút ≥ +${v.stack.last} để đẩy đi, hoặc chịu phạt.` : `😵 Không có lá để chồng – bấm <b>Chịu phạt +${v.stack.total}</b>.`;
-  else if (v.skipStack) h.innerHTML = '⛔ Bạn bị Cấm! Đánh Cấm lượt để chuyền, hoặc chịu mất lượt.';
+  else if (v.skipStack) h.innerHTML = '🤐 Bạn bị khoá mõm! Đánh Khoá mõm để chuyền, hoặc chịu mất lượt.';
   else if (v.up) h.innerHTML = v.up.first ? '⬆️ Up! Đánh 1 lá số bất kỳ (màu nào cũng được), không có thì chịu rút 2.' : `⬆️ Up! Đánh lá số <b>≥ ${v.up.n}</b> (màu nào cũng được), không có thì rút ${Math.max(1, v.up.n)} lá.`;
   else if (v.mustPlay) h.innerHTML = '✨ Lá vừa rút đánh được – bấm vào nó để đánh' + (v.canPass ? ', hoặc Giữ lại.' : '!');
   else if (v.playable.length) h.innerHTML = `🎯 Lượt bạn! Đánh lá cùng màu ${dot}, cùng số/ký hiệu, hoặc lá Đổi màu.`;
@@ -242,15 +258,16 @@ function renderHint(v, meP) {
 function renderActions(v, meP) {
   const a = []; const my = isMyTurn();
   if (v.phase === 'playing' && meP && !meP.out) {
-    if (my && v.stack) a.push(`<button class="btn red" data-act="take">😵 Chịu phạt +${v.stack.total}</button>`);
-    else if (my && v.skipStack) a.push(`<button class="btn red" data-act="take">⛔ Chịu mất lượt</button>`);
+    if (iOwe()) { const wait = Date.now() < pullReadyAt; a.push(`<button class="btn red pull ${wait ? 'cd' : ''}" data-act="pull" ${wait ? 'disabled' : ''}>🃏 Bốc! ${v.owe.until ? `(tìm ${COLOR_NAME[v.owe.until]})` : `(còn ${v.owe.left})`}</button>`); }
+    else if (my && v.stack) a.push(`<button class="btn red" data-act="take">😵 Chịu phạt +${v.stack.total}</button>`);
+    else if (my && v.skipStack) a.push(`<button class="btn red" data-act="take">🤐 Chịu khoá mõm</button>`);
     else if (my && v.up) a.push(`<button class="btn red" data-act="take">⬆️ Chịu rút ${v.up.first ? 2 : Math.max(1, v.up.n)}</button>`);
     else if (my && v.canPass) a.push(`<button class="btn" data-act="pass">✋ Giữ lại, qua lượt</button>`);
     else if (my && !v.mustPlay) a.push(`<button class="btn blue" data-act="draw">🂠 Rút bài</button>`);
     if (meP.handCount <= 2 && !meP.saidUno && (my || v.unoWatch === myId)) a.push(`<button class="btn uno" data-act="uno">UNO!</button>`);
   }
   $('#actions').innerHTML = a.join('');
-  $$('#actions [data-act]').forEach(b => b.onclick = () => { if (b.dataset.act === 'uno') fx.sfx.uno(); send({ type: b.dataset.act }); });
+  $$('#actions [data-act]').forEach(b => b.onclick = () => { if (b.dataset.act === 'pull') return pull(); if (b.dataset.act === 'uno') fx.sfx.uno(); send({ type: b.dataset.act }); });
 }
 function onCardClick(id) {
   const v = view; if (!isMyTurn()) { toast('Chưa tới lượt bạn 😤'); return; }
@@ -337,7 +354,7 @@ function animate(a, b) {
     else if (/đổi bài|chuyền bài/.test(l)) { fx.sfx.swap(); fx.banner('🔄 Đổi bài!', 'B'); }
     else if (/ chọn màu /.test(l) || /chọn [^,]+, lật/.test(l)) { const c = Object.keys(COLOR_NAME).find(k => l.includes(COLOR_NAME[k] + '.') || l.includes(COLOR_NAME[k] + ',')); if (c) { setTimeout(() => { fx.ring($('#color-dot'), c); fx.pop($('#color-dot')); }, 450 * fx.S()); } if (/lật/.test(l)) fx.sfx.roulette(); }
     else if (/chịu phạt/.test(l) && who) { fx.shake(seatEl(who.id)); }
-    else if (/bị cấm lượt\./.test(l) && who) { fx.sfx.skip(); fx.floatText(seatEl(who.id), '⛔'); }
+    else if (/bị khoá mõm\./.test(l) && who) { fx.sfx.skip(); fx.floatText(seatEl(who.id), '🤐'); }
   }
   // tới lượt mình
   if (isMyTurn() && !(a.phase === 'playing' && a.players[a.turn].id === myId && !a.pending)) setTimeout(() => fx.sfx.turn(), 380 * fx.S());
@@ -360,9 +377,9 @@ function playSfx(c) {
 function bannerFor(c, v) {
   const t = c.type, col = c.color === 'W' ? (v.color || '') : c.color;
   if (DRAW_VALUE[t]) fx.banner(v.stack ? `+${v.stack.total}!` : `+${DRAW_VALUE[t]}!`, col);
-  else if (t === 'skip') fx.banner('⛔ Cấm!', col);
-  else if (t === 'skipall') fx.banner('⛔ Cấm hết!', col);
-  else if (t === 'rev') fx.banner('⇄ Đảo chiều!', col);
+  else if (t === 'skip') fx.banner('🤐 Khoá mõm!', col);
+  else if (t === 'skipall') fx.banner('🤐 Khoá mõm cả bàn!', col);
+  else if (t === 'rev') fx.banner('🏳️‍🌈 Đổi gay thành les!', col);
   else if (t === 'discall') fx.banner('🗑️ Xả màu!', col);
   else if (t === 'roulette') fx.banner('🎡 Quay màu!', '');
   else if (t === 'wild') fx.banner('🌈 Đổi màu!', '');

@@ -1,5 +1,5 @@
 // Bot UNO đơn giản mà khôn vừa phải.
-import { getPlayer, current, playableIds, COLORS, DRAW_VALUE, isWild } from './engine.js';
+import { getPlayer, current, playableIds, COLORS, DRAW_VALUE, isWild } from './engine.js?v=10';
 
 function bestColor(hand) {
   const cnt = { R: 0, Y: 0, G: 0, B: 0 };
@@ -9,6 +9,7 @@ function bestColor(hand) {
 
 export function botAction(s, pid) {
   const p = getPlayer(s, pid); if (!p || p.out || s.phase !== 'playing') return null;
+  if (s.owe) return s.owe.player === pid ? { type: 'pull' } : null;
   const pr = s.pending;
   if (pr) {
     if (pr.player !== pid) return null;

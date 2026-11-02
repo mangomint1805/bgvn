@@ -9,7 +9,7 @@ for (const extras of [false, true]) for (const mode of Object.keys(MODES)) {
     const s = createGame(Array.from({ length: np }, (_, i) => ({ id: 'b' + i, name: 'B' + i, isBot: true })), mode, { extras });
     let k = 0;
     while (s.phase === 'playing' && k < 5000) {
-      const pid = s.pending ? s.pending.player : current(s).id;
+      const pid = s.owe ? s.owe.player : s.pending ? s.pending.player : current(s).id;
       if (Math.random() < 0.3) for (const q of s.players) { const c = botCatch(s, q.id); if (c) { applyAction(s, q.id, c); break; } }
       if (s.phase !== 'playing') break;
       const a = botAction(s, pid);

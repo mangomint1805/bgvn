@@ -231,3 +231,8 @@ input:focus{border-color:var(--acc)}
   .actions .btn{padding:7px 12px;font-size:15px}
   .hint{font-size:12.5px;bottom:4px}
 }
+/* nút tự bốc phạt: chờ 1 giây giữa mỗi lần */
+.btn.pull { position: relative; overflow: hidden; font-size: 17px; padding: 12px 22px; }
+.btn.pull.cd { opacity: .75; cursor: wait; }
+.btn.pull.cd::after { content: ''; position: absolute; left: 0; bottom: 0; height: 4px; width: 100%; background: #fff; transform-origin: left; animation: pullcd 1s linear forwards; }
+@keyframes pullcd { from { transform: scaleX(0); } to { transform: scaleX(1); } }
