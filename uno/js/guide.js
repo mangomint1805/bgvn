@@ -23,11 +23,17 @@ export function openGuide(openModal, cardHTML) {
       <h3>Lá riêng của No Mercy (168 lá)</h3>${row(cardHTML, [
         [C('R', 'd4'), '<b>+4 có màu</b>: như +2 nhưng rút 4.'],
         [C('Y', 'skipall'), '<b>Cấm hết</b>: tất cả mất lượt, bạn đi tiếp ngay.'],
-        [C('G', 'discall'), '<b>Bỏ cả màu</b>: bỏ luôn mọi lá cùng màu trên tay.'],
+        [C('G', 'discall'), '<b>Xả màu</b>: bỏ luôn mọi lá cùng màu trên tay.'],
         [C('W', 'wrd4'), '<b>Đảo chiều +4</b>: đảo chiều, người kế (theo chiều mới) rút 4.'],
         [C('W', 'wd6'), '<b>Đổi màu +6</b>: người kế rút 6.'],
         [C('W', 'wd10'), '<b>Đổi màu +10</b>: người kế rút 10 😱'],
         [C('W', 'roulette'), '<b>Quay màu</b>: người kế chọn 1 màu rồi lật bài tới khi ra màu đó – lật bao nhiêu giữ bấy nhiêu!'],
+      ])}
+      <h3>Lá mở rộng (chủ phòng bật trong sảnh)</h3>${row(cardHTML, [
+        [C('W', 'wtd4'), '<b>Cộng nhắm +4</b>: đổi màu và chọn <b>bất kỳ ai</b> phải rút 4 lá.'],
+        [C('B', 'tornado'), '<b>Bão tố</b>: chỉ đánh lên lá <b>cùng màu</b>. Người kế lật bài tới khi ra lá cùng màu Bão tố (hoặc lá Đổi màu), giữ hết và mất lượt.'],
+        [C('Y', 'discall'), '<b>Xả màu</b>: xả luôn mọi lá cùng màu trên tay.'],
+        [C('W', 'wup'), '<b>Up</b>: đổi màu. Người kế đánh lá số màu đó, rồi cứ thế mỗi người phải đánh lá số <b>lớn hơn</b> (cùng màu) hoặc <b>bằng/lớn hơn</b> (khác màu). Ai không theo được rút số lá bằng con số đang thách.'],
       ])}`],
     modes: ['⚙️ Chế độ', () => `
       <h3>🎴 Cổ điển</h3><p>Luật chuẩn. Bị +2/+4 thì rút luôn, không được chồng.</p>
@@ -37,7 +43,7 @@ export function openGuide(openModal, cardHTML) {
         <li><b>Không về bằng lá chức năng</b>: lá cuối cùng phải là lá số. Còn mỗi lá Cấm/Đảo/+2/Đổi màu… thì phải rút bài.</li>
         <li>Không có lá thì rút 1 lá, hợp thì đánh luôn. <b>Không có chặn ngang</b>.</li></ul>
       <h3>💀 No Mercy</h3><ul>
-        <li>Bộ 168 lá với +6, +10, Quay màu, Bỏ cả màu, Cấm hết.</li>
+        <li>Bộ 168 lá với +6, +10, Quay màu, Xả màu, Cấm hết.</li>
         <li>Cộng dồn lá rút (bằng hoặc lớn hơn).</li>
         <li>Không có lá hợp thì <b>rút tới khi ra lá đánh được</b> và phải đánh nó.</li>
         <li><b>Luật 7–0</b>: đánh 7 thì đổi bài với 1 người; đánh 0 thì cả bàn chuyền bài theo chiều chơi.</li>

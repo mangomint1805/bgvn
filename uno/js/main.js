@@ -1,4 +1,4 @@
-import { Host, Client, MAX } from './net.js?v=5';
+import { Host, Client, MAX } from './net.js?v=7';
 import { MODES, COLOR_NAME, cardText, DRAW_VALUE } from './engine.js';
 import * as fx from './ufx.js';
 import { openGuide } from './guide.js';
@@ -12,8 +12,8 @@ let net = null, isHost = false, myId = null, lobby = null, view = null, prevView
 let shownTop = null, freshIds = new Set(), modalKey = null, landing = false;
 
 // ---------- lá bài ----------
-export const SYM = { skip: '⊘', rev: '⇄', d2: '+2', d4: '+4', skipall: '⊘⊘', discall: '✕', wild: '', wd4: '+4', wrd4: '⇄4', wd6: '+6', wd10: '+10', roulette: '?' };
-export const LBL = { skip: 'CẤM LƯỢT', rev: 'ĐẢO CHIỀU', d2: 'RÚT 2', d4: 'RÚT 4', skipall: 'CẤM HẾT', discall: 'BỎ CẢ MÀU', wild: 'ĐỔI MÀU', wd4: 'RÚT 4', wrd4: 'ĐẢO + RÚT 4', wd6: 'RÚT 6', wd10: 'RÚT 10', roulette: 'QUAY MÀU' };
+export const SYM = { skip: '⊘', rev: '⇄', d2: '+2', d4: '+4', skipall: '⊘⊘', discall: '✕', wild: '', wd4: '+4', wrd4: '⇄4', wd6: '+6', wd10: '+10', roulette: '?', wtd4: '🎯4', wup: '⬆', tornado: '🌀' };
+export const LBL = { skip: 'CẤM LƯỢT', rev: 'ĐẢO CHIỀU', d2: 'RÚT 2', d4: 'RÚT 4', skipall: 'CẤM HẾT', discall: 'XẢ MÀU', wild: 'ĐỔI MÀU', wd4: 'RÚT 4', wrd4: 'ĐẢO + RÚT 4', wd6: 'RÚT 6', wd10: 'RÚT 10', roulette: 'QUAY MÀU', wtd4: 'NHẮM +4', wup: 'UP', tornado: 'BÃO TỐ' };
 export function cardHTML(c, cls = '', attrs = '') {
   if (!c) return `<div class="ucard back ${cls}" ${attrs}></div>`;
   const sym = c.type === 'n' ? String(c.num) : SYM[c.type];
@@ -77,12 +77,13 @@ const RULE_INFO = {
   sevenZero: ['Luật 7 – 0', 'Đánh 7: đổi bài với 1 người. Đánh 0: mọi người chuyền bài theo chiều chơi.'],
   drawUntil: ['Rút tới khi đánh được', 'Không có lá hợp thì rút liên tục tới khi ra lá đánh được (bắt buộc đánh).'],
   mercy: ['Luật không khoan nhượng', 'Ai giữ từ 25 lá trở lên bị loại.'],
+  extras: ['Lá mở rộng', 'Thêm Cộng nhắm +4, Bão tố, Xả màu và Up vào bộ bài.'],
   noActionFinish: ['Không về bằng lá chức năng', 'Lá cuối cùng phải là lá số. Còn mỗi lá chức năng/đổi màu thì phải rút bài.'],
 };
 const MODE_DESC = {
   classic: 'Luật chuẩn 108 lá. Không có lá đánh được thì rút 1 lá, hợp thì đánh luôn.',
   house: 'Luật rừng quen thuộc: cộng dồn +2/+4, Cấm chồng Cấm, không về bằng lá chức năng, không chặn ngang.',
-  nomercy: 'Bộ 168 lá cực gắt: +6, +10, Quay màu, Bỏ cả màu, 7–0, ≥ 25 lá là bị loại!',
+  nomercy: 'Bộ 168 lá cực gắt: +6, +10, Quay màu, Xả màu, 7–0, ≥ 25 lá là bị loại!',
 };
 function renderLobby() {
   if (!lobby) return;
@@ -124,6 +125,12 @@ function pickColor(title, cb) {
   $$('.color-pick [data-c]').forEach(b => b.onclick = () => { closeModal(); cb(b.dataset.c); });
 }
 
+function pickTarget(title, cb, key = null) {
+  const others = view.players.filter(p => !p.out && p.id !== myId);
+  openModal(`<h2>${title}</h2><div class="target-list">${others.map(p => `<button data-t="${p.id}">${avatar(p.name)}${esc(p.name)}<span class="n">${p.handCount} lá</span></button>`).join('')}</div>${key ? '' : '<div class="win"><div class="btns"><button class="btn" onclick="__closeModal()">Huỷ</button></div></div>'}`, '', key);
+  $$('.target-list [data-t]').forEach(b => b.onclick = () => { closeModal(); cb(b.dataset.t); });
+}
+
 // ---------- vẽ bàn ----------
 function render() {
   const v = view; if (!v) return;
@@ -161,7 +168,7 @@ function render() {
   $$('[data-catch]').forEach(b => b.onclick = () => send({ type: 'catch', target: b.dataset.catch }));
   // giữa bàn
   $('#deck-cnt').textContent = v.deckCount + ' lá';
-  const canDraw = isMyTurn() && !v.stack && !v.skipStack && !v.mustPlay && !v.canPass;
+  const canDraw = isMyTurn() && !v.stack && !v.skipStack && !v.up && !v.mustPlay && !v.canPass;
   $('#deck').classList.toggle('can', canDraw);
   $('#deck').onclick = () => { if (canDraw) send({ type: 'draw' }); };
   if (!landing) renderDiscard(v.top);
@@ -170,8 +177,8 @@ function render() {
   $('#dir').classList.toggle('ccw', v.dir < 0);
   $('#dir').style.color = (COL_HEX[v.color] || '#7a5cff') + '66';
   const sb = $('#stack-badge');
-  sb.textContent = v.stack ? `+${v.stack.total} lá!` : v.skipStack ? '⛔ Cấm lượt' : '';
-  sb.classList.toggle('show', !!(v.stack || v.skipStack));
+  sb.textContent = v.stack ? `+${v.stack.total} lá!` : v.skipStack ? '⛔ Cấm lượt' : v.up ? (v.up.first ? `⬆ UP: lá số màu ${COLOR_NAME[v.up.color]}` : `⬆ UP ≥ ${v.up.n}`) : '';
+  sb.classList.toggle('show', !!(v.stack || v.skipStack || v.up));
   // gợi ý
   renderHint(v, meP);
   // tay bài
@@ -222,6 +229,7 @@ function renderHint(v, meP) {
   h.classList.add('mine');
   if (v.stack) h.innerHTML = v.playable.length ? `🔥 Bị dồn <b>+${v.stack.total}</b>! Chồng lá rút ≥ +${v.stack.last} để đẩy đi, hoặc chịu phạt.` : `😵 Không có lá để chồng – bấm <b>Chịu phạt +${v.stack.total}</b>.`;
   else if (v.skipStack) h.innerHTML = '⛔ Bạn bị Cấm! Đánh Cấm lượt để chuyền, hoặc chịu mất lượt.';
+  else if (v.up) h.innerHTML = v.up.first ? `⬆️ Up! Đánh 1 lá số màu <b>${COLOR_NAME[v.up.color]}</b>, không có thì chịu rút 2.` : `⬆️ Up! Đánh lá số <b>≥ ${v.up.n}</b> (cùng màu thì phải <b>lớn hơn</b>), không có thì rút ${Math.max(1, v.up.n)} lá.`;
   else if (v.mustPlay) h.innerHTML = '✨ Lá vừa rút đánh được – bấm vào nó để đánh' + (v.canPass ? ', hoặc Giữ lại.' : '!');
   else if (v.playable.length) h.innerHTML = `🎯 Lượt bạn! Đánh lá cùng màu ${dot}, cùng số/ký hiệu, hoặc lá Đổi màu.`;
   else if (v.rules.noActionFinish && meP.hand.length === 1 && meP.hand[0].type !== 'n') h.innerHTML = '🚫 Lá cuối không được là lá chức năng – bấm <b>Rút bài</b>.';
@@ -232,6 +240,7 @@ function renderActions(v, meP) {
   if (v.phase === 'playing' && meP && !meP.out) {
     if (my && v.stack) a.push(`<button class="btn red" data-act="take">😵 Chịu phạt +${v.stack.total}</button>`);
     else if (my && v.skipStack) a.push(`<button class="btn red" data-act="take">⛔ Chịu mất lượt</button>`);
+    else if (my && v.up) a.push(`<button class="btn red" data-act="take">⬆️ Chịu rút ${v.up.first ? 2 : Math.max(1, v.up.n)}</button>`);
     else if (my && v.canPass) a.push(`<button class="btn" data-act="pass">✋ Giữ lại, qua lượt</button>`);
     else if (my && !v.mustPlay) a.push(`<button class="btn blue" data-act="draw">🂠 Rút bài</button>`);
     if (meP.handCount <= 2 && !meP.saidUno && (my || v.unoWatch === myId)) a.push(`<button class="btn uno" data-act="uno">UNO!</button>`);
@@ -243,6 +252,7 @@ function onCardClick(id) {
   const v = view; if (!isMyTurn()) { toast('Chưa tới lượt bạn 😤'); return; }
   const c = me().hand.find(x => x.id === id); if (!c) return;
   if (!v.playable.includes(id)) { fx.sfx.bad(); fx.shake($(`#hand [data-id="${id}"]`)); toast(v.rules.noActionFinish && (me().hand.length === 1 || (c.type === 'discall' && me().hand.every(x => x.color === c.color))) && c.type !== 'n' ? 'Không được về bằng lá chức năng – lá cuối phải là lá số!' : v.stack ? `Phải chồng lá rút ≥ +${v.stack.last}` : v.mustPlay ? 'Chỉ được đánh lá vừa rút' : 'Lá này không hợp màu/số'); return; }
+  if (c.type === 'wtd4') { pickColor('Chọn màu tiếp theo', Object.assign(col => pickTarget('🎯 Nhắm ai rút 4 lá?', t => send({ type: 'play', cardId: id, color: col, target: t })), { cancel: true })); return; }
   if (c.color === 'W') { pickColor('Chọn màu tiếp theo', Object.assign(col => send({ type: 'play', cardId: id, color: col }), { cancel: true })); return; }
   send({ type: 'play', cardId: id });
 }
@@ -253,6 +263,7 @@ function handlePending(v) {
   if (modalKey && modalKey.startsWith('pend')) return;
   if (pr.type === 'color') pickColor('Chọn màu tiếp theo', Object.assign(col => send({ type: 'color', color: col }), { key }));
   else if (pr.type === 'roulette') pickColor('🎡 Vòng quay màu! Chọn 1 màu – bạn sẽ lật bài tới khi ra màu đó', Object.assign(col => send({ type: 'color', color: col }), { key }));
+  else if (pr.type === 'target') pickTarget('🎯 Nhắm ai rút 4 lá?', t => send({ type: 'target', target: t }), key);
   else if (pr.type === 'swap') {
     const others = v.players.filter(p => !p.out && p.id !== myId);
     openModal(`<h2>🔄 Đổi bài với ai?</h2><div class="target-list">${others.map(p => `<button data-t="${p.id}">${avatar(p.name)}${esc(p.name)}<span class="n">${p.handCount} lá</span></button>`).join('')}</div>`, '', key);
@@ -337,6 +348,9 @@ function playSfx(c) {
   else if (t === 'discall') fx.sfx.discall();
   else if (t === 'roulette') fx.sfx.roulette();
   else if (t === 'wild') fx.sfx.wild();
+  else if (t === 'tornado') { fx.sfx.roulette(); fx.sfx.discall(); }
+  else if (t === 'wup') fx.sfx.uno();
+  else if (t === 'wtd4') { fx.sfx.wild(); fx.sfx.plus(4); }
   else if (DRAW_VALUE[t]) { fx.sfx.plus(DRAW_VALUE[t]); if (t === 'wrd4') fx.sfx.rev(); }
 }
 function bannerFor(c, v) {
@@ -345,9 +359,12 @@ function bannerFor(c, v) {
   else if (t === 'skip') fx.banner('⛔ Cấm!', col);
   else if (t === 'skipall') fx.banner('⛔ Cấm hết!', col);
   else if (t === 'rev') fx.banner('⇄ Đảo chiều!', col);
-  else if (t === 'discall') fx.banner('🗑️ Bỏ cả màu!', col);
+  else if (t === 'discall') fx.banner('🗑️ Xả màu!', col);
   else if (t === 'roulette') fx.banner('🎡 Quay màu!', '');
   else if (t === 'wild') fx.banner('🌈 Đổi màu!', '');
+  else if (t === 'tornado') fx.banner('🌪️ Bão tố!', col);
+  else if (t === 'wup') fx.banner('⬆️ UP!', '');
+  else if (t === 'wtd4') fx.banner('🎯 Cộng nhắm +4!', '');
   if (t === 'wd10' || t === 'wd6' || (v.stack && v.stack.total >= 8)) fx.shake($('#table'));
 }
 function dealAnim(v) {
