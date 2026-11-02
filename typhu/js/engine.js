@@ -1,5 +1,5 @@
 // Luật Cờ tỷ phú kiểu ZingPlay – thuần logic.
-import { SQUARES, N, SIDES, RESORTS, GROUPS, groupSquares, SALARY, ISLAND_FEE, START_MONEY, houseCost, landmarkCost, value, MULT, CHANCES, money, AVATARS, COLORS } from './board.js';
+import { SQUARES, N, SIDES, RESORTS, GROUPS, groupSquares, SALARY, ISLAND_FEE, START_MONEY, houseCost, landmarkCost, value, MULT, CHANCES, CHESTS, money, AVATARS, COLORS } from './board.js';
 let rand = Math.random;
 export function setRandom(f) { rand = f; }
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -17,7 +17,7 @@ export function createGame(playerList, opts = {}) {
     players: pickColors(playerList).map((p, i) => ({ id: p.id, name: p.name, isBot: !!p.isBot, color: p.color, avatar: p.avatar || AVATARS[i], pos: 0, cash: startMoney, out: false, island: 0, travel: false, freeRent: 0, escape: 0, doubles: 0 })),
     props: {}, // pos -> { owner, level }
     festival: null, pending: null, dice: null, log: [], logN: 0, winner: null, winReason: '',
-    deck: shuffle(CHANCES.map(c => c.id)), lastChance: null, moveSeq: 0, lastMove: null, moves: [],
+    deck: shuffle(CHANCES.map(c => c.id)), chest: shuffle(CHESTS.map(c => c.id)), lastChance: null, moveSeq: 0, cardSeq: 0, lastMove: null, moves: [],
   };
   s.turn = Math.floor(rand() * s.players.length);
   log(s, `Ván mới bắt đầu! ${cur(s).name} đi trước.`);
@@ -114,6 +114,7 @@ function land(s, p) {
     case 'travel': p.travel = true; log(s, `✈️ ${p.name} ra sân bay – lượt sau được bay tới ô bất kỳ.`); return;
     case 'tax': { const t = Math.round(assets(s, p) * 0.1 / 5) * 5; pay(s, p, t, null); log(s, `💸 ${p.name} đóng thuế ${money(t)} (10% tài sản).`); return; }
     case 'chance': return drawChance(s, p);
+    case 'chest': return drawChest(s, p);
     case 'city': case 'resort': {
       if (!pr) {
         if (p.cash >= q.price) s.pending = { type: 'buy', player: p.id, pos, maxLevel: q.type === 'city' ? 3 : 0 };
@@ -146,10 +147,24 @@ export function cost(q, from, to) {
   for (let l = from + 1; l <= to; l++) c += l === 4 ? landmarkCost(q) : houseCost(q);
   return c;
 }
+function drawChest(s, p) {
+  if (!s.chest.length) s.chest = shuffle(CHESTS.map(c => c.id));
+  const id = s.chest.pop(); const c = CHESTS.find(x => x.id === id);
+  s.lastChance = { id, deck: 'chest', player: p.id, text: c.text, seq: ++s.cardSeq };
+  log(s, `💰 Khí vận cho ${p.name}: ${c.text}`);
+  const others = alive(s).filter(q => q !== p);
+  switch (id) {
+    case 'inherit': p.cash += 200; break; case 'refund': p.cash += 100; break; case 'contest': p.cash += 50; break; case 'stock': p.cash += 120; break;
+    case 'hospital': pay(s, p, 100, null); break; case 'school': pay(s, p, 150, null); break;
+    case 'wedding': for (const q of others) { if (p.out) break; pay(s, p, 30, q); } break;
+    case 'tet': for (const q of others) { pay(s, q, 30, p); if (s.phase !== 'playing') return; } break;
+    case 'start': jumpTo(s, p, 0); break; case 'free': p.freeRent++; break; case 'escape': p.escape++; break; case 'island': sendIsland(s, p); break;
+  }
+}
 function drawChance(s, p) {
   if (!s.deck.length) s.deck = shuffle(CHANCES.map(c => c.id));
   const id = s.deck.pop(); const c = CHANCES.find(x => x.id === id);
-  s.lastChance = { id, player: p.id, text: c.text, seq: s.moveSeq + 1 + s.logN };
+  s.lastChance = { id, deck: 'chance', player: p.id, text: c.text, seq: ++s.cardSeq };
   log(s, `❓ Cơ hội cho ${p.name}: ${c.text}`);
   const others = alive(s).filter(q => q !== p);
   switch (id) {

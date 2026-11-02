@@ -16,8 +16,38 @@ export function cellRect(i) {
 }
 const W3 = (x, y) => new THREE.Vector3(x - L / 2, 0, y - L / 2); // toạ độ bàn → thế giới 3D
 const col = c => new THREE.Color(c);
-const BASE = { start: '#ffd86b', island: '#8fdcf5', festival: '#ff9cc9', travel: '#b2bdff', chance: '#fff1c4', tax: '#ffdede', resort: '#e3f8fc', city: '#fffdf6' };
+const BASE = { start: '#ffd86b', island: '#8fdcf5', festival: '#ff9cc9', travel: '#b2bdff', chance: '#ffe1dc', chest: '#fff3b0', tax: '#ffdede', resort: '#e3f8fc', city: '#fffdf6' };
 
+// ---------- sân giữa ----------
+function plazaTexture() {
+  const S = 1024, cv = document.createElement('canvas'); cv.width = cv.height = S; const c = cv.getContext('2d');
+  c.fillStyle = '#fffaf0'; c.fillRect(0, 0, S, S);
+  c.strokeStyle = '#e9dcc0'; c.lineWidth = 10; c.strokeRect(14, 14, S - 28, S - 28);
+  // tờ tiền bay (vẽ đơn giản)
+  const bill = (x, y, r, s2 = 1) => { c.save(); c.translate(x, y); c.rotate(r); c.scale(s2, s2); c.fillStyle = '#f0a040'; c.fillRect(-70, -32, 140, 64); c.strokeStyle = '#b86a14'; c.lineWidth = 5; c.strokeRect(-62, -24, 124, 48); c.fillStyle = '#b86a14'; c.font = '900 40px Nunito, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('₫', 0, 3); c.restore(); };
+  bill(250, 230, -0.5); bill(380, 330, 0.3, 0.8); bill(700, 760, 0.6, 0.9); bill(820, 600, -0.3, 0.75); bill(560, 220, 0.2, 0.7);
+  // túi tiền
+  c.save(); c.translate(512, 470); c.fillStyle = '#7a5230'; c.beginPath(); c.ellipse(0, 40, 120, 105, 0, 0, Math.PI * 2); c.fill(); c.fillStyle = '#9b6b3e'; c.beginPath(); c.ellipse(-20, 20, 100, 90, 0, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#7a5230'; c.beginPath(); c.moveTo(-45, -55); c.lineTo(45, -55); c.lineTo(25, -95); c.lineTo(-25, -95); c.closePath(); c.fill(); c.fillStyle = '#ffd54a'; c.fillRect(-55, -62, 110, 16);
+  c.fillStyle = '#ffd54a'; c.font = '900 120px Nunito, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('₫', -10, 40); c.restore();
+  // chữ CỜ TỶ PHÚ! chéo, đỏ – hướng về người xem
+  c.save(); c.translate(545, 600); c.rotate(-Math.PI / 4);
+  c.font = '900 110px "Baloo 2", Nunito, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.lineWidth = 18; c.strokeStyle = '#ffffff'; c.strokeText('CỜ TỶ PHÚ!', 0, 0); c.fillStyle = '#d81b2a'; c.fillText('CỜ TỶ PHÚ!', 0, 0);
+  c.font = '800 54px "Baloo 2", Nunito, sans-serif'; c.fillStyle = '#24314d'; c.fillText('Sài Gòn', 0, 80); c.restore();
+  // ô đặt bài: Cơ hội (đỏ) và Khí vận (vàng)
+  const pad = (x, y, color, text, fg) => { c.save(); c.translate(x, y); c.rotate(-Math.PI / 4); c.strokeStyle = color; c.lineWidth = 8; c.setLineDash([22, 14]); c.strokeRect(-115, -80, 230, 160); c.setLineDash([]);
+    c.fillStyle = fg; c.font = '900 46px "Baloo 2", Nunito, sans-serif'; c.textAlign = 'center'; c.fillText(text, 0, text === 'CƠ HỘI' ? -105 : 140); c.restore(); };
+  pad(250, 760, '#d81b2a', 'CƠ HỘI', '#d81b2a'); pad(775, 255, '#e0a800', 'KHÍ VẬN', '#c58f00');
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8; return tex;
+}
+function cardTexture(deck) {
+  const cv = document.createElement('canvas'); cv.width = 320; cv.height = 220; const c = cv.getContext('2d');
+  c.fillStyle = deck === 'chest' ? '#ffd54a' : '#e53935'; c.fillRect(0, 0, 320, 220); c.strokeStyle = '#fff'; c.lineWidth = 10; c.strokeRect(14, 14, 292, 192);
+  c.fillStyle = deck === 'chest' ? '#5a3d00' : '#fff'; c.font = '900 54px "Baloo 2", Nunito, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText(deck === 'chest' ? 'KHÍ VẬN' : 'CƠ HỘI', 160, 120);
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
 // ---------- vẽ chữ lên mặt ô bằng canvas ----------
 function tileTexture(i) {
   const q = SQUARES[i], [x0, y0, x1, y1, inner] = cellRect(i);
@@ -85,6 +115,8 @@ export class Board3D {
     let down = null;
     r.domElement.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
     r.domElement.addEventListener('pointerup', e => { if (down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 6) this.click(e); down = null; });
+    this.controls.addEventListener('start', () => { this.userMoved = true; clearTimeout(this.umt); });
+    this.controls.addEventListener('end', () => { clearTimeout(this.umt); this.umt = setTimeout(() => { this.userMoved = false; }, 6000); });
     this.resize(); addEventListener('resize', () => this.resize());
     this.clock = new THREE.Clock();
     r.setAnimationLoop(() => this.frame());
@@ -97,10 +129,11 @@ export class Board3D {
     const vf = THREE.MathUtils.degToRad(this.camera.fov), hf = 2 * Math.atan(Math.tan(vf / 2) * w / h);
     const pol = portrait ? 0.42 : 0.9, az = Math.PI / 4;
     const rW = L * 0.74, rH = L * 0.74 * (portrait ? 0.95 : Math.cos(pol) * 0.9 + 0.25);
-    const dist = Math.max(rW / Math.tan(hf / 2), rH / Math.tan(vf / 2)) * (portrait ? 1.02 : 1.0);
+    const dist = Math.max(rW / Math.tan(hf / 2), rH / Math.tan(vf / 2)) * (portrait ? 0.9 : 0.8);
+    this.homeDist = dist; this.homePol = pol; this.tOff = portrait ? 0.3 : 0.9; // dời tâm nhìn để bàn nằm cao hơn, chừa chỗ cho bảng điều khiển
     this.controls.maxDistance = dist * 1.6;
     this.camera.position.set(Math.sin(pol) * Math.sin(az) * dist, Math.cos(pol) * dist, Math.sin(pol) * Math.cos(az) * dist);
-    this.controls.target.set(0, -0.3, 0); this.controls.update();
+    this.controls.target.set(this.tOff, -0.3, this.tOff); this.controls.update();
   }
   buildIsland() {
     const s = L + 0.8, top = new THREE.Group();
@@ -111,11 +144,9 @@ export class Board3D {
     // đá lơ lửng phía dưới
     const rock = new THREE.Mesh(new THREE.ConeGeometry(s * 0.55, 3.2, 7), std('#6b5a4e', { roughness: 1, flatShading: true })); rock.rotation.x = Math.PI; rock.position.y = -2.85; top.add(rock);
     const rock2 = new THREE.Mesh(new THREE.ConeGeometry(1.2, 1.6, 6), std('#7d6b5e', { flatShading: true })); rock2.rotation.x = Math.PI; rock2.position.set(3.6, -2.2, 2.8); top.add(rock2);
-    // sân giữa caro
-    const cv = document.createElement('canvas'); cv.width = cv.height = 512; const c = cv.getContext('2d');
-    for (let a = 0; a < 8; a++) for (let b = 0; b < 8; b++) { c.fillStyle = (a + b) % 2 ? '#dff1e2' : '#c8e6cd'; c.fillRect(a * 64, b * 64, 64, 64); }
-    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
-    const plaza = new THREE.Mesh(new THREE.BoxGeometry(L - 2 * CW - 0.2, 0.06, L - 2 * CW - 0.2), [std('#bcdcc0'), std('#bcdcc0'), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9 }), std('#bcdcc0'), std('#bcdcc0'), std('#bcdcc0')]);
+    // sân giữa: kiểu bàn cờ tỷ phú Việt Nam – nền kem, chữ CỜ TỶ PHÚ! đỏ chéo, tiền bay
+    const PS = L - 2 * CW - 0.2;
+    const plaza = new THREE.Mesh(new THREE.BoxGeometry(PS, 0.06, PS), [std('#e8dfc8'), std('#e8dfc8'), new THREE.MeshStandardMaterial({ map: plazaTexture(), roughness: 0.9 }), std('#e8dfc8'), std('#e8dfc8'), std('#e8dfc8')]);
     plaza.position.y = 0.03; plaza.receiveShadow = true; top.add(plaza);
     this.scene.add(top); this.island = top;
   }
@@ -140,15 +171,16 @@ export class Board3D {
       g.position.set(x, 0.06, z); this.scene.add(g);
     };
     const R = (L - 2 * CW) / 2 - 0.6;
-    tree(-R, -R, 1.1); tree(R, R, 1.1); tree(R, -R, 1, true); tree(-R, R, 1, true); tree(-R * 0.3, R * 0.9, 0.7); tree(R * 0.9, -R * 0.2, 0.7, true);
-    // đài phun nước giữa sân
-    const f = new THREE.Group();
-    const b1 = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1, 0.22, 24), std('#e6e9ee')); b1.position.y = 0.17; b1.castShadow = b1.receiveShadow = true; f.add(b1);
-    const w1 = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.05, 24), std('#7cc6ec', { roughness: 0.2, metalness: 0.1 })); w1.position.y = 0.27; f.add(w1);
-    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, 0.7, 12), std('#e6e9ee')); p.position.y = 0.6; p.castShadow = true; f.add(p);
-    const b2 = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.3, 0.1, 20), std('#e6e9ee')); b2.position.y = 0.95; f.add(b2);
-    this.water = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 8), std('#bfe6f8', { transparent: true, opacity: 0.85 })); this.water.position.y = 1.08; f.add(this.water);
-    this.scene.add(f);
+    tree(-R, -R, 0.9); tree(R, R, 0.9, true); tree(R * 0.15, -R * 1.02, 0.6, true); tree(-R * 1.02, R * 0.1, 0.6);
+    // chồng bài Cơ hội & Khí vận nằm trên sân giữa
+    this.piles = {};
+    const pileAt = (deck, bx, by) => {
+      const g = new THREE.Group(); const tex = cardTexture(deck);
+      for (let k = 0; k < 6; k++) { const m = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.025, 0.7), [std('#fff'), std('#fff'), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6 }), std('#fff'), std('#fff'), std('#fff')]); m.position.y = 0.075 + k * 0.028; m.rotation.y = (Math.random() - 0.5) * 0.08; m.castShadow = m.receiveShadow = true; g.add(m); }
+      const w = W3(bx, by); g.position.set(w.x, 0, w.z); g.rotation.y = Math.PI / 4; this.scene.add(g); this.piles[deck] = { g, tex };
+    };
+    const PS = L - 2 * CW - 0.2, u = v2 => CW + 0.1 + v2 * PS;
+    pileAt('chance', u(250 / 1024), u(760 / 1024)); pileAt('chest', u(775 / 1024), u(255 / 1024));
   }
   // ---------- mô hình nhà ----------
   house(color) {
@@ -217,6 +249,18 @@ export class Board3D {
   hop(id, i, ms) { return this.placePawn(id, i, 0, 1, ms, 0.45); }
   fly(id, i, ms) { return this.placePawn(id, i, 0, 1, ms, 3); }
   setTurn(id) { for (const k in this.pawns) this.pawns[k].userData.ring.visible = k === id; }
+  resetPawns() { for (const k in this.pawns) this.scene.remove(this.pawns[k]); this.pawns = {}; }
+  follow(id) { this.following = id; }
+  shake() { const cam = this.camera; this.tween(450, t => { const a = (1 - t) * 0.12; cam.position.x += (Math.random() - 0.5) * a; cam.position.y += (Math.random() - 0.5) * a; }); }
+  drawCard(deck) { // lá bài bay lên khỏi chồng, lật về phía camera
+    const pile = this.piles[deck]; if (!pile) return Promise.resolve();
+    const m = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.025, 0.7), [std('#fff'), std('#fff'), new THREE.MeshStandardMaterial({ map: pile.tex }), std('#fff'), std('#fff'), std('#fff')]);
+    m.castShadow = true; const st = pile.g.position.clone(); st.y = 0.3; m.position.copy(st); m.rotation.y = Math.PI / 4; this.scene.add(m);
+    const cam = this.camera.position, end = st.clone().lerp(new THREE.Vector3(cam.x, cam.y, cam.z), 0.35);
+    return this.tween(700, t => { const e = 1 - Math.pow(1 - t, 3); m.position.lerpVectors(st, end, e); m.position.y += Math.sin(Math.PI * t) * 0.8; m.rotation.x = e * (Math.PI / 2 - 0.35); m.scale.setScalar(1 + e * 0.6); })
+      .then(() => new Promise(r => setTimeout(r, 350))).then(() => this.tween(350, t => { m.scale.setScalar(1.6 * (1 - t) + 0.01); })).then(() => this.scene.remove(m));
+  }
+  celebrate(id) { const p = this.pawns[id]; if (!p) return; this.following = id; let k = 0; const iv = setInterval(() => { const i = this.tiles.findIndex(t => Math.hypot(t.c.x - p.position.x, t.c.z - p.position.z) < 0.8); this.burst(i < 0 ? 0 : i, ['#ff5a5f', '#ffd54a', '#2fc76f', '#3d8bff'][k % 4], 60); if (++k > 6) clearInterval(iv); }, 350); this.tween(2400, t => { p.rotation.y = t * Math.PI * 4; }); }
   // ---------- hiệu ứng ----------
   tween(ms, fn) { return new Promise(res => this.anims.push({ t0: performance.now(), ms, fn, res })); }
   burst(i, color = '#ffd54a', n = 40) {
@@ -252,6 +296,14 @@ export class Board3D {
     for (const k in this.pawns) { const u = this.pawns[k].userData; u.ring.rotation.z = el * 2; u.ring.position.y = 0.86 + Math.sin(el * 3) * 0.03; }
     for (const i in this.bld) this.bld[i].objs.forEach(o => { if (o.userData.bob) o.position.y = TILE_H + 1.15 + Math.sin(el * 4) * 0.08; if (o.userData.flag) o.userData.flag.rotation.y = Math.sin(el * 3 + +i) * 0.3; });
     if (this.water) this.water.scale.y = 1 + Math.sin(el * 5) * 0.2;
+    // camera bám theo quân đang di chuyển: lia mục tiêu + kéo gần lại một chút
+    const tg = this.controls.target, f = this.following && this.pawns[this.following];
+    const want = f ? new THREE.Vector3(f.position.x * 0.55 + this.tOff, -0.3, f.position.z * 0.55 + this.tOff) : new THREE.Vector3(this.tOff, -0.3, this.tOff);
+    tg.lerp(want, 0.06);
+    if (this.homeDist && !this.userMoved) {
+      const off = this.camera.position.clone().sub(tg); const d = off.length(), wd = this.homeDist * (f ? 0.78 : 1);
+      off.multiplyScalar(1 + (wd / d - 1) * 0.05); this.camera.position.copy(tg).add(off);
+    }
     this.controls.update(); this.renderer.render(this.scene, this.camera);
   }
 }

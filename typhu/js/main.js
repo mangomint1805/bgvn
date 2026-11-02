@@ -1,6 +1,8 @@
 import { Host, Client, MAX } from './net.js?v=1';
 import { SQUARES, N, GROUPS, groupSquares, houseCost, landmarkCost, value, MULT, SALARY, ISLAND_FEE, money, AVATARS, COLORS } from './board.js';
 import { skylineSVG } from './skyline.js';
+import { Board3D } from './scene3d.js?v=3';
+let B = null; // bàn cờ 3D
 import { cost } from './engine.js';
 import * as fx from './fx.js';
 import { openGuide } from './guide.js';
@@ -101,67 +103,25 @@ $('#btn-log').onclick = () => $('#log').classList.toggle('open');
 $('#btn-log-close').onclick = () => $('#log').classList.remove('open');
 function send(a) { if (!net) return; if (isHost) net.act('host', a); else net.act(a); }
 
-// ---------- bàn cờ ----------
-function gridPos(i) {
-  if (i === 0) return [9, 9]; if (i < 8) return [9, 9 - i]; if (i === 8) return [9, 1];
-  if (i < 16) return [9 - (i - 8), 1]; if (i === 16) return [1, 1]; if (i < 24) return [1, i - 15];
-  if (i === 24) return [1, 9]; return [i - 23, 9];
-}
-const sideOf = i => i % 8 === 0 ? 'corner' : i < 8 ? 'b' : i < 16 ? 'l' : i < 24 ? 't' : 'r';
-const short = name => name.replace('Cách Mạng Tháng 8', 'CM Tháng 8').replace('Nam Kỳ Khởi Nghĩa', 'Nam Kỳ K.Nghĩa');
-const isoMQ = matchMedia('(min-width: 901px) and (orientation: landscape)');
-function setMode() { $('#board-wrap').classList.toggle('iso', isoMQ.matches); requestAnimationFrame(placeAll); }
-isoMQ.addEventListener ? isoMQ.addEventListener('change', setMode) : isoMQ.addListener(setMode);
+// ---------- bàn cờ 3D ----------
 function buildBoard() {
-  setMode();
-  const b = $('#board'); $$('#board .cell').forEach(c => c.remove());
-  $('#plaza').innerHTML = [['🌳', 12, 14], ['🌴', 82, 16], ['🌳', 16, 80], ['🌴', 84, 82], ['⛲', 50, 50], ['🌷', 30, 22], ['🌷', 70, 76], ['🏯', 22, 54], ['🗼', 78, 46]].map(([e, x, y]) => `<b class="up deco" style="left:${x}%;top:${y}%">${e}</b>`).join('');
-  SQUARES.forEach((q, i) => {
-    const [r, c] = gridPos(i), side = sideOf(i);
-    const el = document.createElement('div'); el.className = `cell ${q.type} side-${side}${side === 'corner' ? ' corner c-' + q.type : ''}${['chance', 'tax', 'resort'].includes(q.type) ? ' special' : ''}`;
-    el.style.gridRow = r; el.style.gridColumn = c; el.dataset.i = i;
-    if (q.type === 'city') el.innerHTML = `<div class="band" style="background:${GROUPS[q.group].color}">${money(q.price)}</div><div class="nm">${short(q.name)}</div><div class="bld"></div>`;
-    else if (q.type === 'resort') el.innerHTML = `<div class="band" style="background:#19b5c9">${money(q.price)}</div><div class="nm"><span class="ic">${q.icon}</span>${q.name}</div><div class="bld"></div>`;
-    else el.innerHTML = `<div class="nm"><span class="ic">${q.icon}</span>${q.name}${q.type === 'start' ? `<small>+${money(SALARY)}</small>` : ''}</div>`;
-    el.onclick = () => onCell(i);
-    b.appendChild(el);
-  });
-  const t = $('#tokens'); t.innerHTML = '';
-  for (const p of view.players) { const d = document.createElement('div'); d.className = 'pawn' + (p.id === myId ? ' me' : ''); d.dataset.pid = p.id; d.style.setProperty('--pc', p.color); d.innerHTML = `<div class="body"><div class="head">${p.avatar || ''}</div><div class="base"></div></div>`; t.appendChild(d); }
-  requestAnimationFrame(placeAll);
+  if (!B) B = new Board3D($('#game3d'), { onCell });
+  B.resetPawns && B.resetPawns();
+  B.sync(view); placeAll();
 }
-const cellEl = i => $(`#board .cell[data-i="${i}"]`);
-function cellPoint(i, k, n) {
-  const c = cellEl(i); if (!c) return [0, 0];
-  const x = c.offsetLeft + c.offsetWidth / 2, y = c.offsetTop + c.offsetHeight / 2;
-  const off = [[-.2, -.12], [.2, -.12], [-.2, .22], [.2, .22]][k] || [0, 0];
-  return [x + off[0] * c.offsetWidth * (n > 1 ? 1 : 0), y + 8 + off[1] * c.offsetHeight * (n > 1 ? 1 : .4)];
+function placeAll() {
+  if (!view || !B) return;
+  const groups = {};
+  for (const p of view.players) { if (p.out) continue; const i = disp[p.id] ?? p.pos; (groups[i] = groups[i] || []).push(p.id); }
+  for (const i in groups) groups[i].forEach((id, k) => B.placePawn(id, +i, k, groups[i].length));
 }
-function placePawn(pid, i) {
-  const el = $(`.pawn[data-pid="${pid}"]`); if (!el) return;
-  const same = view.players.filter(p => !p.out && disp[p.id] === i); const k = same.findIndex(p => p.id === pid);
-  const [x, y] = cellPoint(i, Math.max(0, k), same.length);
-  el.style.transform = `translate3d(${x}px,${y}px,2px)`;
-  el.style.display = P(pid) && P(pid).out ? 'none' : '';
-}
-function placeAll() { if (view) view.players.forEach(p => placePawn(p.id, disp[p.id] ?? p.pos)); }
 addEventListener('resize', () => requestAnimationFrame(placeAll));
 
 // ---------- vẽ ----------
-const BLD = lv => lv === 4 ? '<b class="up lm">🏛️</b>' : '<b class="up">🏠</b>'.repeat(lv);
 function render() {
   const v = view; if (!v) return;
   $('#round-tag').textContent = `Vòng ${v.round}${v.maxRounds ? '/' + v.maxRounds : ''}`;
-  // ô
-  SQUARES.forEach((q, i) => {
-    const el = cellEl(i); if (!el) return;
-    const pr = v.props[i]; const owner = pr && P(pr.owner);
-    el.classList.toggle('owned', !!pr); el.style.setProperty('--oc', owner ? owner.color : 'transparent');
-    el.classList.toggle('fest', v.festival === i);
-    const bld = el.querySelector('.bld'); if (bld) { const h = pr && q.type === 'city' ? BLD(pr.level) : pr ? '<b class="up">🚩</b>' : ''; if (bld.dataset.h !== h) { bld.innerHTML = h; bld.dataset.h = h; } }
-    let rent = el.querySelector('.rent');
-    if (pr) { if (!rent) { rent = document.createElement('span'); rent.className = 'rent'; el.appendChild(rent); } rent.textContent = money(v.rents[i]); } else if (rent) rent.remove();
-  });
+  if (B) { B.sync(v); B.setTurn(v.phase === 'playing' ? (v.pending ? v.pending.player : v.players[v.turn].id) : null); }
   // người chơi
   const n = v.players.length;
   const myIdx = Math.max(0, v.players.findIndex(p => p.id === myId));
@@ -193,11 +153,8 @@ function renderCenter() {
   } else { a.innerHTML = `<button class="btn roll" data-a="roll">🎲 Đổ xúc xắc</button>`; h.innerHTML = 'Tới lượt bạn!'; }
   $$('#c-actions [data-a]').forEach(b => b.onclick = () => { b.disabled = true; if (b.dataset.a === 'roll') { fx.sfx.dice(); rollAnim(); } send({ type: b.dataset.a }); });
 }
-function startPick(type, options, cb) {
-  picking = { type, options, cb };
-  $$('#board .cell').forEach(c => { const i = +c.dataset.i; c.classList.toggle('pick', options.includes(i)); c.classList.toggle('dim', !options.includes(i)); });
-}
-function endPick() { picking = null; $$('#board .cell').forEach(c => c.classList.remove('pick', 'dim')); }
+function startPick(type, options, cb) { if (picking && picking.type === type) return; picking = { type, options, cb }; B && B.pick(options); }
+function endPick() { picking = null; B && B.endPick(); }
 function onCell(i) {
   if (picking && picking.options.includes(i)) { const cb = picking.cb; endPick(); cb(i); return; }
   showDeed(i);
@@ -226,31 +183,29 @@ function effects(a, b) {
     for (const m of newMoves) await animateMove(m);
     placeAll();
     if (a) moneyFx(a, b);
-    if (b.lastChance && b.lastChance !== seenChance && (!a || !a.lastChance || a.lastChance.seq !== b.lastChance.seq)) { seenChance = b.lastChance; showChance(b.lastChance); }
+    if (b.phase === 'ended' && a && a.phase !== 'ended' && B) { B.celebrate(b.winner); }
+    if (b.lastChance && (!seenChance || seenChance.seq !== b.lastChance.seq) && a) { seenChance = b.lastChance; await showChance(b.lastChance); } else if (!a) seenChance = b.lastChance;
     logFx(a, b);
   };
   animBusy = animBusy.then(run, run);
   if (!a) return;
 }
 async function animateMove(m) {
-  const el = $(`.pawn[data-pid="${m.id}"]`); if (!el) { disp[m.id] = m.to; return; }
-  const stepMs = 185 * fx.S();
+  if (!B) { disp[m.id] = m.to; return; }
+  const stepMs = 230 * fx.S();
+  B.follow(m.id); // camera bám theo quân đang đi
   if (m.kind === 'walk' || m.kind === 'back') {
     const dir = m.kind === 'back' ? -1 : 1, steps = Math.abs(m.steps) || ((m.to - m.from + N) % N);
     let i = m.from;
     for (let k = 0; k < steps; k++) {
-      i = (i + dir + N) % N; disp[m.id] = i; placePawn(m.id, i);
-      el.classList.remove('hop'); void el.offsetWidth; el.classList.add('hop'); fx.sfx.hop();
-      if (i === 0 && dir > 0) { fx.floatText(cellEl(0), '+' + money(SALARY), 'good'); fx.sfx.cash(); }
-      await sleep(stepMs);
+      i = (i + dir + N) % N; disp[m.id] = i; fx.sfx.hop();
+      await B.hop(m.id, i, stepMs);
+      if (i === 0 && dir > 0) { B.floatAt(0, '+' + money(SALARY), '#1a9e52'); fx.sfx.cash(); B.burst(0, '#2fc76f', 20); }
     }
-  } else {
-    if (m.kind === 'fly') fx.sfx.plane(); else if (m.to === 8) fx.sfx.island();
-    el.style.transition = `transform ${600 * fx.S()}ms cubic-bezier(.3,.0,.2,1)`;
-    disp[m.id] = m.to; placePawn(m.id, m.to); await sleep(650 * fx.S()); el.style.transition = '';
-  }
-  disp[m.id] = m.to; placeAll();
-  const c = cellEl(m.to); c && c.classList.add('hl'); setTimeout(() => c && c.classList.remove('hl'), 700 * fx.S());
+  } else if (m.kind === 'fly') { fx.sfx.plane(); disp[m.id] = m.to; await B.fly(m.id, m.to, 1300 * fx.S()); }
+  else { if (m.to === 8) fx.sfx.island(); disp[m.id] = m.to; await B.placePawn(m.id, m.to, 0, 1, 700 * fx.S(), 1.2); }
+  disp[m.id] = m.to; placeAll(); B.pulse(m.to);
+  await sleep(250 * fx.S()); B.follow(null);
 }
 function moneyFx(a, b) {
   for (const p of b.players) {
@@ -265,22 +220,24 @@ function logFx(a, b) {
   if (!a) return;
   const k = Math.min(30, b.logN - a.logN); if (k <= 0) return;
   for (const l of b.log.slice(-k)) {
-    if (/Landmark/.test(l)) { fx.sfx.landmark(); fx.banner('🏛️ Landmark!', 'Y'); const pos = posInLine(l); pos != null && fx.burst(cellEl(pos), '#ffd54a', 30); }
+    if (/Landmark/.test(l)) { fx.sfx.landmark(); fx.banner('🏛️ Landmark!', 'Y'); const pos = posInLine(l); pos != null && (B.burst(pos, '#ffd54a', 70), B.shake()); }
     else if (/ mua lại /.test(l)) { fx.sfx.takeover(); fx.banner('🤝 Mua lại!', 'R'); }
-    else if (/ xây lên | mua .* và xây /.test(l)) { fx.sfx.build(); const pos = posInLine(l); pos != null && fx.burst(cellEl(pos), (P(b.players[b.turn].id) || {}).color || 'W', 14); }
-    else if (/ mua /.test(l)) { fx.sfx.cash(); const pos = posInLine(l); pos != null && fx.ring(cellEl(pos), 'Y'); }
+    else if (/ xây lên | mua .* và xây /.test(l)) { fx.sfx.build(); const pos = posInLine(l); pos != null && B.burst(pos, (P(b.players[b.turn].id) || {}).color || '#ffd54a', 30); }
+    else if (/ mua /.test(l)) { fx.sfx.cash(); const pos = posInLine(l); pos != null && (B.burst(pos, '#ffd54a', 18), B.floatAt(pos, '🏠 Mua!', '#ff7a1a')); }
     else if (/tổ chức Lễ hội/.test(l)) { fx.sfx.festival(); fx.banner('🎉 Lễ hội x2!', 'R'); }
-    else if (/phá sản/.test(l)) { fx.sfx.bankrupt(); fx.banner('💀 Phá sản!', 'R'); }
+    else if (/phá sản/.test(l)) { fx.sfx.bankrupt(); fx.banner('💀 Phá sản!', 'R'); B.shake(); }
+    else if (/ trả .* tiền thuê /.test(l)) { const pos = posInLine(l); const m2 = l.match(/ trả ([\d.,]+[KM])/); pos != null && m2 && B.floatAt(pos, '-' + m2[1], '#e53935'); }
     else if (/bị giam ở Côn Đảo/.test(l)) fx.banner('🏝️ Ra đảo!', 'B');
     else if (/Độc quyền|thắng!/.test(l)) {}
   }
   if (b.phase === 'ended' && a.phase !== 'ended') { fx.confetti(); fx.sfx.landmark(); }
 }
 function posInLine(l) { let best = null, len = 0; SQUARES.forEach((q, i) => { if ((q.type === 'city' || q.type === 'resort') && l.includes(q.name) && q.name.length > len) { best = i; len = q.name.length; } }); return best; }
-function showChance(c) {
+async function showChance(c) {
   fx.sfx.chance();
+  if (B) await B.drawCard(c.deck || 'chance');
   const wrap = document.createElement('div'); wrap.style.cssText = 'position:fixed;inset:0;display:grid;place-items:center;z-index:45;pointer-events:none';
-  wrap.innerHTML = `<div class="chance-card"><h3>❓ Cơ hội</h3><p>${esc(c.text)}</p><small>${esc(P(c.player) ? P(c.player).name : '')}</small></div>`;
+  wrap.innerHTML = `<div class="chance-card ${c.deck === 'chest' ? 'chest' : ''}"><h3>${c.deck === 'chest' ? '💰 Khí vận' : '❓ Cơ hội'}</h3><p>${esc(c.text)}</p><small>${esc(P(c.player) ? P(c.player).name : '')}</small></div>`;
   document.body.appendChild(wrap); setTimeout(() => { wrap.style.transition = 'opacity .3s'; wrap.style.opacity = '0'; setTimeout(() => wrap.remove(), 300); }, 2200 * fx.S());
 }
 
