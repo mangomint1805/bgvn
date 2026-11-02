@@ -5,7 +5,7 @@ import { imgTag, avatarTag } from './images.js';
 import { S, SPEEDS, getSpeed, setSpeed, sfx, cardSfx, gunSfx, fly, shake, flash, floatText, banner, toggleMute, isMuted, shoot, arrows, explode, sparkle, confetti, stamp, screenShake } from './fx.js';
 import { THEMES, getTheme, setTheme, onThemeChange } from './themes.js';
 import { openGuide } from './guide.js';
-import { musicSetTheme, musicToggle, musicIsOn, musicVolume, musicResumeIfOn } from './music.js';
+import { musicSetTheme, musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=9';
 
 const $ = s => document.querySelector(s);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
@@ -33,7 +33,7 @@ function getName() {
 }
 const handlers = {
   onLobby(players, code, started) { lobby = players; renderLobby(code); if (!started && !view) show('screen-lobby'); },
-  onState(v) { if (discardQueue.length) setTimeout(sendNextDiscard, 120); else if (!(v && v.prompt && v.prompt.type === 'discard')) discardSel.clear(); setTimer(v && v.phase === 'playing' ? v.timer : null); prevView = view; view = v; markFresh(prevView, v); if (!v) { prevView = null; show('screen-lobby'); return; } const first = !$('#screen-game').classList.contains('active'); show('screen-game'); render(); if (first) dealAnimation(); else animateDiff(prevView, view); },
+  onState(v) { if (discardQueue.length) setTimeout(sendNextDiscard, 120); else if (!(v && v.prompt && v.prompt.type === 'discard')) discardSel.clear(); setTimer(v && v.phase === 'playing' ? v.timer : null); prevView = view; view = v; markFresh(prevView, v); if (!v) { prevView = null; show('screen-lobby'); return; } const first = !$('#screen-game').classList.contains('active'); show('screen-game'); render(); musicMood(v); if (first) dealAnimation(); else animateDiff(prevView, view); },
   onError(msg) { toast(msg); },
   onJoined(id) { myId = id; },
   onDisconnect() { toast('Mất kết nối với chủ phòng – đang tự vào lại…'); },
@@ -118,12 +118,24 @@ function send(a) { selectedCard = null; sidMode = false; if (isHost) net.act('ho
 
 // ---------- Lá bài ----------
 const KIND_TAG = { brown: 'Dùng ngay', blue: 'Trang bị', gun: 'Súng' };
+// Biểu tượng tác dụng dưới hình (giống lá gốc)
+const RNG = n => `<i class="ic irng">🎯 ${n}</i>`;
+const ICONS = {
+  bang: () => '<i class="ic irng">🎯 tầm</i><i class="ic">💥</i>', missed: () => '<i class="ic">🛡️</i>', beer: () => '<i class="ic">❤️+1</i>',
+  panic: () => RNG(1) + '<i class="ic">✋🂠</i>', catbalou: () => '<i class="ic">👥</i><i class="ic">🗑️🂠</i>',
+  stagecoach: () => '<i class="ic">+2🂠</i>', wellsfargo: () => '<i class="ic">+3🂠</i>', store: () => '<i class="ic">👥 1🂠</i>',
+  saloon: () => '<i class="ic">👥 ❤️+1</i>', indians: () => '<i class="ic">👥</i><i class="ic">💥</i>', duel: () => '<i class="ic">👤⚔️</i>',
+  gatling: () => '<i class="ic">👥</i><i class="ic">💥</i>', dynamite: () => '<i class="ic">🧨 ♠2–9</i><i class="ic">−3❤️</i>',
+  jail: () => '<i class="ic">⛓️</i><i class="ic red">♥</i>', barrel: () => '<i class="ic">🛢️</i><i class="ic red">♥</i>',
+  scope: () => '<i class="ic">👁️ −1</i>', mustang: () => '<i class="ic">🐎 +1</i>',
+};
+function iconsFor(type) { const info = CARD_INFO[type]; if (ICONS[type]) return ICONS[type](); if (info.kind === 'gun') return RNG(info.range) + (type === 'volcanic' ? '<i class="ic">∞💥</i>' : ''); return ''; }
 export function cardEl(c, size = '') {
   const info = CARD_INFO[c.type];
   const red = c.suit === 'H' || c.suit === 'D';
   const d = el('div', `pcard ${info.kind} ${size}`);
   d.innerHTML = `<div class="ctop"><span class="idx${red ? ' red' : ''}">${rankLabel(c.rank)}${SUIT_SYMBOL[c.suit]}</span><span class="ktag">${info.kind === 'gun' ? 'Tầm ' + info.range : KIND_TAG[info.kind]}</span></div>
-    <div class="art">${imgTag(c.type)}</div>
+    <div class="art">${imgTag(c.type)}<div class="cicons">${iconsFor(c.type)}</div></div>
     <div class="cname">${info.name}</div><div class="cshort"><span>${suitify(info.short || '')}</span></div>`;
   // nhấn giữ (điện thoại) hoặc chuột phải (máy tính) để xem mô tả đầy đủ
   let lp; d.addEventListener('touchstart', () => { lp = setTimeout(() => { lp = 'done'; showCardDetail(c); }, 450); }, { passive: true });
@@ -189,7 +201,8 @@ function handFan(n) {
   return `<span class="hfan"><span class="backs" style="--n:${k}">${backs}</span><b>${n}</b></span>`;
 }
 function hpDots(p) {
-  let s = ''; for (let i = 0; i < p.maxHp; i++) s += `<i class="bul${i < p.hp ? ' on' : ''}">${BULLET}</i>`;
+  // Cảnh sát trưởng có thêm 1 viên đạn: viên đó màu vàng sáng lấp lánh
+  let s = ''; for (let i = 0; i < p.maxHp; i++) s += `<i class="bul${i < p.hp ? ' on' : ''}${p.role === 'sheriff' && i === p.maxHp - 1 ? ' star' : ''}">${BULLET}</i>`;
   return `<div class="hpbar">${s}</div>`;
 }
 
@@ -558,7 +571,11 @@ function animateDiff(a, b) {
   if (a.phase === 'playing' && b.phase === 'ended') {
     const names = { law: 'Phe Cảnh sát thắng!', outlaw: 'Tội phạm thắng!', renegade: 'Kẻ hai mặt thắng!' };
     setTimeout(() => { sfx.win(); confetti(); banner('🏆 ' + names[b.winner]); }, 700);
+    const r = (b.players.find(p => p.id === myId) || {}).role;
+    const won = b.winner === 'law' ? r === 'sheriff' || r === 'deputy' : b.winner === r;
+    musicStinger(won ? 'win' : 'lose');
   }
+  for (const l of newLines(a, b)) { if (/ bị loại! Vai trò/.test(l)) musicStinger('death'); else if (/ thách .+ Duel!$/.test(l)) musicStinger('duel'); }
 }
 
 // ---------- Hướng dẫn ----------
@@ -605,4 +622,16 @@ function sendNextDiscard() {
   const pr = view && view.prompt;
   if (!pr || pr.type !== 'discard' || pr.player !== myId) { discardQueue = []; return; }
   const id = discardQueue.shift(); if (id) send({ type: 'discard_card', cardId: id });
+}
+
+// ---------- Nhạc theo diễn biến ----------
+function newLines(a, b) { const la = a.log || [], lb = b.log || []; if (!la.length) return []; const last = la[la.length - 1]; const i = lb.lastIndexOf(last); return i >= 0 ? lb.slice(i + 1) : []; }
+function musicMood(v) {
+  if (!v || v.phase !== 'playing') { musicIntensity(0); return; }
+  const alive = v.players.filter(p => p.alive), meP = v.players.find(p => p.id === myId), pr = v.prompt;
+  const sheriff = v.players.find(p => p.role === 'sheriff');
+  let lv = 0;
+  if (alive.some(p => p.hp <= 1) || alive.length <= Math.ceil(v.players.length / 2) || (meP && meP.alive && meP.hp <= 2)) lv = 1;
+  if (alive.length <= 2 || (meP && meP.alive && meP.hp <= 1) || (pr && pr.kind === 'duel') || (sheriff && sheriff.alive && sheriff.hp <= 1)) lv = 2;
+  musicIntensity(lv);
 }

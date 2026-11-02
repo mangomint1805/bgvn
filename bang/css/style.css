@@ -625,3 +625,24 @@ label { display: block; font-weight: 700; margin: 12px 0 4px; text-align: left; 
 .hand .pcard.to-discard { transform: translateY(-18px); }
 @media (max-width: 760px) { .prompt .discard-row .pcard { --w: 46px; } }
 .hand .pcard .cshort span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* biểu tượng tác dụng dưới hình */
+.pcard .art { position: relative; }
+.pcard .cicons { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; gap: calc(var(--w) * .03); padding: calc(var(--w) * .025) 2px; background: linear-gradient(transparent, rgba(251,246,234,.92) 35%); }
+.pcard .cicons:empty { display: none; }
+.pcard .cicons .ic { font-style: normal; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: calc(var(--w) * .11); line-height: 1.1; color: #2b1d12; background: #fffdf7; border: 1px solid rgba(43,29,18,.35); border-radius: 5px; padding: 0 calc(var(--w) * .03); white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.pcard .cicons .ic.red { color: var(--red); }
+.pcard .cicons .ic.irng { background: #2b1d12; color: #ffe9c2; border-color: #2b1d12; }
+.pcard.xs .cicons, .prompt .store-row.peek .cicons, .equip .cicons, .hero-cards .cicons { display: none; }
+.pcard.sm .cicons .ic { font-size: max(8px, calc(var(--w) * .12)); }
+#me-hand.hand .pcard { --w: var(--hw, 116px); }
+.pcard .cicons .ic { font-size: calc(var(--w) * .135); padding: 1px calc(var(--w) * .035); }
+
+/* viên đạn thêm của Cảnh sát trưởng */
+.hpbar i.bul.star { position: relative; }
+.hpbar i.bul.star::after { content: "★"; position: absolute; left: 50%; top: -9px; transform: translateX(-50%); font-size: 9px; font-style: normal; color: #ffd54a; text-shadow: 0 0 4px #ffb300, 0 0 1px #000; animation: starTw 1.6s ease-in-out infinite; }
+.hpbar i.bul.star.on { animation: starGlow 1.6s ease-in-out infinite; }
+.bul.star.on .tip { fill: #fff3b0; } .bul.star.on .case { fill: #ffc928; } .bul.star.on .rim { fill: #d89a00; }
+.hpbar i.bul.star:not(.on)::after { opacity: .35; animation: none; }
+@keyframes starGlow { 0%,100% { filter: drop-shadow(0 0 2px #ffcc33); } 50% { filter: drop-shadow(0 0 7px #ffe066) brightness(1.2); } }
+@keyframes starTw { 50% { transform: translateX(-50%) scale(1.35) rotate(20deg); } }

@@ -114,36 +114,104 @@ function scheduleStep(t) {
 // Dựng sẵn cả vòng nhạc thành 1 đoạn âm thanh rồi phát lặp: không phụ thuộc bộ hẹn giờ,
 // nên chuyển tab/thu nhỏ cửa sổ nhạc vẫn chạy đều (trình duyệt làm chậm hẹn giờ ở tab nền).
 const cacheBuf = {}; let src = null, srcGain = null, themeKey = 'desert', want = 0;
+// Nhạc thay đổi theo diễn biến: 3 lớp cùng nhịp phát song song
+//  - lớp 0: giai điệu chính (luôn có)
+//  - lớp 1: trống + bass dồn dập (khi trận căng: có người sắp chết, còn ít người)
+//  - lớp 2: tiếng dây rền + trống trận (cực căng: đấu súng, còn 2 người, bạn còn 1 máu)
+// cộng thêm "đoạn nhạc ngắn" (stinger) khi có người bị loại / thắng / thua.
+function fold(r, L, tail) {
+  const out = ac.createBuffer(2, L, r.sampleRate);
+  for (let c = 0; c < 2; c++) { const d = r.getChannelData(c), o = out.getChannelData(c); o.set(d.subarray(0, L)); for (let i = 0; i < tail && L + i < d.length; i++) o[i] += d[L + i]; }
+  return out;
+}
+function noiseBuf(c, dur) { const b = c.createBuffer(1, Math.floor(c.sampleRate * dur), c.sampleRate); const x = b.getChannelData(0); for (let i = 0; i < x.length; i++) x[i] = Math.random() * 2 - 1; return b; }
+function hit(c, dest, t, kind, g = 1) {
+  if (kind === 'kick') { const o = c.createOscillator(); o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(42, t + .14); const v = c.createGain(); v.gain.setValueAtTime(.9 * g, t); v.gain.exponentialRampToValueAtTime(.001, t + .3); o.connect(v); v.connect(dest); o.start(t); o.stop(t + .32); return; }
+  const n = c.createBufferSource(); n.buffer = noiseBuf(c, kind === 'hat' ? .05 : .2); const f = c.createBiquadFilter();
+  f.type = kind === 'hat' ? 'highpass' : 'bandpass'; f.frequency.value = kind === 'hat' ? 7000 : kind === 'tom' ? 400 : 1800;
+  const v = c.createGain(); const dur = kind === 'hat' ? .05 : kind === 'tom' ? .35 : .18;
+  v.gain.setValueAtTime((kind === 'hat' ? .18 : kind === 'tom' ? .7 : .45) * g, t); v.gain.exponentialRampToValueAtTime(.001, t + dur);
+  n.connect(f); f.connect(v); v.connect(dest); n.start(t);
+  if (kind === 'snare') { const o = c.createOscillator(); o.frequency.value = 190; const w = c.createGain(); w.gain.setValueAtTime(.25 * g, t); w.gain.exponentialRampToValueAtTime(.001, t + .1); o.connect(w); w.connect(dest); o.start(t); o.stop(t + .12); }
+}
 async function renderLoop(key) {
   if (cacheBuf[key]) return cacheBuf[key];
   const p = PRESETS[key]; const mel = buildMelody(p); const e8 = 60 / p.bpm / 2;
   const steps = mel.length, sr = ac.sampleRate, L = Math.round(steps * e8 * sr), tail = Math.round(2.5 * sr);
+  // lớp 0
   const off = new OfflineAudioContext(2, L + tail, sr);
   const save = [ac, master, preset, melody, step];
   ac = off; master = off.createGain(); master.connect(off.destination); preset = p; melody = mel; step = steps;
   try { for (let k = 0; k < steps; k++) scheduleStep(k * e8); } finally { [ac, master, preset, melody, step] = save; }
-  const r = await off.startRendering();
-  const out = ac.createBuffer(2, L, sr);
-  for (let c = 0; c < 2; c++) { const d = r.getChannelData(c), o = out.getChannelData(c); o.set(d.subarray(0, L)); for (let i = 0; i < tail; i++) o[i] += d[L + i]; } // nốt ngân cuối vòng nối vào đầu vòng
-  return (cacheBuf[key] = out);
+  // lớp 1: trống + bass móc
+  const o1 = new OfflineAudioContext(2, L + tail, sr), d1 = o1.destination;
+  for (let k = 0; k < steps; k++) {
+    const t = k * e8, e = k % 8, bar = Math.floor(k / 8);
+    if (e === 0 || e === 4 || (e === 7 && bar % 2)) hit(o1, d1, t, 'kick');
+    if (e === 2 || e === 6) hit(o1, d1, t, 'snare', .8);
+    hit(o1, d1, t, 'hat', e % 2 ? .6 : 1);
+    const ch = chordNotes(p, bar % (p.prog.length * 2)); const bn = N(ch[e % 4 === 2 ? 2 : 0] - 24);
+    const o = o1.createOscillator(); o.type = 'sawtooth'; o.frequency.value = bn; const fl = o1.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = 500;
+    const v = o1.createGain(); v.gain.setValueAtTime(.12, t); v.gain.exponentialRampToValueAtTime(.001, t + e8 * .9); o.connect(fl); fl.connect(v); v.connect(d1); o.start(t); o.stop(t + e8);
+  }
+  // lớp 2: dây rền tremolo + trống trận
+  const o2 = new OfflineAudioContext(2, L + tail, sr), d2 = o2.destination;
+  for (let k = 0; k < steps; k++) {
+    const t = k * e8, e = k % 8, bar = Math.floor(k / 8);
+    if (e % 2 === 0) hit(o2, d2, t, 'tom', e === 0 ? 1 : .55);
+    if (e === 0) {
+      const ch = chordNotes(p, bar % (p.prog.length * 2));
+      for (const n of [ch[0] - 12, ch[2] - 12, ch[0]]) {
+        const o = o2.createOscillator(); o.type = 'sawtooth'; o.frequency.value = N(n);
+        const fl = o2.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = 1100;
+        const v = o2.createGain(); const dur = e8 * 8;
+        v.gain.setValueAtTime(.0001, t); v.gain.exponentialRampToValueAtTime(.05, t + .15); v.gain.setValueAtTime(.05, t + dur - .1); v.gain.exponentialRampToValueAtTime(.0001, t + dur);
+        const lfo = o2.createOscillator(); lfo.frequency.value = 9; const lg = o2.createGain(); lg.gain.value = .03; lfo.connect(lg); lg.connect(v.gain);
+        o.connect(fl); fl.connect(v); v.connect(d2); o.start(t); lfo.start(t); o.stop(t + dur); lfo.stop(t + dur);
+      }
+    }
+  }
+  const [r0, r1, r2] = await Promise.all([off.startRendering(), o1.startRendering(), o2.startRendering()]);
+  return (cacheBuf[key] = [fold(r0, L, tail), fold(r1, L, tail), fold(r2, L, tail)]);
 }
+let layers = [], level = 0; const LEVEL_GAIN = [[1, 0, 0], [1, .75, 0], [.85, .9, .8]];
 async function play() {
-  const my = ++want; const buf = await renderLoop(themeKey); if (my !== want || !on) return;
-  const old = src, oldG = srcGain, t = ac.currentTime;
-  srcGain = ac.createGain(); srcGain.gain.setValueAtTime(0.0001, t); srcGain.gain.exponentialRampToValueAtTime(1, t + 0.8); srcGain.connect(master);
-  src = ac.createBufferSource(); src.buffer = buf; src.loop = true; src.connect(srcGain); src.start(t + 0.05);
-  if (old) { oldG.gain.setValueAtTime(oldG.gain.value, t); oldG.gain.exponentialRampToValueAtTime(0.0001, t + 0.8); old.stop(t + 0.9); }
+  const my = ++want; const bufs = await renderLoop(themeKey); if (my !== want || !on) return;
+  const t = ac.currentTime, old = layers;
+  layers = bufs.map((b, i) => {
+    const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(Math.max(.0001, LEVEL_GAIN[Math.max(0, level)][i]), t + .8); g.connect(master);
+    const s2 = ac.createBufferSource(); s2.buffer = b; s2.loop = true; s2.connect(g); s2.start(t + .05); return { s: s2, g };
+  });
+  src = layers[0].s;
+  for (const x of old) { x.g.gain.setValueAtTime(x.g.gain.value, t); x.g.gain.linearRampToValueAtTime(0.0001, t + .8); x.s.stop(t + .9); }
+}
+// 0 = bình thường, 1 = căng, 2 = cực căng
+export function musicIntensity(lv) {
+  lv = Math.max(0, Math.min(2, lv | 0)); if (lv === level) return; level = lv;
+  if (!ac || !layers.length) return; const t = ac.currentTime;
+  layers.forEach((x, i) => { x.g.gain.cancelScheduledValues(t); x.g.gain.setValueAtTime(x.g.gain.value, t); x.g.gain.linearRampToValueAtTime(Math.max(.0001, LEVEL_GAIN[lv][i]), t + 2.5); });
+}
+// đoạn nhạc ngắn khi có biến
+export function musicStinger(kind) {
+  if (!on || !ac) return; const t = ac.currentTime + .05;
+  const duck = (dur) => layers.forEach(x => { const v = x.g.gain.value; x.g.gain.cancelScheduledValues(t); x.g.gain.setValueAtTime(v, t); x.g.gain.linearRampToValueAtTime(v * .25, t + .15); x.g.gain.setValueAtTime(v * .25, t + dur); x.g.gain.linearRampToValueAtTime(Math.max(.0001, LEVEL_GAIN[Math.max(0, level)][layers.indexOf(x)]), t + dur + 1.2); });
+  const nt = (f, at, d, type = 'triangle', g = .2) => { const o = ac.createOscillator(); o.type = type; o.frequency.value = f; const v = ac.createGain(); v.gain.setValueAtTime(.0001, t + at); v.gain.exponentialRampToValueAtTime(g, t + at + .02); v.gain.exponentialRampToValueAtTime(.0001, t + at + d); o.connect(v); v.connect(master); o.start(t + at); o.stop(t + at + d + .05); };
+  const r = (PRESETS[themeKey] || PRESETS.desert).root;
+  if (kind === 'death') { duck(2.2); [12, 8, 5, 0].forEach((k, i) => nt(N(r + k), i * .32, .6, 'sawtooth', .07)); nt(N(r - 12), 1.3, 1.6, 'triangle', .25); }
+  else if (kind === 'duel') { duck(2.4); nt(N(r), 0, 2.2, 'sawtooth', .06); nt(N(r + 6), 0, 2.2, 'sawtooth', .05); [0, .5, 1, 1.25, 1.5].forEach(a => nt(70, a, .3, 'sine', .5)); }
+  else if (kind === 'win') { [0, 4, 7, 12, 7, 12, 16].forEach((k, i) => nt(N(r + 12 + k), i * .16, .5, 'square', .06)); nt(N(r + 12), 1.15, 1.8, 'triangle', .2); layers.forEach(x => { x.g.gain.setValueAtTime(x.g.gain.value, t); x.g.gain.linearRampToValueAtTime(.0001, t + 2); }); level = -1; }
+  else if (kind === 'lose') { [7, 6, 5, 0].forEach((k, i) => nt(N(r + k), i * .45, .7, 'sawtooth', .06)); layers.forEach(x => { x.g.gain.setValueAtTime(x.g.gain.value, t); x.g.gain.linearRampToValueAtTime(.0001, t + 2); }); level = -1; }
 }
 
 export function musicSetTheme(theme) {
   themeKey = PRESETS[theme] ? theme : 'desert';
-  if (on && ac && src) play();
+  if (on && ac && layers.length) play();
 }
 export function musicStart() {
-  ctx(); if (src) return;
+  ctx(); if (layers.length) { if (layers[0].g.gain.value < .01) play(); return; }
   play();
 }
-export function musicStop() { want++; if (src) { try { src.stop(); } catch (e) {} src = null; } }
+export function musicStop() { want++; for (const x of layers) try { x.s.stop(); } catch (e) {} layers = []; src = null; }
 export function musicIsOn() { return on; }
 export function musicToggle() { on = !on; try { localStorage.setItem('bangvn-music', on ? '1' : '0'); } catch (e) {} if (on) musicStart(); else musicStop(); return on; }
 export function musicVolume(v) { if (v == null) return vol; vol = v; try { localStorage.setItem('bangvn-music-vol', String(v)); } catch (e) {} if (master) master.gain.value = vol * .35; }
