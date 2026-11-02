@@ -93,29 +93,29 @@ function beginTurn(s) {
   const p = current(s);
   p.bangs = 0; s.turnCount++;
   log(s, `— Lượt của ${name(p)} —`);
-  // Thuốc nổ
+  // Dynamite
   const dyn = p.table.find(c => c.type === 'dynamite');
   if (dyn) {
-    const boom = drawCheck(s, p, c => c.suit === 'S' && c.rank >= 2 && c.rank <= 9, 'Thuốc nổ');
+    const boom = drawCheck(s, p, c => c.suit === 'S' && c.rank >= 2 && c.rank <= 9, 'Dynamite');
     if (boom) {
       discardCard(s, p, dyn.id);
-      log(s, `💥 Thuốc nổ nổ! ${name(p)} mất 3 máu.`);
+      log(s, `💥 Dynamite nổ! ${name(p)} mất 3 máu.`);
       damage(s, p, 3, null);
       if (!p.alive) return; // post() sẽ chuyển lượt
     } else {
       removeCard(p, dyn.id);
       const al = alivePlayers(s); const nxt = al[(al.indexOf(p) + 1) % al.length];
       nxt.table.push(dyn);
-      log(s, `Thuốc nổ chuyền sang ${name(nxt)}.`);
+      log(s, `Dynamite chuyền sang ${name(nxt)}.`);
     }
   }
-  // Nhà tù
+  // Jail
   const jail = p.table.find(c => c.type === 'jail');
   if (jail) {
-    const free = drawCheck(s, p, isHeart, 'Nhà tù');
+    const free = drawCheck(s, p, isHeart, 'Jail');
     discardCard(s, p, jail.id);
     if (!free) { log(s, `${name(p)} bị giam, mất lượt.`); s.step = 'skipped'; nextTurn(s); return; }
-    log(s, `${name(p)} thoát khỏi Nhà tù.`);
+    log(s, `${name(p)} thoát khỏi Jail.`);
   }
   // Rút bài
   if (p.character === 'jessejones' || p.character === 'pedroramirez' || p.character === 'kitcarlson') {
@@ -159,12 +159,12 @@ function damage(s, target, amount, source) {
   }
   log(s, `${name(target)} mất ${amount} máu (còn ${Math.max(0, target.hp)}).`);
   if (target.hp <= 0) {
-    // Tự dùng Bia cứu mạng
+    // Tự dùng Beer cứu mạng
     while (target.hp <= 0 && alivePlayers(s).length > 2) {
       const beer = target.hand.find(c => c.type === 'beer');
       if (!beer) break;
       discardCard(s, target, beer.id); target.hp++;
-      log(s, `🍺 ${name(target)} uống Bia để sống sót!`);
+      log(s, `🍺 ${name(target)} uống Beer để sống sót!`);
     }
     if (target.hp <= 0) killPlayer(s, target, source);
   }
@@ -223,9 +223,9 @@ export function getPlayOptions(s, pid, cardId) {
       if (!targets.length) return { ok: false, reason: 'Không ai trong tầm bắn.' };
       return { ok: true, targetMode: 'player', targets };
     }
-    case 'missed': return { ok: false, reason: 'Hụt! chỉ dùng khi bị bắn.' };
+    case 'missed': return { ok: false, reason: 'Missed! chỉ dùng khi bị bắn.' };
     case 'beer':
-      if (alivePlayers(s).length <= 2) return { ok: false, reason: 'Còn 2 người, Bia vô hiệu.' };
+      if (alivePlayers(s).length <= 2) return { ok: false, reason: 'Còn 2 người, Beer vô hiệu.' };
       if (p.hp >= p.maxHp) return { ok: false, reason: 'Máu đã đầy.' };
       return { ok: true, targetMode: 'none' };
     case 'panic': {
@@ -326,7 +326,7 @@ function playCard(s, p, a) {
       pushShot(s, p, target, p.character === 'slabthekiller' ? 2 : 1, 'bang');
       break;
     }
-    case 'beer': discardCard(s, p, c.id); p.hp++; log(s, `${name(p)} uống Bia, hồi 1 máu.`); break;
+    case 'beer': discardCard(s, p, c.id); p.hp++; log(s, `${name(p)} uống Beer, hồi 1 máu.`); break;
     case 'panic': case 'catbalou': {
       discardCard(s, p, c.id);
       let taken;
@@ -337,19 +337,19 @@ function playCard(s, p, a) {
         if (!target.hand.length) { const tc = target.table[0]; taken = removeCard(target, tc.id); }
         else { const rc = pick(target.hand); taken = removeCard(target, rc.id); }
       }
-      if (type === 'panic') { p.hand.push(taken); log(s, `${name(p)} dùng Hoảng loạn! lấy 1 lá của ${name(target)}.`); }
+      if (type === 'panic') { p.hand.push(taken); log(s, `${name(p)} dùng Panic! lấy 1 lá của ${name(target)}.`); }
       else { s.discard.push(taken); log(s, `${name(p)} dùng Cat Balou, ${name(target)} phải bỏ ${cardLabel(taken)}.`); }
       break;
     }
-    case 'stagecoach': discardCard(s, p, c.id); giveCards(s, p, 2); log(s, `${name(p)} dùng Xe ngựa, rút 2 lá.`); break;
+    case 'stagecoach': discardCard(s, p, c.id); giveCards(s, p, 2); log(s, `${name(p)} dùng Stagecoach, rút 2 lá.`); break;
     case 'wellsfargo': discardCard(s, p, c.id); giveCards(s, p, 3); log(s, `${name(p)} dùng Wells Fargo, rút 3 lá.`); break;
-    case 'saloon': discardCard(s, p, c.id); for (const q of alivePlayers(s)) if (q.hp < q.maxHp) q.hp++; log(s, `${name(p)} mở Quán rượu, ai cũng hồi 1 máu.`); break;
+    case 'saloon': discardCard(s, p, c.id); for (const q of alivePlayers(s)) if (q.hp < q.maxHp) q.hp++; log(s, `${name(p)} mở Saloon, ai cũng hồi 1 máu.`); break;
     case 'store': {
       discardCard(s, p, c.id);
       const al = alivePlayers(s); const start = al.indexOf(p);
       const queue = []; for (let i = 0; i < al.length; i++) queue.push(al[(start + i) % al.length].id);
       const cards = []; for (let i = 0; i < al.length; i++) { const d = drawFromDeck(s); if (d) cards.push(d); }
-      log(s, `${name(p)} mở Tạp hóa: ${cards.map(cardLabel).join(', ')}.`);
+      log(s, `${name(p)} mở General Store: ${cards.map(cardLabel).join(', ')}.`);
       s.pending.push({ type: 'store', player: queue[0], queue, cards });
       break;
     }
@@ -360,22 +360,22 @@ function playCard(s, p, a) {
       break;
     }
     case 'gatling': {
-      discardCard(s, p, c.id); log(s, `${name(p)} quét Súng Gatling!`);
+      discardCard(s, p, c.id); log(s, `${name(p)} quét Gatling!`);
       const queue = orderFrom(s, p);
       // mỗi người: thùng rượu tự động, rồi vào hàng chờ nếu chưa né
       const need = {};
       const ids = [];
-      for (const q of queue) { const n = 1 - barrelSaves(s, q, 1); if (n > 0) { ids.push(q.id); need[q.id] = n; } else log(s, `${name(q)} né được nhờ Thùng rượu.`); }
+      for (const q of queue) { const n = 1 - barrelSaves(s, q, 1); if (n > 0) { ids.push(q.id); need[q.id] = n; } else log(s, `${name(q)} né được nhờ Barrel.`); }
       if (ids.length) s.pending.push({ type: 'respond', kind: 'gatling', source: p.id, player: ids[0], queue: ids, need: 1, needMap: need });
       break;
     }
     case 'duel': {
-      discardCard(s, p, c.id); log(s, `${name(p)} thách ${name(target)} Đấu súng!`);
+      discardCard(s, p, c.id); log(s, `${name(p)} thách ${name(target)} Duel!`);
       s.pending.push({ type: 'respond', kind: 'duel', player: target.id, other: p.id, source: p.id });
       break;
     }
     case 'jail': {
-      removeCard(p, c.id); target.table.push(c); log(s, `${name(p)} nhốt ${name(target)} vào Nhà tù.`); break;
+      removeCard(p, c.id); target.table.push(c); log(s, `${name(p)} nhốt ${name(target)} vào Jail.`); break;
     }
     default: {
       // bài xanh để trước mặt
@@ -389,17 +389,17 @@ function playCard(s, p, a) {
 
 function orderFrom(s, p) { const al = alivePlayers(s); const i = al.indexOf(p); const out = []; for (let k = 1; k < al.length; k++) out.push(al[(i + k) % al.length]); return out; }
 
-// Thùng rượu: trả về số lần né thành công (tối đa `need`)
+// Barrel: trả về số lần né thành công (tối đa `need`)
 function barrelSaves(s, q, need) {
   let saves = 0;
   const checks = (hasTable(q, 'barrel') ? 1 : 0) + (q.character === 'jourdonnais' ? 1 : 0);
-  for (let i = 0; i < checks && saves < need; i++) if (drawCheck(s, q, isHeart, 'Thùng rượu')) saves++;
+  for (let i = 0; i < checks && saves < need; i++) if (drawCheck(s, q, isHeart, 'Barrel')) saves++;
   return saves;
 }
 
 function pushShot(s, source, target, need, kind) {
   need -= barrelSaves(s, target, need);
-  if (need <= 0) { log(s, `${name(target)} né được nhờ Thùng rượu.`); return; }
+  if (need <= 0) { log(s, `${name(target)} né được nhờ Barrel.`); return; }
   s.pending.push({ type: 'respond', kind, source: source.id, player: target.id, need });
 }
 
@@ -443,12 +443,12 @@ function handlePromptAction(s, p, pr, a) {
       const i = pr.cards.findIndex(c => c.id === a.cardId);
       if (i < 0) return { ok: false, reason: 'Lá không hợp lệ.' };
       const c = pr.cards.splice(i, 1)[0]; p.hand.push(c);
-      log(s, `${name(p)} lấy ${cardLabel(c)} từ Tạp hóa.`);
+      log(s, `${name(p)} lấy ${cardLabel(c)} từ General Store.`);
       pr.queue.shift();
       while (pr.queue.length && pr.cards.length) {
         const q = getPlayer(s, pr.queue[0]);
         if (!q || !q.alive) { pr.queue.shift(); continue; }
-        if (pr.cards.length === 1) { q.hand.push(pr.cards.pop()); log(s, `${name(q)} lấy lá cuối từ Tạp hóa.`); pr.queue.shift(); continue; }
+        if (pr.cards.length === 1) { q.hand.push(pr.cards.pop()); log(s, `${name(q)} lấy lá cuối từ General Store.`); pr.queue.shift(); continue; }
         pr.player = q.id; return { ok: true };
       }
       s.discard.push(...pr.cards); s.pending.pop(); return { ok: true };
@@ -475,7 +475,7 @@ function handleRespond(s, p, pr, a) {
     s.pending.pop();
   };
   if (a.type === 'take_hit') {
-    if (pr.kind === 'duel') { log(s, `${name(p)} thua Đấu súng.`); s.pending.pop(); damage(s, p, 1, getPlayer(s, pr.other)); return { ok: true }; }
+    if (pr.kind === 'duel') { log(s, `${name(p)} thua Duel.`); s.pending.pop(); damage(s, p, 1, getPlayer(s, pr.other)); return { ok: true }; }
     log(s, `${name(p)} trúng đòn.`);
     advanceQueue(); damage(s, p, 1, source); return { ok: true };
   }
@@ -484,7 +484,7 @@ function handleRespond(s, p, pr, a) {
   if (!c) return { ok: false, reason: 'Lá này không dùng được.' };
   discardCard(s, p, c.id);
   if (pr.kind === 'duel') {
-    log(s, `${name(p)} bỏ ${cardLabel(c)} trong Đấu súng.`);
+    log(s, `${name(p)} bỏ ${cardLabel(c)} trong Duel.`);
     const other = pr.other; pr.other = pr.player; pr.player = other; return { ok: true };
   }
   if (pr.kind === 'indians') { log(s, `${name(p)} bỏ BANG! chống Indians.`); advanceQueue(); return { ok: true }; }

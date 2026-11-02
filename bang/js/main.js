@@ -358,11 +358,11 @@ function renderPrompt() {
   const src = pr.source ? v.players.find(x => x.id === pr.source) : null;
   const mine = pr.player === myId;
   if (mine) p.classList.add('mine');
-  const kindText = { bang: `💥 ${src?.name} bắn ${mine ? 'bạn' : who.name}!`, gatling: `🔫 ${src?.name} quét Gatling!`, indians: `🏹 ${src?.name} gọi Indians!`, duel: `⚔️ Đấu súng – ${mine ? 'tới bạn' : who.name} đáp trả` };
+  const kindText = { bang: `💥 ${src?.name} bắn ${mine ? 'bạn' : who.name}!`, gatling: `🔫 ${src?.name} quét Gatling!`, indians: `🏹 ${src?.name} gọi Indians!`, duel: `⚔️ Duel – ${mine ? 'tới bạn' : who.name} đáp trả` };
   if (pr.type === 'respond') {
     p.appendChild(el('div', 'ptitle', kindText[pr.kind]));
     if (mine) {
-      const need = pr.kind === 'bang' || pr.kind === 'gatling' ? `Cần ${pr.need} lá Hụt!` : 'Cần 1 lá BANG!';
+      const need = pr.kind === 'bang' || pr.kind === 'gatling' ? `Cần ${pr.need} lá Missed!` : 'Cần 1 lá BANG!';
       p.appendChild(el('div', 'sub', `${need} – bấm lá viền xanh trên tay, hoặc chịu mất 1 máu.`));
       const row = el('div', 'row'); const b = el('button', 'btn danger', '💔 Chịu đòn'); b.onclick = () => send({ type: 'take_hit' }); row.appendChild(b); p.appendChild(row);
     } else p.appendChild(el('div', 'sub', `Đang chờ ${who.name}…`));
@@ -370,7 +370,7 @@ function renderPrompt() {
   }
   if (pr.type === 'discard') { p.appendChild(el('div', 'ptitle', mine ? `Bỏ bớt ${me().handCount - me().hp} lá` : `${who.name} đang bỏ bớt bài…`)); if (mine) p.appendChild(el('div', 'sub', 'Bấm vào lá muốn bỏ.')); return; }
   if (pr.type === 'store') {
-    p.appendChild(el('div', 'ptitle', `🏪 Tạp hóa – ${mine ? 'bạn chọn 1 lá' : esc(who.name) + ' đang chọn'}`));
+    p.appendChild(el('div', 'ptitle', `🏪 General Store – ${mine ? 'bạn chọn 1 lá' : esc(who.name) + ' đang chọn'}`));
     const row = el('div', 'row store-row' + (mine ? '' : ' peek'));
     for (const c of pr.cards) { const ce = cardEl(c, 'sm'); if (mine) { ce.classList.add('playable'); attachTip(ce, c); ce.onclick = () => send({ type: 'store_pick', cardId: c.id }); } row.appendChild(ce); }
     p.appendChild(row); return;
@@ -467,7 +467,7 @@ function animateDiff(a, b) {
       const s = pidByName(b, m[1]), t = pidByName(b, m[2]);
       const gun = b.players.find(p => p.id === s)?.table.find(c => CARD_INFO[c.type].kind === 'gun')?.type;
       gunSfx(gun); shoot(anchorFor(s), anchorFor(t)); hitDelay = 300 * S();
-    } else if ((m = line.match(/^(.+) quét Súng Gatling!$/))) {
+    } else if ((m = line.match(/^(.+) quét Gatling!$/))) {
       const s = pidByName(b, m[1]); cardSfx('gatling');
       b.players.filter(p => p.alive && p.id !== s).forEach((p, i) => shoot(anchorFor(s), anchorFor(p.id), { delay: 80 + i * 110 }));
       hitDelay = 450 * S(); screenShake();
@@ -475,21 +475,21 @@ function animateDiff(a, b) {
       const s = pidByName(b, m[1]); banner('🏹 Indians tấn công!'); cardSfx('indians');
       b.players.filter(p => p.alive && p.id !== s).forEach((p, i) => arrows(anchorFor(s), anchorFor(p.id), { delay: 200 + i * 140, onHit: () => sfx.card() }));
       hitDelay = 800 * S();
-    } else if ((m = line.match(/^(.+) (?:đánh .+ né đạn|né được nhờ Thùng rượu)\.$/))) {
-      const t = pidByName(b, m[1]); if (/Thùng rượu/.test(line)) { cardSfx('barrel'); setTimeout(() => cardSfx('missed'), 250); } else cardSfx('missed');
+    } else if ((m = line.match(/^(.+) (?:đánh .+ né đạn|né được nhờ Barrel)\.$/))) {
+      const t = pidByName(b, m[1]); if (/Barrel/.test(line)) { cardSfx('barrel'); setTimeout(() => cardSfx('missed'), 250); } else cardSfx('missed');
       setTimeout(() => stamp(anchorFor(t), 'HỤT!'), 320 * S());
-    } else if ((m = line.match(/^💥 Thuốc nổ nổ! (.+) mất 3 máu\.$/))) {
+    } else if ((m = line.match(/^💥 Dynamite nổ! (.+) mất 3 máu\.$/))) {
       const t = pidByName(b, m[1]); sfx.boom(); explode(anchorFor(t));
-    } else if ((m = line.match(/thách (.+) Đấu súng!$/))) {
-      banner('⚔ Đấu súng!', m[1].trim()); cardSfx('duel');
-    } else if ((m = line.match(/nhốt (.+) vào Nhà tù\.$/))) {
+    } else if ((m = line.match(/thách (.+) Duel!$/))) {
+      banner('⚔ Duel!', m[1].trim()); cardSfx('duel');
+    } else if ((m = line.match(/nhốt (.+) vào Jail\.$/))) {
       const t = pidByName(b, m[1]); setTimeout(() => stamp(anchorFor(t), 'NHÀ TÙ'), 350);
     } else if ((m = line.match(/^(.+) bị giam, mất lượt\.$/))) {
       stamp(anchorFor(pidByName(b, m[1])), 'MẤT LƯỢT');
-    } else if (/mở Quán rượu/.test(line)) {
-      banner('🥃 Quán rượu!', 'Mọi người hồi 1 máu');
-    } else if ((m = line.match(/^(.+) mở Tạp hóa/))) {
-      banner('🏪 Tạp hóa', 'Mỗi người chọn 1 lá');
+    } else if (/mở Saloon/.test(line)) {
+      banner('🥃 Saloon!', 'Mọi người hồi 1 máu');
+    } else if ((m = line.match(/^(.+) mở General Store/))) {
+      banner('🏪 General Store', 'Mỗi người chọn 1 lá');
     }
   }
   // Lấy bài của người khác: lá bay từ người bị lấy về người lấy
@@ -497,7 +497,7 @@ function animateDiff(a, b) {
   const byChar = ch => b.players.find(p => p.character === ch)?.id;
   for (const line of lines) {
     let m, taker = null, victim = null;
-    if ((m = line.match(/^(.+) dùng Hoảng loạn! lấy 1 lá của (.+)\.$/))) { taker = pidByName(b, m[1]); victim = pidByName(b, m[2]); discardSrc = taker; }
+    if ((m = line.match(/^(.+) dùng Panic! lấy 1 lá của (.+)\.$/))) { taker = pidByName(b, m[1]); victim = pidByName(b, m[2]); discardSrc = taker; }
     else if ((m = line.match(/^(.+) dùng Cat Balou,/))) { discardSrc = null; }
     else if ((m = line.match(/^El Gringo lấy 1 lá từ tay (.+)\.$/))) { taker = byChar('elgringo'); victim = pidByName(b, m[1]); }
     else if ((m = line.match(/^Jesse Jones rút 1 lá từ tay (.+) và/))) { taker = byChar('jessejones'); victim = pidByName(b, m[1]); }
@@ -515,7 +515,7 @@ function animateDiff(a, b) {
     }
   }
   const txt = lines.join(' ');
-  if (/hồi 1 máu/.test(txt) && !/uống Bia|Quán rượu/.test(txt)) sfx.heal();
+  if (/hồi 1 máu/.test(txt) && !/uống Beer|Saloon/.test(txt)) sfx.heal();
   if (/☠️/.test(txt)) sfx.death();
   // Lượt mới
   if (a.turn !== b.turn && b.phase === 'playing') { sfx.turn(); const cur = b.players[b.turn]; if (cur.id === myId) banner('Tới lượt bạn!'); }

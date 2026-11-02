@@ -73,20 +73,20 @@ export function guideHTML() {
 <div class="g-flex">${distanceSVG()}<div><ul>
 <li><b>Khoảng cách</b> giữa 2 người = số ghế ít nhất phải đi qua quanh bàn (người ngồi cạnh là 1). Người đã bị loại không tính.</li>
 <li>Bạn chỉ <b>BANG!</b> được người có khoảng cách ≤ <b>tầm súng</b>. Không có súng thì dùng Colt .45 tầm 1.</li>
-<li><b>Ngựa Mustang</b>: người khác thấy bạn xa thêm 1. <b>Ống ngắm</b>: bạn thấy người khác gần đi 1.</li>
-<li>Súng <b>không</b> làm thay đổi khoảng cách, nên <b>Hoảng loạn!</b> vẫn chỉ dùng được với người cách 1.</li>
+<li><b>Mustang</b>: người khác thấy bạn xa thêm 1. <b>Scope</b>: bạn thấy người khác gần đi 1.</li>
+<li>Súng <b>không</b> làm thay đổi khoảng cách, nên <b>Panic!</b> vẫn chỉ dùng được với người cách 1.</li>
 <li>Trên bàn, số trong vòng tròn vàng cạnh mỗi người là khoảng cách từ bạn tới họ.</li></ul></div></div></section>
 
 <section id="g-draw"><h3>5. "Lật bài" là gì?</h3>
-<p>Một số lá (Thùng rượu, Nhà tù, Thuốc nổ) bắt bạn <b>lật lá trên cùng của chồng bài</b> rồi xem <b>chất</b> của nó: ra <span class="suit red">♥</span> Cơ thì thoát Nhà tù / né được đạn; ra <span class="suit black">♠</span> Bích từ 2 đến 9 thì Thuốc nổ phát nổ. Lá lật xong bị bỏ đi. Mỗi lá bài đều có số và chất ở góc trên bên trái.</p></section>
+<p>Một số lá (Barrel, Jail, Dynamite) bắt bạn <b>lật lá trên cùng của chồng bài</b> rồi xem <b>chất</b> của nó: ra <span class="suit red">♥</span> Cơ thì thoát Jail / né được đạn; ra <span class="suit black">♠</span> Bích từ 2 đến 9 thì Dynamite phát nổ. Lá lật xong bị bỏ đi. Mỗi lá bài đều có số và chất ở góc trên bên trái.</p></section>
 
 <section id="g-brown"><h3>6. Lá nâu – dùng ngay</h3><div class="g-cards">${brown.map(cardRow).join('')}</div></section>
 <section id="g-blue"><h3>7. Lá xanh – đặt trước mặt</h3><div class="g-cards">${blue.map(cardRow).join('')}</div>
-<p class="g-note">Thứ tự đầu lượt: xét <b>Thuốc nổ</b> trước, rồi mới tới <b>Nhà tù</b>. Người bị nhốt vẫn có thể bị bắn và vẫn né được bình thường.</p></section>
+<p class="g-note">Thứ tự đầu lượt: xét <b>Dynamite</b> trước, rồi mới tới <b>Jail</b>. Người bị nhốt vẫn có thể bị bắn và vẫn né được bình thường.</p></section>
 <section id="g-guns"><h3>8. Súng</h3><div class="g-cards">${guns.map(cardRow).join('')}</div></section>
 
 <section id="g-death"><h3>9. Hết máu và bị loại</h3><ul>
-<li>Mất máu cuối cùng thì bị loại, trừ khi dùng ngay 1 lá <b>Bia</b> (game tự dùng giúp bạn). Bia vô hiệu khi chỉ còn 2 người.</li>
+<li>Mất máu cuối cùng thì bị loại, trừ khi dùng ngay 1 lá <b>Beer</b> (game tự dùng giúp bạn). Beer vô hiệu khi chỉ còn 2 người.</li>
 <li>Người bị loại lật vai trò lên, bỏ hết bài trên tay và trước mặt.</li>
 <li><b>Thưởng:</b> ai hạ một Tội phạm thì được rút 3 lá (kể cả người hạ là Tội phạm khác).</li>
 <li><b>Phạt:</b> Cảnh sát trưởng lỡ hạ Phó cảnh sát thì phải bỏ hết bài trên tay và trước mặt.</li></ul></section>
@@ -99,11 +99,11 @@ export function guideHTML() {
 <section id="g-chars"><h3>11. 16 nhân vật</h3><div class="g-chars">${Object.keys(CHARACTERS).map(charRow).join('')}</div></section>
 
 <section id="g-tips"><h3>12. Mẹo cho người mới</h3><ul>
-<li><b>Cảnh sát trưởng:</b> đừng bắn bừa, bắn nhầm Phó là mất trắng bài. Ưu tiên Thùng rượu và Mustang để sống lâu.</li>
+<li><b>Cảnh sát trưởng:</b> đừng bắn bừa, bắn nhầm Phó là mất trắng bài. Ưu tiên Barrel và Mustang để sống lâu.</li>
 <li><b>Phó cảnh sát:</b> giấu vai trò, bảo vệ sếp bằng cách bắn người tấn công sếp.</li>
 <li><b>Tội phạm:</b> dồn hoả lực vào Cảnh sát trưởng, phối hợp với nhau nhưng đừng lộ quá sớm.</li>
 <li><b>Kẻ hai mặt:</b> khó nhất game. Giả làm Phó, giúp sếp diệt Tội phạm, cuối ván mới lật mặt.</li>
-<li>Luôn giữ 1 lá Hụt! hoặc Bia trên tay. Để ý ai bắn ai để đoán vai trò.</li></ul></section>
+<li>Luôn giữ 1 lá Missed! hoặc Beer trên tay. Để ý ai bắn ai để đoán vai trò.</li></ul></section>
 
 <section id="g-web"><h3>13. Chơi trên web này</h3><ul>
 <li><b>Tạo phòng</b> rồi gửi mã 5 ký tự hoặc link cho bạn bè. Thiếu người thì bấm <b>+ Thêm bot</b>.</li>
