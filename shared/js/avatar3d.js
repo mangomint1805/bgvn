@@ -6,9 +6,10 @@ export const OPTIONS = {
   skin: ['#ffe0c2', '#f6c9a0', '#e0a878', '#b97a4f', '#8a5634'],
   hair: [['short', 'Tóc ngắn'], ['spiky', 'Tóc dựng'], ['long', 'Tóc dài'], ['bun', 'Búi tóc'], ['bald', 'Trọc']],
   hairColor: ['#2b1d16', '#5a3a22', '#c98b4a', '#f0d27a', '#e85d75', '#5e7bff', '#ffffff'],
-  hat: [['none', 'Không'], ['nonla', 'Nón lá'], ['helmet', 'Nón bảo hiểm'], ['cap', 'Nón kết'], ['cowboy', 'Mũ cao bồi'], ['crown', 'Vương miện'], ['chef', 'Mũ đầu bếp']],
-  outfit: [['tee', 'Áo thun'], ['aodai', 'Áo dài'], ['vest', 'Vest'], ['jersey', 'Áo đội bóng'], ['apron', 'Tạp dề'], ['army', 'Quân phục']],
+  hat: [['none', 'Không'], ['nonla', 'Nón lá'], ['helmet', 'Nón bảo hiểm'], ['cap', 'Nón kết'], ['cowboy', 'Mũ cao bồi'], ['crown', 'Vương miện'], ['chef', 'Mũ đầu bếp'], ['maidband', 'Băng đô hầu gái']],
+  outfit: [['tee', 'Áo thun'], ['aodai', 'Áo dài'], ['vest', 'Vest'], ['jersey', 'Áo đội bóng'], ['apron', 'Tạp dề'], ['army', 'Quân phục'], ['maid', 'Đồ hầu gái']],
   acc: [['none', 'Không'], ['glasses', 'Kính râm'], ['scarf', 'Khăn rằn'], ['backpack', 'Ba lô'], ['moneybag', 'Túi tiền']],
+  horns: [['none', 'Không'], ['bull', 'Sừng trâu'], ['deer', 'Sừng hươu'], ['devil', 'Sừng quỷ']],
   color: ['#ff5a5f', '#3d8bff', '#2fc76f', '#ffb020', '#a259ff', '#ff7ac8', '#14c4c4', '#8d6e63'],
 };
 // 16 mẫu dựng sẵn (thay cho 16 emoji cũ)
@@ -29,17 +30,19 @@ export const PRESETS = [
   { name: 'Đại gia', kind: 'human', skin: '#f6c9a0', hair: 'bald', hairColor: '#2b1d16', hat: 'crown', outfit: 'vest', acc: 'moneybag', color: '#ffb020' },
   { name: 'Shipper', kind: 'human', skin: '#e0a878', hair: 'short', hairColor: '#2b1d16', hat: 'helmet', outfit: 'jersey', acc: 'backpack', color: '#2fc76f' },
   { name: 'Cầu thủ', kind: 'human', skin: '#b97a4f', hair: 'spiky', hairColor: '#f0d27a', hat: 'none', outfit: 'jersey', acc: 'none', color: '#ff5a5f' },
+  { name: 'Hầu gái', kind: 'human', skin: '#ffe0c2', hair: 'long', hairColor: '#f0d27a', hat: 'maidband', outfit: 'maid', acc: 'none', color: '#ff7ac8' },
+  { name: 'Bị cắm sừng', kind: 'human', skin: '#f6c9a0', hair: 'short', hairColor: '#2b1d16', hat: 'none', outfit: 'tee', acc: 'none', horns: 'deer', color: '#8d6e63' },
 ];
 const M = (c, o = {}) => new THREE.MeshStandardMaterial({ color: new THREE.Color(c), roughness: 0.6, ...o });
 const shadeHex = (c, f) => '#' + new THREE.Color(c).multiplyScalar(f).getHexString();
 function add(g, geo, mat, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, ry, rz); m.castShadow = true; g.add(m); return m; }
 
 export function buildAvatar(cfg) {
-  cfg = { ...PRESETS[0], ...cfg };
+  cfg = { horns: 'none', ...PRESETS[0], ...cfg };
   const g = new THREE.Group(), isHuman = cfg.kind === 'human';
   const skin = M(cfg.kind === 'panda' ? '#ffffff' : cfg.skin), main = M(cfg.color), dark = M('#2b2b33'), white = M('#ffffff');
   // ----- thân + áo -----
-  const shirtCol = { tee: cfg.color, aodai: cfg.color, vest: '#2f3545', jersey: cfg.color, apron: '#ffffff', army: '#4f6b3a' }[cfg.outfit];
+  const shirtCol = { tee: cfg.color, aodai: cfg.color, vest: '#2f3545', jersey: cfg.color, apron: '#ffffff', army: '#4f6b3a', maid: '#22222b' }[cfg.outfit];
   const shirt = M(shirtCol);
   add(g, new THREE.CylinderGeometry(0.2, 0.26, 0.42, 12), shirt, 0, 0.42, 0);
   // chân
@@ -53,6 +56,14 @@ export function buildAvatar(cfg) {
   if (cfg.outfit === 'vest') { add(g, new THREE.BoxGeometry(0.1, 0.3, 0.02), white, 0, 0.46, 0.235); add(g, new THREE.BoxGeometry(0.04, 0.22, 0.02), main, 0, 0.45, 0.25); }
   if (cfg.outfit === 'jersey') { add(g, new THREE.BoxGeometry(0.14, 0.12, 0.02), white, 0, 0.45, 0.245); }
   if (cfg.outfit === 'apron') add(g, new THREE.BoxGeometry(0.3, 0.32, 0.02), white, 0, 0.38, 0.25);
+  if (cfg.outfit === 'maid') { // váy đen xoè + tạp dề trắng viền bèo + nơ cổ
+    add(g, new THREE.CylinderGeometry(0.24, 0.36, 0.26, 16, 1, true), M('#22222b', { side: THREE.DoubleSide }), 0, 0.2, 0);
+    add(g, new THREE.TorusGeometry(0.35, 0.025, 6, 24), white, 0, 0.075, 0, Math.PI / 2, 0, 0);
+    add(g, new THREE.BoxGeometry(0.26, 0.36, 0.02), white, 0, 0.3, 0.275, -0.18, 0, 0);
+    add(g, new THREE.BoxGeometry(0.2, 0.1, 0.02), white, 0, 0.53, 0.235);
+    add(g, new THREE.ConeGeometry(0.05, 0.09, 4), main, -0.045, 0.62, 0.22, 0, 0, Math.PI / 2); add(g, new THREE.ConeGeometry(0.05, 0.09, 4), main, 0.045, 0.62, 0.22, 0, 0, -Math.PI / 2);
+    add(g, new THREE.SphereGeometry(0.075, 8, 6), white, -0.29, 0.56, 0).scale.set(1, 0.7, 1); add(g, new THREE.SphereGeometry(0.075, 8, 6), white, 0.29, 0.56, 0).scale.set(1, 0.7, 1);
+  }
   if (cfg.outfit === 'army') { add(g, new THREE.BoxGeometry(0.42, 0.04, 0.42), M('#6b4f2a'), 0, 0.3, 0); }
   // ----- đầu -----
   const head = new THREE.Group(); head.position.y = 0.88; g.add(head);
@@ -85,6 +96,19 @@ export function buildAvatar(cfg) {
   if (cfg.hat === 'cowboy') { add(head, new THREE.CylinderGeometry(0.48, 0.48, 0.03, 24), M('#8d5a3b'), 0, hatY, 0); add(head, new THREE.CylinderGeometry(0.2, 0.24, 0.24, 16), M('#8d5a3b'), 0, hatY + 0.12, 0); add(head, new THREE.CylinderGeometry(0.245, 0.245, 0.05, 16), dark, 0, hatY + 0.03, 0); }
   if (cfg.hat === 'crown') { add(head, new THREE.CylinderGeometry(0.17, 0.17, 0.12, 8, 1, true), M('#ffd54a', { metalness: 0.7, roughness: 0.25, side: THREE.DoubleSide }), 0, 0.31, 0); for (let k = 0; k < 8; k++) add(head, new THREE.ConeGeometry(0.03, 0.08, 4), M('#ffd54a', { metalness: 0.7, roughness: 0.25 }), Math.cos(k * Math.PI / 4) * 0.17, 0.41, Math.sin(k * Math.PI / 4) * 0.17); add(head, new THREE.SphereGeometry(0.03, 8, 6), M('#e53935'), 0, 0.31, 0.17); }
   if (cfg.hat === 'chef') { add(head, new THREE.CylinderGeometry(0.2, 0.2, 0.14, 16), white, 0, 0.27, 0); add(head, new THREE.SphereGeometry(0.22, 14, 10), white, 0, 0.4, 0).scale.set(1, 0.75, 1); }
+  if (cfg.hat === 'maidband') { add(head, new THREE.TorusGeometry(0.27, 0.025, 6, 24, Math.PI), M('#22222b'), 0, 0.08, 0.02, -0.5, 0, 0); for (let k = 0; k < 5; k++) add(head, new THREE.SphereGeometry(0.05, 8, 6), white, -0.18 + k * 0.09, 0.27 - Math.abs(k - 2) * 0.03, 0.08).scale.set(1, 0.8, 0.5); }
+  // sừng
+  if (cfg.horns === 'bull') { const hm = M('#efe6d2'); for (const sx of [-1, 1]) { add(head, new THREE.CylinderGeometry(0.03, 0.06, 0.18, 8), hm, sx * 0.24, 0.18, 0, 0, 0, sx * -1.0); add(head, new THREE.ConeGeometry(0.03, 0.14, 8), hm, sx * 0.34, 0.3, 0, 0, 0, sx * -0.25); } }
+  if (cfg.horns === 'deer') { const hm = M('#8d5a3b', { flatShading: true });
+    // cành sừng: mỗi đoạn mọc ra từ điểm cuối đoạn trước nên không bị rời
+    const seg = (x, y, ang, len, r) => { add(head, new THREE.CylinderGeometry(r * 0.7, r, len, 6), hm, x + Math.sin(ang) * len / 2, y + Math.cos(ang) * len / 2, -0.02, 0, 0, -ang); return [x + Math.sin(ang) * len, y + Math.cos(ang) * len]; };
+    for (const sx of [-1, 1]) {
+      let [x, y] = seg(sx * 0.13, 0.22, sx * 0.45, 0.22, 0.03);
+      seg(x, y, sx * 1.25, 0.14, 0.02);
+      [x, y] = seg(x, y, sx * 0.15, 0.16, 0.022);
+      seg(x, y, sx * 0.95, 0.11, 0.016); seg(x, y, sx * -0.2, 0.12, 0.016);
+    } }
+  if (cfg.horns === 'devil') { const hm = M('#d32f2f', { roughness: 0.4 }); for (const sx of [-1, 1]) add(head, new THREE.ConeGeometry(0.05, 0.16, 10), hm, sx * 0.15, 0.27, 0.05, -0.2, 0, sx * -0.35); }
   // phụ kiện
   if (cfg.acc === 'glasses') { add(head, new THREE.BoxGeometry(0.11, 0.06, 0.02), dark, -0.09, 0.03, 0.27); add(head, new THREE.BoxGeometry(0.11, 0.06, 0.02), dark, 0.09, 0.03, 0.27); add(head, new THREE.BoxGeometry(0.07, 0.015, 0.02), dark, 0, 0.04, 0.27); }
   if (cfg.acc === 'scarf') { add(g, new THREE.TorusGeometry(0.19, 0.05, 8, 16), M('#d32f2f'), 0, 0.64, 0, Math.PI / 2, 0, 0); add(g, new THREE.BoxGeometry(0.08, 0.16, 0.03), M('#d32f2f'), 0.08, 0.55, 0.2, 0, 0, 0.2); }
