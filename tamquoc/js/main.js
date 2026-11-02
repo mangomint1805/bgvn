@@ -1,12 +1,12 @@
 // Giao diện Tam Quốc Sát + nối với lớp mạng (host-authoritative). Mọi hình vẽ tự làm bằng CSS/SVG/emoji.
-import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, SUIT_SYMBOL, SUIT_NAME, cardLabel, cardName, rankLabel, rolesFor } from './cards.js?v=1';
-import { JUDGE_TEXT } from './engine.js?v=1';
-import { Host, Client, loadSnapshot, session, MAX, MIN } from './net.js?v=1';
+import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, SUIT_SYMBOL, SUIT_NAME, cardLabel, cardName, rankLabel, rolesFor, infoOf } from './cards.js?v=3';
+import { JUDGE_TEXT } from './engine.js?v=3';
+import { Host, Client, loadSnapshot, session, MAX, MIN } from './net.js?v=3';
 import { netStatus } from '../../shared/ui/status.js';
-import { portrait, blankPortrait, cardHTML, backHTML, generalCardHTML, kindTag, iconsFor } from './art.js?v=1';
-import * as fx from './fx.js?v=1';
-import { musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=1';
-import { openGuide as guide } from './guide.js?v=1';
+import { portrait, blankPortrait, cardHTML, backHTML, generalCardHTML, kindTag, iconsFor, emoOf } from './art.js?v=3';
+import * as fx from './fx.js?v=3';
+import { musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=3';
+import { openGuide as guide } from './guide.js?v=3';
 
 const GAME = 'tamquoc';
 const $ = s => document.querySelector(s);
@@ -17,6 +17,7 @@ const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return
 const isTouch = matchMedia('(hover: none)').matches;
 
 let net = null, isHost = false, myId = null, view = null, prev = null, lobby = [];
+let lobbyOpts = { exp: true, expGen: true };
 let ui = null, askSig = '', modalSig = '', lastEv = 0, autoPass = null, introShown = false, endShown = false;
 
 // ======================= MÀN HÌNH =======================
@@ -35,11 +36,11 @@ $('#name').value = ls.get('bgvn-name') || '';
 function myName() { const n = $('#name').value.trim() || 'Bạn'; ls.set('bgvn-name', n); return n; }
 (() => {
   const ids = ['guanyu', 'caocao', 'zhouyu', 'diaochan', 'zhugeliang'];
-  $('#hero').innerHTML = ids.map((g, i) => `<div class="hero-g" style="--r:${(i - 2) * 11}deg;--y:${Math.abs(i - 2) * 9}px;--d:${i * 90}ms">${portrait(g)}</div>`).join('')
+  $('#hero').innerHTML = ids.map((g, i) => `<div class="hero-g" style="--r:${(i - 2) * 9}deg;--i:${i - 2};--y:${Math.abs(i - 2) * 8}px;--d:${i * 90}ms;z-index:${5 - Math.abs(i - 2)}">${portrait(g)}</div>`).join('')
     + `<div class="hero-c">${cardHTML({ id: 'h1', type: 'sat', suit: 'S', rank: 7 }, 'sm')}</div><div class="hero-c r">${cardHTML({ id: 'h2', type: 'dao', suit: 'H', rank: 3 }, 'sm')}</div>`;
 })();
 const handlers = {
-  onLobby(info, code, started) { lobby = info; $('#room-code').textContent = code; renderLobby(); if (!started) { if (view) { view = null; prev = null; } closeModal(); show('screen-lobby'); } },
+  onLobby(info, code, started, opts) { lobby = info; if (opts) lobbyOpts = opts; $('#room-code').textContent = code; renderLobby(); if (!started) { if (view) { view = null; prev = null; } closeModal(); show('screen-lobby'); } },
   onState(v) { onState(v); },
   onError(m) { toast(m, 'bad'); fx.sfx.bad(); if (pending) { pending = false; if (view) render(); } },
   onJoined(id) { myId = id; },
@@ -73,6 +74,7 @@ $('#btn-leave').onclick = () => {
 };
 $('#btn-copy').onclick = () => { const url = location.origin + location.pathname + '?room=' + $('#room-code').textContent; navigator.clipboard?.writeText(url).then(() => toast('Đã chép link mời 📋', 'ok'), () => toast(url)); };
 $('#btn-addbot').onclick = () => net && net.addBot && net.addBot();
+$('#opt-exp').onchange = $('#opt-gen').onchange = () => { if (isHost && net && net.setOpts) net.setOpts({ exp: $('#opt-exp').checked, expGen: $('#opt-gen').checked }); };
 $('#btn-start').onclick = () => { musicResumeIfOn(); net && net.start && net.start(); };
 $('#btn-guide-home').onclick = $('#btn-guide').onclick = openGuide;
 $('#btn-log').onclick = () => $('#log').classList.toggle('hidden');
@@ -106,8 +108,10 @@ function renderLobby() {
   const n = lobby.length;
   $('#pcount').textContent = `${n}/${MAX}`;
   const roles = rolesFor(Math.max(MIN, Math.min(MAX, n || MIN)));
-  $('#role-preview').innerHTML = (n >= MIN ? roles.map(r => `<span class="rchip r-${r}">${ROLES[r].icon} ${ROLES[r].name}</span>`).join('') : '<span class="muted">Cần ít nhất 2 người.</span>')
+  $('#role-preview').innerHTML = (n >= MIN ? roles.map(r => `<span class="rchip r-${r}"><i class="seal">${SEAL[r]}</i>${ROLES[r].name}</span>`).join('') : '<span class="muted">Cần ít nhất 2 người.</span>')
     + `<div class="role-desc">${[...new Set(roles)].map(r => `<p><b>${ROLES[r].icon} ${ROLES[r].name}:</b> ${ROLES[r].desc}</p>`).join('')}</div>`;
+  $('#opt-exp').checked = lobbyOpts.exp !== false; $('#opt-gen').checked = lobbyOpts.expGen !== false;
+  $('#opt-exp').disabled = $('#opt-gen').disabled = !isHost;
   $('#btn-addbot').style.display = isHost ? '' : 'none'; $('#btn-addbot').disabled = n >= MAX;
   $('#btn-start').style.display = isHost ? '' : 'none'; $('#btn-start').disabled = n < MIN || n > MAX;
   $('#wait-msg').textContent = isHost ? (n < MIN ? 'Thêm bot hoặc mời bạn bè (2–8 người).' : `Sẵn sàng! ${n} người – bấm Bắt đầu.`) : (n ? 'Đang chờ chủ phòng bắt đầu…' : 'Đang kết nối…');
@@ -148,6 +152,7 @@ function initUi(v) {
   if (a.type === 'discard') return { k: 'discard', ids: [] };
   if (a.type === 'liuli') return { k: 'liuli', cardId: null, target: null };
   if (a.type === 'targets') return { k: 'targets', ids: [] };
+  if (a.type === 'show') return { k: 'show' };
   return null;
 }
 
@@ -182,14 +187,24 @@ function hpBar(p, big = false) {
   let s = ''; for (let i = 0; i < p.maxHp; i++) s += `<i class="${i < p.hp ? 'on ' + c : ''}"></i>`;
   return `<div class="hp ${big ? 'big' : ''}">${s}</div>`;
 }
+const SEAL = { lord: '主', loyal: '忠', rebel: '反', spy: '內' };
 function roleChip(p) {
-  if (p.role) return `<span class="rchip r-${p.role}">${ROLES[p.role].icon} ${ROLES[p.role].name}</span>`;
-  return '<span class="rchip r-hidden">❓ Chưa lộ</span>';
+  if (p.role) return `<span class="rchip r-${p.role}"><i class="seal">${SEAL[p.role]}</i>${ROLES[p.role].name}</span>`;
+  return '<span class="rchip r-hidden"><i class="seal">?</i>Chưa lộ</span>';
 }
 function equipIcons(p) {
   const out = [];
-  for (const k of ['weapon', 'armor', 'plus', 'minus']) { const c = p.equip[k]; if (!c) continue; const i = CARD_INFO[c.type]; out.push(`<span class="eqi e-${k}" title="${esc(cardName(c))}">${i.emo}${k === 'weapon' ? `<b>${i.range}</b>` : k === 'plus' ? '<b>+1</b>' : k === 'minus' ? '<b>−1</b>' : ''}</span>`); }
+  for (const k of ['weapon', 'armor', 'plus', 'minus']) { const c = p.equip[k]; if (!c) continue; const i = CARD_INFO[c.type]; out.push(`<span class="eqi e-${k}" title="${esc(cardName(c))}">${emoOf(c.type)}${k === 'weapon' ? `<b>${i.range}</b>` : k === 'plus' ? '<b>+1</b>' : k === 'minus' ? '<b>−1</b>' : ''}</span>`); }
   return out.join('');
+}
+function statusBadges(p, long = false) {
+  const f = p.flags || {}; const b = [];
+  if (f.drunk) b.push(['🍶', 'Say rượu', 'Sát kế tiếp lượt này +1 sát thương']);
+  if (f.chained) b.push(['⛓️', 'Bị xích', 'Chịu sát thương lửa/sét sẽ lan sang người bị xích khác']);
+  if (f.flipped) b.push(['🏰', 'Lật úp', 'Bỏ qua lượt kế tiếp']);
+  if (p.scars && p.scars.length) b.push(['🩹', p.scars.length + ' vết sẹo', 'Bất khuất: ' + p.scars.map(c => rankLabel(c.rank)).join(' ')]);
+  if (!b.length) return '';
+  return `<span class="stb${long ? ' long' : ''}">${b.map(x => `<i title="${x[1]}: ${x[2]}">${x[0]}${long ? `<small>${x[1]}</small>` : ''}</i>`).join('')}</span>`;
 }
 function judgeIcons(p) { return p.judge.map(j => `<span class="jdi" title="${CARD_INFO[j.as].name}">${CARD_INFO[j.as].emo}</span>`).join(''); }
 function targetInfo() {
@@ -219,13 +234,13 @@ function renderSeats() {
     const [x, y] = L[k] || [50, 10];
     const g = p.general ? GENERALS[p.general] : null;
     const dying = a && a.purpose === 'dying' && a.forWho === p.id;
-    const seat = el('div', `seat${compact ? ' compact' : ''} k-${p.kingdom || 'none'}${p.id === cur.id && v.turnCount ? ' current' : ''}${!p.alive ? ' dead' : ''}${waiting.includes(p.id) ? ' waiting' : ''}${dying ? ' dying' : ''}`);
+    const seat = el('div', `seat${compact ? ' compact' : ''}${p.flags && p.flags.chained ? ' chained' : ''}${p.flags && p.flags.flipped ? ' flipped' : ''} k-${p.kingdom || 'none'}${p.id === cur.id && v.turnCount ? ' current' : ''}${!p.alive ? ' dead' : ''}${waiting.includes(p.id) ? ' waiting' : ''}${dying ? ' dying' : ''}`);
     seat.dataset.pid = p.id;
     const top = Math.min(Math.max(y / 100 * TH, portraitMode ? 46 : 64), TH - (portraitMode ? 46 : 60));
     seat.style.left = Math.min(Math.max(x / 100 * TW, 40), TW - 40) + 'px'; seat.style.top = top + 'px';
     const conn = v.conn && v.conn[p.id];
-    seat.innerHTML = `<div class="ava">${g ? portrait(p.general) : blankPortrait()}${p.distance != null && p.alive ? `<span class="dist${p.inRange ? ' in' : ''}" title="Khoảng cách từ bạn">${p.distance}</span>` : ''}${!p.alive ? '<span class="rip">☠</span>' : ''}${conn === 'off' ? '<span class="conn" title="Mất kết nối – bot đánh thay">📴</span>' : conn === 'afk' ? '<span class="conn" title="Treo máy – bot đánh thay">💤</span>' : ''}${p.flags && p.flags.luoyi ? '<span class="buff" title="Lỏa y">💪</span>' : ''}</div>
-      <div class="plate"><div class="pname">${esc(p.name)}</div><div class="gname">${g ? g.name : 'đang chọn…'}</div>${hpBar(p)}
+    seat.innerHTML = `<div class="ava">${g ? portrait(p.general) : blankPortrait()}${p.distance != null && p.alive ? `<span class="dist${p.inRange ? ' in' : ''}" title="Khoảng cách từ bạn">${p.distance}</span>` : ''}${!p.alive ? '<span class="rip">☠</span>' : ''}${conn === 'off' ? '<span class="conn" title="Mất kết nối – bot đánh thay">📴</span>' : conn === 'afk' ? '<span class="conn" title="Treo máy – bot đánh thay">💤</span>' : ''}${p.flags && p.flags.luoyi ? '<span class="buff" title="Lỏa y">💪</span>' : ''}${statusBadges(p)}</div>
+      <div class="plate">${p.kingdom ? `<span class="flag">${KINGDOMS[p.kingdom].han}</span>` : ''}<div class="pname">${esc(p.name)}</div><div class="gname">${g ? g.name : 'đang chọn…'}</div>${hpBar(p)}
         <div class="meta"><span class="hc" title="Lá trên tay"><i></i>${p.handCount}</span>${equipIcons(p)}${judgeIcons(p)}</div>${roleChip(p)}</div>`;
     if (ti) {
       if (ti.sel.includes(p.id)) seat.classList.add('selected');
@@ -249,7 +264,7 @@ function outReason(p) {
 // Đẩy khu giữa bàn xuống / thu hẹp nếu ghế đè lên
 function fitCenter() {
   const table = $('#table'), c = $('#center'); if (!table || !c) return;
-  c.style.setProperty('--cpush', '0px'); c.style.maxWidth = '';
+  c.style.setProperty('--cpush', '0px'); c.style.maxWidth = ''; c.classList.remove('tight', 'tight2');
   const tr = table.getBoundingClientRect(); let cr = c.getBoundingClientRect(); let push = 0;
   const seats = [...table.querySelectorAll('.seat')].map(s => s.getBoundingClientRect());
   for (const r of seats) { if (r.right < cr.left + 4 || r.left > cr.right - 4) continue; if (r.top + r.height / 2 < cr.top + cr.height / 2) push = Math.max(push, r.bottom + 6 - cr.top); }
@@ -258,10 +273,13 @@ function fitCenter() {
   cr = c.getBoundingClientRect(); const mid = cr.left + cr.width / 2; let half = cr.width / 2;
   for (const r of seats) {
     if (r.bottom < cr.top || r.top > cr.bottom) continue;
-    if (r.right > cr.left && r.right < mid) half = Math.min(half, mid - r.right - 4);
-    if (r.left < cr.right && r.left > mid) half = Math.min(half, r.left - mid - 4);
+    if (r.right > cr.left && r.right < mid) half = Math.min(half, mid - r.right - 9);
+    if (r.left < cr.right && r.left > mid) half = Math.min(half, r.left - mid - 9);
   }
   if (half < cr.width / 2) c.style.maxWidth = Math.max(130, Math.round(half * 2)) + 'px';
+  // vẫn tràn xuống dưới bàn → ẩn dòng nhật ký, rồi rút gọn lời nhắc
+  if (c.getBoundingClientRect().bottom > tr.bottom + 2) c.classList.add('tight');
+  if (c.getBoundingClientRect().bottom > tr.bottom + 2) c.classList.add('tight2');
 }
 addEventListener('resize', () => { if (view) render(); });
 
@@ -287,6 +305,7 @@ function promptText() {
       if (!mine) return { t: `⏳ ${nmB(who)} đang ra bài…`, q: true };
       if (ui && (ui.k === 'use' || ui.k === 'jiedao')) {
         const nmc = CARD_INFO[ui.as].name;
+        if (ui.as === 'tiesuo') return { t: '⛓️ Thiết tác liên hoàn', s: 'Chọn 1–2 người để xích / gỡ xích (bấm chân dung để chọn mình), hoặc bấm "Trùng chú" để bỏ lá này rút 1 lá.', mine };
         if (ui.k === 'jiedao') return { t: ui.a ? `🔪 Chọn người để ${nmB(ui.a)} phải chém` : '🔪 Chọn người có vũ khí để mượn dao', mine };
         return { t: `👉 Chọn mục tiêu cho <b>${nmc}</b>`, s: ui.opt.max > 1 ? `Tối đa ${ui.opt.max} người – bấm xác nhận khi xong.` : 'Bấm vào ghế sáng viền đỏ. Ghế mờ là không chọn được.', mine };
       }
@@ -304,17 +323,28 @@ function promptText() {
       if (a.purpose === 'phase') return mine ? { t: `🗑️ Bỏ bớt ${nb} lá`, s: `Cuối lượt chỉ giữ số lá bằng số máu (${m.hp}). Chọn ${nb} lá ở tay rồi bấm nút.`, mine } : { t: `${nmB(who)} đang bỏ bớt ${nb} lá…`, q: true };
       if (a.purpose === 'songco') return mine ? { t: '⚔️ Thư hùng song kiếm!', s: `Bỏ 1 lá trên tay, hoặc để ${nmB(a.src)} rút 1 lá.`, mine } : { t: `${nmB(who)} chọn: bỏ 1 lá hay cho rút 1 lá…` };
       if (a.purpose === 'cuonglie') return mine ? { t: '👁️ Cương liệt phản đòn!', s: `Bỏ 2 lá trên tay, hoặc chịu mất 1 máu do ${nmB(a.src)}.`, mine } : { t: `${nmB(who)} chọn: bỏ 2 lá hay mất 1 máu…` };
+      if (a.purpose === 'huogong') return mine ? { t: '🎇 Hỏa công', s: suitify(`${nmB(a.tgt)} lật ${a.shown ? cardLabel(a.shown) : ''}. Bỏ 1 lá ${SUIT_SYMBOL[a.suit]} trên tay để đốt họ 1 máu?`), mine } : { t: `${nmB(who)} đang tìm lá ${SUIT_SYMBOL[a.suit]} để đốt…` };
       if (a.purpose === 'guanshi') return mine ? { t: '🪓 Quán thạch phủ', s: `${nmB(a.tgt)} đã Né. Bỏ 2 lá (tay/trang bị) để Sát vẫn trúng?`, mine } : { t: `${nmB(who)} đang tính bổ rìu…` };
       return { t: `${nmB(who)} đang bỏ bài…` };
     }
     case 'pick': return mine ? { t: `${a.mode === 'take' ? '✋ Lấy' : '🗑️ Phá'} 1 lá của ${nmB(a.from)}`, mine, btn: ['Mở bảng chọn', showPick] } : { t: `${nmB(who)} đang chọn lá của ${nmB(a.from)}…` };
     case 'guanxing': return mine ? { t: '🪶 Quan tinh: sắp xếp chồng bài', mine, btn: ['Mở bảng xếp', showGuanxing] } : { t: `🪶 ${nmB(who)} [Quan tinh] đang xem ${a.count} lá trên cùng…` };
-    case 'targets': return mine ? { t: '🐺 Đột tập', s: 'Chọn tối đa 2 người để lấy 1 lá trên tay mỗi người (thay cho rút bài), hoặc rút bình thường.', mine } : { t: `🐺 ${nmB(who)} [Đột tập] đang chọn người…` };
+    case 'show':
+      if (a.purpose === 'pindian') return mine ? { t: `🀄 Đọ bài với ${nmB(a.vs)}`, s: 'Chọn 1 lá trên tay úp xuống – số lớn hơn thắng (A nhỏ nhất, K lớn nhất; bằng nhau người khởi xướng thua).', mine } : { t: `🀄 ${nmB(who)} đang chọn lá để đọ bài…` };
+      return mine ? { t: `🎇 Hỏa công của ${nmB(a.src)}`, s: 'Chọn 1 lá trên tay để lật cho họ xem. Họ bỏ được lá cùng chất thì bạn bị đốt 1 máu.', mine } : { t: `🎇 ${nmB(who)} đang chọn lá để lật (Hỏa công)…` };
+    case 'targets': if (a.purpose && a.purpose !== 'duttap') {
+      const T = { thantoc: ['💨 Thần tốc', 'Bỏ qua phán định + rút bài để Sát 1 người bất kỳ (không cần tầm)? Chọn người hoặc bỏ qua.'], loikich: ['⚡ Lôi kích', 'Chọn 1 người phán định: ra ♠ thì họ chịu 2 sát thương sét.'], tietmenh: ['📜 Tiết mệnh', 'Chọn 1 người rút bài tới bằng máu tối đa của họ (tối đa 5).'], khuho: ['🐯 Khu hổ thắng!', `Chọn người trong tầm của ${nmB(a.src)} để họ đánh.`] }[a.purpose] || ['Chọn người', ''];
+      return mine ? { t: T[0], s: suitify(T[1]) + (a.candidates.includes(myId) ? ' Bấm chân dung của bạn để chọn chính mình.' : ''), mine } : { t: `${nmB(who)} đang dùng ${T[0]}…` };
+    }
+      return mine ? { t: '🐺 Đột tập', s: 'Chọn tối đa 2 người để lấy 1 lá trên tay mỗi người (thay cho rút bài), hoặc rút bình thường.', mine } : { t: `🐺 ${nmB(who)} [Đột tập] đang chọn người…` };
     case 'yesno':
       if (a.purpose === 'loay') return mine ? { t: '💪 Lỏa y: cởi giáp?', s: 'Rút ít đi 1 lá, đổi lại Sát/Quyết đấu lượt này gây thêm 1 sát thương.', mine } : { t: `${nmB(who)} đang tính cởi giáp…` };
+      if (a.purpose === 'cuthu') return mine ? { t: '🏰 Cứ thủ', s: 'Rút 3 lá rồi lật úp tướng (bỏ qua lượt kế tiếp của bạn)?', mine } : { t: `${nmB(who)} đang tính cố thủ…` };
+      if (a.purpose === 'nietban') return mine ? { t: '🐦‍🔥 Niết bàn!', s: 'Bỏ hết bài, rút 3 lá và hồi về 3 máu (chỉ 1 lần mỗi ván)?', mine } : { t: `${nmB(who)} đang tính tái sinh…` };
       if (a.purpose === 'hanbing') return mine ? { t: '❄️ Băng phách kiếm', s: `Không gây sát thương cho ${nmB(a.tgt)} mà phá 2 lá của họ?`, mine } : { t: `${nmB(who)} đang cân nhắc Băng phách kiếm…` };
       return { t: '…' };
-    case 'liuli': return mine ? { t: '🌺 Lưu ly: chuyển Sát?', s: `${nmB(a.src)} Sát bạn. Bỏ 1 lá (tay/trang bị) rồi chọn người trong tầm để nhận Sát thay.`, mine } : { t: `🌺 ${nmB(who)} [Lưu ly] đang tính chuyển Sát…` };
+    case 'liuli': if (a.purpose === 'thienhuong') return mine ? { t: '🌸 Thiên hương: chuyển sát thương?', s: suitify(`Sắp mất ${a.n} máu. Bỏ 1 lá ♥ trên tay${GENERALS[me().general].skills.includes('hongnhan') ? ' (♠ cũng tính là ♥)' : ''} rồi chọn người nhận thay – họ sẽ rút bài bằng số máu đã mất.`), mine } : { t: `🌸 ${nmB(who)} [Thiên hương] đang tính…` };
+      return mine ? { t: '🌺 Lưu ly: chuyển Sát?', s: `${nmB(a.src)} Sát bạn. Bỏ 1 lá (tay/trang bị) rồi chọn người trong tầm để nhận Sát thay.`, mine } : { t: `🌺 ${nmB(who)} [Lưu ly] đang tính chuyển Sát…` };
     case 'suit': return mine ? { t: '🎼 Phản gián: đoán chất!', s: `${nmB(a.src)} thách bạn. Đoán sai chất thì mất 1 máu.`, mine, btn: ['Đoán chất', showSuit] } : { t: `🎼 ${nmB(who)} đang đoán chất…` };
     case 'wugu': return mine ? { t: '🌾 Ngũ cốc: chọn 1 lá', mine, btn: ['Mở bảng chọn', showWugu], peek: a.cards } : { t: `🌾 ${nmB(who)} đang chọn từ Ngũ cốc…`, peek: a.cards };
   }
@@ -334,7 +364,7 @@ function cardPrompt(a) {
   if (!mine) return { t, s: `Đang chờ ${nmB(who)}…`, q: a.purpose !== 'dying' };
   const S = {
     sat: `Đánh ${want}${need}, không thì mất máu.`, wanjian: 'Đánh 1 Né, không thì mất 1 máu.', nanman: 'Đánh 1 Sát, không thì mất 1 máu.',
-    duel: `Đánh ${want}${need}, không thì thua và mất 1 máu.`, dying: a.forWho === myId ? 'Tự ăn Đào để sống tiếp?' : 'Đánh Đào để cứu?', delegate: 'Bạn có thể đánh hộ hoặc bỏ qua.',
+    duel: `Đánh ${want}${need}, không thì thua và mất 1 máu.`, dying: a.forWho === myId ? 'Tự ăn Đào (hoặc uống Rượu) để sống tiếp?' : 'Đánh Đào để cứu?', delegate: 'Bạn có thể đánh hộ hoặc bỏ qua.',
     qinglong: 'Đánh thêm 1 Sát vào người vừa Né?', jiedao: `Sát ${nmB(a.target)}, không thì giao vũ khí cho ${nmB(src)}.`,
     quytai: a.judgeCard ? `Lá phán định: ${cardLabel(a.judgeCard)} – ${JUDGE_TEXT[a.why] || ''}. Đánh 1 lá trên tay để thay?` : '',
   };
@@ -355,12 +385,12 @@ function renderMe() {
   if (!m) { box.innerHTML = ''; return; }
   const g = m.general ? GENERALS[m.general] : null;
   $('#me').className = `me k-${m.kingdom || 'none'}${v.players[v.turn].id === myId && v.phase === 'playing' && v.turnCount ? ' current' : ''}${!m.alive ? ' dead' : ''}`;
-  const zoneSel = ui && ((ui.k === 'skill' && ui.opt.zones === 'he') || (ui.k === 'discard' && view.ask.zones === 'he') || ui.k === 'liuli');
-  const eq = ['weapon', 'armor', 'plus', 'minus'].map(k => m.equip[k] ? `<span class="eqc e-${k}${zoneSel && !(ui.k === 'discard' && k === 'weapon' && view.ask.purpose === 'guanshi') ? ' pickable' : ''}${selIds().includes(m.equip[k].id) ? ' sel' : ''}" data-cid="${m.equip[k].id}">${CARD_INFO[m.equip[k].type].emo}<b>${esc(cardName(m.equip[k]))}</b><small class="${/[HD]/.test(m.equip[k].suit) ? 'red' : ''}">${SUIT_SYMBOL[m.equip[k].suit]}${rankLabel(m.equip[k].rank)}</small></span>` : '').join('');
+  const zoneSel = ui && ((ui.k === 'skill' && ui.opt.zones === 'he') || (ui.k === 'discard' && view.ask.zones === 'he') || (ui.k === 'liuli' && view.ask.purpose !== 'thienhuong'));
+  const eq = ['weapon', 'armor', 'plus', 'minus'].map(k => m.equip[k] ? `<span class="eqc e-${k}${zoneSel && !(ui.k === 'discard' && k === 'weapon' && view.ask.purpose === 'guanshi') ? ' pickable' : ''}${selIds().includes(m.equip[k].id) ? ' sel' : ''}" data-cid="${m.equip[k].id}">${emoOf(m.equip[k].type)}<b>${esc(cardName(m.equip[k]))}</b><small class="${/[HD]/.test(m.equip[k].suit) ? 'red' : ''}">${SUIT_SYMBOL[m.equip[k].suit]}${rankLabel(m.equip[k].rank)}</small></span>` : '').join('');
   const jd = m.judge.map(j => `<span class="eqc jd" data-cid="${j.card.id}">${CARD_INFO[j.as].emo}<b>${CARD_INFO[j.as].name}</b></span>`).join('');
   const sk = g ? g.skills.map(s => `<button class="skc${SKILLS[s].lord && m.role !== 'lord' ? ' off' : ''}" data-sk="${s}">${SKILLS[s].name}</button>`).join('') : '';
   box.innerHTML = `<div class="me-ava">${g ? portrait(m.general) : blankPortrait()}${!m.alive ? '<span class="rip">☠</span>' : ''}</div>
-    <div class="me-id"><div class="pname">${esc(m.name)} <span class="gname">${g ? '· ' + g.name : ''}</span></div>${hpBar(m, true)}<div class="me-row">${m.role ? roleChip(m) : ''}<span class="rng" title="Tầm đánh">🎯 ${m.range}</span></div></div>
+    <div class="me-id"><div class="pname">${esc(m.name)} <span class="gname">${g ? '· ' + g.name : ''}</span></div>${hpBar(m, true)}<div class="me-row">${m.role ? roleChip(m) : ''}<span class="rng" title="Tầm đánh">🎯 ${m.range}</span>${statusBadges(m, true)}</div></div>
     <div class="me-zone">${eq || jd ? eq + jd : '<span class="muted small">Chưa có trang bị</span>'}</div>
     <div class="me-skills">${sk}</div>`;
   const ti = targetInfo(); const meAva = box.querySelector('.me-ava');
@@ -388,14 +418,16 @@ function renderHand() {
   const w = Math.max(min, Math.min(max, (avail - (cnt - 1) * 5) / Math.max(1, cnt)));
   const ov = cnt > 1 ? Math.min(4, ((avail - w) / (cnt - 1) - w) / 2) : 4;
   hand.style.setProperty('--cw', w + 'px'); hand.style.setProperty('--ov', Math.max(-w * .36, ov) + 'px');
-  const respIds = mine && (a.type === 'card') && a.options ? a.options.filter(o => o.ids).map(o => o.ids[0]) : [];
+  const respIds = mine && (a.type === 'card' || a.type === 'nullify') && a.options ? a.options.filter(o => o.ids).map(o => o.ids[0]) : [];
+  const hn = m.general && GENERALS[m.general].skills.includes('hongnhan');
+  const okSel = c => { if (!ui) return true; if (ui.k === 'liuli' && a.purpose === 'thienhuong') return c.suit === 'H' || (hn && c.suit === 'S'); if (ui.k === 'discard' && a.suit) return (c.suit === 'S' && hn ? 'H' : c.suit) === a.suit; if (ui.k === 'skill' && ui.opt.sameSuit && ui.ids.length) { const f = m.hand.find(x => x.id === ui.ids[0]); return !f || f.suit === c.suit || ui.ids.includes(c.id); } return true; };
   const sel = selIds();
   m.hand.forEach(c => {
     const t = el('div', '', cardHTML(c)); const ce = t.firstElementChild;
     bindCard(ce, c);
     if (sel.includes(c.id)) ce.classList.add('selected');
     if (ui && (ui.k === 'skill' || ui.k === 'discard' || ui.k === 'zhangba' || ui.k === 'liuli')) {
-      const ok = ui.k !== 'skill' || ui.opt.cards[1] > 0;
+      const ok = (ui.k !== 'skill' || ui.opt.cards[1] > 0) && okSel(c);
       if (ok) { ce.classList.add('playable'); ce.onclick = () => toggleSel(c.id); } else ce.classList.add('dim');
     } else if (mine && a.type === 'play') {
       const modes = (v.myModes && v.myModes[c.id]) || [];
@@ -406,8 +438,8 @@ function renderHand() {
       if (respIds.includes(c.id)) { ce.classList.add('playable', 'resp'); ce.onclick = () => send({ type: 'respond', ids: [c.id] }); }
       else ce.classList.add('dim');
     } else if (mine && a.type === 'nullify') {
-      if (c.type === 'wuxie') { ce.classList.add('playable', 'resp'); ce.onclick = () => send({ type: 'respond', ids: [c.id] }); } else ce.classList.add('dim');
-    }
+      if (respIds.includes(c.id)) { ce.classList.add('playable', 'resp'); ce.onclick = () => send({ type: 'respond', ids: [c.id] }); } else ce.classList.add('dim');
+    } else if (mine && a.type === 'show') { ce.classList.add('playable', 'resp'); ce.onclick = () => send({ type: 'show', id: c.id }); }
     if (isFresh(c.id)) ce.classList.add('fresh');
     hand.appendChild(ce);
   });
@@ -418,7 +450,7 @@ function markFresh() { const pa = prev && prev.players.find(p => p.id === myId),
 
 // ---- lá bài: chi tiết, tooltip ----
 const tip = $('#card-tip');
-function tipHTML(c, as) { const i = CARD_INFO[as || c.type]; return `<div class="te">${kindTag(as || c.type)}${i.kind === 'weapon' ? ' · tầm ' + i.range : ''} · ${suitify(SUIT_SYMBOL[c.suit])}${rankLabel(c.rank)} ${SUIT_NAME[c.suit]}</div><div class="tn">${esc(as ? i.name : cardName(c))}</div><div class="td">${suitify(i.desc)}</div>`; }
+function tipHTML(c, as) { const i = as ? CARD_INFO[as] : infoOf(c); return `<div class="te">${kindTag(as || c.type)}${i.kind === 'weapon' ? ' · tầm ' + i.range : ''} · ${suitify(SUIT_SYMBOL[c.suit])}${rankLabel(c.rank)} ${SUIT_NAME[c.suit]}</div><div class="tn">${esc(as ? i.name : cardName(c))}</div><div class="td">${suitify(i.desc)}</div>`; }
 function attachTip(node, c, as) {
   node.addEventListener('mouseenter', () => { tip.innerHTML = tipHTML(c, as); const r = node.getBoundingClientRect(); tip.style.left = Math.min(innerWidth - 270, Math.max(8, r.left + r.width / 2 - 130)) + 'px'; tip.classList.add('on'); tip.style.top = Math.max(8, r.top - tip.offsetHeight - 10) + 'px'; });
   node.addEventListener('mouseleave', () => tip.classList.remove('on'));
@@ -433,7 +465,7 @@ function bindCard(ce, c) {
   if (!ce.onclick) ce.onclick = () => showCard(c);
 }
 function showCard(c, as) {
-  const i = CARD_INFO[as || c.type];
+  const i = as ? CARD_INFO[as] : infoOf(c);
   openModal(`<div class="detail">${cardHTML(c, 'lg')}<div class="dt">${tipHTML(c, as)}<p class="muted small">${i.kind === 'basic' ? 'Lá cơ bản.' : i.kind === 'trick' ? 'Cẩm nang: dùng xong bỏ vào chồng bỏ, có thể bị Vô giải khả kích.' : i.kind === 'delay' ? 'Cẩm nang trì hoãn: đặt vào vùng phán định, có tác dụng ở pha Phán định.' : 'Trang bị: đặt trước mặt, có tác dụng tới khi bị thay/phá.'}</p></div></div><div class="row"><button class="btn" id="d-close">Đóng</button></div>`);
   $('#d-close').onclick = closeModal;
 }
@@ -473,7 +505,7 @@ function clickSeat(pid) {
     if (ui.targets.length > ui.opt.tmax) ui.targets.shift();
     if (skillReady() && ui.opt.tmax === ui.targets.length && ui.opt.cards[1] === ui.ids.length && ui.opt.cards[0] === ui.opt.cards[1]) { sendSkill(); return; }
   } else if (ui.k === 'liuli') ui.target = ui.target === pid ? null : pid;
-  else if (ui.k === 'targets') { ui.ids = ui.ids.includes(pid) ? ui.ids.filter(x => x !== pid) : [...ui.ids, pid]; if (ui.ids.length > 2) ui.ids.shift(); }
+  else if (ui.k === 'targets') { const mx = view.ask.max || 2; ui.ids = ui.ids.includes(pid) ? ui.ids.filter(x => x !== pid) : [...ui.ids, pid]; if (ui.ids.length > mx) ui.ids.shift(); if (mx === 1 && ui.ids.length === 1 && view.ask.min === 1) { send({ type: 'targets', ids: ui.ids }); return; } }
   fx.sfx.card(); render();
 }
 function toggleSel(id) {
@@ -495,7 +527,7 @@ function skillHint(u) {
   if (o.tmax > 0) parts.push(o.tmax === 1 ? 'chọn 1 người' : `chọn ${o.tmin} người (người đầu Quyết đấu người sau)`);
   return (SKILLS[u.sk] ? SKILLS[u.sk].desc + ' — ' : 'Dùng 2 lá trên tay như 1 Sát — ') + parts.join(', ') + '.';
 }
-const SKILL_ICON = { nhanduc: '🤝', chehanh: '⚖️', khonhuc: '🔥', phangian: '🎼', thanhnang: '🌿', ketnhan: '💞', ligian: '🌙', xamau: '🔱' };
+const SKILL_ICON = { cuongtap: '⚔️', khuho: '🐯', thiennghia: '🎯', loankich: '🏹', nhanduc: '🤝', chehanh: '⚖️', khonhuc: '🔥', phangian: '🎼', thanhnang: '🌿', ketnhan: '💞', ligian: '🌙', xamau: '🐍' };
 function renderActions() {
   const box = $('#actions'); box.innerHTML = ''; const v = view, a = v.ask, m = me();
   const add = (txt, cls, fn, dis = false) => { const b = el('button', 'btn ' + (cls || ''), txt); b.onclick = fn; b.disabled = dis; box.appendChild(b); return b; };
@@ -517,7 +549,9 @@ function renderActions() {
         add('Huỷ', 'ghost', () => { ui = null; render(); }); return;
       }
       if (ui && (ui.k === 'use' || ui.k === 'jiedao')) {
-        const u = ui; if (u.k === 'use' && u.opt.max > 1) add(`⚔️ Sát ${u.targets.length} người`, 'pri', () => send({ type: 'use', ids: [u.cid], as: u.as, targets: u.targets }), u.targets.length < u.opt.min);
+        const u = ui;
+        if (u.k === 'use' && u.as === 'tiesuo') { add(u.targets.length ? `⛓️ Xích ${u.targets.length} người` : '♻️ Trùng chú (rút 1)', 'pri', () => send({ type: 'use', ids: [u.cid], as: u.as, targets: u.targets })); }
+        else if (u.k === 'use' && u.opt.max > 1) add(`⚔️ Sát ${u.targets.length} người`, 'pri', () => send({ type: 'use', ids: [u.cid], as: u.as, targets: u.targets }), u.targets.length < u.opt.min);
         add('Huỷ chọn', 'ghost', () => { ui = null; render(); }); return;
       }
       if (ui && ui.k === 'skill') {
@@ -534,10 +568,10 @@ function renderActions() {
     }
     case 'card': {
       const zb = (a.options || []).some(o => o.via === 'zhangba');
-      if (ui && ui.k === 'zhangba') { box.appendChild(el('span', 'lbl', `🔱 Chọn 2 lá (${ui.ids.length}/2)`)); add('Huỷ', 'ghost', () => { ui = null; render(); }); return; }
-      if (zb) add('🔱 Xà mâu: 2 lá = Sát', '', () => { ui = { k: 'zhangba', ids: [] }; render(); });
+      if (ui && ui.k === 'zhangba') { box.appendChild(el('span', 'lbl', `🐍 Chọn 2 lá (${ui.ids.length}/2)`)); add('Huỷ', 'ghost', () => { ui = null; render(); }); return; }
+      if (zb) add('🐍 Xà mâu: 2 lá = Sát', '', () => { ui = { k: 'zhangba', ids: [] }; render(); });
       if (a.canDelegate) add(a.want === 'ne' ? '📣 Hộ giá (nhờ quân Ngụy)' : '📣 Kích tướng (nhờ quân Thục)', '', () => send({ type: 'delegate' }));
-      const PASS = { sat: '💔 Chịu đòn', wanjian: '💔 Chịu đòn', nanman: '💔 Chịu đòn', duel: '🏳️ Chịu thua', dying: a.forWho === myId ? 'Thôi' : 'Không cứu', delegate: 'Bỏ qua', qinglong: 'Thôi', jiedao: '🗡️ Giao vũ khí', quytai: 'Không đổi' };
+      const PASS = { leiji: 'Thôi', sat: '💔 Chịu đòn', wanjian: '💔 Chịu đòn', nanman: '💔 Chịu đòn', duel: '🏳️ Chịu thua', dying: a.forWho === myId ? 'Thôi' : 'Không cứu', delegate: 'Bỏ qua', qinglong: 'Thôi', jiedao: '🗡️ Giao vũ khí', quytai: 'Không đổi' };
       add(PASS[a.purpose] || 'Bỏ qua', a.purpose === 'sat' || a.purpose === 'wanjian' || a.purpose === 'nanman' || a.purpose === 'duel' ? 'red' : 'ghost', () => send({ type: 'pass' }));
       return;
     }
@@ -550,16 +584,18 @@ function renderActions() {
       if (!ui || ui.k !== 'discard') ui = { k: 'discard', ids: [] };
       const n = a.n, k = ui.ids.length;
       const u = ui; add(k === n ? `🗑️ Bỏ ${n} lá đã chọn` : `Chọn ${k}/${n} lá`, 'pri', () => send({ type: 'discard', ids: u.ids }), k !== n);
-      if (a.optional) add(({ songco: '🎁 Cho rút 1 lá', cuonglie: '💔 Chịu mất 1 máu', guanshi: 'Thôi' })[a.purpose] || 'Bỏ qua', 'ghost', () => send({ type: 'pass' }));
+      if (a.optional) add(({ songco: '🎁 Cho rút 1 lá', cuonglie: '💔 Chịu mất 1 máu', guanshi: 'Thôi', huogong: 'Không đốt' })[a.purpose] || 'Bỏ qua', 'ghost', () => send({ type: 'pass' }));
       return;
     }
     case 'targets': {
       if (!ui || ui.k !== 'targets') ui = { k: 'targets', ids: [] };
-      const u = ui; add(`🐺 Lấy bài (${u.ids.length} người)`, 'pri', () => send({ type: 'targets', ids: u.ids }), !u.ids.length);
-      add('Rút 2 lá bình thường', 'ghost', () => send({ type: 'targets', ids: [] }));
+      const u = ui; const L = { duttap: ['🐺 Lấy bài', 'Rút 2 lá bình thường'], thantoc: ['💨 Thần tốc!', 'Thôi, đi lượt bình thường'], loikich: ['⚡ Giáng sét', 'Thôi'], tietmenh: ['📜 Cho rút bài', 'Thôi'], khuho: ['🐯 Ra lệnh đánh', null] }[a.purpose] || ['Xác nhận', 'Bỏ qua'];
+      add(`${L[0]}${u.ids.length ? ' → ' + u.ids.map(id => esc(nameOf(id))).join(', ') : ''}`, 'pri', () => send({ type: 'targets', ids: u.ids }), u.ids.length < Math.max(1, a.min || 0));
+      if (L[1] && !(a.min > 0)) add(L[1], 'ghost', () => send({ type: 'targets', ids: [] }));
       return;
     }
-    case 'yesno': add(a.purpose === 'loay' ? '💪 Cởi giáp!' : '❄️ Phá 2 lá', 'pri', () => send({ type: 'yes' })); add(a.purpose === 'loay' ? 'Rút 2 lá bình thường' : 'Gây sát thương', 'ghost', () => send({ type: 'no' })); return;
+    case 'show': box.appendChild(el('span', 'lbl', a.purpose === 'pindian' ? '🀄 Bấm 1 lá trên tay để đọ' : '🎇 Bấm 1 lá trên tay để lật')); return;
+    case 'yesno': { const L = { loay: ['💪 Cởi giáp!', 'Rút 2 lá bình thường'], hanbing: ['❄️ Phá 2 lá', 'Gây sát thương'], cuthu: ['🏰 Cố thủ (rút 3)', 'Thôi'], nietban: ['🐦‍🔥 Niết bàn!', 'Không'] }[a.purpose] || ['Có', 'Không']; add(L[0], 'pri', () => send({ type: 'yes' })); add(L[1], 'ghost', () => send({ type: 'no' })); return; }
     case 'liuli': {
       if (!ui || ui.k !== 'liuli') ui = { k: 'liuli', cardId: null, target: null };
       const u = ui; add(`🌺 Chuyển Sát${u.cardId ? '' : ' (chọn 1 lá)'}${u.target ? ' → ' + esc(nameOf(u.target)) : ' (chọn người)'}`, 'pri', () => send({ type: 'liuli', cardId: u.cardId, target: u.target }), !(u.cardId && u.target));
@@ -645,7 +681,7 @@ function showIntro(force) {
   const m = me(); if (!m || !m.general || !m.role) return;
   const g = GENERALS[m.general];
   openModal(`<div class="intro"><div class="kick">${force ? 'Thân phận của bạn' : 'Ván mới · bí mật của bạn'}</div>
-    <div class="intro-cards">${generalCardHTML(m.general)}<div class="role-card r-${m.role}"><span class="ri">${ROLES[m.role].icon}</span><b>${ROLES[m.role].name}</b></div></div>
+    <div class="intro-cards">${generalCardHTML(m.general)}<div class="role-card r-${m.role}"><span class="ri rseal">${SEAL[m.role]}</span><b>${ROLES[m.role].name}</b></div></div>
     <p class="goal">${roleGoal(m.role)}</p>
     <div class="pv-box"><span class="lbl">${g.name} · ${m.maxHp} máu</span>${g.skills.map(s => `<p><b>${SKILLS[s].name}${SKILLS[s].lord ? ' (Chúa)' : ''}:</b> ${SKILLS[s].desc}${SKILLS[s].lord && m.role !== 'lord' ? ' <i class="muted">(không có tác dụng vì bạn không phải Chúa)</i>' : ''}</p>`).join('')}</div>
     <p class="muted small">💡 Bấm vào chân dung của bạn ở góc dưới để xem lại.</p>
@@ -704,37 +740,43 @@ function playEvents(v) {
       case 'general': if (e.p === myId) at(() => { if (!introShown) { introShown = true; showIntro(); } }, 300); break;
       case 'draw': { const n = Math.min(e.k, 4); for (let i = 0; i < n; i++) at(() => fx.fly(backHTML('sm'), $('#deck'), handAnchor(e.p), { duration: 380, sound: i === 0 }), i * 90); if (e.p === myId) at(() => fx.sfx.draw()); t += 60; break; }
       case 'use': {
-        const card = e.card; const info = CARD_INFO[e.as];
+        const card = e.card; const info = e.as === 'sat' && card ? infoOf(card) : CARD_INFO[e.as];
         at(() => {
-          bubbleAt(e.p, `<b>${info.emo} ${info.name}</b>`);
+          bubbleAt(e.p, `<b>${e.as === 'sat' ? info.emo : emoOf(e.as)} ${info.name}</b>`);
           const dest = info.kind === 'delay' ? (e.to && e.to[0] ? anchor(e.to[0]) : $('#discard')) : (e.to && e.to.length === 1 ? anchor(e.to[0]) : $('#discard'));
           if (card) fx.fly(cardHTML(card, 'sm'), handAnchor(e.p), dest, { duration: 480 });
-          if (e.as === 'sat') { fx.sfx.slash(); (e.to || []).forEach((id, i) => fx.slashFx(anchor(id), 260 + i * 120)); }
+          if (e.as === 'sat') { fx.sfx.slash(); (e.to || []).forEach((id, i) => { fx.slashFx(anchor(id), 260 + i * 120); if (card && card.el === 'fire') fx.fireFx(anchor(id), 300 + i * 120); }); if (card && card.el) (card.el === 'fire' ? fx.sfx.fire : fx.sfx.thunder)(); }
           else if (e.as === 'nanman') { fx.sfx.elephant(); fx.banner('🐘 Nam man xâm nhập!', 'Ai không ra Sát mất 1 máu'); fx.screenShake(); }
           else if (e.as === 'wanjian') { fx.sfx.arrows(); fx.banner('🏹 Vạn tiễn tề phát!', 'Ai không ra Né mất 1 máu'); v.players.filter(p => p.alive && p.id !== e.p).forEach((p, i) => fx.arrowsFx(handAnchor(e.p), anchor(p.id), 120 + i * 90)); }
           else if (e.as === 'taoyuan') { fx.sfx.heal(); fx.banner('🌸 Đào viên kết nghĩa', 'Mọi người hồi 1 máu'); }
           else if (e.as === 'wugu') { fx.sfx.good(); fx.banner('🌾 Ngũ cốc phong đăng', 'Mỗi người chọn 1 lá'); }
           else if (e.as === 'juedou') { fx.sfx.drum(); musicStinger('duel'); }
           else if (e.as === 'dao') { fx.sfx.peach(); }
+          else if (e.as === 'jiu') { fx.sfx.drink(); fx.stamp(anchor(e.p), 'SAY RƯỢU 🍶', 'red'); }
+          else if (e.as === 'hoasat') { fx.sfx.fire(); (e.to || []).forEach((id, i) => fx.fireFx(anchor(id), 260 + i * 120)); }
+          else if (e.as === 'huogong') { fx.sfx.fire(); }
+          else if (e.as === 'tiesuo') fx.sfx.chain();
           else if (e.as === 'lebu' || e.as === 'shandian') fx.sfx.equip();
           else fx.sfx.skill();
         });
         t += step + 80; break;
       }
       case 'play': at(() => {
-        const info = CARD_INFO[e.as];
+        const info = e.as === 'sat' && e.cards && e.cards[0] ? infoOf(e.cards[0]) : CARD_INFO[e.as];
         bubbleAt(e.p, `<b>${info ? info.emo + ' ' + info.name : ''}</b>${e.via === 'bagua' ? ' <small>Bát quái</small>' : ''}`);
         if (e.cards && e.cards[0]) fx.fly(cardHTML(e.cards[0], 'sm'), handAnchor(e.p), $('#discard'), { duration: 420 });
         if (e.as === 'ne') { fx.sfx.dodge(); fx.shieldFx(anchor(e.p), e.via === 'bagua' ? '☯️' : '💨'); }
         else if (e.as === 'sat') fx.sfx.slash();
         else if (e.as === 'dao') fx.sfx.peach();
+        else if (e.as === 'jiu') fx.sfx.drink();
       }); t += step; break;
-      case 'equip': at(() => { fx.sfx.equip(); bubbleAt(e.p, `<b>${CARD_INFO[e.card.type].emo} ${esc(cardName(e.card))}</b>`); fx.fly(cardHTML(e.card, 'sm'), handAnchor(e.p), anchor(e.p), { duration: 420, scaleTo: .6 }); }); t += step; break;
+      case 'equip': at(() => { fx.sfx.equip(); bubbleAt(e.p, `<b>${emoOf(e.card.type)} ${esc(cardName(e.card))}</b>`); fx.fly(cardHTML(e.card, 'sm'), handAnchor(e.p), anchor(e.p), { duration: 420, scaleTo: .6 }); }); t += step; break;
       case 'discard': if (e.cards && e.cards.length) at(() => e.cards.slice(0, 3).forEach((c, i) => fx.fly(cardHTML(c, 'sm'), handAnchor(e.p), $('#discard'), { delay: i * 80, duration: 400, rotate: Math.random() * 10 - 5, sound: i === 0 }))); t += 80; break;
       case 'move': at(() => fx.fly(e.card && !e.hidden ? cardHTML(e.card, 'sm') : backHTML('sm'), handAnchor(e.from), handAnchor(e.to), { duration: 560 })); if (e.to === myId && e.card) at(() => toast(`Bạn nhận được ${cardLabel(e.card)}`, 'ok'), 500); else if (e.from === myId && e.to !== myId) at(() => toast(`${nameOf(e.to)} lấy mất 1 lá của bạn!`), 500); t += step; break;
       case 'damage': at(() => {
         const box = e.p === myId ? $('#me') : seatEl(e.p); const a = anchor(e.p);
-        fx.shake(box); fx.flash(box); fx.floatText(a, `−${e.k}`); fx.sfx.hit(); if (e.k >= 2 || e.p === myId) fx.screenShake();
+        fx.shake(box); fx.flash(box); fx.floatText(a, `−${e.k}${e.nature === 'fire' ? '🔥' : e.nature === 'thunder' ? '⚡' : ''}`, e.nature === 'fire' ? '#e2561e' : e.nature === 'thunder' ? '#6b5fd6' : undefined); fx.sfx.hit(); if (e.k >= 2 || e.p === myId) fx.screenShake();
+        if (e.nature === 'fire') fx.fireFx(a); else if (e.nature === 'thunder') fx.sparks(a, '200,190,255');
       }, e.nature === 'thunder' ? 350 : 120); t += step; break;
       case 'heal': at(() => { const a = anchor(e.p); fx.healFx(a); fx.floatText(a, `+${e.k}`, '#2f9e5b'); fx.flash(e.p === myId ? $('#me') : seatEl(e.p), 'flash-heal'); fx.sfx.heal(); }); t += step; break;
       case 'dying': at(() => { fx.stamp(anchor(e.p), 'HẤP HỐI', 'red'); fx.sfx.dying(); }); t += step; break;
@@ -742,6 +784,11 @@ function playEvents(v) {
       case 'judge': at(() => { fx.sfx.judge(); fx.judgeFlip(cardHTML(e.card), $('#center'), (e.swap ? '🦊 Quỷ tài đổi: ' : '🔮 ') + (JUDGE_TEXT[e.why] || 'Phán định')); }); t += step * 3; break;
       case 'judgeRes': at(() => (e.hit === (e.why === 'lebu') ? fx.sfx.good : fx.sfx.bad)(), 0); break;
       case 'lebu': at(() => fx.stamp(anchor(e.p), 'MẤT PHA RA BÀI', 'red')); t += step; break;
+      case 'bingliang': at(() => fx.stamp(anchor(e.p), 'MẤT PHA RÚT BÀI', 'red')); t += step; break;
+      case 'chain': at(() => { fx.sfx.chain(); fx.stamp(anchor(e.p), e.on ? '⛓️ BỊ XÍCH' : 'GỠ XÍCH', e.on ? '' : 'blue'); }); t += 90; break;
+      case 'flip': at(() => fx.stamp(anchor(e.p), e.on ? '🏰 LẬT ÚP' : 'LẬT LẠI', 'blue')); t += 90; break;
+      case 'show': at(() => { bubbleAt(e.p, `<b>Lật: ${CARD_INFO[e.card.type] ? esc(cardName(e.card)) : ''} ${suitify(SUIT_SYMBOL[e.card.suit])}${rankLabel(e.card.rank)}</b>`); fx.fly(cardHTML(e.card, 'sm'), handAnchor(e.p), $('#center'), { duration: 520 }); }); t += step; break;
+      case 'pindian': at(() => { fx.sfx.drum(); fx.banner(`🀄 Đọ bài: ${esc(nameOf(e.a))} ${rankLabel(e.ca.rank)} – ${rankLabel(e.cb.rank)} ${esc(nameOf(e.b))}`, `${esc(nameOf(e.win ? e.a : e.b))} thắng!`); }); t += step * 2; break;
       case 'lightning': at(() => { fx.sfx.thunder(); fx.boltFx(anchor(e.p)); }); t += step; break;
       case 'passbolt': at(() => fx.fly('<div class="fly-emo">⚡</div>', anchor(e.from), anchor(e.to), { duration: 520 })); t += 60; break;
       case 'block': at(() => { fx.sfx.shield(); fx.shieldFx(anchor(e.p), '🛡️'); fx.stamp(anchor(e.p), 'VÔ HIỆU'); }); t += step; break;
@@ -750,7 +797,7 @@ function playEvents(v) {
       case 'nullify': at(() => { fx.sfx.nullify(); bubbleAt(e.p, '<b>🚫 Vô giải!</b>'); if (e.tgt) fx.stamp(anchor(e.tgt), e.count % 2 ? 'VÔ GIẢI' : 'GIẢI LẠI', 'blue'); if (e.card) fx.fly(cardHTML(e.card, 'sm'), handAnchor(e.p), $('#discard'), { duration: 380 }); }); t += step; break;
       case 'canceled': at(() => fx.stamp(anchor(e.p), 'BỊ HUỶ', 'blue')); break;
       case 'wugu': at(() => fx.fly(cardHTML(e.card, 'sm'), $('#center'), handAnchor(e.p), { duration: 460 })); t += 80; break;
-      case 'skill': if (SKILLS[e.sk]) at(() => { bubbleAt(e.p, `<b>✨ ${SKILLS[e.sk].name}</b>`, 'skill'); (fx.sfx[SKILL_SFX[e.sk]] || fx.sfx.skill)(); }); else if (e.sk === 'qinglong' || e.sk === 'guanshi') at(() => { bubbleAt(e.p, `<b>${e.sk === 'qinglong' ? '🐉 Thanh long đao' : '🪓 Quán thạch phủ'}</b>`); fx.sfx.slash(); (e.to || []).forEach(id => fx.slashFx(anchor(id), 150)); }); t += 90; break;
+      case 'skill': if (SKILLS[e.sk]) at(() => { bubbleAt(e.p, `<b>✨ ${SKILLS[e.sk].name}</b>`, 'skill'); (fx.sfx[SKILL_SFX[e.sk]] || fx.sfx.qin)(); }); else if (e.sk === 'qinglong' || e.sk === 'guanshi') at(() => { bubbleAt(e.p, `<b>${e.sk === 'qinglong' ? '🐉 Thanh long đao' : '🪓 Quán thạch phủ'}</b>`); fx.sfx.slash(); (e.to || []).forEach(id => fx.slashFx(anchor(id), 150)); }); t += 90; break;
       case 'win': at(() => {
         const m = me(); const side = r => r === 'lord' || r === 'loyal' ? 'lord' : r; const won = m && side(m.role) === e.w;
         fx.banner(won ? '🏆 Chiến thắng!' : '😵 Thất bại', winText(e.w)); if (won) { fx.sfx.win(); fx.confetti(); } musicStinger(won ? 'win' : 'lose');

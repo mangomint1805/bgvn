@@ -1,11 +1,12 @@
 // Hướng dẫn luật Tam Quốc Sát (bản BGVN) – soạn lại bằng lời của hội, rút gọn hợp lý cho bản web.
-import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, buildDeck, rolesFor, DECK_SIZE, HORSE_NAMES } from './cards.js?v=1';
-import { cardHTML, portrait } from './art.js?v=1';
+import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, buildDeck, rolesFor, DECK_SIZE_BASE, DECK_SIZE_EXP, HORSE_NAMES, artKey } from './cards.js?v=3';
+import { cardHTML, portrait } from './art.js?v=3';
+import { IMG } from './images.js?v=3';
 
-const deck = buildDeck();
+const deck = buildDeck(true);
 const red = t => String(t).replace(/([♥♦])/g, '<span class="red">$1</span>');
-const COUNT = {}; for (const c of deck) COUNT[c.type] = (COUNT[c.type] || 0) + 1;
-const sample = type => deck.find(c => c.type === type);
+const COUNT = {}; for (const c of deck) { const k = artKey(c); COUNT[k] = (COUNT[k] || 0) + 1; }
+const sample = type => deck.find(c => artKey(c) === type);
 function row(type) {
   const i = CARD_INFO[type];
   return `<div class="g-card">${cardHTML(sample(type), 'sm')}<div><h4>${i.name} <small>${COUNT[type]} lá</small></h4><p>${red(i.desc)}</p></div></div>`;
@@ -37,12 +38,13 @@ export function guideHTML() {
   const delay = ['lebu', 'shandian'];
   const weapons = ['zhuge', 'cixiong', 'qinggang', 'hanbing', 'qinglong', 'zhangba', 'guanshi', 'fangtian', 'qilin'];
   const armor = ['bagua', 'renwang', 'plus', 'minus'];
-  const byK = k => Object.keys(GENERALS).filter(id => GENERALS[id].kingdom === k);
+  const byK = (k, exp) => Object.keys(GENERALS).filter(id => GENERALS[id].kingdom === k && !!GENERALS[id].exp === exp);
+  const expCards = ['jiu', 'hoasat', 'loisat', 'huogong', 'tiesuo', 'bingliang', 'zhuque', 'guding', 'tengjia', 'baiyin'];
   return `
 <div class="g-head"><h2>📖 Luật Tam Quốc Sát</h2><button class="btn sm" id="g-close">Đóng ✕</button></div>
 <nav class="g-toc">
   <a href="#g-goal">Vai trò</a><a href="#g-setup">Chuẩn bị</a><a href="#g-turn">Một lượt</a><a href="#g-dist">Khoảng cách</a><a href="#g-basic">Lá cơ bản</a>
-  <a href="#g-trick">Cẩm nang</a><a href="#g-delay">Trì hoãn</a><a href="#g-equip">Trang bị</a><a href="#g-judge">Phán định</a><a href="#g-dying">Hấp hối</a><a href="#g-gens">Võ tướng</a><a href="#g-web">Chơi trên web</a><a href="#g-tips">Mẹo</a>
+  <a href="#g-trick">Cẩm nang</a><a href="#g-delay">Trì hoãn</a><a href="#g-equip">Trang bị</a><a href="#g-judge">Phán định</a><a href="#g-dying">Hấp hối</a><a href="#g-gens">Võ tướng</a><a href="#g-exp">Mở rộng</a><a href="#g-web">Chơi trên web</a><a href="#g-tips">Mẹo</a><a href="#g-art">Nguồn tranh</a>
 </nav>
 <div class="g-body">
 <p class="g-lead">Thời loạn Tam Quốc, 2–8 người ngồi quanh bàn. Mỗi người bí mật giữ một <b>thân phận</b> và điều khiển một <b>võ tướng</b> có kỹ năng riêng. Dùng bài Sát, Né, Đào, cẩm nang và trang bị để bảo vệ phe mình – nhưng ngoài Chúa công ra, chẳng ai biết ai là bạn, ai là thù!</p>
@@ -59,7 +61,7 @@ ${roleTable()}
 </ul></section>
 
 <section id="g-setup"><h3>2. Chuẩn bị</h3><ul>
-<li>Bộ bài ${DECK_SIZE} lá, mỗi lá có <b>chất</b> (♠ Bích, ♥ Cơ, ♣ Chuồn, ♦ Rô) và <b>số</b> (A–K) – dùng khi phán định.</li>
+<li>Bộ bài cơ bản ${DECK_SIZE_BASE} lá (bật bản mở rộng Quân Tranh: thêm ${DECK_SIZE_EXP} lá), mỗi lá có <b>chất</b> (♠ Bích, ♥ Cơ, ♣ Chuồn, ♦ Rô) và <b>số</b> (A–K) – dùng khi phán định.</li>
 <li><b>Chọn tướng:</b> Chúa công chọn trước trong 3 tướng Chúa (Tào Tháo, Lưu Bị, Tôn Quyền) + 2 tướng ngẫu nhiên. Sau đó mọi người cùng lúc chọn 1 trong 3 tướng được chia.</li>
 <li>Máu tối đa = số máu ghi trên tướng (Chúa công +1). Mỗi người nhận 4 lá, Chúa công đi trước rồi theo chiều kim đồng hồ.</li>
 </ul></section>
@@ -94,7 +96,8 @@ ${roleTable()}
 
 <section id="g-equip"><h3>8. Trang bị</h3>
 <p>Đánh lá trang bị ra là đặt trước mặt (mỗi loại 1 ô: vũ khí, giáp, ngựa +1, ngựa −1). Đeo lá mới cùng ô thì lá cũ bị bỏ.</p>
-<div class="g-grid">${weapons.map(row).join('')}</div><div class="g-grid">${armor.map(row).join('')}</div></section>
+<div class="g-grid">${weapons.map(row).join('')}</div><div class="g-grid">${armor.map(row).join('')}</div>
+<p class="g-note">Hình binh khí do BGVN vẽ lại theo mô tả hình dáng trên Wikipedia: <b>Thanh long đao</b> (yển nguyệt đao) là lưỡi bản to gắn thẳng trên đầu cán, sống có khấc, cổ đao đầu rồng, cuối cán có mũi nhọn; <b>Xà mâu</b> có mũi giáo lượn sóng; <b>Phương thiên hoạ kích</b> có mũi giáo giữa và hai lưỡi trăng khuyết hai bên.</p></section>
 
 <section id="g-judge"><h3>9. Phán định</h3><ul>
 <li>Phán định = lật lá trên cùng của chồng bài, xem chất/số rồi bỏ đi.</li>
@@ -104,17 +107,32 @@ ${roleTable()}
 
 <section id="g-dying"><h3>10. Hấp hối, tử trận, thưởng phạt</h3><ul>
 <li>Về 0 máu là <b>hấp hối</b>: bắt đầu từ người đang có lượt, lần lượt mọi người được hỏi có muốn đánh <b>Đào</b> cứu không (chính người hấp hối cũng tự ăn được). Đủ lên 1 máu thì sống tiếp.</li>
+<li>Bản mở rộng: người hấp hối có thể tự uống <b>Rượu 🍶</b> thay Đào để hồi 1 máu (Rượu chỉ cứu được chính mình).</li>
 <li>Không ai cứu: tử trận, lật thân phận, bỏ hết bài.</li>
 <li>Giết một <b>Phản tặc</b>: người giết được thưởng rút 3 lá (kể cả Phản tặc giết đồng bọn).</li>
 <li><b>Chúa công giết nhầm Trung thần</b>: Chúa phải bỏ hết bài trên tay và trang bị.</li>
 </ul></section>
 
-<section id="g-gens"><h3>11. Võ tướng (${Object.keys(GENERALS).length} tướng)</h3>
+<section id="g-gens"><h3>11. Võ tướng cơ bản (${Object.keys(GENERALS).filter(k => !GENERALS[k].exp).length} tướng)</h3>
 <p class="g-note">Kỹ năng ghi <b>(Chúa)</b> chỉ có tác dụng khi tướng đó là Chúa công. Kỹ năng chủ động hiện thành nút trong pha Ra bài; kỹ năng bị động tự kích hoạt.</p>
-${Object.keys(KINGDOMS).map(k => `<h4 class="g-kd" style="--kc:${KINGDOMS[k].color}">${KINGDOMS[k].han} ${KINGDOMS[k].name}</h4><div class="g-gens">${byK(k).map(general).join('')}</div>`).join('')}
+${Object.keys(KINGDOMS).map(k => `<h4 class="g-kd" style="--kc:${KINGDOMS[k].color}">${KINGDOMS[k].han} ${KINGDOMS[k].name}</h4><div class="g-gens">${byK(k, false).map(general).join('')}</div>`).join('')}
 </section>
 
-<section id="g-web"><h3>12. Chơi trên web BGVN</h3><ul>
+<section id="g-exp"><h3>12. Bản mở rộng Quân Tranh</h3>
+<p>Chủ phòng bật/tắt ở phòng chờ: <b>Bản mở rộng Quân Tranh</b> (thêm ${DECK_SIZE_EXP} lá bài) và <b>Tướng mở rộng</b> (thêm ${Object.keys(GENERALS).filter(k => GENERALS[k].exp).length} võ tướng).</p>
+<ul>
+<li><b>Sát thương thuộc tính:</b> Hỏa Sát, Hỏa công, Chu tước vũ phiến gây sát thương <b>lửa 🔥</b>; Lôi Sát, Thiểm điện, Lôi kích gây sát thương <b>sét 🌩️</b>.</li>
+<li><b>Xích sắt ⛓️:</b> người bị xích (Thiết tác liên hoàn) chịu sát thương lửa/sét thì được gỡ xích, và <b>mọi người khác đang bị xích</b> cũng lần lượt chịu cùng lượng sát thương cùng thuộc tính (rồi cũng được gỡ xích). Sát thương lan không lan tiếp.</li>
+<li><b>Rượu 🍶:</b> mỗi lượt uống 1 lần trong pha ra bài – lá Sát kế tiếp lượt đó +1 sát thương (dù bị Né thì men rượu cũng hết). Hết lượt thì tỉnh. Khi chính mình hấp hối có thể uống Rượu thay Đào (chỉ cứu được mình).</li>
+<li><b>Đọ bài 🀄</b> (Khu hổ, Thiên nghĩa): hai bên úp 1 lá trên tay rồi lật, số lớn hơn thắng (A = 1, K = 13; bằng nhau người khởi xướng thua).</li>
+</ul>
+<div class="g-grid">${expCards.map(row).join('')}</div>
+<h4>Tướng mở rộng</h4>
+${Object.keys(KINGDOMS).map(k => byK(k, true).length ? `<h4 class="g-kd" style="--kc:${KINGDOMS[k].color}">${KINGDOMS[k].han} ${KINGDOMS[k].name}</h4><div class="g-gens">${byK(k, true).map(general).join('')}</div>` : '').join('')}
+<p class="g-note">Một số kỹ năng được BGVN rút gọn cho bản web (VD Bất khuất: lật 1 lá làm vết sẹo, khác số mọi vết cũ thì hồi về 1 máu; Cứ thủ: lượt sau bị bỏ qua).</p>
+</section>
+
+<section id="g-web"><h3>13. Chơi trên web BGVN</h3><ul>
 <li><b>Tạo phòng</b> rồi gửi mã 5 ký tự (hoặc link) cho bạn bè. 2–8 người, thiếu thì thêm bot. Chủ phòng giữ tab mở suốt ván.</li>
 <li><b>Bấm lá sáng màu</b> để dùng; nếu lá có nhiều cách dùng (VD Quan Vũ dùng lá đỏ như Sát) sẽ hiện nút chọn. Sau đó bấm vào <b>ghế sáng viền đỏ</b> để chọn mục tiêu.</li>
 <li>Nhấn giữ (điện thoại) hoặc rê chuột (máy tính) vào lá để xem mô tả đầy đủ. Bấm vào ghế để xem tướng, kỹ năng, trang bị của người đó.</li>
@@ -123,13 +141,18 @@ ${Object.keys(KINGDOMS).map(k => `<h4 class="g-kd" style="--kc:${KINGDOMS[k].col
 <li>Không có lá đỡ thì máy tự cho chịu đòn luôn – không ai biết bạn hết Né đâu… trừ khi bạn hét lên 😅.</li>
 </ul></section>
 
-<section id="g-tips"><h3>13. Mẹo nhỏ</h3><ul>
+<section id="g-tips"><h3>14. Mẹo nhỏ</h3><ul>
 <li><b>Trung thần</b>: đừng lộ quá sớm, hãy đỡ đòn cho Chúa và dùng Vô giải chặn Lạc bất lên Chúa.</li>
 <li><b>Phản tặc</b>: dồn sức vào Chúa, nhưng tiêu diệt Trung thần lộ mặt trước nếu họ quá trâu.</li>
 <li><b>Nội gián</b>: giữ thế cân bằng – phe nào mạnh quá thì kéo lại, và đừng để Chúa chết khi bàn còn đông.</li>
 <li>Bot đoán phe qua hành động công khai: ai chém Chúa, ai cứu ai… Bạn cũng thế nhé!</li>
 </ul></section>
-<p class="g-foot">Bản fan-made phi thương mại của hội BGVN, luật rút gọn từ trò chơi bài Tam Quốc Sát. Mọi hình vẽ, câu chữ và âm nhạc đều do BGVN tự làm.</p>
+
+<section id="g-art"><h3>15. Nguồn tranh minh hoạ</h3>
+<p>Chân dung võ tướng là <b>tranh khắc gỗ minh hoạ Tam Quốc diễn nghĩa đời Thanh</b>; tranh trên lá bài là ukiyo-e (Utagawa Kuniyoshi, Katsushika Hokusai…) và tranh cổ Trung Hoa. Tất cả thuộc <b>phạm vi công cộng</b> (tác giả mất hơn 100 năm), lấy từ Wikimedia Commons, BGVN chỉ cắt khung và thu nhỏ. Tướng chưa có tranh cổ đúng người thì dùng chân dung SVG tự vẽ. Binh khí và trang bị là hình SVG BGVN tự vẽ.</p>
+<div class="g-credits">${Object.entries(IMG).filter(([, v]) => v.t).map(([k, v]) => `<p><b>${v.for || k}</b> – <a href="${v.u}" target="_blank" rel="noopener">${v.t}</a>${v.a ? ' · ' + v.a : ''}${v.d ? ' · ' + v.d : ''} · <i>${v.l}</i></p>`).join('')}</div>
+</section>
+<p class="g-foot">Bản fan-made phi thương mại của hội BGVN, luật rút gọn từ trò chơi bài Tam Quốc Sát; không liên kết với Yoka Games. Tranh minh hoạ là tranh khắc gỗ, tranh lụa cổ Trung Hoa (Minh, Thanh) và tranh ukiyo-e của Utagawa Kuniyoshi… thuộc phạm vi công cộng, lấy từ Wikimedia Commons (danh sách trong img/CREDITS.md). Khung bài, câu chữ và âm nhạc do BGVN tự làm.</p>
 </div>`;
 }
 export function openGuide(openModal, closeModal) {

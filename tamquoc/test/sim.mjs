@@ -1,7 +1,7 @@
 // Mô phỏng hàng trăm ván toàn bot: đếm ván kẹt/lỗi, kiểm tra bảo toàn bài, thống kê phe thắng.
-// Chạy: node tamquoc/test/sim.mjs [số ván=400]
-import { createGame, applyAction, top, countCards, DECK_SIZE, viewFor } from '../js/engine.js?v=1';
-import { botAction } from '../js/bot.js?v=1';
+// Chạy: node tamquoc/test/sim.mjs [số ván=400] [exp: on|off|mix=mix]
+import { createGame, applyAction, top, countCards, viewFor } from '../js/engine.js?v=3';
+import { botAction } from '../js/bot.js?v=3';
 
 const GAMES = +(process.argv[2] || 400);
 const MAX_STEPS = 40000;
@@ -12,7 +12,8 @@ for (let g = 0; g < GAMES; g++) {
   const n = 2 + (g % 7);
   const players = Array.from({ length: n }, (_, i) => ({ id: 'p' + i, name: 'Bot' + i, isBot: true }));
   let s;
-  try { s = createGame(players); } catch (e) { errors++; console.log('Lỗi tạo ván', e); continue; }
+  const expMode = process.argv[3] || 'mix'; const exp = expMode === 'on' ? true : expMode === 'off' ? false : g % 2 === 0;
+  try { s = createGame(players, { exp, expGen: exp }); } catch (e) { errors++; console.log('Lỗi tạo ván', e); continue; }
   let steps = 0, fail = false;
   while (s.phase === 'playing' && steps < MAX_STEPS) {
     steps++;
@@ -35,10 +36,10 @@ for (let g = 0; g < GAMES; g++) {
     }
     for (const e of s.ev) if (e.n > (s._seen || 0)) { const k = e.t === 'skill' ? 'sk:' + e.sk : e.t === 'use' ? 'use:' + e.as : e.t === 'play' ? 'play:' + e.as + (e.via ? '/' + e.via : '') : e.t; evc[k] = (evc[k] || 0) + 1; }
     s._seen = s.seq;
-    if (steps % 50 === 0) { const c = countCards(s); if (c !== DECK_SIZE) { console.log('Mất bài giữa ván!', c, 'game', g, 'step', steps, t.k); lost++; break; } }
+    if (steps % 50 === 0) { const c = countCards(s); if (c !== s.deckSize) { console.log('Mất bài giữa ván!', c, 'game', g, 'step', steps, t.k); lost++; break; } }
     if (steps % 97 === 0) { for (const p of players) JSON.stringify(viewFor(s, p.id)); }
   }
-  const c = countCards(s); if (c !== DECK_SIZE) { lost++; console.log('Mất bài cuối ván: tổng =', c, 'game', g); }
+  const c = countCards(s); if (c !== s.deckSize) { lost++; console.log('Mất bài cuối ván: tổng =', c, 'game', g); }
   if (s.phase !== 'ended') { stuck++; if (!fail) console.log('Ván không kết thúc', g, 'n=' + n, 'lượt', s.turnCount, s.log.slice(-6)); }
   else {
     done++; wins[s.winner] = (wins[s.winner] || 0) + 1; byN[n] = byN[n] || {}; byN[n][s.winner] = (byN[n][s.winner] || 0) + 1;

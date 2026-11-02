@@ -35,6 +35,9 @@ export const CARD_INFO = {
   sat: { name: 'Sát', kind: 'basic', han: '殺', emo: '🗡️', short: 'Chém 1 người trong tầm', desc: 'Chọn 1 người trong tầm đánh. Họ phải đánh ra 1 Né, không thì mất 1 máu. Mỗi lượt chỉ dùng 1 Sát (trừ khi có Gia Cát liên nỏ/kỹ năng).' },
   ne: { name: 'Né', kind: 'basic', han: '閃', emo: '💨', short: 'Né 1 Sát / Vạn tiễn', desc: 'Thiểm – chỉ đánh ra khi bị Sát hoặc Vạn tiễn tề phát để huỷ đòn đó.' },
   dao: { name: 'Đào', kind: 'basic', han: '桃', emo: '🍑', short: 'Hồi 1 máu / cứu người', desc: 'Trong lượt mình: hồi 1 máu. Khi có ai hấp hối (0 máu): dùng để cứu họ 1 máu.' },
+  jiu: { name: 'Rượu', kind: 'basic', han: '酒', emo: '🍶', short: 'Sát kế tiếp +1 / tự cứu', desc: 'Trong pha ra bài (1 lần/lượt): uống cho "say rượu" – lá Sát kế tiếp bạn dùng trong lượt gây thêm 1 sát thương. Khi chính bạn hấp hối: uống để hồi 1 máu (chỉ cứu được mình).' },
+  hoasat: { name: 'Hỏa Sát', kind: 'basic', han: '火', emo: '🔥', exp: true, short: 'Sát gây sát thương lửa', desc: 'Một lá Sát mang lửa: gây sát thương lửa (Đằng giáp chịu thêm 1, lan qua người bị Thiết tác liên hoàn).' },
+  loisat: { name: 'Lôi Sát', kind: 'basic', han: '雷', emo: '🌩️', exp: true, short: 'Sát gây sát thương sét', desc: 'Một lá Sát mang sấm: gây sát thương sét (lan qua người bị Thiết tác liên hoàn).' },
   wuzhong: { name: 'Vô trung sinh hữu', kind: 'trick', han: '無', emo: '✨', short: 'Rút 2 lá', desc: 'Từ cái không sinh ra cái có: rút 2 lá.' },
   guohe: { name: 'Quá hà sách kiều', kind: 'trick', han: '拆', emo: '🌉', short: 'Bỏ 1 lá của người khác', desc: 'Chọn 1 người khác, bỏ 1 lá của họ (trên tay – ngẫu nhiên, trang bị hoặc vùng phán định).' },
   shunshou: { name: 'Thuận thủ khiên dương', kind: 'trick', han: '順', emo: '🐑', short: 'Lấy 1 lá người cách 1', desc: 'Tiện tay dắt dê: lấy 1 lá (tay/trang bị/phán định) của người cách bạn 1.' },
@@ -45,24 +48,33 @@ export const CARD_INFO = {
   wugu: { name: 'Ngũ cốc phong đăng', kind: 'trick', han: '穀', emo: '🌾', short: 'Lật bài, mỗi người chọn 1', desc: 'Được mùa: lật số lá bằng số người còn sống, bắt đầu từ bạn mỗi người chọn 1 lá.' },
   jiedao: { name: 'Tá đao sát nhân', kind: 'trick', han: '借', emo: '🔪', short: 'Mượn dao giết người', desc: 'Chọn người A có vũ khí và người B trong tầm của A. A phải Sát B, không thì đưa vũ khí cho bạn.' },
   wuxie: { name: 'Vô giải khả kích', kind: 'trick', han: '懈', emo: '🚫', short: 'Huỷ 1 cẩm nang', desc: 'Đánh ra khi một cẩm nang sắp có tác dụng lên một người: huỷ tác dụng đó. Có thể bị Vô giải khác huỷ lại (chồng được).' },
-  lebu: { name: 'Lạc bất tư thục', kind: 'delay', han: '樂', emo: '🍶', short: 'Phán định ≠ ♥ → mất pha ra bài', desc: 'Đặt vào vùng phán định của 1 người khác. Đầu lượt họ phán định: không ra ♥ Cơ thì bỏ qua pha ra bài.' },
+  huogong: { name: 'Hỏa công', kind: 'trick', han: '焚', emo: '🎇', exp: true, short: 'Lật bài, khớp chất → 1 lửa', desc: 'Chọn 1 người có bài trên tay (kể cả bạn). Họ lật cho xem 1 lá trên tay; bạn bỏ 1 lá trên tay cùng chất thì họ chịu 1 sát thương lửa.' },
+  tiesuo: { name: 'Thiết tác liên hoàn', kind: 'trick', han: '鎖', emo: '⛓️', exp: true, short: 'Xích 1–2 người / đổi 1 lá', desc: 'Chọn 1–2 người: đổi trạng thái bị xích của họ. Người bị xích chịu sát thương lửa/sét thì sát thương lan sang mọi người đang bị xích khác. Hoặc bỏ lá này để rút 1 lá (trùng chú).' },
+  lebu: { name: 'Lạc bất tư thục', kind: 'delay', han: '樂', emo: '🏮', short: 'Phán định ≠ ♥ → mất pha ra bài', desc: 'Đặt vào vùng phán định của 1 người khác. Đầu lượt họ phán định: không ra ♥ Cơ thì bỏ qua pha ra bài.' },
   shandian: { name: 'Thiểm điện', kind: 'delay', han: '電', emo: '⚡', short: 'Phán định ♠2–9 → −3 máu', desc: 'Đặt vào vùng phán định của bạn. Đầu lượt phán định: ra ♠ Bích 2–9 thì sét đánh mất 3 máu; không thì chuyền sang người kế tiếp.' },
+  bingliang: { name: 'Binh lương thốn đoạn', kind: 'delay', han: '糧', emo: '🍚', exp: true, short: 'Phán định ≠ ♣ → mất pha rút', desc: 'Đặt vào vùng phán định của 1 người cách bạn 1. Đầu lượt họ phán định: không ra ♣ Chuồn thì bỏ qua pha rút bài.' },
   zhuge: { name: 'Gia Cát liên nỏ', kind: 'weapon', range: 1, han: '弩', emo: '🎯', short: 'Sát không giới hạn', desc: 'Tầm 1. Trong lượt, dùng Sát bao nhiêu lần cũng được.' },
   cixiong: { name: 'Thư hùng song kiếm', kind: 'weapon', range: 2, han: '雙', emo: '⚔️', short: 'Sát người khác giới', desc: 'Tầm 2. Khi Sát người khác giới tính: họ chọn bỏ 1 lá trên tay hoặc để bạn rút 1 lá.' },
   qinggang: { name: 'Thanh cương kiếm', kind: 'weapon', range: 2, han: '青', emo: '🗡️', short: 'Sát xuyên giáp', desc: 'Tầm 2. Sát của bạn bỏ qua giáp của mục tiêu.' },
   hanbing: { name: 'Băng phách kiếm', kind: 'weapon', range: 2, han: '冰', emo: '❄️', short: 'Đổi sát thương lấy 2 lá', desc: 'Tầm 2. Khi Sát trúng: có thể không gây sát thương mà bỏ 2 lá của mục tiêu.' },
   qinglong: { name: 'Thanh long đao', kind: 'weapon', range: 3, han: '龍', emo: '🐉', short: 'Bị né thì Sát tiếp', desc: 'Tầm 3. Sát bị Né thì có thể đánh thêm 1 Sát vào chính người đó.' },
-  zhangba: { name: 'Trượng bát xà mâu', kind: 'weapon', range: 3, han: '矛', emo: '🔱', short: '2 lá bất kỳ = 1 Sát', desc: 'Tầm 3. Có thể dùng/đánh 2 lá trên tay như 1 Sát.' },
+  zhangba: { name: 'Trượng bát xà mâu', kind: 'weapon', range: 3, han: '矛', emo: '🐍', short: '2 lá bất kỳ = 1 Sát', desc: 'Tầm 3. Có thể dùng/đánh 2 lá trên tay như 1 Sát.' },
   guanshi: { name: 'Quán thạch phủ', kind: 'weapon', range: 3, han: '斧', emo: '🪓', short: 'Bỏ 2 lá: Sát vẫn trúng', desc: 'Tầm 3. Sát bị Né thì có thể bỏ 2 lá để Sát vẫn gây sát thương.' },
-  fangtian: { name: 'Phương thiên hoạ kích', kind: 'weapon', range: 4, han: '戟', emo: '🔱', short: 'Sát cuối: tới 3 người', desc: 'Tầm 4. Nếu Sát là lá cuối cùng trên tay, có thể chọn tới 3 mục tiêu.' },
+  fangtian: { name: 'Phương thiên hoạ kích', kind: 'weapon', range: 4, han: '戟', emo: '⚔️', short: 'Sát cuối: tới 3 người', desc: 'Tầm 4. Nếu Sát là lá cuối cùng trên tay, có thể chọn tới 3 mục tiêu.' },
   qilin: { name: 'Kỳ lân cung', kind: 'weapon', range: 5, han: '弓', emo: '🏹', short: 'Bắn rụng ngựa', desc: 'Tầm 5. Sát gây sát thương thì bỏ luôn 1 ngựa của mục tiêu.' },
+  zhuque: { name: 'Chu tước vũ phiến', kind: 'weapon', range: 4, han: '扇', emo: '🪭', exp: true, short: 'Sát thường → Hỏa Sát', desc: 'Tầm 4. Có thể dùng lá Sát thường như Hỏa Sát.' },
+  guding: { name: 'Cổ đĩnh đao', kind: 'weapon', range: 2, han: '錠', emo: '🗡️', exp: true, short: 'Địch hết bài: +1 sát thương', desc: 'Tầm 2. Sát của bạn gây thêm 1 sát thương nếu mục tiêu không còn lá trên tay.' },
   bagua: { name: 'Bát quái trận', kind: 'armor', han: '卦', emo: '☯️', short: 'Phán định đỏ = Né', desc: 'Khi cần đánh Né: có thể phán định, ra đỏ (♥/♦) thì coi như đã đánh Né.' },
   renwang: { name: 'Nhân vương thuẫn', kind: 'armor', han: '盾', emo: '🛡️', short: 'Sát đen vô hiệu', desc: 'Sát màu đen (♠/♣) không có tác dụng với bạn.' },
+  tengjia: { name: 'Đằng giáp', kind: 'armor', han: '藤', emo: '🪵', exp: true, short: 'Miễn Sát thường & AoE, sợ lửa', desc: 'Nam man xâm nhập, Vạn tiễn tề phát và Sát thường không có tác dụng với bạn. Nhưng sát thương lửa lên bạn +1.' },
+  baiyin: { name: 'Bạch ngân sư tử', kind: 'armor', han: '獅', emo: '🦁', exp: true, short: 'Sát thương tối đa 1', desc: 'Mỗi lần chịu sát thương nhiều hơn 1 thì chỉ mất 1 máu. Khi mất lá này khỏi ô giáp: hồi 1 máu.' },
   plus: { name: 'Ngựa +1', kind: 'plus', han: '駒', emo: '🐎', short: 'Người khác thấy bạn xa +1', desc: 'Ngựa phòng thủ: khoảng cách từ người khác tới bạn +1.' },
   minus: { name: 'Ngựa −1', kind: 'minus', han: '騎', emo: '🏇', short: 'Bạn thấy người khác gần −1', desc: 'Ngựa tấn công: khoảng cách từ bạn tới người khác −1.' },
 };
-export const HORSE_NAMES = { plus: ['Tuyệt ảnh', 'Đích lô', 'Trảo hoàng'], minus: ['Xích thố', 'Đại uyển', 'Tử tinh'] };
-export function cardName(c) { if (!c) return '?'; return c.v || CARD_INFO[c.type].name; }
+export const HORSE_NAMES = { plus: ['Tuyệt ảnh', 'Đích lô', 'Trảo hoàng', 'Hoa lưu'], minus: ['Xích thố', 'Đại uyển', 'Tử tinh'] };
+export const infoOf = c => (c && c.el ? CARD_INFO[c.el === 'fire' ? 'hoasat' : 'loisat'] : CARD_INFO[c.type]);
+export const artKey = c => (c.el ? (c.el === 'fire' ? 'hoasat' : 'loisat') : c.type);
+export function cardName(c) { if (!c) return '?'; return c.v || infoOf(c).name; }
 export function cardLabel(c) { return c ? `${cardName(c)} ${SUIT_SYMBOL[c.suit]}${rankLabel(c.rank)}` : '?'; }
 export const EQUIP_SLOT = { weapon: 'weapon', armor: 'armor', plus: 'plus', minus: 'minus' };
 
@@ -76,18 +88,32 @@ const DECK_BY_SUIT = {
     'wugu', 'wugu', 'lebu', 'shandian', 'qilin', 'plus:Trảo hoàng', 'minus:Xích thố'],
   D: ['sat', 'sat', 'sat', 'sat', 'sat', 'sat', 'ne', 'ne', 'ne', 'ne', 'ne', 'ne', 'ne', 'ne', 'ne', 'ne', 'dao', 'juedou', 'shunshou', 'shunshou', 'zhuge', 'guanshi', 'fangtian', 'minus:Đại uyển'],
 };
-export const DECK_SIZE = Object.values(DECK_BY_SUIT).reduce((a, l) => a + l.length, 0);
-export function buildDeck() {
+// Bản mở rộng Quân Tranh (BGVN tự xếp chất/số): fire:/thunder: là Hỏa Sát / Lôi Sát
+const EXP_BY_SUIT = {
+  S: ['thunder', 'thunder', 'thunder', 'jiu', 'jiu', 'tiesuo', 'bingliang', 'guding', 'ne', 'wuxie'],
+  C: ['thunder', 'thunder', 'jiu', 'tiesuo', 'tiesuo', 'bingliang', 'tengjia', 'baiyin', 'ne'],
+  H: ['fire', 'fire', 'huogong', 'huogong', 'dao', 'ne', 'wuxie', 'zhuque', 'plus:Hoa lưu'],
+  D: ['fire', 'fire', 'jiu', 'huogong', 'tiesuo', 'ne', 'dao'],
+};
+export const DECK_SIZE_BASE = Object.values(DECK_BY_SUIT).reduce((a, l) => a + l.length, 0);
+export const DECK_SIZE_EXP = Object.values(EXP_BY_SUIT).reduce((a, l) => a + l.length, 0);
+export const DECK_SIZE = DECK_SIZE_BASE; // tương thích cũ
+export function deckSize(exp) { return DECK_SIZE_BASE + (exp ? DECK_SIZE_EXP : 0); }
+export function buildDeck(exp = false) {
   const out = []; let id = 0;
-  for (const [suit, list] of Object.entries(DECK_BY_SUIT)) {
-    // rải số 1–13 xen kẽ (bước 5 nguyên tố cùng 13 → đủ mọi số, lặp đều)
-    list.forEach((t, i) => {
-      const [type, v] = t.split(':');
-      const rank = ((i * 5 + (suit.charCodeAt(0) % 7)) % 13) + 1;
-      const c = { id: 'c' + (id++), type, suit, rank }; if (v) c.v = v;
-      out.push(c);
-    });
-  }
+  const add = (table, off) => {
+    for (const [suit, list] of Object.entries(table)) {
+      // rải số 1–13 xen kẽ (bước 5 nguyên tố cùng 13 → đủ mọi số, lặp đều)
+      list.forEach((t, i) => {
+        let [type, v] = t.split(':'); let el = null;
+        if (type === 'fire' || type === 'thunder') { el = type; type = 'sat'; }
+        const rank = ((i * 5 + off + (suit.charCodeAt(0) % 7)) % 13) + 1;
+        const c = { id: 'c' + (id++), type, suit, rank }; if (v) c.v = v; if (el) c.el = el;
+        out.push(c);
+      });
+    }
+  };
+  add(DECK_BY_SUIT, 0); if (exp) add(EXP_BY_SUIT, 8);
   return out;
 }
 
@@ -134,6 +160,25 @@ export const SKILLS = {
   vosong: { name: 'Vô song', desc: 'Sát của bạn cần 2 Né mới né được; trong Quyết đấu đối thủ mỗi lần phải ra 2 Sát.' },
   ligian: { name: 'Ly gián', desc: 'Pha ra bài (1 lần): bỏ 1 lá, chọn 2 tướng nam: người thứ nhất Quyết đấu người thứ hai (không thể bị Vô giải).' },
   benguyet: { name: 'Bế nguyệt', desc: 'Cuối lượt: rút 1 lá.' },
+  // ---- mở rộng ----
+  thantoc: { name: 'Thần tốc', desc: 'Đầu lượt: có thể bỏ qua pha Phán định và pha Rút bài để Sát 1 người bất kỳ (không cần tầm, không tính lượt Sát).' },
+  cuthu: { name: 'Cứ thủ', desc: 'Pha kết thúc: có thể rút 3 lá rồi lật úp tướng (bỏ qua lượt kế tiếp của mình).' },
+  lietcung: { name: 'Liệt cung', desc: 'Khi Sát chỉ định mục tiêu có số lá trên tay ≥ máu của bạn, hoặc ≤ tầm đánh của bạn: mục tiêu không thể Né.' },
+  cuongcot: { name: 'Cuồng cốt', desc: 'Mỗi khi gây sát thương cho người cách bạn ≤ 1: hồi 1 máu.' },
+  hongnhan: { name: 'Hồng nhan', desc: 'Lá ♠ của bạn (trên tay và khi bạn phán định) được coi là ♥.' },
+  thienhuong: { name: 'Thiên hương', desc: 'Khi sắp chịu sát thương: có thể bỏ 1 lá ♥ trên tay để chuyển sát thương sang người khác; người đó sau đó rút số lá bằng số máu đã mất.' },
+  loikich: { name: 'Lôi kích', desc: 'Mỗi khi dùng/đánh ra Né: có thể cho 1 người phán định, ra ♠ thì người đó chịu 2 sát thương sét.' },
+  lienhoan: { name: 'Liên hoàn', desc: 'Có thể dùng lá ♣ trên tay như Thiết tác liên hoàn.' },
+  nietban: { name: 'Niết bàn', desc: 'Một lần mỗi ván, khi hấp hối: bỏ hết bài, gỡ xích/lật lại, rút 3 lá và hồi về 3 máu.' },
+  battran: { name: 'Bát trận', desc: 'Khi không đeo giáp: luôn coi như có Bát quái trận.' },
+  hoake: { name: 'Hỏa kế', desc: 'Có thể dùng lá đỏ (♥/♦) trên tay như Hỏa công.' },
+  khanpha: { name: 'Khán phá', desc: 'Có thể dùng lá đen (♠/♣) trên tay như Vô giải khả kích.' },
+  cuongtap: { name: 'Cường tập', desc: 'Pha ra bài (1 lần): mất 1 máu hoặc bỏ 1 vũ khí, gây 1 sát thương cho 1 người trong tầm đánh.' },
+  tietmenh: { name: 'Tiết mệnh', desc: 'Mỗi khi chịu 1 sát thương: có thể cho 1 người rút bài tới bằng máu tối đa của họ (tối đa 5 lá trên tay).' },
+  khuho: { name: 'Khu hổ', desc: 'Pha ra bài (1 lần): đọ bài với 1 người nhiều máu hơn bạn. Thắng: họ gây 1 sát thương cho 1 người trong tầm của họ do bạn chọn. Thua: họ gây 1 sát thương cho bạn.' },
+  thiennghia: { name: 'Thiên nghĩa', desc: 'Pha ra bài (1 lần): đọ bài với 1 người. Thắng: lượt này được dùng thêm 1 Sát và Sát không cần tầm. Thua: lượt này không được dùng Sát.' },
+  loankich: { name: 'Loạn kích', desc: 'Có thể dùng 2 lá cùng chất trên tay như Vạn tiễn tề phát.' },
+  batkhuat: { name: 'Bất khuất', desc: 'Tự động: khi hấp hối mà không ai cứu, lật lá trên cùng chồng bài làm "vết sẹo"; nếu số của nó khác mọi vết sẹo trước thì hồi về 1 máu và sống tiếp.' },
 };
 
 // ---------- Võ tướng ----------
@@ -147,8 +192,8 @@ export const GENERALS = {
   guojia: { name: 'Quách Gia', kingdom: 'wei', hp: 3, gender: 'm', han: '嘉', emo: '🍷', skills: ['thiendo', 'dike'], tag: 'Quỷ tài yểu mệnh' },
   zhenji: { name: 'Chân Cơ', kingdom: 'wei', hp: 3, gender: 'f', han: '甄', emo: '🌊', skills: ['khuynhquoc', 'lacthan'], tag: 'Lạc thần trên sóng' },
   liubei: { name: 'Lưu Bị', kingdom: 'shu', hp: 4, gender: 'm', lord: true, han: '備', emo: '🤝', skills: ['nhanduc', 'kichtuong'], tag: 'Lấy nhân nghĩa thu lòng người' },
-  guanyu: { name: 'Quan Vũ', kingdom: 'shu', hp: 4, gender: 'm', han: '羽', emo: '🐉', skills: ['vothanh'], tag: 'Mặt đỏ, râu dài, đao lớn' },
-  zhangfei: { name: 'Trương Phi', kingdom: 'shu', hp: 4, gender: 'm', han: '飛', emo: '🐯', skills: ['baohao'], tag: 'Hét một tiếng cầu gãy' },
+  guanyu: { name: 'Quan Vũ', kingdom: 'shu', hp: 4, gender: 'm', han: '羽', emo: '🐉', wpn: 'qinglong', skills: ['vothanh'], tag: 'Mặt đỏ, râu dài, đao lớn' },
+  zhangfei: { name: 'Trương Phi', kingdom: 'shu', hp: 4, gender: 'm', han: '飛', emo: '🐯', wpn: 'zhangba', skills: ['baohao'], tag: 'Hét một tiếng cầu gãy' },
   zhugeliang: { name: 'Gia Cát Lượng', kingdom: 'shu', hp: 3, gender: 'm', han: '亮', emo: '🪶', skills: ['quantinh', 'khongthanh'], tag: 'Quạt lông, khăn là' },
   zhaoyun: { name: 'Triệu Vân', kingdom: 'shu', hp: 4, gender: 'm', han: '雲', emo: '🐲', skills: ['longdam'], tag: 'Toàn thân là gan' },
   machao: { name: 'Mã Siêu', kingdom: 'shu', hp: 4, gender: 'm', han: '超', emo: '🐎', skills: ['mathuat', 'thietky'], tag: 'Cẩm Mã Siêu' },
@@ -162,9 +207,25 @@ export const GENERALS = {
   luxun: { name: 'Lục Tốn', kingdom: 'wu', hp: 3, gender: 'm', han: '遜', emo: '📜', skills: ['khiemton', 'liendoanh'], tag: 'Thư sinh đốt liên doanh' },
   sunshangxiang: { name: 'Tôn Thượng Hương', kingdom: 'wu', hp: 3, gender: 'f', han: '香', emo: '🏹', skills: ['kieuco', 'ketnhan'], tag: 'Cung kiếm chẳng kém nam nhi' },
   huatuo: { name: 'Hoa Đà', kingdom: 'qun', hp: 3, gender: 'm', han: '佗', emo: '🌿', skills: ['capcuu', 'thanhnang'], tag: 'Thần y cạo xương' },
-  lvbu: { name: 'Lữ Bố', kingdom: 'qun', hp: 4, gender: 'm', han: '布', emo: '🔱', skills: ['vosong'], tag: 'Người có Lữ Bố, ngựa có Xích Thố' },
+  lvbu: { name: 'Lữ Bố', kingdom: 'qun', hp: 4, gender: 'm', han: '布', emo: '⚔️', wpn: 'fangtian', skills: ['vosong'], tag: 'Người có Lữ Bố, ngựa có Xích Thố' },
+  // ---- tướng mở rộng ----
+  xiahouyuan: { name: 'Hạ Hầu Uyên', kingdom: 'wei', hp: 4, gender: 'm', exp: true, han: '淵', emo: '💨', skills: ['thantoc'], tag: 'Ba ngày năm trăm dặm' },
+  caoren: { name: 'Tào Nhân', kingdom: 'wei', hp: 4, gender: 'm', exp: true, han: '仁', emo: '🏰', skills: ['cuthu'], tag: 'Thành còn người còn' },
+  dianwei: { name: 'Điển Vi', kingdom: 'wei', hp: 4, gender: 'm', exp: true, han: '韋', emo: '🛡️', wpn: 'shuangji', skills: ['cuongtap'], tag: 'Cổ chi Ác Lai' },
+  xunyu: { name: 'Tuân Úc', kingdom: 'wei', hp: 3, gender: 'm', exp: true, han: '彧', emo: '📜', skills: ['khuho', 'tietmenh'], tag: 'Vương tá chi tài' },
+  huangzhong: { name: 'Hoàng Trung', kingdom: 'shu', hp: 4, gender: 'm', exp: true, han: '忠', emo: '🏹', skills: ['lietcung'], tag: 'Già mà gân' },
+  weiyan: { name: 'Ngụy Diên', kingdom: 'shu', hp: 4, gender: 'm', exp: true, han: '延', emo: '🩸', skills: ['cuongcot'], tag: 'Ai dám giết ta?' },
+  pangtong: { name: 'Bàng Thống', kingdom: 'shu', hp: 3, gender: 'm', exp: true, han: '統', emo: '🐦‍🔥', skills: ['lienhoan', 'nietban'], tag: 'Phượng sồ tiên sinh' },
+  wolong: { name: 'Ngọa Long', kingdom: 'shu', hp: 3, gender: 'm', exp: true, han: '臥', emo: '🔥', skills: ['battran', 'hoake', 'khanpha'], tag: 'Mượn gió đông đốt Xích Bích' },
+  xiaoqiao: { name: 'Tiểu Kiều', kingdom: 'wu', hp: 3, gender: 'f', exp: true, han: '嬌', emo: '🌸', skills: ['hongnhan', 'thienhuong'], tag: 'Hoa nhường nguyệt thẹn' },
+  zhoutai: { name: 'Chu Thái', kingdom: 'wu', hp: 4, gender: 'm', exp: true, han: '泰', emo: '🩹', skills: ['batkhuat'], tag: 'Mười hai vết thương vì chủ' },
+  taishici: { name: 'Thái Sử Từ', kingdom: 'wu', hp: 4, gender: 'm', exp: true, han: '慈', emo: '🎯', skills: ['thiennghia'], tag: 'Đại trượng phu sinh ra ở đời' },
+  zhangjiao: { name: 'Trương Giác', kingdom: 'qun', hp: 3, gender: 'm', exp: true, han: '角', emo: '⚡', skills: ['loikich'], tag: 'Trời xanh đã chết' },
+  yuanshao: { name: 'Viên Thiệu', kingdom: 'qun', hp: 4, gender: 'm', exp: true, han: '紹', emo: '🏹', skills: ['loankich'], tag: 'Bốn đời tam công' },
   diaochan: { name: 'Điêu Thuyền', kingdom: 'qun', hp: 3, gender: 'f', han: '蟬', emo: '🌙', skills: ['ligian', 'benguyet'], tag: 'Trăng cũng phải nấp' },
 };
 export const LORD_IDS = Object.keys(GENERALS).filter(k => GENERALS[k].lord);
+export const BASE_GENERALS = Object.keys(GENERALS).filter(k => !GENERALS[k].exp);
+export const EXP_GENERALS = Object.keys(GENERALS).filter(k => GENERALS[k].exp);
 // tất cả chữ Hán dùng cho font thư pháp (để tải font tối giản)
 export const HAN_TEXT = [...new Set([...Object.values(GENERALS).map(g => g.han), ...Object.values(CARD_INFO).map(c => c.han), ...Object.values(KINGDOMS).map(k => k.han), '三國殺'].join(''))].join('');

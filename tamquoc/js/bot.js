@@ -1,6 +1,6 @@
 // Bot Tam Quốc Sát: đoán phe qua "ấn tượng" công khai (s.lean), chơi theo vai trò, dùng kỹ năng.
-import { getPlayer, current, alivePlayers, top, distance, inRange, attackRange, hasSkill, weaponOf, armorOf, cardModes, activeSkills, responseOptions, useOptions, orderFrom } from './engine.js?v=1';
-import { CARD_INFO, GENERALS, isRed, isBlack } from './cards.js?v=1';
+import { getPlayer, current, alivePlayers, top, distance, inRange, attackRange, hasSkill, weaponOf, armorOf, cardModes, activeSkills, responseOptions, useOptions, orderFrom, effSuit } from './engine.js?v=3';
+import { CARD_INFO, GENERALS, isRed, isBlack } from './cards.js?v=3';
 
 const R = () => Math.random();
 function rnd(a) { return a[Math.floor(Math.random() * a.length)]; }
@@ -77,7 +77,7 @@ const isFriend = (s, me, o) => relation(s, me, o) > 0;
 
 // giá trị lá (giữ/bỏ)
 function value(s, me, c) {
-  const base = { dao: 9, ne: 6, wuxie: 6, sat: 5, wuzhong: 7, shunshou: 6, guohe: 5, juedou: 4, nanman: 5, wanjian: 5, lebu: 6, jiedao: 3, taoyuan: 3, wugu: 3, shandian: 1,
+  const base = { huogong: 4, tiesuo: 3, bingliang: 6, zhuque: 4, guding: 4, tengjia: 5, baiyin: 5, dao: 9, jiu: 5, ne: 6, wuxie: 6, sat: 5, wuzhong: 7, shunshou: 6, guohe: 5, juedou: 4, nanman: 5, wanjian: 5, lebu: 6, jiedao: 3, taoyuan: 3, wugu: 3, shandian: 1,
     bagua: 6, renwang: 5, plus: 5, minus: 4, zhuge: 4, qinggang: 4, qinglong: 4, zhangba: 3, guanshi: 4, fangtian: 3, qilin: 3, cixiong: 3, hanbing: 3 }[c.type] || 2;
   let v = base;
   if (c.type === 'sat' && me.hand.filter(x => x.type === 'sat').length > 2 && !(weaponOf(me) === 'zhuge' || hasSkill(me, 'baohao'))) v -= 2;
@@ -123,9 +123,25 @@ function decide(s, me, t, ask) {
     case 'discard': return discardDecision(s, me, t, ask);
     case 'pick': return pickDecision(s, me, ask);
     case 'guanxing': return guanxing(s, me, t);
-    case 'targets': { // Đột tập
-      const c = ask.candidates.map(id => getPlayer(s, id)).filter(q => !isFriend(s, me, q)).sort((a, b) => relation(s, me, a) - relation(s, me, b) || b.hand.length - a.hand.length);
+    case 'targets': {
+      const cands = ask.candidates.map(id => getPlayer(s, id));
+      const enemies = cands.filter(q => isEnemy(s, me, q)).sort((a, b) => a.hp - b.hp);
+      if (ask.purpose === 'thantoc') { const e = enemies.filter(q => !(armorOf(q) === 'tengjia')); return { type: 'targets', ids: e.length && (e[0].hp <= 2 || me.hand.length <= 2 || R() < .4) ? [e[0].id] : [] }; }
+      if (ask.purpose === 'loikich') return { type: 'targets', ids: enemies.length ? [enemies[0].id] : [] };
+      if (ask.purpose === 'tietmenh') { const f = cands.filter(q => q === me || isFriend(s, me, q)).sort((a, b) => (Math.min(5, b.maxHp) - b.hand.length) - (Math.min(5, a.maxHp) - a.hand.length)); return { type: 'targets', ids: f.length ? [f[0].id] : [] }; }
+      if (ask.purpose === 'khuho') { const e = enemies.length ? enemies : cands.filter(q => !isFriend(s, me, q) && q !== me); return { type: 'targets', ids: [(e[0] || cands[0]).id] }; }
+      // Đột tập
+      const c = cands.filter(q => !isFriend(s, me, q)).sort((a, b) => relation(s, me, a) - relation(s, me, b) || b.hand.length - a.hand.length);
       return { type: 'targets', ids: c.slice(0, 2).map(q => q.id) };
+    }
+    case 'show': {
+      if (ask.purpose === 'pindian') { const c = [...me.hand].sort((a, b) => b.rank - a.rank)[0]; return { type: 'show', id: c.id }; }
+      const src = getPlayer(s, ask.src); const c = worstFirst(s, me, me.hand)[0];
+      if (src && isEnemy(s, me, src)) { // lật chất mà kẻ địch khó có (chất ít gặp)
+        const cnt = {}; for (const x of me.hand) cnt[x.suit] = (cnt[x.suit] || 0) + 1;
+        const r = [...me.hand].sort((a, b) => (cnt[a.suit] - cnt[b.suit]) || value(s, me, a) - value(s, me, b))[0]; return { type: 'show', id: r.id };
+      }
+      return { type: 'show', id: c.id };
     }
     case 'yesno': {
       if (ask.purpose === 'loay') {
@@ -133,10 +149,18 @@ function decide(s, me, t, ask) {
         const hasT = alivePlayers(s).some(q => q !== me && isEnemy(s, me, q) && inRange(s, me, q));
         return { type: sats >= 1 && hasT && R() < .8 ? 'yes' : 'no' };
       }
+      if (ask.purpose === 'nietban') return { type: 'yes' };
+      if (ask.purpose === 'cuthu') return { type: me.hp <= 2 || me.hand.length <= 1 || R() < .25 ? 'yes' : 'no' };
       if (ask.purpose === 'hanbing') { const tg = getPlayer(s, ask.tgt); return { type: isFriend(s, me, tg) || (tg.hp > 2 && Object.values(tg.equip).filter(Boolean).length >= 2) ? 'yes' : 'no' }; }
       return { type: 'no' };
     }
     case 'liuli': {
+      if (ask.purpose === 'thienhuong') {
+        const hearts = worstFirst(s, me, me.hand.filter(c => effSuit(me, c) === 'H' && c.type !== 'dao'));
+        const e = ask.candidates.map(id => getPlayer(s, id)).filter(q => isEnemy(s, me, q)).sort((a, b) => a.hp - b.hp);
+        if (!hearts.length || !e.length || (ask.n <= 1 && me.hp >= 3 && R() < .5)) return { type: 'pass' };
+        return { type: 'liuli', cardId: hearts[0].id, target: e[0].id };
+      }
       const src = getPlayer(s, ask.src);
       const cands = ask.candidates.map(id => getPlayer(s, id)).filter(q => isEnemy(s, me, q));
       if (!cands.length) return { type: 'pass' };
@@ -152,7 +176,7 @@ function decide(s, me, t, ask) {
 }
 
 function chooseGeneral(s, me, offers) {
-  const score = { zhangfei: 8, guanyu: 8, zhaoyun: 8, lvbu: 8, huanggai: 7, sunquan: 8, liubei: 7, caocao: 7, simayi: 7, guojia: 7, zhenji: 7, zhangliao: 8, zhugeliang: 6, huangyueying: 7, zhouyu: 7, huatuo: 8, diaochan: 7, machao: 7, xuchu: 6, ganning: 7, lvmeng: 6, luxun: 7, daqiao: 7, sunshangxiang: 6, xiahoudun: 7 };
+  const score = { zhangfei: 8, guanyu: 8, zhaoyun: 8, lvbu: 8, huanggai: 7, sunquan: 8, liubei: 7, caocao: 7, simayi: 7, guojia: 7, zhenji: 7, zhangliao: 8, zhugeliang: 6, huangyueying: 7, zhouyu: 7, huatuo: 8, diaochan: 7, machao: 7, xuchu: 6, ganning: 7, lvmeng: 6, luxun: 7, daqiao: 7, sunshangxiang: 6, xiahoudun: 7, xiahouyuan: 7, caoren: 7, dianwei: 7, xunyu: 7, huangzhong: 8, weiyan: 7, pangtong: 7, wolong: 8, xiaoqiao: 7, zhoutai: 7, taishici: 7, zhangjiao: 7, yuanshao: 8 };
   const sorted = [...offers].sort((a, b) => (score[b] || 5) + R() * 3 - (score[a] || 5) - R() * 3);
   return { type: 'general', id: sorted[0] };
 }
@@ -214,9 +238,32 @@ function playTurn(s, me) {
     const user = victim && males.filter(q => q !== victim && !isFriend(s, me, q)).sort((a, b) => b.hand.length - a.hand.length)[0];
     if (victim && user) { const c = worstFirst(s, me, [...me.hand, ...Object.values(me.equip).filter(Boolean)])[0]; return { type: 'skill', skill: 'ligian', ids: [c.id], targets: [user.id, victim.id] }; }
   }
+  if (sk('cuongtap')) {
+    const e = sk('cuongtap').targets.map(id => getPlayer(s, id)).filter(q => isEnemy(s, me, q)).sort((a, b) => a.hp - b.hp)[0];
+    const wpn = me.hand.find(c => CARD_INFO[c.type].kind === 'weapon');
+    if (e && (wpn || (me.hp >= 3 && (e.hp <= 2 || R() < .4)))) return { type: 'skill', skill: 'cuongtap', ids: wpn ? [wpn.id] : [], targets: [e.id] };
+  }
+  if (sk('thiennghia') && me.hand.some(c => c.rank >= 11) && me.hand.some(c => c.type === 'sat')) {
+    const e = sk('thiennghia').targets.map(id => getPlayer(s, id)).filter(q => isEnemy(s, me, q))[0]; if (e) return { type: 'skill', skill: 'thiennghia', targets: [e.id] };
+  }
+  if (sk('khuho') && me.hand.some(c => c.rank >= 10)) {
+    const e = sk('khuho').targets.map(id => getPlayer(s, id)).find(q => !isFriend(s, me, q) && alivePlayers(s).some(x => x !== q && inRange(s, q, x) && isEnemy(s, me, x)));
+    if (e) return { type: 'skill', skill: 'khuho', targets: [e.id] };
+  }
   // 5. cẩm nang
   const pickT = (targets, f = isEnemy) => targets.map(id => getPlayer(s, id)).filter(q => f(s, me, q)).sort((a, b) => a.hp - b.hp || armorScore(b) - armorScore(a))[0];
   x = usable('lebu')[0]; if (x) { const tg = pickT(x.o.targets); if (tg) return use(x, 'lebu', [tg.id]); }
+  x = usable('bingliang')[0]; if (x) { const tg = pickT(x.o.targets); if (tg) return use(x, 'bingliang', [tg.id]); }
+  x = realFirst(usable('huogong'), 'huogong')[0];
+  if (x && me.hand.length >= 3 && new Set(me.hand.map(c => c.suit)).size >= 2) { const tg = pickT(x.o.targets.filter(id => id !== me.id)); if (tg) return use(x, 'huogong', [tg.id]); }
+  x = realFirst(usable('tiesuo'), 'tiesuo')[0];
+  if (x) {
+    const chainedFriends = [me, ...friends].filter(q => q.flags.chained).slice(0, 2);
+    const freeEnemies = enemies.filter(q => !q.flags.chained).sort((a, b) => a.hp - b.hp).slice(0, 2);
+    if (chainedFriends.length) return use(x, 'tiesuo', chainedFriends.map(q => q.id));
+    if (freeEnemies.length >= 2 || (freeEnemies.length && R() < .3)) return use(x, 'tiesuo', freeEnemies.map(q => q.id));
+    if (x.c.type === 'tiesuo') return use(x, 'tiesuo', []);
+  }
   x = usable('shunshou')[0]; if (x) { const tg = pickT(x.o.targets) || (x.o.targets.map(id => getPlayer(s, id)).find(q => q.judge.length && !isEnemy(s, me, q))); if (tg) return use(x, 'shunshou', [tg.id]); }
   x = realFirst(usable('guohe'), 'guohe')[0]; if (x) { const tg = pickT(x.o.targets) || x.o.targets.map(id => getPlayer(s, id)).find(q => isFriend(s, me, q) && q.judge.length); if (tg) return use(x, 'guohe', [tg.id]); }
   x = usable('jiedao')[0];
@@ -248,8 +295,18 @@ function playTurn(s, me) {
     if (!tg.length) break;
     tg.sort((a, b) => slashScore(s, me, b, sx.c) - slashScore(s, me, a, sx.c));
     const best = tg[0]; if (slashScore(s, me, best, sx.c) < -5) break;
+    // uống Rượu trước khi chém kẻ địch yếu máu (hoặc khi dư Rượu)
+    const wine = !me.flags.drunk && !s.tf.jiu && usable('jiu').find(w => w.c.id !== sx.c.id);
+    if (wine && isEnemy(s, me, best) && (best.hp <= 2 || me.hand.filter(c => c.type === 'jiu').length > 1) && !(armorOf(best) === 'renwang' && isBlack(sx.c) && weaponOf(me) !== 'qinggang')) return use(wine, 'jiu');
     const targets = [best.id, ...tg.slice(1, sx.o.max).map(q => q.id)];
+    if (!sx.c.el && sx.c.type === 'sat' && modes[sx.c.id].some(m => m.as === 'hoasat' && m.ok) && (armorOf(best) === 'tengjia' || best.flags.chained || R() < .5)) return use(sx, 'hoasat', targets);
     return use(sx, 'sat', targets);
+  }
+  // Loạn kích: 2 lá cùng chất như Vạn tiễn
+  if (sk('loankich') && aoeOk && me.hand.length >= 3) {
+    const by = {}; for (const c of worstFirst(s, me, me.hand)) (by[c.suit] = by[c.suit] || []).push(c);
+    const pr = Object.values(by).find(l => l.length >= 2 && l.slice(0, 2).every(c => value(s, me, c) <= 6));
+    if (pr) return { type: 'skill', skill: 'loankich', ids: pr.slice(0, 2).map(c => c.id) };
   }
   // Xà mâu: 2 lá rác như Sát
   if (sk('xamau') && me.hand.length >= 4 && (s.tf.slashes || 0) === 0) {
@@ -263,6 +320,8 @@ function armorScore(q) { return (q.equip.armor ? 2 : 0) + (q.equip.plus ? 1 : 0)
 function slashScore(s, me, q, c) {
   let v = 10 - q.hp * 2 - q.hand.length * .5;
   if (armorOf(q) === 'renwang' && isBlack(c) && weaponOf(me) !== 'qinggang') v -= 20;
+  if (armorOf(q) === 'tengjia' && weaponOf(me) !== 'qinggang') v += c.el === 'fire' || weaponOf(me) === 'zhuque' ? 4 : c.el ? 0 : -20;
+  if (q.flags.chained && c.el) v += 2;
   if (armorOf(q) === 'bagua' && weaponOf(me) !== 'qinggang') v -= 2;
   if (q.role === 'lord' && me.role === 'rebel') v += 4;
   return v;
@@ -331,7 +390,7 @@ function judgeHitLocal(why, c) {
 }
 
 // ---------- Vô giải ----------
-const HARM = { guohe: 1, shunshou: 1, juedou: 1, nanman: 1, wanjian: 1, lebu: 1.5, shandian: .6, jiedao: .5 };
+const HARM = { guohe: 1, shunshou: 1, juedou: 1, nanman: 1, wanjian: 1, lebu: 1.5, shandian: .6, jiedao: .5, huogong: .8, bingliang: 1.2, tiesuo: .3 };
 const HELP = { wuzhong: 1, taoyuan: .6, wugu: .2 };
 function nullifyDecision(s, me, ask) {
   const tgt = ask.tgt ? getPlayer(s, ask.tgt) : null; if (!tgt) return { type: 'pass' };
@@ -348,15 +407,19 @@ function nullifyDecision(s, me, ask) {
     }
   } else { want = rel > 0; weight = HELP[ask.trick] || .3; if (ask.trick === 'taoyuan' && rel < 0 && tgt.hp > 1) weight = .1; }
   if (want === effective) return { type: 'pass' };
-  const myW = me.hand.filter(c => c.type === 'wuxie').length;
+  const myW = responseOptions(s, me, 'wuxie').length;
   const p = Math.min(.95, weight * (tgt === me ? 1 : .7) * (myW > 1 ? 1.3 : 1));
-  if (R() < p) { const c = me.hand.find(c => c.type === 'wuxie'); return c ? { type: 'respond', ids: [c.id] } : { type: 'pass' }; }
+  if (R() < p) { const o = responseOptions(s, me, 'wuxie'); const c = o.length ? worstFirst(s, me, o.map(x => me.hand.find(h => h.id === x.ids[0])))[0] : null; return c ? { type: 'respond', ids: [c.id] } : { type: 'pass' }; }
   return { type: 'pass' };
 }
 
 // ---------- Bỏ bài ----------
 function discardDecision(s, me, t, ask) {
   const n = ask.n;
+  if (ask.purpose === 'huogong') {
+    const tg = getPlayer(s, ask.tgt); const m = worstFirst(s, me, me.hand.filter(c => effSuit(me, c) === ask.suit && c.type !== 'dao'));
+    return m.length && !isFriend(s, me, tg) && tg !== me && (isEnemy(s, me, tg) || R() < .3) ? { type: 'discard', ids: [m[0].id] } : { type: 'pass' };
+  }
   if (ask.purpose === 'songco') { const w = worstFirst(s, me, me.hand)[0]; return w && value(s, me, w) <= 4 ? { type: 'discard', ids: [w.id] } : { type: 'pass' }; }
   if (ask.purpose === 'cuonglie') { if (me.hp <= 2 || me.hand.length >= 4) return { type: 'discard', ids: worstFirst(s, me, me.hand).slice(0, 2).map(c => c.id) }; return { type: 'pass' }; }
   if (ask.purpose === 'guanshi') {

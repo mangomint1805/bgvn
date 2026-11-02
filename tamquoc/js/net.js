@@ -1,7 +1,7 @@
 // Lớp mạng Tam Quốc Sát: host giữ state + chạy engine, client chỉ gửi action. Kết nối dùng chung ở shared/net/room.js
-import { createGame, applyAction, viewFor, top, getPlayer, NULL_TIME } from './engine.js?v=1';
-import { botAction } from './bot.js?v=1';
-import { S } from './fx.js?v=1';
+import { createGame, applyAction, viewFor, top, getPlayer, NULL_TIME } from './engine.js?v=3';
+import { botAction } from './bot.js?v=3';
+import { S } from './fx.js?v=3';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
 export const TURN_TIME = 60, PROMPT_TIME = 20, PICK_TIME = 30; // giây: hết giờ thì máy tự đánh thay (chống treo máy)
 const NS = 'bgvn-tamquoc', PREFIX = 'bgvn-tamquoc-', GAME = 'tamquoc';
@@ -25,10 +25,11 @@ export class Host {
   constructor(name, handlers, offline = false, restore = null) {
     this.h = handlers; this.offline = offline;
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
+    this.opts = { exp: true, expGen: true };
     this.state = null; this.conns = new Map(); this.botTimer = null; this.dlTimer = null; this.deadline = null;
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));
-      this.state = restore.state; this.code = restore.code;
+      this.state = restore.state; this.code = restore.code; if (restore.opts) this.opts = restore.opts;
     }
     if (offline) { this.code = 'OFFLINE'; setTimeout(() => { this.pushLobby(); if (this.state) { this.graceUntil = Date.now() + 1500; this.broadcast(); this.scheduleBots(); } }, 0); return; }
     this.room = new RoomHost({ ns: NS, prefix: PREFIX, code: this.code, keepCode: !!restore, onConn: c => this.attach(c), onReady: code => { this.code = code; session.save(GAME, { role: 'host', code }); this.pushLobby(); }, onError: m => this.h.onError(m) });
@@ -37,7 +38,7 @@ export class Host {
   }
   saveSnap() {
     clearTimeout(this.snapT);
-    this.snapT = setTimeout(() => { try { localStorage.setItem(SNAP, JSON.stringify({ ts: Date.now(), code: this.code, offline: this.offline, players: this.players.map(({ conn, ...p }) => p), state: this.state })); } catch (e) {} }, 300);
+    this.snapT = setTimeout(() => { try { localStorage.setItem(SNAP, JSON.stringify({ ts: Date.now(), code: this.code, offline: this.offline, players: this.players.map(({ conn, ...p }) => p), state: this.state, opts: this.opts })); } catch (e) {} }, 300);
   }
   attach(conn) {
     conn.on('data', msg => this.onMsg(conn, msg));
@@ -73,8 +74,8 @@ export class Host {
   lobbyInfo() { return this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot, connected: p.connected, afk: (p.afk || 0) >= 2 })); }
   pushLobby() {
     const info = this.lobbyInfo();
-    this.h.onLobby(info, this.code, !!this.state); this.saveSnap();
-    for (const p of this.players) if (p.conn) try { p.conn.send({ t: 'lobby', players: info, code: this.code, started: !!this.state }); } catch (e) {}
+    this.h.onLobby(info, this.code, !!this.state, this.opts); this.saveSnap();
+    for (const p of this.players) if (p.conn) try { p.conn.send({ t: 'lobby', players: info, code: this.code, started: !!this.state, opts: this.opts }); } catch (e) {}
   }
   addBot() {
     if (this.state || this.players.length >= MAX) return;
@@ -89,9 +90,10 @@ export class Host {
     if (p.conn) try { p.conn.send({ t: 'kicked' }); p.conn.close(); } catch (e) {}
     this.players = this.players.filter(x => x !== p); this.pushLobby();
   }
+  setOpts(o) { if (this.state) return; this.opts = { ...this.opts, ...o }; this.pushLobby(); }
   start() {
     if (this.players.length < MIN || this.players.length > MAX) { this.h.onError(`Cần ${MIN}–${MAX} người chơi.`); return; }
-    this.state = createGame(this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot })));
+    this.state = createGame(this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot })), this.opts);
     this.graceUntil = Date.now() + 2500 * S();
     this.pushLobby(); this.broadcast(); this.scheduleBots();
   }
@@ -182,7 +184,7 @@ export class Client {
       onWelcome: id => { this.id = id; session.save(GAME, { role: 'client', code: this.code, name: this.name }); this.h.onJoined(id); },
       onLost: () => this.h.onDisconnect(),
       onMsg: msg => {
-        if (msg.t === 'lobby') this.h.onLobby(msg.players, msg.code, msg.started);
+        if (msg.t === 'lobby') this.h.onLobby(msg.players, msg.code, msg.started, msg.opts);
         else if (msg.t === 'state') this.h.onState(msg.view);
         else if (msg.t === 'error') this.h.onError(msg.msg);
         else if (msg.t === 'kicked') { this.h.onError('Bạn đã bị mời ra khỏi phòng.'); this.leave(); }

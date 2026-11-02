@@ -62,6 +62,10 @@ export const sfx = {
   peach() { if (!muted) { tn(hz(79), .2, { gain: .1 }); tn(hz(84), .3, { gain: .1, delay: 90 }); } },
   draw() { if (!muted) nz(.05, { type: 'highpass', freq: 3000, gain: .15 }); },
   skill() { if (!muted) { tn(hz(74), .18, { type: 'triangle', gain: .07 }); tn(hz(81), .25, { type: 'triangle', gain: .07, delay: 70 }); } },
+  drink() { if (!muted) { [0, 140, 280].forEach((d, i) => { tn(220 - i * 30, .12, { type: 'sine', gain: .12, slide: -60, delay: d }); nz(.06, { type: 'bandpass', freq: 700, q: 3, gain: .25, delay: d + 30 }); }); tn(hz(76), .4, { type: 'triangle', gain: .06, delay: 450 }); } },
+  fire() { if (!muted) { nz(.9, { type: 'lowpass', freq: 900, gain: .55, sweepTo: 3000 }); nz(.5, { type: 'bandpass', freq: 2400, q: .8, gain: .25, delay: 120 }); for (let i = 0; i < 6; i++) nz(.04, { type: 'highpass', freq: 4000, gain: .3, delay: 80 + Math.random() * 600 }); } },
+  chain() { if (!muted) [0, 70, 150, 210].forEach(d => { tn(1700 + Math.random() * 600, .09, { type: 'square', gain: .025, delay: d }); nz(.05, { type: 'bandpass', freq: 3200, q: 5, gain: .4, delay: d }); }); },
+  qin() { if (!muted) [0, 4, 7].forEach((d, i) => tn(hz(62 + d), .9, { type: 'triangle', gain: .07, delay: i * 90, slide: -2 })); },
   dying() { if (!muted) [0, 300].forEach(d => tn(hz(70), .22, { type: 'square', gain: .04, delay: d })); },
 };
 
@@ -194,6 +198,10 @@ export function boltFx(el) {
 export function healFx(el) {
   const a = pt(el); if (!a || reduced) return; fcanvas();
   for (let i = 0; i < 14; i++) fparts.push({ type: i % 2 ? 'plus' : 'petal', x: a.x + Rn(-30, 30), y: a.y + Rn(-10, 20), vx: Rn(-.4, .4), vy: Rn(-1.6, -.5), r: i % 2 ? Rn(12, 18) : Rn(4, 7), c: i % 2 ? '60,170,110' : '#f7a8c0', life: Rn(40, 70), t: 0, rot: 0, vr: Rn(-.1, .1) });
+}
+export function fireFx(el, delay = 0) {
+  const a = pt(el); if (!a || reduced) return;
+  setTimeout(() => { fcanvas(); for (let i = 0; i < 26; i++) fparts.push({ type: 'spark', x: a.x + Rn(-22, 22), y: a.y + Rn(-6, 18), vx: Rn(-.6, .6), vy: Rn(-3.2, -1), g: -.02, drag: .97, r: Rn(2.5, 5.5), c: ['255,120,30', '255,190,60', '230,60,20'][i % 3], life: Rn(26, 50), t: 0 }); }, delay * S());
 }
 export function sparks(el, c = '255,200,80') { const a = pt(el); if (!a || reduced) return; fcanvas(); burst(a.x, a.y, 16, { c, smin: 1.5, smax: 5 }); }
 export function confetti() {
