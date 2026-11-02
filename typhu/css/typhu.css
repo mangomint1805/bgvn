@@ -107,7 +107,7 @@ input:focus{border-color:var(--acc)}
   .topbar{padding:3px 6px}.chip.ic{width:36px;min-height:36px}.pc{padding:3px 6px}.pc img{width:30px;height:30px}.pc .wo{display:none}.act{min-height:0;padding:6px 8px}.act .btn{min-height:40px;font-size:15px;padding:6px 10px}
 }
 @media (max-width:380px){.round-tag{font-size:14px;padding:3px 9px}.tools{gap:4px}.chip.ic{width:38px}.timer{font-size:12.5px;padding:4px 8px}.act .btn{font-size:15.5px;padding:8px 10px}}
-@media (max-height:700px) and (orientation:portrait){.pc img{width:26px;height:26px}.pc .cs{font-size:15px}.act{min-height:0}}
+@media (max-height:700px) and (orientation:portrait){.pc img{width:26px;height:26px}.pc .cs{font-size:15px}.act{min-height:92px}}
 
 /* nhật ký */
 .log{position:fixed;right:0;top:0;bottom:0;width:min(360px,92vw);background:#fffffff5;box-shadow:-10px 0 30px -12px #0005;z-index:30;transform:translateX(105%);transition:transform .25s;display:flex;flex-direction:column}
@@ -202,3 +202,5 @@ input:focus{border-color:var(--acc)}
 @media (max-width:400px){.pc{gap:4px;padding:3px 4px}.pc img{width:26px;height:26px;border-radius:8px}.pc .nm{font-size:12px}.act .btns .btn.main{flex-basis:118px}.act .btn.sm{padding:6px 8px;font-size:13.5px}}
 .flip .front{background:radial-gradient(circle at 50% 0,#ffeceb,#fff 65%);border-color:#ffd0cc}
 .flip .front.chest{background:radial-gradient(circle at 50% 0,#fff4cc,#fff 65%);border-color:#ffe08a}
+@media (max-width:420px){.timer .tn{display:none}}
+.modal-box h2{padding:0 38px}

@@ -43,6 +43,7 @@ function openModal(html, cls = '', key = null) {
   if (onModalClose) { const f = onModalClose; onModalClose = null; f(); }
   $('#modal-box').className = 'modal-box ' + cls; $('#modal-box').innerHTML = html; $('#modal').classList.add('open'); modalKey = key;
 }
+function setModal(html) { const b = $('#modal-box'), y = b.scrollTop; b.innerHTML = html; b.scrollTop = y; }
 function closeModal() { $('#modal').classList.remove('open'); modalKey = null; fns.modal = []; if (onModalClose) { const f = onModalClose; onModalClose = null; f(); } if (B) B.pick([]); }
 $('#modal').addEventListener('click', e => { if (e.target.id === 'modal' && modalKey !== 'lock') closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modal').classList.contains('open') && modalKey !== 'lock') closeModal(); });
@@ -117,7 +118,8 @@ function openSettings() {
     <div class="set-row"><b>🌇 Chủ đề</b>${seg('theme', Object.entries(THEMES).map(([k, t]) => [k, t.name]), v => B && B.setTheme(v))}</div>
     <div class="set-row"><b>🖥️ Chất lượng 3D</b>${seg('quality', [['low', 'Thấp'], ['med', 'Vừa'], ['high', 'Cao']], v => B && B.setQuality(v))}</div>
     <div class="set-row"><b>⏩ Tốc độ hoạt ảnh</b>${seg('speed', [['slow', 'Chậm'], ['normal', 'Vừa'], ['fast', 'Nhanh']])}</div>
-    <p class="note">Máy yếu / điện thoại nóng: chọn chất lượng Thấp. Cài đặt được lưu trên máy này.</p>`, '', 'settings');
+    <p class="note">Máy yếu / điện thoại nóng: chọn chất lượng Thấp. Cài đặt được lưu trên máy này.</p>
+    <div class="mbtns">${btn('modal', '📖 Hướng dẫn luật', () => openGuide(), 'ghost')}</div>`, '', 'settings');
   $('#vol-music').oninput = e => { settings.music = +e.target.value; fx.applyVolumes(); fx.saveSettings(); };
   $('#vol-sfx').oninput = e => { settings.sfx = +e.target.value; fx.applyVolumes(); fx.saveSettings(); };
   $('#vol-sfx').onchange = () => fx.sfx.cash();
@@ -397,7 +399,7 @@ setInterval(() => {
   const el = $('#timer'); const v = shown;
   if (!v || v.phase !== 'playing' || !deadlineAt) { el.hidden = true; return; }
   const s = Math.max(0, Math.ceil((deadlineAt - Date.now()) / 1000));
-  el.hidden = false; el.textContent = `⏳ ${isMine(v.actor) && !multiLocal(v) ? 'Bạn' : nm(v, v.actor)} · ${s}s`;
+  el.hidden = false; el.innerHTML = `⏳ <span class="tn">${esc(isMine(v.actor) && !multiLocal(v) ? 'Bạn' : nm(v, v.actor))} · </span>${s}s`;
   el.classList.toggle('low', s <= 10);
   if (s <= 5 && s > 0 && isMine(v.actor) && s !== el._last) { el._last = s; fx.sfx.tick(); }
 }, 250);
@@ -559,7 +561,7 @@ function openTile(i, refresh = false) {
   const mb = v && actPid ? manageBtns(v, actPid, i) : '';
   const html = `<button class="close-x" data-close aria-label="Đóng">✕</button><div class="deed" style="--gc:${gColor(i)}"><div class="hd"><small>${t.type === 'city' ? 'Nhóm ' + GROUPS[t.group].name : t.type === 'station' ? 'Bến xe' : t.type === 'utility' ? 'Công ty' : 'Ô đặc biệt'}</small><b>${esc(t.name)}</b>${t.area ? `<small>${esc(t.area)}</small>` : ''}</div>${ownRow}${body}
     ${here.length ? `<div class="own">Đang đứng: ${here.map(p => `<img src="${pic(p.avatar, 60)}" alt="" title="${esc(p.name)}">`).join('')}</div>` : ''}</div>${mb ? `<div class="mbtns">${mb}</div>` : ''}`;
-  if (refresh) { $('#modal-box').innerHTML = html; } else openModal(html, '', 'tile:' + i);
+  if (refresh) { setModal(html); } else openModal(html, '', 'tile:' + i);
   B && B.pick([i]);
 }
 function openPlayer(id) {
@@ -568,7 +570,7 @@ function openPlayer(id) {
   const html = `<button class="close-x" data-close aria-label="Đóng">✕</button><div class="win" style="margin-bottom:6px"><img src="${pic(p.avatar, 160)}" alt=""><h2 style="margin:4px 0 0">${esc(p.name)}</h2>
     <div class="sub">💵 ${money(p.cash)} · 💎 tài sản ${money(v.worth[id] || 0)}${p.cards.length ? ` · 🗝️ ${p.cards.length} thẻ ra tù` : ''}${p.inJail ? ' · ⛓️ đang ở tù' : ''}${p.out ? ' · 💀 phá sản' : ''}</div></div>
     <div class="mg">${own.length ? own.map(i => `<div class="row" style="border-left:6px solid ${gColor(i)};padding-left:8px"><span class="nm" ${fnAttr('modal', () => openTile(i))}>${esc(tileName(i))} <small>${statusOf(v, i)}</small></span><small>${money(TILES[i].price)}</small></div>`).join('') : '<p class="note" style="text-align:center">Chưa có miếng đất nào.</p>'}</div>`;
-  if (modalKey === 'player:' + id) { $('#modal-box').innerHTML = html; } else openModal(html, '', 'player:' + id);
+  if (modalKey === 'player:' + id) { setModal(html); } else openModal(html, '', 'player:' + id);
 }
 
 // ---------- quản lý tài sản ----------
@@ -583,12 +585,12 @@ function renderManage() {
     { name: 'Công ty', color: '#1e88e5', tiles: TILES.map((t, i) => t.type === 'utility' ? i : -1).filter(i => i >= 0) }]
     .map(g => ({ ...g, mine: g.tiles.filter(i => own.includes(i)) })).filter(g => g.mine.length);
   const debt = v.stage === 'debt' && v.actor === pid ? `<p class="sub" style="text-align:center">Cần trả <b>${money(v.debt.amount)}</b> · đang có <b>${money(p.cash)}</b></p>` : '';
-  $('#modal-box').innerHTML = `<button class="close-x" data-close aria-label="Đóng">✕</button><h2>🏗️ Tài sản của ${esc(p.name)}</h2>
+  setModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>🏗️ Tài sản của ${esc(p.name)}</h2>
     <p style="text-align:center;margin:0">💵 <b>${money(p.cash)}</b> tiền mặt</p>${debt}
     ${groups.length ? `<div class="mg">${groups.map(g => `<div class="grp"><h5 style="--gc:${g.color}"><i></i>${g.name}${g.full ? ' ✅ đủ nhóm' : ` (${g.mine.length}/${g.tiles.length})`}</h5>
       ${g.mine.map(i => `<div class="row"><span class="nm" ${fnAttr('modal', () => openTile(i))}>${esc(tileName(i))} <small>${statusOf(v, i) || money(TILES[i].price)}</small></span>${manageBtns(v, pid, i)}</div>`).join('')}</div>`).join('')}</div>`
       : '<p class="note" style="text-align:center">Bạn chưa có miếng đất nào.</p>'}
-    <p class="note">Xây nhà cần đủ nhóm màu, xây đều tay; 4 nhà rồi mới lên Landmark. Bán nhà được nửa giá. Thế chấp nhận nửa giá, chuộc lại +10%.</p>`;
+    <p class="note">Xây nhà cần đủ nhóm màu, xây đều tay; 4 nhà rồi mới lên Landmark. Bán nhà được nửa giá. Thế chấp nhận nửa giá, chuộc lại +10%.</p>`);
 }
 
 // ---------- giao dịch ----------
@@ -606,7 +608,7 @@ function openTrade(pid) {
         return `<label style="--gc:${gColor(i)}"><input type="checkbox" data-side="${side}" data-tile="${i}" ${on ? 'checked' : ''} ${ok ? '' : 'disabled'}><i></i>${esc(tileName(i))} <small class="sub">${v.props[i].mort ? '🏦' : ''}${ok ? money(TILES[i].price) : 'có nhà'}</small></label>`; }).join('') : '<p class="note">Không có đất.</p>';
     };
     const t = { to: st.to, give: st.give, get: st.get }, err = tradeError(v, pid, t);
-    $('#modal-box').innerHTML = `<button class="close-x" data-close aria-label="Đóng">✕</button><h2>🤝 Giao dịch</h2>
+    setModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>🤝 Giao dịch</h2>
       <div class="tr-who">${others.map(o => `<button class="${o.id === st.to ? 'on' : ''}" ${fnAttr('modal', () => { st.to = o.id; st.get = { cash: 0, tiles: [], cards: 0 }; draw(); })}><img src="${pic(o.avatar, 60)}" alt="">${esc(o.name)}</button>`).join('')}</div>
       <div class="tr-cols">
         <div class="tr-col"><h4>${multiLocal(v) ? esc(me.name) + ' đưa' : 'Bạn đưa'} <small class="sub">(có ${money(me.cash)})</small></h4>${list(pid, 'give')}
@@ -617,7 +619,7 @@ function openTrade(pid) {
           ${them.cards.length ? `<label>🗝️ Thẻ ra tù <input class="inp" type="number" min="0" max="${them.cards.length}" value="${st.get.cards || ''}" data-cards="get" placeholder="0"></label>` : ''}</div>
       </div>
       <p class="sub" id="tr-err" style="text-align:center;color:#c62828;min-height:20px;margin:8px 0 0">${err && err !== 'Giao dịch trống' ? esc(err) : ''}</p>
-      <div class="mbtns"><button class="btn ghost" data-close>Huỷ</button>${btn('modal', `📨 Gửi đề nghị (${MAX_TRADES - v.trades} lần)`, () => { closeModal(); send(pid, { type: 'trade', ...t }); }, 'pri', !!err || v.trades >= MAX_TRADES)}</div>`;
+      <div class="mbtns"><button class="btn ghost" data-close>Huỷ</button>${btn('modal', `📨 Gửi đề nghị (${MAX_TRADES - v.trades} lần)`, () => { closeModal(); send(pid, { type: 'trade', ...t }); }, 'pri', !!err || v.trades >= MAX_TRADES)}</div>`);
     $$('#modal-box [data-tile]').forEach(c => c.onchange = () => { const s = st[c.dataset.side], i = +c.dataset.tile; s.tiles = c.checked ? [...s.tiles, i] : s.tiles.filter(x => x !== i); draw(); });
     $$('#modal-box [data-cash]').forEach(c => c.onchange = () => { st[c.dataset.cash].cash = Math.max(0, Math.floor(+c.value || 0)); draw(); });
     $$('#modal-box [data-cards]').forEach(c => c.onchange = () => { st[c.dataset.cards].cards = Math.max(0, Math.floor(+c.value || 0)); draw(); });

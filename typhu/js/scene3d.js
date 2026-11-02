@@ -202,6 +202,7 @@ export class Board3D {
     const Q = QUALITY[this.q]; sun.shadow.mapSize.set(Q.shadow || 512, Q.shadow || 512);
     Object.assign(sun.shadow.camera, { left: -11, right: 11, top: 11, bottom: -11, near: 1, far: 60 }); sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.03;
     this.scene.add(sun); this.scene.add(sun.target);
+    this.fill = new THREE.DirectionalLight(0xffe6c4, 0); this.scene.add(this.fill); this.scene.add(this.fill.target);
     this.lamp = new THREE.PointLight(0xffd9a0, 0, 26, 1.2); this.lamp.position.set(0, 7, 0); this.scene.add(this.lamp);
     this.siren = [new THREE.PointLight(0xff2020, 0, 6), new THREE.PointLight(0x2060ff, 0, 6)]; this.siren.forEach(l => this.scene.add(l));
   }
@@ -221,7 +222,7 @@ export class Board3D {
     for (let k = 0; k < pos.count; k++) { const y = Math.max(0, pos.getY(k) / 120); const m = hor.clone().lerp(top, Math.pow(y, 0.6)); c.setXYZ(k, m.r, m.g, m.b); }
     c.needsUpdate = true; this.scene.fog.color.copy(hor);
     this.sun.color.set(T.sun); this.sun.intensity = T.sunI; this.sun.position.set(...T.sunPos); this.hemi.color.set(T.hs); this.hemi.groundColor.set(T.hg); this.hemi.intensity = T.hI;
-    this.lamp.intensity = T.lamp * 12; this.renderer.toneMappingExposure = T.exp; this.stars.visible = T.stars;
+    this.lamp.intensity = T.lamp * 12; this.fill.intensity = T.night * 0.9; this.renderer.toneMappingExposure = T.exp; this.stars.visible = T.stars;
     if (this.city) this.city.night.forEach(([m, d, n]) => { m.emissiveIntensity = d + (n - d) * T.night; });
     (this.lampHeads || []).forEach(m => { m.material.emissiveIntensity = T.night * 2.5; });
   }
@@ -404,7 +405,7 @@ export class Board3D {
     this.camera.aspect = w / h; this.camera.fov = w / h < 0.8 ? 50 : w / h < 1.2 ? 44 : 38; this.camera.updateProjectionMatrix();
     const vf = THREE.MathUtils.degToRad(this.camera.fov), hf = 2 * Math.atan(Math.tan(vf / 2) * w / h);
     this.closeDist = THREE.MathUtils.clamp(Math.max(2.5 / Math.tan(hf / 2), 2.6 / Math.tan(vf / 2)), 6, 11);
-    this.overDist = Math.max((L * 0.62) / Math.tan(hf / 2), (L * 0.6) / Math.tan(vf / 2));
+    this.overDist = Math.max((L * 0.62) / Math.tan(hf / 2), (L * 0.68) / Math.tan(vf / 2));
     this.controls.maxDistance = Math.max(this.overDist * 1.25, 20);
   }
   desired() {
@@ -419,7 +420,7 @@ export class Board3D {
     }
     const i = this.cam.focus && this.pawnTile[this.cam.focus] != null ? this.pawnTile[this.cam.focus] : 0;
     const side = Math.round(camAz(i) / (Math.PI / 2)) * (Math.PI / 2);
-    return { t: new THREE.Vector3(0, 0, portrait ? 0 : 0.6), az: side, pol: portrait ? 0.32 : 0.62, dist: this.overDist };
+    return { t: new THREE.Vector3(0, 0, 0), az: side, pol: portrait ? 0.32 : 0.6, dist: this.overDist };
   }
   snap() { this.updateCamera(1e6); }
   updateCamera(dt) {
@@ -530,6 +531,7 @@ export class Board3D {
     this.updateCamera(dt || 0.016);
     if (this.shakeAmt > 0.002) { const a = this.shakeAmt; this.camera.position.x += (Math.random() - 0.5) * a; this.camera.position.y += (Math.random() - 0.5) * a; this.shakeAmt *= 0.88; }
     const sp = this.sun.position, tg = this.controls.target; this.sun.target.position.set(tg.x * 0.5, 0, tg.z * 0.5); this.sun.position.set(...THEMES[this.themeName].sunPos).add(this.sun.target.position);
+    if (this.fill.intensity) { this.fill.position.copy(this.camera.position); this.fill.target.position.copy(tg); }
     void sp; this.renderer.render(this.scene, this.camera);
   }
   dispose() { this.renderer.setAnimationLoop(null); this.ro.disconnect(); this.renderer.dispose(); this.renderer.domElement.remove(); }
