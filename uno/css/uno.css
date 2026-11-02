@@ -12,10 +12,10 @@ button,input,select{font:inherit;color:inherit}
 h1,h2,h3,h4,.logo,.btn,.mode-tag,.banner{font-family:"Baloo 2",Nunito,sans-serif}
 .bg-blobs{position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none}
 .bg-blobs i{position:absolute;width:46vmax;height:46vmax;border-radius:50%;filter:blur(70px);opacity:.33;animation:drift 22s ease-in-out infinite alternate}
-.bg-blobs i:nth-child(1){background:var(--R);left:-14vmax;top:-16vmax}
-.bg-blobs i:nth-child(2){background:var(--Y);right:-16vmax;top:-10vmax;animation-delay:-5s}
-.bg-blobs i:nth-child(3){background:var(--G);left:-10vmax;bottom:-20vmax;animation-delay:-10s}
-.bg-blobs i:nth-child(4){background:var(--B);right:-14vmax;bottom:-18vmax;animation-delay:-15s}
+.bg-blobs i:nth-child(1){background:var(--b1,var(--R));left:-14vmax;top:-16vmax}
+.bg-blobs i:nth-child(2){background:var(--b2,var(--Y));right:-16vmax;top:-10vmax;animation-delay:-5s}
+.bg-blobs i:nth-child(3){background:var(--b3,var(--G));left:-10vmax;bottom:-20vmax;animation-delay:-10s}
+.bg-blobs i:nth-child(4){background:var(--b4,var(--B));right:-14vmax;bottom:-18vmax;animation-delay:-15s}
 @keyframes drift{to{transform:translate(6vmax,4vmax) scale(1.12)}}
 .screen{position:fixed;inset:0;display:none;z-index:1}
 .screen.active{display:flex}
@@ -241,3 +241,7 @@ input:focus{border-color:var(--acc)}
 .gift-pick .ucard { --cw: 58px; --ch: 87px; cursor: pointer; transition: transform .15s; }
 .gift-pick .ucard.sel { transform: translateY(-8px); box-shadow: 0 0 0 4px #7a5cff, 0 8px 18px #0004; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ===== Chủ đề ===== */
+[data-theme="sea"]{--bg:#eefaff;--acc:#1e9bd7;--line:#d7ecf7;--b1:#35c2e8;--b2:#7ee0c8;--b3:#4f8cff;--b4:#a8e6ff;--shadow:0 10px 30px -12px #1d5a8a40,0 2px 6px #1d5a8a14}
+[data-theme="sunset"]{--bg:#fff2ea;--acc:#ff6a3d;--line:#f6e0d6;--b1:#ff8a5b;--b2:#ffc46b;--b3:#c86bff;--b4:#ff5fa2;--shadow:0 10px 30px -12px #8a3a2f40,0 2px 6px #8a3a2f14}

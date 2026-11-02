@@ -107,6 +107,12 @@ $('#btn-addbot').onclick = () => net && net.addBot();
 $('#btn-start').onclick = () => { fx.actx(); net && net.start(); };
 
 // ---------- công cụ ----------
+// chủ đề màu nền
+const THEMES = [['candy', '🍬 Kẹo ngọt'], ['sea', '🌊 Biển xanh'], ['sunset', '🌇 Hoàng hôn']];
+function applyTheme(k) { document.documentElement.dataset.theme = k; try { localStorage.setItem('uno-theme', k); } catch (e) {} }
+let themeK = (() => { try { return localStorage.getItem('uno-theme') || 'candy'; } catch (e) { return 'candy'; } })(); applyTheme(themeK);
+const nextTheme = () => { const i = THEMES.findIndex(t => t[0] === themeK); themeK = THEMES[(i + 1) % THEMES.length][0]; applyTheme(themeK); toast('Chủ đề: ' + THEMES.find(t => t[0] === themeK)[1]); };
+$('#btn-theme').onclick = nextTheme; $('#btn-theme-home').onclick = nextTheme;
 $('#speed').innerHTML = Object.entries(fx.SPEEDS).map(([k, v]) => `<option value="${k}">⚡ ${v.name}</option>`).join('');
 $('#speed').value = fx.getSpeed(); $('#speed').onchange = e => fx.setSpeed(e.target.value);
 const syncMusic = () => { $('#btn-music').classList.toggle('on', fx.musicIsOn()); $('#btn-music-home').classList.toggle('on', fx.musicIsOn()); };
