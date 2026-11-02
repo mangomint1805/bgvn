@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tam Quốc Sát Việt – chơi online cùng hội bạn</title>
+<meta name="description" content="Tam Quốc Sát bản fan-made tiếng Việt: chọn võ tướng Ngụy Thục Ngô Quần, giấu vai Chúa công – Trung thần – Phản tặc – Nội gián. Chơi online hoặc với bot.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='8' y='8' width='84' height='84' rx='18' fill='%23c8322a'/><text x='50' y='72' text-anchor='middle' font-size='62' fill='%23fff4e0' font-family='serif'>殺</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@700&display=swap&text=%E6%93%8D%E6%87%BF%E6%83%87%E9%81%BC%E8%A4%9A%E5%98%89%E7%94%84%E5%82%99%E7%BE%BD%E9%A3%9B%E4%BA%AE%E9%9B%B2%E8%B6%85%E8%8B%B1%E6%AC%8A%E5%AF%A7%E8%92%99%E8%93%8B%E7%91%9C%E5%96%AC%E9%81%9C%E9%A6%99%E4%BD%97%E5%B8%83%E8%9F%AC%E6%AE%BA%E9%96%83%E6%A1%83%E7%84%A1%E6%8B%86%E9%A0%86%E9%AC%A5%E8%A0%BB%E7%AE%AD%E5%9C%92%E7%A9%80%E5%80%9F%E6%87%88%E6%A8%82%E9%9B%BB%E5%BC%A9%E9%9B%99%E9%9D%92%E5%86%B0%E9%BE%8D%E7%9F%9B%E6%96%A7%E6%88%9F%E5%BC%93%E5%8D%A6%E7%9B%BE%E9%A7%92%E9%A8%8E%E9%AD%8F%E8%9C%80%E5%90%B3%E7%BE%A4%E4%B8%89%E5%9C%8B%E5%B0%87%E5%B8%A5%E5%8D%92" rel="stylesheet">
+<link rel="stylesheet" href="css/tamquoc.css?v=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+</head>
+<body>
+<div class="bg-clouds" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<!-- ===== TRANG CHỦ ===== -->
+<section id="screen-home" class="screen active">
+  <a class="back-hub" href="../">← Bàn chơi BGVN</a>
+  <div class="home-card">
+    <div class="hero" id="hero"></div>
+    <h1 class="logo"><span class="han">三國殺</span><span class="vn">Tam Quốc Sát</span></h1>
+    <p class="tag">Chọn tướng, giấu vai, chém nhau tới người cuối cùng – không cần cài đặt</p>
+    <label class="fld"><span>Tên của bạn</span><input id="name" maxlength="16" placeholder="VD: Minto" autocomplete="nickname"></label>
+    <div class="btn-col">
+      <button class="btn big pri" id="btn-offline">🤖 Chơi với bot</button>
+      <button class="btn big" id="btn-create">✨ Tạo phòng online</button>
+      <div class="join-row"><input id="join-code" maxlength="5" placeholder="MÃ PHÒNG" autocapitalize="characters"><button class="btn" id="btn-join">Vào</button></div>
+    </div>
+    <div class="home-tools">
+      <button class="chip" id="btn-guide-home">📖 Hướng dẫn</button>
+      <button class="chip" id="btn-music-home">🎵 Nhạc: tắt</button>
+      <select class="chip" id="speed-home" title="Tốc độ hiệu ứng"></select>
+    </div>
+    <p class="note">Bản fan-made phi thương mại của hội BGVN. Hình vẽ, chữ và nhạc đều tự làm – không dùng tài nguyên của bản thương mại.</p>
+  </div>
+</section>
+
+<!-- ===== SẢNH ===== -->
+<section id="screen-lobby" class="screen">
+  <div class="lobby">
+    <div class="lobby-head">
+      <button class="chip" id="btn-leave-lobby">← Thoát</button>
+      <div class="code-box" id="code-box">Mã phòng <b id="room-code">…</b> <button class="chip sm" id="btn-copy">Sao chép link</button></div>
+    </div>
+    <div class="lobby-grid">
+      <div class="panel">
+        <h3>Người chơi <small id="pcount"></small></h3>
+        <ul id="plist" class="plist"></ul>
+        <div class="row"><button class="btn" id="btn-addbot">＋ Thêm bot</button></div>
+      </div>
+      <div class="panel">
+        <h3>Phân vai</h3>
+        <div id="role-preview" class="role-preview"></div>
+        <p class="muted small">Chúa công lộ mặt từ đầu và đi trước. Vai người khác chỉ lộ khi tử trận. Mỗi người chọn 1 trong 3 võ tướng (Chúa công chọn trước, có thêm 3 tướng Chúa).</p>
+      </div>
+    </div>
+    <button class="btn big pri" id="btn-start">⚔️ Bắt đầu</button>
+    <p class="wait" id="wait-msg">Đang chờ chủ phòng bắt đầu…</p>
+  </div>
+</section>
+
+<!-- ===== BÀN CHƠI ===== -->
+<section id="screen-game" class="screen">
+  <header class="topbar">
+    <button class="chip ic" id="btn-leave" title="Rời ván">←</button>
+    <span class="tb-logo han">三國殺</span>
+    <div class="turn-info" id="turn-info"></div>
+    <div class="timer" id="timer"></div>
+    <div class="tb-right">
+      <button class="chip ic" id="btn-more" title="Cài đặt">⚙️</button>
+      <div class="tb-opts" id="tb-opts">
+        <select id="speed" class="chip" title="Tốc độ hiệu ứng"></select>
+        <button class="chip ic" id="btn-music" title="Nhạc nền">🎵</button>
+        <input type="range" id="vol" min="0" max="1" step="0.05" title="Âm lượng nhạc">
+        <button class="chip ic" id="btn-mute" title="Âm thanh hiệu ứng">🔊</button>
+      </div>
+      <button class="chip ic" id="btn-guide" title="Hướng dẫn">📖</button>
+      <button class="chip ic" id="btn-log" title="Nhật ký ván">📜</button>
+    </div>
+  </header>
+  <div class="table-wrap">
+    <div class="table" id="table">
+      <div class="felt"><span class="han">三國</span></div>
+      <div class="center" id="center">
+        <div class="phases" id="phases"></div>
+        <div class="piles"><div class="pile" id="deck"></div><div class="pile" id="discard"></div></div>
+        <div class="prompt" id="prompt"></div>
+        <div class="feed" id="feed"></div>
+      </div>
+    </div>
+  </div>
+  <div class="me" id="me">
+    <div class="me-info" id="me-info"></div>
+    <div class="me-main">
+      <div class="actions" id="actions"></div>
+      <div class="hand" id="hand"></div>
+    </div>
+  </div>
+  <aside class="log hidden" id="log"><h4>Nhật ký <button class="chip sm" id="btn-log-close">✕</button></h4><div id="log-list"></div></aside>
+</section>
+
+<div class="modal hidden" id="modal"><div class="modal-box" id="modal-box"></div></div>
+<div class="toast hidden" id="toast"></div>
+<div id="card-tip"></div>
+<script type="module" src="js/main.js?v=1"></script>
+</body>
+</html>
