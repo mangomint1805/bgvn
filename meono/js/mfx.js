@@ -1,0 +1,209 @@
+// Âm thanh tổng hợp (WebAudio) + hiệu ứng DOM cho Mèo Nổ. Không dùng file âm thanh nào.
+export const SPEEDS = { slow: { k: 1.5, name: 'Chậm' }, normal: { k: 1, name: 'Vừa' }, fast: { k: 0.7, name: 'Nhanh' } };
+const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+let speedKey = SPEEDS[ls.get('meono-speed')] ? ls.get('meono-speed') : 'normal';
+export const S = () => SPEEDS[speedKey].k;
+export const getSpeed = () => speedKey;
+export function setSpeed(k) { if (SPEEDS[k]) { speedKey = k; ls.set('meono-speed', k); } }
+export const reduced = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
+
+let muted = ls.get('meono-mute') === '1';
+export const isMuted = () => muted;
+export function toggleMute() { muted = !muted; ls.set('meono-mute', muted ? '1' : '0'); return muted; }
+
+let ac = null, master = null;
+export function actx() {
+  if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination); } catch (e) { return null; } }
+  if (ac.state === 'suspended') ac.resume().catch(() => {});
+  return ac;
+}
+function tone(f, d, type = 'sine', g = 0.12, slide = 0, at = 0, dest) {
+  const a = actx(); if (!a || muted) return; const t = a.currentTime + at;
+  const o = a.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(25, f + slide), t + d);
+  const gn = a.createGain(); gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.012); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  o.connect(gn); gn.connect(dest || master); o.start(t); o.stop(t + d + 0.03);
+}
+function noise(d, freq, g, at = 0, type = 'bandpass', q = 1, sweep = 0) {
+  const a = actx(); if (!a || muted) return; const t = a.currentTime + at;
+  const b = a.createBuffer(1, Math.max(1, Math.floor(a.sampleRate * d)), a.sampleRate); const x = b.getChannelData(0);
+  for (let i = 0; i < x.length; i++) x[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / x.length, 1.5);
+  const s = a.createBufferSource(); s.buffer = b; const f = a.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q;
+  if (sweep) f.frequency.exponentialRampToValueAtTime(Math.max(40, freq + sweep), t + d);
+  const gn = a.createGain(); gn.gain.value = g; s.connect(f); f.connect(gn); gn.connect(master); s.start(t);
+}
+// tiếng "meo" tổng hợp
+function meow(at = 0, pitch = 1, g = 0.09) {
+  const a = actx(); if (!a || muted) return; const t = a.currentTime + at;
+  const o = a.createOscillator(); o.type = 'sawtooth';
+  o.frequency.setValueAtTime(520 * pitch, t); o.frequency.linearRampToValueAtTime(820 * pitch, t + 0.12); o.frequency.linearRampToValueAtTime(460 * pitch, t + 0.42);
+  const f = a.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 3; f.frequency.setValueAtTime(900, t); f.frequency.linearRampToValueAtTime(1800, t + 0.15); f.frequency.linearRampToValueAtTime(700, t + 0.42);
+  const gn = a.createGain(); gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.05); gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+  o.connect(f); f.connect(gn); gn.connect(master); o.start(t); o.stop(t + 0.5);
+}
+const arp = (notes, step = 0.07, type = 'triangle', g = 0.1) => notes.forEach((f, i) => tone(f, 0.2, type, g, 0, i * step));
+export const sfx = {
+  play() { noise(0.08, 2600, 0.35); tone(700, 0.08, 'sine', 0.05, 300); },
+  draw() { noise(0.1, 1700, 0.3); tone(300, 0.1, 'sine', 0.05, -60); },
+  flip() { noise(0.06, 3200, 0.3); },
+  shuffle() { for (let i = 0; i < 9; i++) noise(0.04, 2200 + (i % 3) * 400, 0.25, i * 0.045); },
+  attack() { tone(180, 0.25, 'sawtooth', 0.08, 220); noise(0.18, 600, 0.4, 0.05, 'lowpass'); meow(0.12, 1.15, 0.06); },
+  skip() { tone(500, 0.08, 'square', 0.05, 400); tone(900, 0.12, 'square', 0.04, 400, 0.08); },
+  future() { arp([659, 784, 988, 1319, 1568], 0.06, 'sine', 0.07); },
+  alter() { arp([1568, 1319, 988, 1175, 1568], 0.06, 'triangle', 0.06); },
+  favor() { meow(0, 1.3, 0.07); arp([784, 988], 0.1, 'sine', 0.05); },
+  steal() { noise(0.25, 1200, 0.35, 0, 'bandpass', 2, 1800); tone(400, 0.2, 'triangle', 0.06, 500, 0.05); },
+  nope() { tone(330, 0.16, 'square', 0.08); tone(247, 0.3, 'square', 0.08, -40, 0.15); noise(0.1, 500, 0.3, 0, 'lowpass'); },
+  denied() { tone(200, 0.4, 'sawtooth', 0.05, -80); },
+  fuse() { noise(1.1, 4200, 0.18, 0, 'highpass', 0.7); for (let i = 0; i < 6; i++) noise(0.03, 5000, 0.3, 0.1 + i * 0.15 + Math.random() * 0.05, 'highpass'); },
+  boom() {
+    noise(1.8, 900, 1.4, 0, 'lowpass', 0.7, -820); noise(0.5, 3000, 0.6, 0, 'bandpass', 0.5, -2500);
+    tone(120, 1.1, 'sine', 0.5, -90); tone(60, 1.4, 'sine', 0.4, -30, 0.05);
+    meow(0.5, 1.6, 0.06); meow(0.75, 1.9, 0.05);
+  },
+  defuse() { noise(0.03, 5000, 0.5, 0, 'highpass'); noise(0.03, 5000, 0.5, 0.12, 'highpass'); arp([523, 659, 784, 1047], 0.08, 'sine', 0.08); meow(0.4, 1.1, 0.06); },
+  heartbeat(g = 0.35) { tone(70, 0.13, 'sine', g, -20); tone(64, 0.15, 'sine', g * 0.8, -20, 0.2); },
+  drumroll() { for (let i = 0; i < 12; i++) noise(0.05, 300, 0.25 + i * 0.03, i * 0.04, 'lowpass'); },
+  tick() { tone(1500, 0.03, 'square', 0.03); },
+  turn() { tone(988, 0.1, 'sine', 0.07); tone(1319, 0.14, 'sine', 0.06, 0, 0.08); },
+  bad() { tone(200, 0.15, 'sawtooth', 0.05); },
+  meow,
+  win() { arp([523, 659, 784, 1047, 784, 1047, 1319], 0.11, 'triangle', 0.1); meow(0.8, 1.2, 0.07); },
+};
+
+// ---------- hiệu ứng DOM ----------
+function layer() { let l = document.getElementById('fx-layer'); if (!l) { l = document.createElement('div'); l.id = 'fx-layer'; document.body.appendChild(l); } return l; }
+export const ctr = el => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height }; };
+export function fly(html, fromEl, toEl, { delay = 0, duration = 460, rotate = 0, scale = 1, onEnd, cls = '' } = {}) {
+  if (!fromEl || !toEl) { onEnd && onEnd(); return; }
+  duration *= S(); delay *= S();
+  const a = ctr(fromEl), b = ctr(toEl);
+  const n = document.createElement('div'); n.className = 'flyer ' + cls; n.innerHTML = html; layer().appendChild(n);
+  const w = n.offsetWidth || 70, h = n.offsetHeight || 100;
+  n.style.transform = `translate(${a.x - w / 2}px,${a.y - h / 2}px) scale(.8)`; n.style.opacity = '0';
+  setTimeout(() => {
+    n.style.transition = `transform ${duration}ms cubic-bezier(.2,.9,.3,1.1), opacity 120ms`; n.style.opacity = '1';
+    n.style.transform = `translate(${b.x - w / 2}px,${b.y - h / 2}px) scale(${scale}) rotate(${rotate}deg)`;
+    setTimeout(() => { n.remove(); onEnd && onEnd(); }, duration + 30);
+  }, delay);
+}
+export function floatText(el, text, cls = '') {
+  if (!el) return; const c = ctr(el);
+  const n = document.createElement('div'); n.className = 'float-text ' + cls; n.textContent = text;
+  n.style.left = c.x + 'px'; n.style.top = c.y + 'px'; layer().appendChild(n); setTimeout(() => n.remove(), 1500 * S());
+}
+export function pop(el, cls = 'pop') { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), 800 * S()); }
+export const shake = el => pop(el, 'shake');
+const FIRE = ['#ff3d2e', '#ff8a00', '#ffd23f', '#fff3b0', '#ff5d8f'];
+export function burst(el, cols = FIRE, n = 22, dist = 90) {
+  if (!el) return; const c = ctr(el);
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('i'); d.className = 'spark'; d.style.background = cols[i % cols.length];
+    const ang = Math.random() * Math.PI * 2, r = dist * (0.5 + Math.random());
+    d.style.left = c.x + 'px'; d.style.top = c.y + 'px';
+    d.style.setProperty('--dx', Math.cos(ang) * r + 'px'); d.style.setProperty('--dy', Math.sin(ang) * r + 'px');
+    d.style.animationDuration = 700 * S() + 'ms'; layer().appendChild(d); setTimeout(() => d.remove(), 800 * S());
+  }
+}
+// BÙM: rung màn hình, chớp sáng, khói, tia lửa, mèo bay tán loạn
+export function explode(el, catsHTML = []) {
+  const c = el ? ctr(el) : { x: innerWidth / 2, y: innerHeight / 2 };
+  const L = layer();
+  const flash = document.createElement('div'); flash.className = 'boom-flash'; L.appendChild(flash); setTimeout(() => flash.remove(), 900);
+  const word = document.createElement('div'); word.className = 'boom-word'; word.textContent = 'BÙM!'; L.appendChild(word); setTimeout(() => word.remove(), 1700);
+  if (reduced()) return;
+  document.body.classList.remove('quake'); void document.body.offsetWidth; document.body.classList.add('quake');
+  setTimeout(() => document.body.classList.remove('quake'), 900);
+  const ring = document.createElement('i'); ring.className = 'shock'; ring.style.left = c.x + 'px'; ring.style.top = c.y + 'px'; L.appendChild(ring); setTimeout(() => ring.remove(), 900);
+  for (let i = 0; i < 10; i++) {
+    const s = document.createElement('i'); s.className = 'smoke'; const ang = Math.random() * Math.PI * 2, r = 40 + Math.random() * 90;
+    s.style.left = c.x + 'px'; s.style.top = c.y + 'px'; s.style.setProperty('--dx', Math.cos(ang) * r + 'px'); s.style.setProperty('--dy', Math.sin(ang) * r - 40 + 'px');
+    s.style.animationDelay = i * 30 + 'ms'; L.appendChild(s); setTimeout(() => s.remove(), 1800);
+  }
+  burst(el, FIRE, 46, 170);
+  const faces = catsHTML.length ? catsHTML : ['🙀', '😹', '😿', '🐱', '😼'];
+  for (let i = 0; i < 7; i++) {
+    const m = document.createElement('div'); m.className = 'flycat'; m.innerHTML = faces[i % faces.length];
+    const ang = -Math.PI / 2 + (Math.random() - 0.5) * 2.6, r = Math.max(innerWidth, innerHeight) * (0.6 + Math.random() * 0.4);
+    m.style.left = c.x + 'px'; m.style.top = c.y + 'px';
+    m.style.setProperty('--dx', Math.cos(ang) * r + 'px'); m.style.setProperty('--dy', Math.sin(ang) * r + 'px'); m.style.setProperty('--r', (Math.random() * 1080 - 540) + 'deg');
+    m.style.animationDelay = 60 + i * 50 + 'ms'; L.appendChild(m); setTimeout(() => m.remove(), 2200);
+  }
+}
+export function confetti() {
+  if (reduced()) return;
+  const cols = ['#ff8a00', '#ff5d8f', '#4cc9f0', '#7bd389', '#ffd23f', '#a06cd5'];
+  for (let i = 0; i < 110; i++) {
+    const d = document.createElement('i'); d.className = 'confetti'; d.style.background = cols[i % cols.length];
+    d.style.left = Math.random() * 100 + 'vw'; d.style.animationDelay = Math.random() * 600 + 'ms';
+    d.style.animationDuration = 1800 + Math.random() * 1600 + 'ms'; d.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg');
+    layer().appendChild(d); setTimeout(() => d.remove(), 4200);
+  }
+}
+const bq = []; let busy = false;
+export const bannerBusy = () => busy;
+export function banner(text, cls = '') { bq.push([text, cls]); if (bq.length > 3) bq.splice(0, bq.length - 3); if (!busy) nextB(); }
+function nextB() {
+  const it = bq.shift(); if (!it) { busy = false; return; } busy = true;
+  const n = document.createElement('div'); n.className = 'banner ' + it[1] + ([...it[0]].length > 15 ? ' long' : ''); n.textContent = it[0]; layer().appendChild(n);
+  n.style.animationDuration = 1150 * S() + 'ms';
+  setTimeout(() => { n.remove(); nextB(); }, 1050 * S());
+}
+
+// ---------- nhạc nền "rình mò" – căng dần theo độ nguy hiểm ----------
+let musicOn = ls.get('meono-music') === '1', vol = +(ls.get('meono-music-vol') || 0.5);
+let mGain = null, tension = 0, schedT = null, nextT = 0, step = 0, pad = null;
+// âm giai thứ ngũ cung (A minor pentatonic) – chất "mèo lén lút"
+const BASS = [110, 110, 130.8, 110, 146.8, 130.8, 98, 103.8];
+const MEL = [440, 523.3, 587.3, 659.3, 784, 880];
+const PAT = [0, -1, 2, -1, 3, 2, -1, 1, 0, -1, 4, 3, 2, -1, 1, -1];
+export function setTension(t) { tension = Math.max(0, Math.min(1, t)); if (pad && ac) pad.g.gain.setTargetAtTime(0.0001 + tension * tension * 0.05, ac.currentTime, 0.6); }
+export const getTension = () => tension;
+function mnote(f, t, d, type, g) {
+  const o = ac.createOscillator(); o.type = type; o.frequency.value = f; const gn = ac.createGain();
+  gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.015); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  o.connect(gn); gn.connect(mGain); o.start(t); o.stop(t + d + 0.05);
+}
+function mnoise(t, d, f, g) {
+  const b = ac.createBuffer(1, Math.floor(ac.sampleRate * d), ac.sampleRate); const x = b.getChannelData(0);
+  for (let i = 0; i < x.length; i++) x[i] = (Math.random() * 2 - 1) * (1 - i / x.length);
+  const s = ac.createBufferSource(); s.buffer = b; const fl = ac.createBiquadFilter(); fl.type = 'highpass'; fl.frequency.value = f;
+  const gn = ac.createGain(); gn.gain.value = g; s.connect(fl); fl.connect(gn); gn.connect(mGain); s.start(t);
+}
+function schedule() {
+  const lookahead = 1.5;
+  while (nextT < ac.currentTime + lookahead) {
+    const bpm = 92 + tension * 70, st = 60 / bpm / 2; // nốt móc đơn
+    const t = nextT, i = step % 16, bar = Math.floor(step / 16) % 8;
+    if (i % 4 === 0) mnote(BASS[bar], t, st * 3, 'triangle', 0.22);
+    if (i % 4 === 2) mnote(BASS[bar] * 2, t, st * 0.8, 'triangle', 0.07);
+    const m = PAT[(i + (bar % 2) * 3) % 16];
+    if (m >= 0 && (tension < 0.75 || i % 2 === 0)) mnote(MEL[(m + bar) % MEL.length], t, st * 0.9, 'sine', 0.06);
+    if (tension > 0.25 && i % 2 === 1) mnoise(t, 0.03, 7000, 0.05 + tension * 0.08);
+    if (tension > 0.45 && (i === 0 || i === 3 || i === 8 || i === 11)) { mnote(68, t, 0.14, 'sine', 0.25 + tension * 0.2); }
+    if (tension > 0.7 && i % 4 === 0) mnote(MEL[5] * 2, t, 0.05, 'square', 0.02);
+    nextT += st; step++;
+  }
+}
+export function musicStart() {
+  const a = actx(); if (!a || schedT || !musicOn) return;
+  if (!mGain) { mGain = a.createGain(); mGain.connect(master); }
+  mGain.gain.value = vol * 0.35;
+  if (!pad) { // nền rung căng thẳng
+    const g = a.createGain(); g.gain.value = 0.0001; const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 500;
+    const o1 = a.createOscillator(), o2 = a.createOscillator(); o1.type = o2.type = 'sawtooth'; o1.frequency.value = 55; o2.frequency.value = 55.9;
+    o1.connect(f); o2.connect(f); f.connect(g); g.connect(mGain); o1.start(); o2.start(); pad = { g, o1, o2 };
+  }
+  setTension(tension);
+  nextT = a.currentTime + 0.1; schedT = setInterval(schedule, 200); schedule();
+}
+export function musicStop() {
+  clearInterval(schedT); schedT = null;
+  if (pad) { try { pad.o1.stop(); pad.o2.stop(); } catch (e) {} pad = null; }
+  if (mGain) { try { mGain.disconnect(); } catch (e) {} mGain = null; }
+}
+export const musicIsOn = () => musicOn;
+export function musicToggle() { musicOn = !musicOn; ls.set('meono-music', musicOn ? '1' : '0'); musicOn ? musicStart() : musicStop(); return musicOn; }
+export function musicVolume(v) { if (v == null) return vol; vol = v; ls.set('meono-music-vol', String(v)); if (mGain) mGain.gain.value = vol * 0.35; }
+export function musicResumeIfOn() { if (musicOn) musicStart(); }
+document.addEventListener('visibilitychange', () => { if (ac && !document.hidden && ac.state !== 'running') ac.resume().catch(() => {}); if (!document.hidden && schedT && ac) nextT = Math.max(nextT, ac.currentTime + 0.05); });
