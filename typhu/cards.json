@@ -1,0 +1,39 @@
+{
+  "_ghichu": "BẢN NHÁP chờ duyệt – thẻ Cơ hội (đỏ) và Khí vận (vàng). Đơn vị: K.",
+  "chance": [
+    { "id": "go_nguyenhue", "text": "Đi dạo phố đi bộ: đi thẳng tới Nguyễn Huệ." },
+    { "id": "go_dongkhoi", "text": "Đi cà phê Đồng Khởi: tới Đồng Khởi. Qua Bắt đầu thì nhận 200K." },
+    { "id": "go_conghoa", "text": "Đi công tác Tân Bình: tới Cộng Hòa. Qua Bắt đầu thì nhận 200K." },
+    { "id": "go_mienDong", "text": "Về quê ăn Tết: tới Bến xe Miền Đông. Qua Bắt đầu thì nhận 200K." },
+    { "id": "near_station", "text": "Bắt xe về quê: tới bến xe gần nhất. Bến có chủ thì trả gấp đôi tiền thuê." },
+    { "id": "near_utility", "text": "Cúp điện cúp nước: tới công ty gần nhất. Có chủ thì đổ xúc xắc, trả 10 lần số chấm." },
+    { "id": "go_start", "text": "Về ô Bắt đầu, nhận 200K." },
+    { "id": "back3", "text": "Kẹt xe giờ cao điểm: lùi 3 ô." },
+    { "id": "flood", "text": "Triều cường ngập đường: dời về Bãi đậu xe miễn phí." },
+    { "id": "jail", "text": "Vượt đèn đỏ bị bắt: vào tù ngay, không qua Bắt đầu." },
+    { "id": "free_jail", "text": "Thẻ ra tù miễn phí: giữ lại dùng sau hoặc bán cho người khác." },
+    { "id": "dividend", "text": "Ngân hàng trả cổ tức: nhận 100K." },
+    { "id": "vietlott", "text": "Trúng vé số: nhận 150K." },
+    { "id": "fine", "text": "Bị phạt nguội: trả 50K." },
+    { "id": "repair", "text": "Sửa nhà mùa mưa: trả 25K mỗi nhà, 100K mỗi Landmark." },
+    { "id": "leader", "text": "Được bầu làm tổ trưởng dân phố: trả mỗi người 50K tiền liên hoan." }
+  ],
+  "chest": [
+    { "id": "bank_error", "text": "Ngân hàng tính nhầm có lợi cho bạn: nhận 200K." },
+    { "id": "salary13", "text": "Lương tháng 13: nhận 100K." },
+    { "id": "inherit", "text": "Được thừa kế: nhận 100K." },
+    { "id": "insurance", "text": "Bảo hiểm đáo hạn: nhận 100K." },
+    { "id": "stock", "text": "Bán cổ phiếu có lời: nhận 50K." },
+    { "id": "tax_refund", "text": "Được hoàn thuế thu nhập: nhận 50K." },
+    { "id": "beauty", "text": "Đạt giải nhì cuộc thi sắc đẹp: nhận 20K." },
+    { "id": "birthday", "text": "Sinh nhật bạn: mỗi người tặng 30K." },
+    { "id": "lixi", "text": "Tết đến: mỗi người lì xì bạn 20K." },
+    { "id": "hospital", "text": "Đi viện: trả viện phí 100K." },
+    { "id": "school", "text": "Đóng học phí: trả 50K." },
+    { "id": "doctor", "text": "Khám răng: trả 50K." },
+    { "id": "roadwork", "text": "Đóng phí sửa đường: 40K mỗi nhà, 115K mỗi Landmark." },
+    { "id": "go_start", "text": "Về ô Bắt đầu, nhận 200K." },
+    { "id": "jail", "text": "Trốn thuế bị phát hiện: vào tù ngay, không qua Bắt đầu." },
+    { "id": "free_jail", "text": "Thẻ ra tù miễn phí: giữ lại dùng sau hoặc bán cho người khác." }
+  ]
+}
