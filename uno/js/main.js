@@ -277,6 +277,7 @@ function onCardClick(id) {
   if (c.type === 'wswap') { pickColor('Chọn màu tiếp theo', Object.assign(col => pickTarget('🤝 Đổi nguyên tay bài với ai?', t => send({ type: 'play', cardId: id, color: col, target: t })), { cancel: true })); return; }
   if (c.type === 'steal') { pickTarget('🫳 Móc túi ai? (lấy ngẫu nhiên 1 lá)', t => send({ type: 'play', cardId: id, target: t }), null, 2); return; }
   if (c.type === 'gift') { pickTarget('🎁 Tặng quà cho ai?', t => pickGift(id, gs => send({ type: 'play', cardId: id, target: t, give: gs }))); return; }
+  if (c.type === 'dq') { send({ type: 'play', cardId: id }); return; }
   if (c.color === 'W') { pickColor('Chọn màu tiếp theo', Object.assign(col => send({ type: 'play', cardId: id, color: col }), { cancel: true })); return; }
   send({ type: 'play', cardId: id });
 }

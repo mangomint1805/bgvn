@@ -37,7 +37,7 @@ function buildDeck(mode, rules = {}) {
     for (let i = 0; i < 4; i++) { add('W', 'wild'); add('W', 'wd4'); }
   }
   if (rules.extras) { // lá mở rộng
-    for (const c of COLORS) { add(c, 'tornado'); if (mode !== 'nomercy') add(c, 'discall'); add(c, 'nou'); add(c, 'gift'); add(c, 'steal'); add(c, 'dq'); }
+    for (const c of COLORS) { add(c, 'tornado'); if (mode !== 'nomercy') add(c, 'discall'); add(c, 'nou'); add(c, 'gift'); add(c, 'steal'); add('W', 'dq'); }
     for (let i = 0; i < 2; i++) { add('W', 'wtd4'); add('W', 'wup'); add('W', 'wswap'); add('W', 'shield'); add('W', 'shield'); }
   }
   return shuffle(d);
@@ -168,6 +168,7 @@ export function applyAction(s, pid, a) {
     if (o.until) done = c.color === o.until || isWild(c);
     else if (o.kind === 'mystery' && o.got === 1) { // lá +?: lá đầu tiên quyết định phải bốc thêm bao nhiêu
       o.reveal = c.type === 'n' ? c.num : -1; o.left = Math.max(0, o.reveal);
+      if (!isWild(c)) { s.color = c.color; log(s, `🎨 Màu mới: ${COLOR_NAME[c.color]}.`); }
       log(s, c.type === 'n' ? `❓ ${p.name} lật ra số ${c.num}${c.num ? `: bốc thêm ${c.num} lá!` : ': thoát nạn!'}` : `❓ ${p.name} lật ra lá chức năng: được tha!`);
       done = o.left <= 0;
     } else done = --o.left <= 0;
@@ -215,7 +216,7 @@ export function applyAction(s, pid, a) {
       }
       if (p.hand.length === 0) { win(s, p); return { ok: true }; }
       s._target = a.target || null; s._give = Array.isArray(a.give) ? a.give.slice(0, 2) : null;
-      if (isWild(c)) {
+      if (isWild(c) && c.type !== 'dq') { // +?: không chọn màu, màu theo lá người kế bốc ra
         if (a.color && COLORS.includes(a.color)) { s.color = a.color; log(s, `${p.name} chọn màu ${COLOR_NAME[a.color]}.`); finishEffect(s, c, p); }
         else s.pending = { type: 'color', player: p.id, card: c };
         return { ok: true };

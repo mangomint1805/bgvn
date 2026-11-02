@@ -32,7 +32,7 @@ export function openGuide(openModal, cardHTML) {
       <h3>Lá mở rộng (chủ phòng bật trong sảnh)</h3>${row(cardHTML, [
         [C('W', 'wtd4'), '<b>Cộng nhắm +4</b>: đổi màu và chọn <b>bất kỳ ai</b> phải rút 4 lá. Có luật cộng dồn thì người bị nhắm được chồng lá rút để đẩy tiếp.'],
         [C('R', 'nou'), '<b>No U</b>: đang bị dồn +2/+4 thì đánh lá này (màu nào cũng được) để <b>dội toàn bộ phạt ngược về</b> người vừa đánh. Không có phạt thì như Đảo chiều.'],
-        [C('B', 'dq'), '<b>+?</b>: người kế bốc 1 lá. Ra số mấy thì <b>bốc thêm bấy nhiêu</b> (ra 0 là thoát), ra lá chức năng thì được tha. Bốc xong mất lượt.'],
+        [C('W', 'dq'), '<b>+?</b>: màu nào cũng đánh được. Người kế bốc 1 lá, <b>màu của lá đó thành màu mới</b>. Ra số mấy thì <b>bốc thêm bấy nhiêu</b> (ra 0 là thoát), ra lá chức năng thì được tha. Bốc xong mất lượt.'],
         [C('W', 'shield'), '<b>Khiên</b>: như lá Đổi màu, nhưng đang bị dồn +2/+4 thì giơ Khiên để <b>chuyền nguyên phạt sang người kế</b>. Không dùng để né Up.'],
         [C('Y', 'gift'), '<b>Tặng quà</b>: chọn 1 người, nhét cho họ 2 lá trên tay bạn (bạn tự chọn lá).'],
         [C('G', 'steal'), '<b>Móc túi</b>: rút ngẫu nhiên 1 lá từ tay 1 người (người đó phải còn từ 2 lá).'],
