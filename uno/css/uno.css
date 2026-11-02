@@ -236,3 +236,8 @@ input:focus{border-color:var(--acc)}
 .btn.pull.cd { opacity: .75; cursor: wait; }
 .btn.pull.cd::after { content: ''; position: absolute; left: 0; bottom: 0; height: 4px; width: 100%; background: #fff; transform-origin: left; animation: pullcd 1s linear forwards; }
 @keyframes pullcd { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* chọn lá để tặng */
+.gift-pick { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-height: 46vh; overflow: auto; padding: 8px 2px; }
+.gift-pick .ucard { --cw: 58px; --ch: 87px; cursor: pointer; transition: transform .15s; }
+.gift-pick .ucard.sel { transform: translateY(-8px); box-shadow: 0 0 0 4px #7a5cff, 0 8px 18px #0004; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }

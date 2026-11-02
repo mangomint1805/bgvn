@@ -8,8 +8,8 @@ export const COLOR_NAME = { R: 'Đỏ', Y: 'Vàng', G: 'Xanh lá', B: 'Xanh dư�
 // Giá trị phạt rút của lá rút
 export const DRAW_VALUE = { d2: 2, d4: 4, wd4: 4, wrd4: 4, wd6: 6, wd10: 10, wtd4: 4 };
 export const CARD_NAME = {
-  n: 'Số', skip: 'Khoá mõm', rev: 'Đổi gay thành les', d2: '+2', d4: '+4', skipall: 'Khoá mõm cả bàn', discall: 'Bỏ hết màu',
-  wild: 'Đổi màu', wd4: 'Đổi màu +4', wtd4: 'Cộng nhắm +4', wup: 'Up', tornado: 'Bão tố', wrd4: 'Đổi màu đảo chiều +4', wd6: 'Đổi màu +6', wd10: 'Đổi màu +10', roulette: 'Vòng quay màu',
+  n: 'Số', skip: 'Khoá mõm', rev: 'Đảo chiều', d2: '+2', d4: '+4', skipall: 'Khoá mõm cả bàn', discall: 'Bỏ hết màu',
+  wild: 'Đổi màu', wd4: 'Đổi màu +4', wtd4: 'Cộng nhắm +4', wup: 'Up', tornado: 'Bão tố', wrd4: 'Đổi màu đảo chiều +4', wd6: 'Đổi màu +6', wd10: 'Đổi màu +10', roulette: 'Vòng quay màu', nou: 'No U', shield: 'Khiên', dq: '+?', gift: 'Tặng quà', steal: 'Móc túi', wswap: 'Đổi tay',
 };
 export const MODES = {
   classic: { name: 'Cổ điển', rules: { stackDraw: false, stackSkip: false, sevenZero: false, drawUntil: false, mercy: false, noActionFinish: false } },
@@ -37,8 +37,8 @@ function buildDeck(mode, rules = {}) {
     for (let i = 0; i < 4; i++) { add('W', 'wild'); add('W', 'wd4'); }
   }
   if (rules.extras) { // lá mở rộng
-    for (const c of COLORS) { add(c, 'tornado'); if (mode !== 'nomercy') add(c, 'discall'); }
-    for (let i = 0; i < 2; i++) { add('W', 'wtd4'); add('W', 'wup'); }
+    for (const c of COLORS) { add(c, 'tornado'); if (mode !== 'nomercy') add(c, 'discall'); add(c, 'nou'); add(c, 'gift'); add(c, 'steal'); add(c, 'dq'); }
+    for (let i = 0; i < 2; i++) { add('W', 'wtd4'); add('W', 'wup'); add('W', 'wswap'); add('W', 'shield'); add('W', 'shield'); }
   }
   return shuffle(d);
 }
@@ -97,6 +97,7 @@ function finishOwe(s) {
   const t = getPlayer(s, o.player);
   if (o.kind === 'tornado') log(s, `🌪️ ${t.name} bốc ${o.got} lá mới ra màu ${COLOR_NAME[o.until]} và mất lượt.`);
   else if (o.kind === 'roulette') log(s, `🎡 ${t.name} bốc ${o.got} lá mới ra màu ${COLOR_NAME[o.until]}.`);
+  else if (o.kind === 'mystery') log(s, `❓ ${t.name} bốc tổng cộng ${o.got} lá và mất lượt.`);
   else if (o.kind === 'up') log(s, `⬆️ ${t.name} không theo được Up, bốc ${o.got} lá.`);
   else log(s, `😵 ${t.name} chịu phạt, bốc ${o.got} lá.`);
   s.turn = o.resume.turn;
@@ -118,6 +119,8 @@ export function canPlay(s, p, c) {
   if (s.rules.noActionFinish && isFinishingAction(p, c)) return false;
   const t = top(s);
   if (s.stack) { // đang bị dồn phạt rút: chỉ được chồng lá rút giá trị bằng hoặc cao hơn
+    if (c.type === 'shield') return true; // Khiên: chặn lá cộng, chuyền phạt sang người kế
+    if (c.type === 'nou') { const f = s.stack.from && getPlayer(s, s.stack.from); return !!(f && !f.out && f !== p); } // No U: dội phạt ngược lại, màu nào cũng được
     if (!s.rules.stackDraw || !DRAW_VALUE[c.type]) return false;
     return DRAW_VALUE[c.type] >= s.stack.last;
   }
@@ -161,7 +164,13 @@ export function applyAction(s, pid, a) {
     const c = drawOne(s);
     if (!c) { finishOwe(s); return { ok: true }; }
     p.hand.push(c); p.saidUno = false; o.got++;
-    const done = o.until ? (c.color === o.until || isWild(c)) : --o.left <= 0;
+    let done;
+    if (o.until) done = c.color === o.until || isWild(c);
+    else if (o.kind === 'mystery' && o.got === 1) { // lá +?: lá đầu tiên quyết định phải bốc thêm bao nhiêu
+      o.reveal = c.type === 'n' ? c.num : -1; o.left = Math.max(0, o.reveal);
+      log(s, c.type === 'n' ? `❓ ${p.name} lật ra số ${c.num}${c.num ? `: bốc thêm ${c.num} lá!` : ': thoát nạn!'}` : `❓ ${p.name} lật ra lá chức năng: được tha!`);
+      done = o.left <= 0;
+    } else done = --o.left <= 0;
     checkMercy(s, p);
     if (s.phase !== 'playing') return { ok: true };
     if (p.out || done) finishOwe(s);
@@ -205,7 +214,7 @@ export function applyAction(s, pid, a) {
         if (p.hand.length === 1 && !p.saidUno) s.unoWatch = p.id;
       }
       if (p.hand.length === 0) { win(s, p); return { ok: true }; }
-      s._target = a.target || null;
+      s._target = a.target || null; s._give = Array.isArray(a.give) ? a.give.slice(0, 2) : null;
       if (isWild(c)) {
         if (a.color && COLORS.includes(a.color)) { s.color = a.color; log(s, `${p.name} chọn màu ${COLOR_NAME[a.color]}.`); finishEffect(s, c, p); }
         else s.pending = { type: 'color', player: p.id, card: c };
@@ -252,12 +261,51 @@ function finishEffect(s, c, p) {
     const t = getPlayer(s, s._target); s._target = null;
     if (!t || t.out || t === p) { s.pending = { type: 'target', player: p.id, card: c }; return; }
     if (s.rules.stackDraw) { // cộng dồn như lá rút thường, nhưng phạt bay thẳng tới người bị nhắm
-      s.stack = { total: (s.stack ? s.stack.total : 0) + 4, last: 4 };
+      s.stack = { total: (s.stack ? s.stack.total : 0) + 4, last: 4, from: p.id };
       log(s, `🎯 ${p.name} nhắm ${t.name}: dồn phạt ${s.stack.total} lá!`);
       s.turn = s.players.indexOf(t); return endTurn(s, 0);
     }
     log(s, `🎯 ${p.name} nhắm ${t.name}: tự bốc 4 lá!`);
     return startOwe(s, t, { kind: 'stack', left: 4 }, s.turn, 1);
+  }
+  if (c.type === 'nou') {
+    const f = s.stack && s.stack.from && getPlayer(s, s.stack.from);
+    if (f && !f.out && f !== p) { s.stack.from = p.id; log(s, `🔄 NO U! ${p.name} dội ${s.stack.total} lá ngược về ${f.name}!`); s.turn = s.players.indexOf(f); return endTurn(s, 0); }
+    s.dir *= -1; log(s, `🔄 No U! Đảo chiều.`);
+    return endTurn(s, n === 2 ? 2 : 1);
+  }
+  if (c.type === 'steal' || c.type === 'gift' || c.type === 'wswap') {
+    const t = getPlayer(s, s._target); s._target = null;
+    if (!t || t.out || t === p) { s.pending = { type: 'target', player: p.id, card: c }; return; }
+    if (c.type === 'steal') {
+      if (t.hand.length >= 2) { const x = t.hand.splice(Math.floor(rand() * t.hand.length), 1)[0]; p.hand.push(x); p.saidUno = false; log(s, `🫳 ${p.name} móc túi ${t.name}, lấy được 1 lá!`); if (t.hand.length === 1 && !t.saidUno) s.unoWatch = t.id; }
+      else log(s, `🫳 ${p.name} móc túi ${t.name} nhưng túi rỗng!`);
+    } else if (c.type === 'gift') {
+      const max = Math.min(2, p.hand.length - 1); // phải giữ lại ít nhất 1 lá
+      let give = (s._give || []).map(id => p.hand.find(x => x.id === id)).filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).slice(0, max);
+      if (give.length < max) { // tự chọn lá "xấu" nhất: lá số to, không đụng lá Đổi màu
+        const rest = p.hand.filter(x => !give.includes(x)).sort((a, b) => (isWild(a) - isWild(b)) || ((b.type === 'n' ? b.num : 5) - (a.type === 'n' ? a.num : 5)));
+        give = give.concat(rest.slice(0, max - give.length));
+      }
+      p.hand = p.hand.filter(x => !give.includes(x)); t.hand.push(...give); t.saidUno = false;
+      log(s, `🎁 ${p.name} tặng ${t.name} ${give.length} lá. Quà nè!`);
+      if (p.hand.length === 1 && !p.saidUno) s.unoWatch = p.id;
+      checkMercy(s, t); if (s.phase !== 'playing') return;
+    } else {
+      [p.hand, t.hand] = [t.hand, p.hand]; p.saidUno = t.saidUno = false;
+      log(s, `🤝 ${p.name} đổi nguyên tay bài với ${t.name}!`);
+      if (t.hand.length === 1) s.unoWatch = t.id;
+    }
+    s._give = null; return endTurn(s, 1);
+  }
+  if (c.type === 'shield' && s.stack) {
+    s.stack.from = p.id; log(s, `🛡️ ${p.name} giơ Khiên! ${s.stack.total} lá phạt chuyển sang ${nameAt(s, 1)}.`);
+    return endTurn(s, 1);
+  }
+  if (c.type === 'dq') {
+    const t = s.players[nextIdx(s)];
+    log(s, `❓ +?! ${t.name} bốc 1 lá: ra số mấy thì bốc thêm bấy nhiêu, lá chức năng thì được tha.`);
+    return startOwe(s, t, { kind: 'mystery', left: 1 }, s.turn, 2);
   }
   if (c.type === 'tornado') {
     const t = s.players[nextIdx(s)];
@@ -267,11 +315,11 @@ function finishEffect(s, c, p) {
   if (c.type === 'wup') { s.up = { color: s.color, n: 0, first: true }; log(s, `⬆️ Up! Từ ${nameAt(s, 1)}: mỗi người đánh 1 lá số, số sau phải bằng hoặc lớn hơn số trước.`); return endTurn(s, 1); }
   const v = DRAW_VALUE[c.type];
   if (c.type === 'wrd4' || c.type === 'rev') {
-    s.dir *= -1; log(s, `🔁 Đổi gay thành les! Đảo chiều chơi.`);
+    s.dir *= -1; log(s, `🔁 Đảo chiều!`);
     if (c.type === 'rev' && n === 2) { log(s, `${nameAt(s, 1)} bị mất lượt.`); return endTurn(s, 2); }
   }
   if (v) {
-    if (s.rules.stackDraw) { s.stack = { total: (s.stack ? s.stack.total : 0) + v, last: v }; log(s, `➕ Dồn phạt: ${s.stack.total} lá cho ${nameAt(s, 1)}!`); return endTurn(s, 1); }
+    if (s.rules.stackDraw) { s.stack = { total: (s.stack ? s.stack.total : 0) + v, last: v, from: p.id }; log(s, `➕ Dồn phạt: ${s.stack.total} lá cho ${nameAt(s, 1)}!`); return endTurn(s, 1); }
     const t = s.players[nextIdx(s)]; log(s, `😵 ${t.name} phải tự bốc ${v} lá và mất lượt!`);
     return startOwe(s, t, { kind: 'stack', left: v }, s.turn, 2);
   }
@@ -311,8 +359,8 @@ export function viewFor(s, pid) {
     phase: s.phase, mode: s.mode, rules: s.rules, winner: s.winner, turn: s.turn, dir: s.dir, color: s.color, top: top(s),
     deckCount: s.deck.length, stack: s.stack, skipStack: s.skipStack, up: s.up, mustPlay: s.mustPlay, turnCount: s.turnCount,
     canPass: !!(s.lastDraw && s.lastDraw.player === pid), unoWatch: s.unoWatch,
-    pending: s.pending ? { type: s.pending.type, player: s.pending.player } : null,
-    owe: s.owe ? { player: s.owe.player, got: s.owe.got, left: s.owe.left, until: s.owe.until, kind: s.owe.kind } : null,
+    pending: s.pending ? { type: s.pending.type, player: s.pending.player, card: s.pending.card ? s.pending.card.type : null } : null,
+    owe: s.owe ? { player: s.owe.player, got: s.owe.got, left: s.owe.left, until: s.owe.until, kind: s.owe.kind, reveal: s.owe.reveal } : null,
     log: s.log.slice(-40), logN: s.logN || 0, me: pid, lastDraw: s.lastDraw && s.lastDraw.player === pid ? s.lastDraw.card : null,
     players: s.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot, out: p.out, handCount: p.hand.length, saidUno: p.saidUno, hand: p === me ? p.hand : null })),
     playable: playableIds(s, pid),

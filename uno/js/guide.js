@@ -15,7 +15,7 @@ export function openGuide(openModal, cardHTML) {
       <h3>Bộ cổ điển (108 lá)</h3>${row(cardHTML, [
         [C('R', 'n', 7), 'Lá số 0–9: đánh theo màu hoặc theo số.'],
         [C('Y', 'skip'), '<b>Khoá mõm</b>: người kế tiếp mất lượt.'],
-        [C('G', 'rev'), '<b>Đổi gay thành les</b>: đổi chiều chơi. Còn 2 người thì như Khoá mõm.'],
+        [C('G', 'rev'), '<b>Đảo chiều</b>: đổi chiều chơi. Còn 2 người thì như Khoá mõm.'],
         [C('B', 'd2'), '<b>+2</b>: người kế rút 2 lá và mất lượt.'],
         [C('W', 'wild'), '<b>Đổi màu</b>: bạn chọn màu tiếp theo.'],
         [C('W', 'wd4'), '<b>Đổi màu +4</b>: chọn màu, người kế rút 4 lá và mất lượt.'],
@@ -31,6 +31,12 @@ export function openGuide(openModal, cardHTML) {
       ])}
       <h3>Lá mở rộng (chủ phòng bật trong sảnh)</h3>${row(cardHTML, [
         [C('W', 'wtd4'), '<b>Cộng nhắm +4</b>: đổi màu và chọn <b>bất kỳ ai</b> phải rút 4 lá. Có luật cộng dồn thì người bị nhắm được chồng lá rút để đẩy tiếp.'],
+        [C('R', 'nou'), '<b>No U</b>: đang bị dồn +2/+4 thì đánh lá này (màu nào cũng được) để <b>dội toàn bộ phạt ngược về</b> người vừa đánh. Không có phạt thì như Đảo chiều.'],
+        [C('B', 'dq'), '<b>+?</b>: người kế bốc 1 lá. Ra số mấy thì <b>bốc thêm bấy nhiêu</b> (ra 0 là thoát), ra lá chức năng thì được tha. Bốc xong mất lượt.'],
+        [C('W', 'shield'), '<b>Khiên</b>: như lá Đổi màu, nhưng đang bị dồn +2/+4 thì giơ Khiên để <b>chuyền nguyên phạt sang người kế</b>. Không dùng để né Up.'],
+        [C('Y', 'gift'), '<b>Tặng quà</b>: chọn 1 người, nhét cho họ 2 lá trên tay bạn (bạn tự chọn lá).'],
+        [C('G', 'steal'), '<b>Móc túi</b>: rút ngẫu nhiên 1 lá từ tay 1 người (người đó phải còn từ 2 lá).'],
+        [C('W', 'wswap'), '<b>Đổi tay</b>: đổi màu, rồi đổi nguyên bộ bài với 1 người.'],
         [C('B', 'tornado'), '<b>Bão tố</b>: chỉ đánh lên lá <b>cùng màu</b>. Người kế phải <b>tự bốc từng lá</b> (mỗi lá cách nhau 1 giây 😈) tới khi ra lá cùng màu Bão tố (hoặc lá Đổi màu), giữ hết và mất lượt.'],
         [C('Y', 'discall'), '<b>Xả màu</b>: xả luôn mọi lá cùng màu trên tay.'],
         [C('W', 'wup'), '<b>Up</b>: đổi màu, rồi từ người kế mỗi người đánh 1 lá số (màu nào cũng được), số sau phải <b>bằng hoặc lớn hơn</b> số trước. Ai không theo được rút số lá bằng con số đang thách.'],
@@ -41,7 +47,7 @@ export function openGuide(openModal, cardHTML) {
         <li><b>Cộng dồn</b>: bị +2 thì đánh +2 hoặc +4 đẩy sang người kế, tổng phạt cộng dồn. Lá chồng phải <b>bằng hoặc lớn hơn</b> lá trước (+4 không chồng được +2).</li>
         <li><b>Khoá mõm chồng Khoá mõm</b>: bị khoá mõm mà có lá Khoá mõm thì đánh để chuyền cho người kế.</li>
         <li><b>Tự bốc phạt</b>: bị cộng bao nhiêu lá thì tự bấm bốc từng lá, mỗi lá cách nhau 1 giây. Cho thấm 😈</li>
-        <li><b>Không về bằng lá chức năng</b>: lá cuối cùng phải là lá số. Còn mỗi lá Khoá mõm/Gay⇄Les/+2/Đổi màu… thì phải rút bài.</li>
+        <li><b>Không về bằng lá chức năng</b>: lá cuối cùng phải là lá số. Còn mỗi lá Khoá mõm/Đảo/+2/Đổi màu… thì phải rút bài.</li>
         <li>Không có lá thì rút 1 lá, hợp thì đánh luôn. <b>Không có chặn ngang</b>.</li></ul>
       <h3>💀 No Mercy</h3><ul>
         <li>Bộ 168 lá với +6, +10, Quay màu, Xả màu, Khoá mõm cả bàn.</li>
