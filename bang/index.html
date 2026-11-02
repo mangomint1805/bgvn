@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BANG! Việt hóa – chơi online với bạn bè</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rye&family=Bevan&family=Oswald:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A4%A0%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+
+<!-- ===== Màn hình chính ===== -->
+<section id="screen-home" class="screen active">
+  <a href="../" style="position:absolute;left:14px;top:12px;z-index:5;background:#fffc;color:#3a2a1a;text-decoration:none;font-weight:700;padding:6px 12px;border-radius:999px;box-shadow:0 4px 12px #0003;font-size:14px">← Bàn chơi BGVN</a>
+  <div class="home-box">
+    <h1 class="logo">BANG!</h1>
+    <p class="tagline">Cuộc chiến Viễn Tây – chơi online với bạn bè</p>
+    <div class="hero-cards" id="hero-cards"></div>
+    <div class="panel">
+      <label>Tên của bạn
+        <input id="inp-name" maxlength="16" placeholder="VD: Minto">
+      </label>
+      <div class="home-actions">
+        <button id="btn-create" class="btn primary">Tạo phòng</button>
+        <div class="join-row">
+          <input id="inp-code" maxlength="5" placeholder="MÃ PHÒNG" autocapitalize="characters">
+          <button id="btn-join" class="btn">Vào phòng</button>
+        </div>
+        <button id="btn-offline" class="btn ghost small">Chơi một mình với bot (offline)</button>
+      </div>
+      <div class="theme-pick" id="theme-pick"></div>
+      <div class="theme-pick" id="speed-pick"></div>
+      <div class="theme-pick"><button id="btn-music-home">🎵 Nhạc nền: tắt</button></div>
+    </div>
+    <button id="btn-guide-home" class="btn guide-btn">📖 Hướng dẫn chơi</button>
+    <p class="foot">Chủ phòng cần giữ tab mở suốt ván. 4–7 người, có thể thêm bot.</p>
+  </div>
+</section>
+
+<!-- ===== Phòng chờ ===== -->
+<section id="screen-lobby" class="screen">
+  <div class="lobby-box">
+    <h2 class="title">Phòng chờ</h2>
+    <div class="panel">
+      <div class="code-box">Mã phòng: <span id="lobby-code">-----</span> <button id="btn-copy" class="btn small">Sao chép link</button></div>
+      <ul id="lobby-players"></ul>
+      <div id="lobby-host-actions" class="lobby-actions hidden">
+        <button id="btn-add-bot" class="btn">+ Thêm bot</button>
+        <button id="btn-start" class="btn primary">Bắt đầu</button>
+      </div>
+      <p id="lobby-msg" class="muted">Đang chờ chủ phòng bắt đầu…</p>
+      <button id="btn-leave" class="btn small ghost">Rời phòng</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Bàn chơi ===== -->
+<section id="screen-game" class="screen">
+  <header class="topbar">
+    <span class="logo small">BANG!</span>
+    <span id="turn-info"></span>
+    <select id="theme-select" title="Chủ đề"></select>
+    <select id="speed-select" title="Tốc độ hiệu ứng"></select>
+    <button id="btn-music" class="btn icon ghost" title="Nhạc nền">🎵</button>
+    <input id="music-vol" class="vol" type="range" min="0" max="1" step="0.05" title="Âm lượng nhạc">
+    <button id="btn-mute" class="btn icon ghost" title="Hiệu ứng âm thanh">🔊</button>
+    <button id="btn-guide" class="btn icon ghost" title="Hướng dẫn">📖</button>
+    <button id="btn-log-toggle" class="btn small ghost" title="Nhật ký ván">📜<span class="hide-m"> Nhật ký</span></button>
+  </header>
+
+  <div class="table-wrap">
+    <div id="table" class="table">
+      <div class="felt"></div>
+      <div class="center">
+        <div class="piles"><div id="deck" class="pile"></div><div id="discard" class="pile"></div></div>
+        <div id="prompt" class="prompt"></div>
+        <div id="feed" class="feed"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="me-area" class="me">
+    <div class="me-left">
+      <div id="me-cards" class="me-cards"></div>
+      <div id="me-info" class="me-info"></div>
+    </div>
+    <div class="me-mid">
+      <div id="me-hand" class="hand"></div>
+      <div id="actions" class="actions"></div>
+    </div>
+    <div class="me-right"><div class="muted small-label">Trang bị</div><div id="me-table" class="me-table"></div></div>
+  </div>
+
+  <aside id="log" class="log hidden"><h3>Nhật ký</h3><div id="log-list"></div></aside>
+  <div id="modal" class="modal hidden"><div class="modal-box" id="modal-box"></div></div>
+</section>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
