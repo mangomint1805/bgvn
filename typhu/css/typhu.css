@@ -202,3 +202,4 @@ input:focus{border-color:var(--acc)}
 @media (max-width:400px){.pc{gap:4px;padding:3px 4px}.pc img{width:26px;height:26px;border-radius:8px}.pc .nm{font-size:12px}.act .btns .btn.main{flex-basis:118px}.act .btn.sm{padding:6px 8px;font-size:13.5px}}
 .flip .front{background:radial-gradient(circle at 50% 0,#ffeceb,#fff 65%);border-color:#ffd0cc}
 .flip .front.chest{background:radial-gradient(circle at 50% 0,#fff4cc,#fff 65%);border-color:#ffe08a}
+@media (max-width:420px){.timer .tn{display:none}}

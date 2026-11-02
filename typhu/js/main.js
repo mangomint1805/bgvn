@@ -397,7 +397,7 @@ setInterval(() => {
   const el = $('#timer'); const v = shown;
   if (!v || v.phase !== 'playing' || !deadlineAt) { el.hidden = true; return; }
   const s = Math.max(0, Math.ceil((deadlineAt - Date.now()) / 1000));
-  el.hidden = false; el.textContent = `⏳ ${isMine(v.actor) && !multiLocal(v) ? 'Bạn' : nm(v, v.actor)} · ${s}s`;
+  el.hidden = false; el.innerHTML = `⏳ <span class="tn">${esc(isMine(v.actor) && !multiLocal(v) ? 'Bạn' : nm(v, v.actor))} · </span>${s}s`;
   el.classList.toggle('low', s <= 10);
   if (s <= 5 && s > 0 && isMine(v.actor) && s !== el._last) { el._last = s; fx.sfx.tick(); }
 }, 250);
