@@ -1,5 +1,5 @@
 {
-  "_ghichu": "Thẻ Cơ hội (đỏ) và Khí vận (vàng) – title hiện to trên thẻ, text là tác dụng. Đơn vị: K.",
+  "_ghichu": "Thẻ Cơ hội (đỏ) và Khí vận (vàng) – title hiện to trên thẻ ({name} = tên người bốc), text là tác dụng. Đơn vị: K.",
   "chance": [
     {
       "id": "go_nguyenhue",
@@ -34,7 +34,7 @@
     {
       "id": "go_start",
       "text": "Về ô Bắt đầu, nhận 200K.",
-      "title": "💘 Nơi tình yêu bắt đầu"
+      "title": "💘🏍️ Nơi tình yêu bốc đầu"
     },
     {
       "id": "back3",
@@ -86,77 +86,77 @@
     {
       "id": "bank_error",
       "text": "Nhận 200K.",
-      "title": "🏦 Ngân hàng tính nhầm có lợi cho bạn"
+      "title": "🏦💻 Ngân hàng lag"
     },
     {
       "id": "salary13",
       "text": "Nhận 100K.",
-      "title": "💼 Lương tháng 13"
+      "title": "💼💼 Lương tháng 15"
     },
     {
       "id": "inherit",
       "text": "Nhận 100K.",
-      "title": "📜 Được thừa kế"
+      "title": "🌧️💰 Trên trời rơi xuống"
     },
     {
       "id": "insurance",
       "text": "Nhận 100K.",
-      "title": "🛡️ Bảo hiểm đáo hạn"
+      "title": "👵💨 Ăn cắp bà già"
     },
     {
       "id": "stock",
       "text": "Nhận 50K.",
-      "title": "📈 Bán cổ phiếu có lời"
+      "title": "📚🤡 Bán khoá học lừa đảo"
     },
     {
       "id": "tax_refund",
       "text": "Nhận 50K.",
-      "title": "🧾 Được hoàn thuế thu nhập"
+      "title": "🔪😈 Đâm cha chém chú"
     },
     {
       "id": "beauty",
       "text": "Nhận 20K.",
-      "title": "👑 Đạt giải nhì cuộc thi sắc đẹp"
+      "title": "🏆🤢 Giải nhất cuộc thi xấu trai"
     },
     {
       "id": "birthday",
       "text": "Mỗi người tặng 30K.",
-      "title": "🎂 Sinh nhật bạn"
+      "title": "🎂🎉 Sinh nhật {name}"
     },
     {
       "id": "lixi",
       "text": "Mỗi người lì xì bạn 20K.",
-      "title": "🧧 Tết đến"
+      "title": "🧧🌸 Tết"
     },
     {
       "id": "hospital",
       "text": "Trả viện phí 100K.",
-      "title": "🏥 Đi viện"
+      "title": "🛵🤕 Té xe nhập viện"
     },
     {
       "id": "school",
       "text": "Trả 50K.",
-      "title": "🎓 Đóng học phí"
+      "title": "🤦💸 Đóng tiền ngu"
     },
     {
       "id": "doctor",
       "text": "Trả 50K.",
-      "title": "🦷 Khám răng"
+      "title": "🦷😭 Răng khôn"
     },
     {
       "id": "roadwork",
       "text": "Trả 40K mỗi nhà, 115K mỗi Landmark.",
-      "title": "🚧 Đóng phí sửa đường"
+      "title": "🚇🚧 Phí xây Metro"
     },
     {
       "id": "go_start",
       "text": "Về ô Bắt đầu, nhận 200K.",
-      "title": "🏁 Về nhà"
+      "title": "💘🏍️ Nơi tình yêu bốc đầu"
     },
     {
       "id": "jail",
       "text": "Vào tù ngay, không qua Bắt đầu.",
-      "title": "🚔 Trốn thuế bị phát hiện"
+      "title": "🚔 Tù ngay"
     },
     {
       "id": "free_jail",
