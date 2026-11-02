@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ma Sói – đêm trăng làng quê</title>
+<meta name="description" content="Ma Sói: trò chơi suy luận tiếng Việt chơi online cùng hội bạn, máy làm quản trò, có bot.">
+<meta name="theme-color" content="#0b1030">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='60' cy='38' r='30' fill='%23f7e3a3'/><path d='M14 96l4-30-8-14 7-2-1-12 10 8 4-10 4 12 10-8 18-30 6 2-6 24 8-4-4 12 6 6-14 6 4 16 6 24z' fill='%23141a33'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/masoi.css?v=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+</head>
+<body class="th-night ph-home">
+<!-- CẢNH LÀNG (vẽ bằng SVG/CSS) -->
+<div id="scene" aria-hidden="true">
+  <div class="sky s-night"></div><div class="sky s-dawn"></div><div class="sky s-day"></div><div class="sky s-dusk"></div><div class="sky s-blood"></div>
+  <div class="stars" id="stars"></div>
+  <div class="moon"><i></i><i></i><i></i></div><div class="sun"></div>
+  <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+  <div class="hills" id="hills"></div>
+  <div class="dinh" id="dinh"></div>
+  <div class="bamboo left" id="bamboo-l"></div><div class="bamboo right" id="bamboo-r"></div>
+  <div class="fog f1"></div><div class="fog f2"></div>
+  <div class="fireflies" id="fireflies"></div>
+  <div class="vignette"></div>
+</div>
+
+<!-- TRANG CHỦ -->
+<section id="screen-home" class="screen active">
+  <a class="back-hub" href="../">← Bàn chơi BGVN</a>
+  <div class="home-card">
+    <div class="hero" id="hero"></div>
+    <h1 class="logo">Ma <span>Sói</span></h1>
+    <p class="tag">Trăng tròn, sương giăng rặng tre… trong làng có Sói! Máy làm quản trò, cả hội lo mà sống sót 🐺🌕</p>
+    <label class="fld"><span>Tên của bạn</span><input id="name" maxlength="16" placeholder="Nhập tên…" autocomplete="nickname"></label>
+    <div class="btn-col">
+      <button class="btn big pri" id="btn-offline">🤖 Chơi với bot</button>
+      <button class="btn big" id="btn-create">🏮 Tạo phòng online</button>
+      <div class="join-row"><input id="join-code" maxlength="5" placeholder="MÃ PHÒNG" autocapitalize="characters" aria-label="Mã phòng"><button class="btn" id="btn-join">Vào</button></div>
+    </div>
+    <div class="home-tools">
+      <button class="chip" id="btn-guide-home">📖 Hướng dẫn</button>
+      <button class="chip" id="btn-music-home">🎵 Nhạc</button>
+    </div>
+    <p class="note">Bản fan-made phi thương mại. Ma Sói là trò chơi dân gian; hình vẽ, chữ, nhạc đều tự làm.</p>
+  </div>
+</section>
+
+<!-- SẢNH -->
+<section id="screen-lobby" class="screen">
+  <div class="lobby">
+    <div class="lobby-head">
+      <button class="chip" id="btn-leave-lobby">← Thoát</button>
+      <div class="code-box" id="code-box">Mã phòng <b id="room-code">…</b> <button class="chip sm" id="btn-copy">Chép link</button></div>
+    </div>
+    <div class="lobby-grid">
+      <div class="panel">
+        <h3>Dân làng <small id="pcount"></small></h3>
+        <ul id="plist" class="plist"></ul>
+        <div class="row-btns"><button class="btn" id="btn-addbot">＋ Thêm bot</button><button class="btn" id="btn-fill">🤖 Đủ 8 người</button></div>
+      </div>
+      <div class="panel">
+        <h3>Bộ vai <small id="role-sum"></small></h3>
+        <label class="opt auto"><input type="checkbox" id="opt-auto"><span><b>✨ Tự gợi ý theo số người</b><small>Bấm +/− để tự chỉnh từng vai.</small></span></label>
+        <div id="roles" class="roles"></div>
+        <p class="role-err" id="role-err"></p>
+        <h3>Luật chơi</h3>
+        <div id="opts" class="opts"></div>
+      </div>
+    </div>
+    <button class="btn big pri" id="btn-start">🌕 Bắt đầu đêm đầu tiên</button>
+    <p class="wait" id="wait-msg">🏮 Đang chờ chủ phòng bắt đầu…</p>
+  </div>
+</section>
+
+<!-- VÁN CHƠI -->
+<section id="screen-game" class="screen">
+  <header class="topbar">
+    <button class="chip ico" id="btn-leave" aria-label="Rời ván">←</button>
+    <div class="phase" id="phase"></div>
+    <div class="tools">
+      <button class="chip ico" id="btn-music" title="Nhạc nền" aria-label="Nhạc nền">🎵</button>
+      <input type="range" id="vol" min="0" max="1" step="0.05" title="Âm lượng nhạc" aria-label="Âm lượng nhạc">
+      <button class="chip ico" id="btn-mute" title="Âm thanh" aria-label="Âm thanh">🔊</button>
+      <button class="chip ico" id="btn-voice" title="Quản trò đọc (giọng máy)" aria-label="Quản trò đọc">🗣️</button>
+      <button class="chip ico" id="btn-guide" title="Hướng dẫn" aria-label="Hướng dẫn">📖</button>
+    </div>
+  </header>
+  <div class="clock" id="clock"><i></i><b></b></div>
+  <div class="gwrap">
+    <div class="gmain">
+      <div class="narr" id="narr"></div>
+      <div class="seats-wrap" id="seats-wrap"><div class="fire" id="fire" aria-hidden="true"></div><div class="seats" id="seats"></div></div>
+      <div class="act" id="act">
+        <button class="mycard" id="mycard" aria-label="Giữ để xem vai của bạn"><span class="mc-art" id="mycard-art"></span><span class="mc-txt">Giữ để<br>xem vai</span></button>
+        <div class="act-body" id="act-body"></div>
+      </div>
+    </div>
+    <aside class="dock" id="dock">
+      <div class="tabs" id="tabs"></div>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+      <div class="quick" id="quick"></div>
+      <form class="say" id="say" autocomplete="off"><input id="say-in" maxlength="160" placeholder="Nói gì đó…" aria-label="Tin nhắn"><button class="btn pri" id="say-btn">Gửi</button><button type="button" class="chip ico" id="btn-dock" aria-label="Phóng to khung chat">⤢</button></form>
+    </aside>
+  </div>
+</section>
+
+<div class="peek" id="peek" aria-hidden="true"></div>
+<div class="modal" id="modal"><div class="modal-box" id="modal-box"></div></div>
+<div class="toast" id="toast"></div>
+<div id="fx-layer"></div>
+<script type="module" src="js/main.js?v=1"></script>
+</body>
+</html>
