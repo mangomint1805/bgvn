@@ -28,8 +28,13 @@ export class RoomHost {
   // opts: { ns, prefix, code?, keepCode?, onConn(conn), onReady(code), onError(msg) }
   constructor(opts) {
     this.o = opts; this.code = opts.code || makeCode(); this.opened = !!opts.keepCode;
+    this.conns = new Set();
+    const inner = opts.onConn; // theo dõi mọi kết nối để gửi nhịp tim
+    this.o = { ...opts, onConn: c => { this.conns.add(c); const del = () => this.conns.delete(c); c.on('close', del); c.on('error', del); inner(c); } };
     this.open();
     this.stopKeep = keepAlive(() => this.peer);
+    // nhịp tim: người chơi không nghe gì 8 giây thì tự vào lại (rớt mạng âm thầm, chủ phòng đã đóng chỗ…)
+    this.hb = setInterval(() => { for (const c of this.conns) if (c.open) try { c.send({ t: '__hb' }); } catch (e) {} }, 2500);
   }
   startRelays() {
     if (this.relayCode === this.code) return;
@@ -55,7 +60,7 @@ export class RoomHost {
       } else if (!['network', 'server-error', 'socket-error', 'socket-closed', 'disconnected', 'peer-unavailable'].includes(e.type)) this.o.onError && this.o.onError('Lỗi mạng: ' + e.type);
     });
   }
-  destroy() { this.dead = true; this.stopKeep && this.stopKeep(); this.relay && this.relay.destroy(); this.fb && this.fb.destroy(); try { this.peer && this.peer.destroy(); } catch (e) {} }
+  destroy() { this.dead = true; clearInterval(this.hb); this.stopKeep && this.stopKeep(); this.relay && this.relay.destroy(); this.fb && this.fb.destroy(); try { this.peer && this.peer.destroy(); } catch (e) {} }
 }
 
 // ======================= NGƯỜI VÀO PHÒNG =======================
@@ -111,18 +116,29 @@ export class RoomClient {
     conn.on('open', () => { if (conn === this.conn) conn.send({ t: 'join', token: token(), ...this.o.joinMsg() }); });
     conn.on('data', msg => {
       if (conn !== this.conn || !msg) return;
-      if (msg.t === 'welcome') { clearTimeout(this.joinTimer); this.id = msg.id; this.tries = 0; this.wasIn = true; this.status('Đã vào phòng', 'ok'); this.o.onWelcome && this.o.onWelcome(msg.id, msg); return; }
+      this.lastSeen = Date.now();
+      if (msg.t === '__hb') return;
+      if (msg.t === 'welcome') { clearTimeout(this.joinTimer); this.id = msg.id; this.tries = 0; this.wasIn = true; this.watch(conn, lost); this.status('Đã vào phòng', 'ok'); this.o.onWelcome && this.o.onWelcome(msg.id, msg); return; }
       this.o.onMsg(msg);
     });
     const lost = () => {
-      if (conn !== this.conn || this.dead) return;
+      if (conn !== this.conn || this.dead || conn._gone) return;
       if (!this.id) { if (conn.notFound || mode !== 'p2p') this.next(); return; }
-      this.id = null; this.tries = 0; this.mi = 0;
+      conn._gone = true; this.id = null; this.tries = 0; this.mi = 0;
       this.status('Mất kết nối – đang vào lại…'); this.o.onLost && this.o.onLost();
       setTimeout(() => { if (!this.dead) this.connect(); }, 1500);
     };
     conn.on('close', lost); conn.on('error', lost);
   }
+  // chủ phòng có gửi nhịp tim (bản mới): im lặng quá 8 giây thì coi như mất kết nối và vào lại
+  watch(conn, lost) {
+    clearInterval(this.wd); this.lastSeen = Date.now(); let gotHb = false;
+    const onHb = m => { if (m && m.t === '__hb') gotHb = true; }; conn.on('data', onHb);
+    this.wd = setInterval(() => {
+      if (this.dead || conn !== this.conn) { clearInterval(this.wd); return; }
+      if (gotHb && Date.now() - this.lastSeen > 8000) { clearInterval(this.wd); try { conn.close(); } catch (e) {} lost(); }
+    }, 1000);
+  }
   send(msg) { if (this.conn && this.conn.open) this.conn.send(msg); }
-  destroy() { this.dead = true; clearTimeout(this.joinTimer); this.stopKeep && this.stopKeep(); try { this.conn && this.conn.close(); } catch (e) {} try { this.peer && this.peer.destroy(); } catch (e) {} }
+  destroy() { this.dead = true; clearInterval(this.wd); clearTimeout(this.joinTimer); this.stopKeep && this.stopKeep(); try { this.conn && this.conn.close(); } catch (e) {} try { this.peer && this.peer.destroy(); } catch (e) {} }
 }

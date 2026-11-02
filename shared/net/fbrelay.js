@@ -38,8 +38,10 @@ export class FbHost {
     db().then(F => {
       if (this.dead) return;
       const room = F.ref(F.db, `rooms/${ns}/${code}`); this.F = F; this.room = room;
-      F.set(room, { alive: Date.now() }).then(() => {
-        F.onDisconnect(room).remove();
+      const mark = () => F.update(room, { alive: Date.now() }).then(() => F.onDisconnect(room).remove()).catch(() => {});
+      let was = null; // mạng của chủ phòng rớt rồi có lại: máy chủ đã xoá phòng → dựng lại
+      this.offs.push(F.onValue(F.ref(F.db, '.info/connected'), s => { const c = !!s.val(); if (c && was === false && !this.dead) mark(); was = c; }));
+      mark().then(() => {
         const h = F.ref(F.db, `rooms/${ns}/${code}/h`);
         this.offs.push(F.onChildAdded(h, snap => {
           const m = snap.val(); F.remove(snap.ref);
@@ -79,6 +81,8 @@ export function fbConnect(ns, code) {
       if (d.t === '__bye') { fail(); return; }
       conn.emit('data', d);
     }));
+    let up = null;
+    offs.push(F.onValue(F.ref(F.db, '.info/connected'), s => { const c = !!s.val(); if (up && !c) fail(); up = c; }));
     let seen = false; // chủ phòng đóng tab -> phòng bị xoá
     offs.push(F.onValue(F.ref(F.db, `rooms/${ns}/${code}/alive`), s => { if (s.exists()) seen = true; else if (seen) fail(); }));
     conn.open = true; conn.emit('open');
