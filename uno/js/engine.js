@@ -12,9 +12,9 @@ export const CARD_NAME = {
   wild: 'Đổi màu', wd4: 'Đổi màu +4', wrd4: 'Đổi màu đảo chiều +4', wd6: 'Đổi màu +6', wd10: 'Đổi màu +10', roulette: 'Vòng quay màu',
 };
 export const MODES = {
-  classic: { name: 'Cổ điển', rules: { stackDraw: false, stackSkip: false, sevenZero: false, drawUntil: false, mercy: false } },
-  house:   { name: 'Luật rừng', rules: { stackDraw: true, stackSkip: true, sevenZero: false, drawUntil: false, mercy: false } },
-  nomercy: { name: 'No Mercy', rules: { stackDraw: true, stackSkip: false, sevenZero: true, drawUntil: true, mercy: true } },
+  classic: { name: 'Cổ điển', rules: { stackDraw: false, stackSkip: false, sevenZero: false, drawUntil: false, mercy: false, noActionFinish: false } },
+  house:   { name: 'Luật rừng', rules: { stackDraw: true, stackSkip: true, sevenZero: false, drawUntil: false, mercy: false, noActionFinish: true } },
+  nomercy: { name: 'No Mercy', rules: { stackDraw: true, stackSkip: false, sevenZero: true, drawUntil: true, mercy: true, noActionFinish: false } },
 };
 export const isWild = c => c.color === 'W';
 
@@ -94,6 +94,7 @@ function win(s, p) { s.phase = 'ended'; s.winner = p.id; s.pending = null; s.sta
 // ---------- Kiểm tra lá đánh được ----------
 export function canPlay(s, p, c) {
   if (s.phase !== 'playing' || p.out) return false;
+  if (s.rules.noActionFinish && isFinishingAction(p, c)) return false;
   const t = top(s);
   if (s.stack) { // đang bị dồn phạt rút: chỉ được chồng lá rút giá trị bằng hoặc cao hơn
     if (!s.rules.stackDraw || !DRAW_VALUE[c.type]) return false;
@@ -105,6 +106,13 @@ export function canPlay(s, p, c) {
   if (c.color === s.color) return true;
   if (c.type === 'n') return t.type === 'n' && t.num === c.num;
   return c.type === t.type;
+}
+// Luật "không về bằng lá chức năng": lá cuối cùng phải là lá số
+export function isFinishingAction(p, c) {
+  if (c.type === 'n') return false;
+  if (p.hand.length === 1) return true;
+  if (c.type === 'discall') return p.hand.every(x => x === c || x.color === c.color);
+  return false;
 }
 export function playableIds(s, pid) {
   const p = getPlayer(s, pid); if (!p || current(s) !== p || s.pending) return [];

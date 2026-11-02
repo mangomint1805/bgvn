@@ -34,6 +34,7 @@ export function openGuide(openModal, cardHTML) {
       <h3>🔥 Luật rừng</h3><ul>
         <li><b>Cộng dồn</b>: bị +2 thì đánh +2 hoặc +4 đẩy sang người kế, tổng phạt cộng dồn. Lá chồng phải <b>bằng hoặc lớn hơn</b> lá trước (+4 không chồng được +2).</li>
         <li><b>Cấm chồng Cấm</b>: bị Cấm lượt mà có lá Cấm thì đánh để chuyền cho người kế.</li>
+        <li><b>Không về bằng lá chức năng</b>: lá cuối cùng phải là lá số. Còn mỗi lá Cấm/Đảo/+2/Đổi màu… thì phải rút bài.</li>
         <li>Không có lá thì rút 1 lá, hợp thì đánh luôn. <b>Không có chặn ngang</b>.</li></ul>
       <h3>💀 No Mercy</h3><ul>
         <li>Bộ 168 lá với +6, +10, Quay màu, Bỏ cả màu, Cấm hết.</li>

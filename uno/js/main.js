@@ -77,10 +77,11 @@ const RULE_INFO = {
   sevenZero: ['Luật 7 – 0', 'Đánh 7: đổi bài với 1 người. Đánh 0: mọi người chuyền bài theo chiều chơi.'],
   drawUntil: ['Rút tới khi đánh được', 'Không có lá hợp thì rút liên tục tới khi ra lá đánh được (bắt buộc đánh).'],
   mercy: ['Luật không khoan nhượng', 'Ai giữ từ 25 lá trở lên bị loại.'],
+  noActionFinish: ['Không về bằng lá chức năng', 'Lá cuối cùng phải là lá số. Còn mỗi lá chức năng/đổi màu thì phải rút bài.'],
 };
 const MODE_DESC = {
   classic: 'Luật chuẩn 108 lá. Không có lá đánh được thì rút 1 lá, hợp thì đánh luôn.',
-  house: 'Luật rừng quen thuộc: cộng dồn +2/+4, Cấm chồng Cấm, không chặn ngang.',
+  house: 'Luật rừng quen thuộc: cộng dồn +2/+4, Cấm chồng Cấm, không về bằng lá chức năng, không chặn ngang.',
   nomercy: 'Bộ 168 lá cực gắt: +6, +10, Quay màu, Bỏ cả màu, 7–0, ≥ 25 lá là bị loại!',
 };
 function renderLobby() {
@@ -223,6 +224,7 @@ function renderHint(v, meP) {
   else if (v.skipStack) h.innerHTML = '⛔ Bạn bị Cấm! Đánh Cấm lượt để chuyền, hoặc chịu mất lượt.';
   else if (v.mustPlay) h.innerHTML = '✨ Lá vừa rút đánh được – bấm vào nó để đánh' + (v.canPass ? ', hoặc Giữ lại.' : '!');
   else if (v.playable.length) h.innerHTML = `🎯 Lượt bạn! Đánh lá cùng màu ${dot}, cùng số/ký hiệu, hoặc lá Đổi màu.`;
+  else if (v.rules.noActionFinish && meP.hand.length === 1 && meP.hand[0].type !== 'n') h.innerHTML = '🚫 Lá cuối không được là lá chức năng – bấm <b>Rút bài</b>.';
   else h.innerHTML = `🙈 Không có lá hợp màu ${dot} – bấm <b>Rút bài</b>.`;
 }
 function renderActions(v, meP) {
@@ -240,7 +242,7 @@ function renderActions(v, meP) {
 function onCardClick(id) {
   const v = view; if (!isMyTurn()) { toast('Chưa tới lượt bạn 😤'); return; }
   const c = me().hand.find(x => x.id === id); if (!c) return;
-  if (!v.playable.includes(id)) { fx.sfx.bad(); fx.shake($(`#hand [data-id="${id}"]`)); toast(v.stack ? `Phải chồng lá rút ≥ +${v.stack.last}` : v.mustPlay ? 'Chỉ được đánh lá vừa rút' : 'Lá này không hợp màu/số'); return; }
+  if (!v.playable.includes(id)) { fx.sfx.bad(); fx.shake($(`#hand [data-id="${id}"]`)); toast(v.rules.noActionFinish && (me().hand.length === 1 || (c.type === 'discall' && me().hand.every(x => x.color === c.color))) && c.type !== 'n' ? 'Không được về bằng lá chức năng – lá cuối phải là lá số!' : v.stack ? `Phải chồng lá rút ≥ +${v.stack.last}` : v.mustPlay ? 'Chỉ được đánh lá vừa rút' : 'Lá này không hợp màu/số'); return; }
   if (c.color === 'W') { pickColor('Chọn màu tiếp theo', Object.assign(col => send({ type: 'play', cardId: id, color: col }), { cancel: true })); return; }
   send({ type: 'play', cardId: id });
 }
