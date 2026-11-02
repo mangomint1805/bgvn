@@ -2,6 +2,7 @@
 import { createGame, applyAction, viewFor, current, MODES } from './engine.js';
 import { botAction, botCatch } from './bot.js';
 import { S } from './ufx.js';
+import { peerOptions, keepAlive } from './ice.js';
 
 const PREFIX = 'bgvn-uno-';
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -22,11 +23,22 @@ export class Host {
     this.state = null; this.conns = new Map(); this.botTimer = null; this.catchTimer = null;
     this.mode = 'house'; this.rules = { ...MODES.house.rules };
     if (offline) { this.peer = { destroy() {} }; setTimeout(() => this.pushLobby(), 0); return; }
-    this.peer = new Peer(PREFIX + this.code, { debug: 1 });
-    this.peer.on('open', () => this.pushLobby());
+    this.open();
+    this.stopKeep = keepAlive(() => this.peer);
+  }
+  async open() {
+    const opt = await peerOptions();
+    if (this.dead) return;
+    this.peer = new Peer(PREFIX + this.code, opt);
+    this.peer.on('open', () => { this.opened = true; this.pushLobby(); });
+    this.peer.on('disconnected', () => { if (!this.dead) setTimeout(() => { try { if (this.peer.disconnected && !this.peer.destroyed) this.peer.reconnect(); } catch (e) {} }, 1000); });
     this.peer.on('error', e => {
-      if (e.type === 'unavailable-id') { this.code = makeCode(); this.peer.destroy(); this.peer = new Peer(PREFIX + this.code); this.peer.on('open', () => this.pushLobby()); this.wire(); }
-      else this.h.onError('Lỗi mạng: ' + e.type);
+      if (e.type === 'unavailable-id') {
+        try { this.peer.destroy(); } catch (x) {}
+        if (this.opened && (this.keepTries = (this.keepTries || 0) + 1) <= 5) setTimeout(() => this.open(), 3000); else { this.code = makeCode(); this.open(); }
+      }
+      else if (['network', 'server-error', 'socket-error', 'socket-closed', 'disconnected'].includes(e.type)) { /* tự nối lại */ }
+      else if (e.type !== 'peer-unavailable') this.h.onError('Lỗi mạng: ' + e.type);
     });
     this.wire();
   }
@@ -39,7 +51,7 @@ export class Host {
   }
   onMsg(conn, msg) {
     if (msg.t === 'join') {
-      let p = this.players.find(x => x.token === msg.token && !x.isBot);
+      let p = this.players.find(x => x.token === msg.token && !x.isBot && x.id !== 'host');
       if (p) { if (p.conn && p.conn !== conn) try { p.conn.close(); } catch (e) {} p.conn = conn; p.connected = true; p.name = msg.name || p.name; }
       else {
         if (this.state) { conn.send({ t: 'error', msg: 'Ván đang diễn ra, không thể vào.' }); return; }
@@ -127,32 +139,50 @@ export class Host {
       if (a) this.act(pid, a);
     }, p.isBot ? Math.max(Math.round((base + Math.random() * 500) * S()), (this.graceUntil || 0) - Date.now()) : 20000);
   }
-  destroy() { clearTimeout(this.botTimer); clearTimeout(this.catchTimer); try { this.peer.destroy(); } catch (e) {} }
+  destroy() { this.dead = true; clearTimeout(this.botTimer); clearTimeout(this.catchTimer); this.stopKeep && this.stopKeep(); try { this.peer.destroy(); } catch (e) {} }
 }
 
 export class Client {
   constructor(code, name, handlers) {
-    this.h = handlers; this.code = code.toUpperCase().trim(); this.name = name; this.id = null;
-    this.peer = new Peer(undefined, { debug: 1 });
-    this.peer.on('open', () => this.connect());
+    this.h = handlers; this.code = code.toUpperCase().trim(); this.name = name; this.id = null; this.tries = 0;
+    this.init();
+  }
+  async init() {
+    const opt = await peerOptions();
+    if (this.dead) return;
+    this.peer = new Peer(undefined, opt);
+    this.stopKeep = keepAlive(() => this.peer);
+    this.peer.on('open', () => { if (!this.conn || !this.conn.open) this.connect(); });
     this.peer.on('error', e => {
-      if (e.type === 'peer-unavailable') this.h.onError('Không tìm thấy phòng ' + this.code + '.');
+      if (e.type === 'peer-unavailable') this.retry('Không tìm thấy phòng ' + this.code + '. Kiểm tra lại mã, hoặc nhờ chủ phòng mở lại tab game.');
+      else if (['network', 'server-error', 'socket-error', 'socket-closed', 'disconnected'].includes(e.type)) { /* tự nối lại */ }
       else this.h.onError('Lỗi mạng: ' + e.type);
     });
   }
+  retry(finalMsg) {
+    if (this.dead || this.id) return;
+    clearTimeout(this.joinTimer);
+    if (++this.tries <= 4) { this.h.onError(`Đang thử kết nối lại (${this.tries}/4)…`); setTimeout(() => this.connect(), 2500); }
+    else this.h.onError(finalMsg);
+  }
   connect() {
-    this.conn = this.peer.connect(PREFIX + this.code, { reliable: true });
-    this.conn.on('open', () => this.conn.send({ t: 'join', name: this.name, token: token() }));
-    this.conn.on('data', msg => {
-      if (msg.t === 'welcome') { this.id = msg.id; this.h.onJoined(msg.id); }
+    if (this.dead || this.id) return;
+    try { this.conn && this.conn.close(); } catch (e) {}
+    const conn = this.peer.connect(PREFIX + this.code, { reliable: true });
+    this.conn = conn;
+    clearTimeout(this.joinTimer);
+    this.joinTimer = setTimeout(() => { if (!this.id) this.retry('Không nối được tới chủ phòng. Thử đổi mạng (wifi ↔ 4G) hoặc để người khác làm chủ phòng.'); }, 12000);
+    conn.on('open', () => conn.send({ t: 'join', name: this.name, token: token() }));
+    conn.on('data', msg => {
+      if (msg.t === 'welcome') { clearTimeout(this.joinTimer); this.id = msg.id; this.h.onJoined(msg.id); }
       else if (msg.t === 'lobby') this.h.onLobby(msg.info, msg.code, msg.started);
       else if (msg.t === 'state') this.h.onState(msg.view);
       else if (msg.t === 'error') this.h.onError(msg.msg);
       else if (msg.t === 'kicked') { this.h.onError('Bạn đã bị mời ra khỏi phòng.'); this.destroy(); }
     });
-    this.conn.on('close', () => this.h.onDisconnect());
-    this.conn.on('error', () => this.h.onDisconnect());
+    const lost = () => { if (conn === this.conn && this.id && !this.dead) { this.h.onDisconnect(); this.id = null; this.tries = 0; setTimeout(() => { if (!this.dead) this.connect(); }, 1500); } };
+    conn.on('close', lost); conn.on('error', lost);
   }
   act(a) { if (this.conn && this.conn.open) this.conn.send({ t: 'action', a }); }
-  destroy() { try { this.peer.destroy(); } catch (e) {} }
+  destroy() { this.dead = true; clearTimeout(this.joinTimer); this.stopKeep && this.stopKeep(); try { this.peer && this.peer.destroy(); } catch (e) {} }
 }

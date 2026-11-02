@@ -36,7 +36,8 @@ const handlers = {
   onState(v) { prevView = view; view = v; markFresh(prevView, v); if (!v) { prevView = null; show('screen-lobby'); return; } const first = !$('#screen-game').classList.contains('active'); show('screen-game'); render(); if (first) dealAnimation(); else animateDiff(prevView, view); },
   onError(msg) { toast(msg); },
   onJoined(id) { myId = id; },
-  onDisconnect() { toast('Mất kết nối với chủ phòng. Tải lại trang để vào lại.'); },
+  onDisconnect() { toast('Mất kết nối với chủ phòng – đang tự vào lại…'); },
+  onStatus(m) { const el = $('#lobby-msg'); if (el) el.textContent = m; },
 };
 $('#btn-create').onclick = () => {
   const n = getName(); if (!n) return;

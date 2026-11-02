@@ -46,7 +46,7 @@ const handlers = {
   onState(v) { if (!v) { view = null; closeModal(); show('screen-lobby'); renderLobby(); return; } prevView = view; view = v; if (!$('#screen-game').classList.contains('active')) { show('screen-game'); prevView = null; } render(); animate(prevView, view); },
   onError(m) { toast(m); fx.sfx.bad(); },
   onJoined(id) { myId = id; },
-  onDisconnect() { toast('Mất kết nối với chủ phòng.'); },
+  onDisconnect() { toast('Mất kết nối – đang tự vào lại…'); },
 };
 function startHost(offline) {
   fx.actx(); fx.musicResumeIfOn();
