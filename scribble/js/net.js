@@ -1,6 +1,6 @@
 // Lớp mạng Scribble it!: chủ phòng giữ state + đồng hồ, máy khách gửi hành động & nét vẽ.
 // Nét vẽ đi riêng (tin 'draw' theo lô ~100ms, chủ phòng chuyển tiếp), người vào muộn nhận lại cả lịch sử ('canvas').
-import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, bookItems, shiftTime, cleanOpts, DEFAULT_OPTS } from './engine.js?v=2';
+import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, bookItems, shiftTime, cleanOpts, DEFAULT_OPTS } from './engine.js?v=3';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
 const NS = 'bgvn-scribble', PREFIX = 'bgvn-scribble-', GAME = 'scribble';
 const SNAP = 'bgvn-hostsnap-' + GAME;

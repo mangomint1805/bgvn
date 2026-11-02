@@ -2,9 +2,9 @@
 //   createGame(players, opts, now) · applyAction(state, pid, action, now) -> {ok, reason}
 //   viewFor(state, pid, now) · tick(state, now) -> true nếu state đổi
 // Hai chế độ: 'guess' (đoán hình kiểu skribbl) và 'gartic' (Tam sao thất bản – chuyền câu ↔ hình).
-import { isMatch, isNear, leaks, maskWord, letterIdx, wordLens } from './match.js?v=2';
-import { buildPool, parseCustom, randomPrompt, DEFAULT_CATS, CATS } from './words.js?v=2';
-import { cleanOps, pushOp, opsBytes, simplifyOps } from './ops.js?v=2';
+import { isMatch, isNear, leaks, maskWord, letterIdx, wordLens } from './match.js?v=3';
+import { buildPool, parseCustom, randomPrompt, DEFAULT_CATS, CATS } from './words.js?v=3';
+import { cleanOps, pushOp, opsBytes, simplifyOps } from './ops.js?v=3';
 
 let R = Math.random;
 export function setRandom(f) { R = f || Math.random; }

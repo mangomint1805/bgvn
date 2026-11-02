@@ -1,6 +1,6 @@
 // Bảng vẽ: canvas logic 800×600 co giãn theo khung, vẽ bằng chuột/cảm ứng (pointer events),
 // gom điểm thành lô ~100ms để gửi qua mạng, hoàn tác/xoá/đổ màu đều là "thao tác" phát lại được.
-import { W, H, PALETTE, SIZES, COLOR_NAMES, pushOp, decodePts, encodePts } from './ops.js?v=2';
+import { W, H, PALETTE, SIZES, COLOR_NAMES, pushOp, decodePts, encodePts } from './ops.js?v=3';
 export { W, H, PALETTE, SIZES };
 
 const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
@@ -56,8 +56,8 @@ export function opsToCanvas(ops) {
 
 export class Board {
   // host: phần tử khung (kích thước do CSS quyết định); bảng tự co theo tỉ lệ 4:3 nằm giữa khung
-  constructor(host, { editable = false, onOps = null, onChange = null } = {}) {
-    this.host = host; this.onOps = onOps; this.onChange = onChange;
+  constructor(host, { editable = false, onOps = null, onChange = null, onInk = null, onTool = null } = {}) {
+    this.host = host; this.onOps = onOps; this.onChange = onChange; this.onInk = onInk; this.onTool = onTool; // onInk(quãng đường, công cụ) để phát tiếng bút
     this.el = document.createElement('div'); this.el.className = 'board';
     this.cv = document.createElement('canvas'); this.cv.width = W; this.cv.height = H;
     this.el.appendChild(this.cv); host.appendChild(this.el);
@@ -91,7 +91,7 @@ export class Board {
     if (!this.editable || (e.pointerType === 'mouse' && e.button !== 0)) return;
     e.preventDefault(); this.finish();
     const p = this.pt(e);
-    if (this.tool === 'fill') { this.commit({ k: 'f', g: this.g++, c: this.color, x: p[0], y: p[1] }); return; }
+    if (this.tool === 'fill') { this.commit({ k: 'f', g: this.g++, c: this.color, x: p[0], y: p[1] }); this.onTool && this.onTool('fill'); return; }
     try { this.cv.setPointerCapture(e.pointerId); } catch (x) {}
     this.cur = { id: e.pointerId, g: this.g++, c: this.tool === 'eraser' ? 0 : this.color, w: this.size, pts: [p], sent: 0 };
     renderOp(this.ctx, { k: 's', c: this.cur.c, w: this.cur.w, p: [p[0], p[1]] });
@@ -101,13 +101,16 @@ export class Board {
     const s = this.cur; if (!s || e.pointerId !== s.id) return;
     e.preventDefault();
     const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    let dist = 0;
     for (const ev of (evs.length ? evs : [e])) {
       const p = this.pt(ev), last = s.pts[s.pts.length - 1];
       if (Math.abs(p[0] - last[0]) + Math.abs(p[1] - last[1]) < 2) continue;
+      dist += Math.hypot(p[0] - last[0], p[1] - last[1]);
       s.pts.push(p);
       const ctx = this.ctx; ctx.strokeStyle = PALETTE[s.c]; ctx.lineWidth = SIZES[s.w]; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
       ctx.beginPath(); ctx.moveTo(last[0], last[1]); ctx.lineTo(p[0], p[1]); ctx.stroke();
     }
+    if (dist && this.onInk) this.onInk(dist, this.tool);
   }
   up(e) { if (this.cur && (!e || e.pointerId === this.cur.id)) this.finish(); }
   // gửi phần nét mới (kèm điểm cuối của lô trước để nét liền mạch)
@@ -125,8 +128,8 @@ export class Board {
     this.emit([op]);
   }
   emit(ops) { this.onOps && this.onOps(ops); this.onChange && this.onChange(); }
-  undo() { if (this.ops.length || this.cur) this.commit({ k: 'u' }); }
-  clear() { this.commit({ k: 'c', g: this.g++ }); }
+  undo() { if (this.ops.length || this.cur) { this.commit({ k: 'u' }); this.onTool && this.onTool('undo'); } }
+  clear() { this.commit({ k: 'c', g: this.g++ }); this.onTool && this.onTool('clear'); }
   // nhận thao tác từ người khác
   apply(ops) {
     let redraw = false;

@@ -1,11 +1,11 @@
-import { Host, Client, MAX, loadSnapshot, session } from './net.js?v=2';
+import { Host, Client, MAX, loadSnapshot, session } from './net.js?v=3';
 import { netStatus } from '../../shared/ui/status.js';
-import { Board, buildToolbar, opsToCanvas, W, H } from './draw.js?v=2';
-import { CATS, CAT_KEYS, DEFAULT_CATS, buildPool, randomPrompt, parseCustom } from './words.js?v=2';
-import { REACTS } from './engine.js?v=2';
-import { opsBytes, simplifyOps } from './ops.js?v=2';
-import * as fx from './fx.js?v=2';
-import { guideHTML } from './guide.js?v=2';
+import { Board, buildToolbar, opsToCanvas, W, H } from './draw.js?v=3';
+import { CATS, CAT_KEYS, DEFAULT_CATS, buildPool, randomPrompt, parseCustom } from './words.js?v=3';
+import { REACTS } from './engine.js?v=3';
+import { opsBytes, simplifyOps } from './ops.js?v=3';
+import * as fx from './fx.js?v=3';
+import { guideHTML } from './guide.js?v=3';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -33,10 +33,29 @@ function download(canvas, name) {
 const fname = s => fx && String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[đĐ]/g, 'd').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'tranh';
 
 // ---------- âm thanh ----------
-const syncSound = () => $$('.snd-btn').forEach(b => { b.textContent = b.id === 'btn-sound-home' ? (fx.isMuted() ? '🔇 Âm thanh' : '🔊 Âm thanh') : (fx.isMuted() ? '🔇' : '🔊'); });
-$$('.snd-btn').forEach(b => b.onclick = () => { fx.toggleMute(); syncSound(); fx.sfx.pop(); }); syncSound();
-const syncMusic = () => $('#btn-music-home').classList.toggle('on', fx.musicIsOn());
-$('#btn-music-home').onclick = () => { fx.actx(); fx.musicToggle(); syncMusic(); }; syncMusic();
+// trang chủ: 2 nút riêng; trong ván: nút loa mở bảng nhỏ bật/tắt hiệu ứng & nhạc nền
+function syncSound() {
+  const m = fx.isMuted(), mu = fx.musicIsOn();
+  $('#btn-sound-home').textContent = m ? '🔇 Âm thanh' : '🔊 Âm thanh'; $('#btn-sound-home').classList.toggle('on', !m);
+  $('#btn-music-home').textContent = mu ? '🎵 Nhạc: bật' : '🎵 Nhạc'; $('#btn-music-home').classList.toggle('on', mu);
+  $('#sp-sfx').textContent = m ? '🔇 Hiệu ứng: tắt' : '🔊 Hiệu ứng: bật'; $('#sp-sfx').classList.toggle('on', !m);
+  $('#sp-music').textContent = mu ? '🎵 Nhạc nền: bật' : '🎵 Nhạc nền: tắt'; $('#sp-music').classList.toggle('on', mu);
+  $$('.ic.snd-btn').forEach(b => b.classList.toggle('muted', m));
+}
+const toggleSfx = () => { fx.toggleMute(); syncSound(); fx.sfx.pop(); };
+const toggleMusic = () => { fx.actx(); fx.musicToggle(); syncSound(); };
+$('#btn-sound-home').onclick = toggleSfx; $('#btn-music-home').onclick = toggleMusic;
+$('#sp-sfx').onclick = toggleSfx; $('#sp-music').onclick = toggleMusic;
+$$('.ic.snd-btn').forEach(b => b.onclick = e => {
+  e.stopPropagation(); const pop = $('#snd-pop');
+  if (!pop.hidden) { pop.hidden = true; return; }
+  const r = b.getBoundingClientRect(); pop.style.top = r.bottom + 8 + 'px'; pop.style.right = Math.max(8, innerWidth - r.right) + 'px';
+  pop.hidden = false; fx.sfx.pop();
+});
+document.addEventListener('pointerdown', e => { const pop = $('#snd-pop'); if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('.ic.snd-btn')) pop.hidden = true; });
+syncSound();
+// tiếng bút chì / tẩy / đổ màu cho mọi bảng vẽ
+const inkFx = { onInk: (d, tool) => fx.scribble(d, tool), onTool: k => (k === 'fill' ? fx.sfx.fill() : k === 'undo' ? fx.sfx.undo() : fx.sfx.crumple()) };
 const openGuide = () => openModal(guideHTML() + '<div class="m-btns"><button class="btn pri" data-close>Hiểu rồi! 👌</button></div>', 'wide');
 $('#btn-guide-home').onclick = $('#g-guide').onclick = $('#t-guide').onclick = openGuide;
 
@@ -178,7 +197,7 @@ setInterval(() => {
 let gBoard = null, gTools = null, cv = 0, curTurn = null, canvasBuf = null, syncPending = false, chatKey = '', overlayKey = '', endShown = null, lastClose = 0, hintKey = '';
 function ensureGBoard() {
   if (gBoard) return;
-  gBoard = new Board($('#g-board'), { onOps: ops => { if (!net || !view || view.drawer !== myId) return; net.draw(ops); cv++; } });
+  gBoard = new Board($('#g-board'), { ...inkFx, onOps: ops => { if (!net || !view || view.drawer !== myId) return; net.draw(ops); cv++; } });
   gTools = buildToolbar($('#g-tools'), gBoard);
   gBoard.el.appendChild($('#g-overlay')); // hộp chọn từ / tổng kết nằm gọn trên mặt tranh
 }
@@ -187,6 +206,7 @@ function onDraw(ops, n) {
   if (!view || view.mode !== 'guess' || !gBoard || syncPending) return;
   if (n !== cv + 1) { requestSync(); return; }
   gBoard.apply(ops); cv = n;
+  const len = ops.reduce((t, o) => t + (o.p ? o.p.length / 2 : 0), 0); if (len) fx.scribble(Math.min(30, len * 2), 'pen', 0.45);
 }
 function onCanvas(m) {
   if (!view || view.mode !== 'guess' || m.tk !== curTurn) return;
@@ -209,7 +229,7 @@ function renderGuess(v, p) {
   const dn = esc(pname(v.drawer));
   $('#g-cap').innerHTML = v.phase === 'end' ? '🏁 Hết ván' : `Vòng ${Math.min(v.round, v.rounds)}/${v.rounds} · ${v.phase === 'choose' ? (amDrawer ? 'bạn chọn từ' : dn + ' đang chọn từ') : v.phase === 'draw' ? (amDrawer ? 'bạn đang vẽ ✏️' : dn + ' đang vẽ') : 'hết lượt'}`;
   let hint;
-  if (v.word && (v.phase === 'draw' || v.phase === 'turnEnd')) hint = `<span class="word ${amDrawer ? 'mine' : 'got'}">${esc(v.word)}</span>`;
+  if (v.word && (v.phase === 'draw' || v.phase === 'turnEnd')) hint = `<span class="word ${amDrawer ? 'mine' : 'got'} ${[...v.word].length > 14 ? 'long' : ''}">${esc(v.word)}</span>`;
   else if (v.mask) {
     const words = v.mask.join('').split(' ');
     hint = words.map(w => `<span class="w">${[...w].map(ch => `<i class="${ch === '_' ? 'blank' : 'shown'}">${ch === '_' ? '' : esc(ch)}</i>`).join('')}</span>`).join('') + `<small class="lens">${v.lens.join(' ')}</small>`;
@@ -305,7 +325,7 @@ const KIND = { write: ['✍️', 'Viết câu'], draw: ['🎨', 'Vẽ'], guess: 
 const DKEY = 'scribble-draft';
 function ensureTBoard() {
   if (tBoard) return;
-  tBoard = new Board($('#t-board'), { onChange: () => { clearTimeout(draftT); draftT = setTimeout(saveDraft, 400); } });
+  tBoard = new Board($('#t-board'), { ...inkFx, onChange: () => { clearTimeout(draftT); draftT = setTimeout(saveDraft, 400); } });
   tTools = buildToolbar($('#t-tools'), tBoard);
 }
 function saveDraft() {
@@ -473,7 +493,7 @@ function albumCanvas(v, chains) {
   ctx.fillStyle = '#fff8e8'; ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = '#e7e2f5'; ctx.lineWidth = 1;
   for (let y = 0; y < h; y += 28) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
-  ctx.fillStyle = '#1f2340'; ctx.font = '800 46px "Baloo 2", sans-serif'; ctx.textBaseline = 'top';
+  ctx.fillStyle = '#1f2340'; ctx.font = '800 44px "Shantell Sans", sans-serif'; ctx.textBaseline = 'top';
   ctx.fillText('Scribble it! – Tam sao thất bản', PAD, 26);
   ctx.font = '600 18px "Be Vietnam Pro", sans-serif'; ctx.fillStyle = '#6b6f8a';
   ctx.fillText(new Date().toLocaleDateString('vi-VN') + ' · BGVN', PAD, 80);
@@ -481,7 +501,7 @@ function albumCanvas(v, chains) {
   chains.forEach((c, ci) => {
     const x = PAD + ci * (CW + GAP);
     ctx.fillStyle = avColor(pname(v.chains[c])); rr(x, HEAD, CW, 36, 18); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.font = '800 20px "Be Vietnam Pro", sans-serif'; ctx.fillText('Chuỗi của ' + pname(v.chains[c]), x + 16, HEAD + 7);
+    ctx.fillStyle = '#fff'; ctx.font = '700 20px "Shantell Sans", sans-serif'; ctx.fillText('Chuỗi của ' + pname(v.chains[c]), x + 16, HEAD + 7);
     for (let k = 0; k < v.steps; k++) {
       const it = book.get(c + ':' + k), y = HEAD + COLH + k * ROW;
       const verb = k === 0 ? '✍️ viết' : k % 2 ? '🎨 vẽ' : '🤔 đoán';
@@ -492,7 +512,7 @@ function albumCanvas(v, chains) {
       ctx.fillStyle = '#fff'; rr(x, by, CW, CH, 16); ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#1f2340'; ctx.stroke();
       if (it && it.d) { ctx.save(); rr(x, by, CW, CH, 16); ctx.clip(); ctx.drawImage(drawingImg(c + ':' + k, it.d), x, by, CW, CH); ctx.restore(); rr(x, by, CW, CH, 16); ctx.stroke(); }
       else if (it) {
-        ctx.fillStyle = '#1f2340'; ctx.font = '700 26px "Be Vietnam Pro", sans-serif';
+        ctx.fillStyle = '#1f2340'; ctx.font = '30px "Patrick Hand", sans-serif';
         const lines = wrapText(ctx, '“' + it.t + '”', CW - 50), lh = 36, ty = by + CH / 2 - lines.length * lh / 2;
         ctx.textAlign = 'center'; lines.forEach((l, i) => ctx.fillText(l, x + CW / 2, ty + i * lh)); ctx.textAlign = 'left';
       }
@@ -506,7 +526,7 @@ let pBoard = null, pWord = '';
 function newWord() { const pool = buildPool({ cats: DEFAULT_CATS }); pWord = pool[Math.floor(Math.random() * pool.length)]; $('#p-word').textContent = pWord; }
 $('#btn-practice').onclick = () => {
   fx.actx(); fx.musicResumeIfOn(); show('screen-practice');
-  if (!pBoard) { pBoard = new Board($('#p-board'), { editable: true }); buildToolbar($('#p-tools'), pBoard); }
+  if (!pBoard) { pBoard = new Board($('#p-board'), { ...inkFx, editable: true }); buildToolbar($('#p-tools'), pBoard); }
   newWord();
 };
 $('#p-next').onclick = () => { newWord(); if (!pBoard.isEmpty()) pBoard.clear(); fx.sfx.choose(); };
