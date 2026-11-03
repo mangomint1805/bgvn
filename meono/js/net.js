@@ -2,6 +2,10 @@
 import { createGame, applyAction, viewFor, resolveWindow, waitingOn, getPlayer, DEFAULT_OPTS } from './engine.js?v=7';
 import { botAction, botNope } from './bot.js?v=7';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
+import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
+// Câu chọc kiểu mèo cho bảng thả emoji (shared/ui/react.js), mỗi câu ≤ 24 ký tự
+export const MEO_PHRASES = ['Bốc đi bé!', 'ĐÉO nhé!', 'Meo meo 😼', 'Bom đâu rồi?', 'Hú hồn 😮‍💨', 'Đổ vỏ nè!', 'Cứu tui'];
+const BOT_POOLS = { attack: ['Bốc đi bé!', 'Đổ vỏ nè!', 'Meo meo 😼'], hurt: ['Cứu tui', 'Hú hồn 😮‍💨'], win: ['Meo meo 😼'], reply: ['Meo meo 😼', 'Bom đâu rồi?'], nope: ['ĐÉO nhé!'] };
 const NS = 'bgvn-meono', PREFIX = 'bgvn-meono-', GAME = 'meono';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
@@ -26,6 +30,7 @@ export class Host {
     this.state = null; this.conns = new Map(); this.timers = {}; this.clock = null; this.graceUntil = 0;
     this.hs = Math.random().toString(36).slice(2, 8); // mã phiên chủ phòng (đổi khi tải lại trang)
     this.opts = { ...DEFAULT_OPTS };
+    this.lim = hostLimiter(); this.botReactAt = 0;
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));
       this.state = restore.state; this.code = restore.code; this.opts = restore.opts || this.opts;
@@ -62,6 +67,8 @@ export class Host {
       if (this.state) { this.schedule(); this.broadcast(); }
     } else if (msg.t === 'action') {
       const p = this.conns.get(conn); if (p) this.act(p.id, msg.a);
+    } else if (msg.t === 'react') {
+      const p = this.conns.get(conn); if (p && p.conn === conn) this.react(p.id, msg.e); // "from" do chủ phòng gán theo kết nối
     } else if (msg.t === 'sync') {
       // người vào thấy mình lỡ mất state → gửi lại riêng cho họ
       const p = this.conns.get(conn); if (!p || p.conn !== conn) return;
@@ -119,6 +126,36 @@ export class Host {
     for (const e of evs) wait = Math.max(wait, e.k === 'boom' ? 3400 : e.k === 'bomb' ? 1800 : e.k === 'defuse' ? 1200 : e.k === 'win' ? 1000 : 0);
     if (wait) this.graceUntil = Math.max(this.graceUntil, Date.now() + wait * speedK());
     this.schedule(); this.broadcast();
+    this.botReacts(evs);
+  }
+  // ---- thả emoji / chọc nhau: chủ phòng lọc (hợp lệ + chống spam) rồi phát lại cho cả bàn ----
+  react(from, e) {
+    if (this.dead || !isReact(e, MEO_PHRASES) || !this.players.some(p => p.id === from) || !this.lim(from)) return false;
+    const msg = { t: 'react', e, from };
+    for (const p of this.players) if (p.conn) try { p.conn.send(msg); } catch (x) {}
+    this.h.onReact && this.h.onReact(msg);
+    const sender = this.players.find(p => p.id === from);
+    if (sender && !sender.isBot && Math.random() < 0.3) this.botSay(null, 'reply', 900 + Math.random() * 900);
+    return true;
+  }
+  // bot chọc (pid null = bot ngẫu nhiên); tối đa 1 câu / 6 giây cho cả bàn
+  botSay(pid, mood, delay = 1000) {
+    const now = Date.now(); if (now < this.botReactAt) return;
+    const bots = this.players.filter(p => p.isBot && (!pid || p.id === pid) && !(this.state && (getPlayer(this.state, p.id) || {}).out && mood !== 'hurt'));
+    if (!bots.length) return;
+    this.botReactAt = now + 6000;
+    const b = bots[Math.floor(Math.random() * bots.length)];
+    setTimeout(() => { if (!this.dead && this.state) this.react(b.id, pickReact(mood, BOT_POOLS)); }, delay * speedK());
+  }
+  botReacts(evs) {
+    const isBot = id => (this.players.find(p => p.id === id) || {}).isBot;
+    for (const e of evs) {
+      if (e.k === 'win') { if (isBot(e.by) && Math.random() < 0.6) this.botSay(e.by, 'win', 1800); return; }
+      if (e.k === 'boom') { if (isBot(e.by) && Math.random() < 0.5) this.botSay(e.by, 'hurt', 2600); else if (Math.random() < 0.35) this.botSay(null, 'attack', 3000); }
+      else if (e.k === 'bomb' && isBot(e.by) && Math.random() < 0.35) this.botSay(e.by, 'hurt', 1600);
+      else if (e.k === 'nope' && isBot(e.by) && Math.random() < 0.3) this.botSay(e.by, 'nope', 500);
+      else if (e.k === 'play' && e.kind === 'attack' && isBot(e.by) && Math.random() < 0.25) this.botSay(e.by, 'attack', 700);
+    }
   }
   clearTimers() { for (const k of Object.keys(this.timers)) clearTimeout(this.timers[k]); this.timers = {}; }
   isAuto(pid) { const p = this.players.find(x => x.id === pid); return !p || p.isBot; }
@@ -230,6 +267,7 @@ export class Client {
       // chủ phòng đã gửi state mới hơn cái mình có (tin bị rơi) → xin gửi lại
       if (msg.started && (msg.hs !== this.hs || msg.bc > this.bc)) { this.diag.syncs++; this.room.send({ t: 'sync' }); }
     } else if (msg.t === 'lobby') this.h.onLobby(msg.info, msg.code, msg.started);
+    else if (msg.t === 'react') this.h.onReact && this.h.onReact(msg);
     else if (msg.t === 'error') this.h.onError(msg.msg);
     else if (msg.t === 'kicked') { this.h.onError('Bạn đã bị mời ra khỏi phòng.'); this.leave(); }
   }
@@ -255,6 +293,7 @@ export class Client {
     } catch (e) {}
   }
   act(a) { this.room.send({ t: 'action', a }); }
+  react(e) { this.room.send({ t: 'react', e }); }
   destroy() { this.dead = true; clearInterval(this.wd); try { this.fbOff && this.fbOff(); } catch (e) {} this.room.destroy(); }
   leave() { this.destroy(); session.clear(GAME); }
 }

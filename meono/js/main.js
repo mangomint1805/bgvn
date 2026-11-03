@@ -1,4 +1,5 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn } from './net.js?v=7';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, MEO_PHRASES } from './net.js?v=8';
+import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat, awards } from './engine.js?v=7';
 import { cardHTML, catSVG, bombSVG, cardIcon, mascotSVG, tint } from './cards.js?v=7';
@@ -52,6 +53,31 @@ $('#mascot').onclick = () => { pet($('#mascot')); setMood('happy', 1400); };
 $('#home-cat').onclick = () => { pet($('#home-cat')); fx.pop($('#home-cat'), 'woke'); };
 $('#lobby-cat').onclick = () => { pet($('#lobby-cat')); fx.pop($('#lobby-cat'), 'woke'); };
 
+// ---------- thả emoji / chọc nhau (shared/ui/react.js): nút 😂 ở góc dưới phải hộp bài ----------
+const reacts = createReactions({
+  send: e => { if (!net) return; if (isHost) net.react('host', e); else net.react(e); },
+  seatEl: id => id === myId ? $('#actions') : $(`.seat[data-pid="${id}"] .av`),
+  myId: () => myId,
+  nameOf: id => { const p = view && view.players.find(x => x.id === id); return p ? clean(p.name) : ''; },
+  mount: $('#center'), place: 'right:6px;bottom:6px',
+  phrases: MEO_PHRASES,
+  onShow: msg => { if (/^Meo|^Bốc|^ĐÉO/.test(msg.e || '')) fx.sfx.meow(0, 1.2 + Math.random() * 0.3, 0.05); else fx.sfx.flip(); },
+});
+reacts.setVisible(false);
+// màn ngang thấp (điện thoại xoay ngang): hộp bài bị ép dẹt → chuyển nút 😂 lên khoảng trống trên thanh công cụ
+function placeReact() {
+  const b = document.querySelector('.bgr-btn'); if (!b) return;
+  const tb = $('.topbar'), tools = $('.topbar .tools'), title = $('.topbar .title-tag');
+  let into = $('#center'), pos = { left: '', top: '', right: '6px', bottom: '6px' };
+  if (innerHeight < 520 && $('#screen-game').classList.contains('active')) {
+    const tr = tb.getBoundingClientRect(), x0 = Math.max(title.offsetParent ? title.getBoundingClientRect().right : 0, $('#btn-leave').getBoundingClientRect().right) - tr.left + 8;
+    if (tools.getBoundingClientRect().left - tr.left - x0 >= 52) { into = tb; pos = { left: x0 + 'px', top: '50%', right: '', bottom: '' }; }
+  }
+  if (b.parentNode !== into) into.appendChild(b);
+  Object.assign(b.style, pos, { transform: into === tb ? 'translateY(-50%)' : '' });
+}
+addEventListener('resize', placeReact);
+
 // ---------- trang chủ ----------
 $('#name').value = ls.get('bgvn-name') || '';
 $('#hero').innerHTML = ['cat1', 'attack', 'bomb', 'defuse', 'cat5'].map((t, i) => cardHTML({ t }, 'hero-card', `style="--r:${(i - 2) * 13}deg;--d:${i * 90}ms"`)).join('');
@@ -63,6 +89,7 @@ const handlers = {
   onJoined(id) { myId = id; },
   onDisconnect() {},
   onNet(t, k, retry) { netStatus(t, k, retry); },
+  onReact(msg) { reacts.show(msg); },
 };
 function startHost(offline) {
   fx.actx(); fx.musicResumeIfOn();
@@ -83,7 +110,7 @@ $('#btn-join').onclick = () => {
 $('#join-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
 $('#join-code').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase(); });
 const qcode = new URLSearchParams(location.search).get('room'); if (qcode) $('#join-code').value = qcode.toUpperCase();
-function leave() { if (net) (net.leave ? net.leave() : net.destroy()); net = null; view = null; lobby = null; closeModal(); fx.setTension(0); show('screen-home'); }
+function leave() { if (net) (net.leave ? net.leave() : net.destroy()); net = null; view = null; lobby = null; closeModal(); fx.setTension(0); reacts.setVisible(false); show('screen-home'); }
 $('#btn-leave-lobby').onclick = leave;
 $('#btn-leave').onclick = () => openModal(`<h2>Rời ván?</h2><p class="ctr">${isHost ? 'Bạn là chủ phòng – rời đi sẽ kết thúc ván cho mọi người.' : 'Bạn có thể vào lại bằng mã phòng.'}</p><div class="btns"><button class="btn" onclick="__closeModal()">Ở lại</button><button class="btn red" id="m-leave">Rời ván</button></div>`);
 document.addEventListener('click', e => { if (e.target.id === 'm-leave') leave(); });
@@ -143,7 +170,7 @@ const risk = v => v.peek && v.peek.length ? (v.peek[0].t === 'bomb' ? 1 : 0) : v
 
 // ---------- nhận state ----------
 function onState(v) {
-  if (!v) { view = null; closeModal(); show('screen-lobby'); renderLobby(); fx.setTension(0); return; }
+  if (!v) { view = null; closeModal(); show('screen-lobby'); renderLobby(); fx.setTension(0); reacts.setVisible(false); return; }
   // state chủ phòng gửi là sự thật duy nhất: luôn vẽ theo state mới nhất; hàng đợi hoạt ảnh chỉ là phần phụ, có thể bỏ
   const newGame = !!(view && view.gid && v.gid && view.gid !== v.gid);
   const first = !view || newGame || !$('#screen-game').classList.contains('active');
@@ -190,6 +217,7 @@ function render() {
   if (!landing || Date.now() - landingAt > 2500) { landing = 0; renderDiscard(); }
   renderMeter(v);
   updateMascot();
+  reacts.setVisible(v.phase === 'playing' || v.phase === 'ended'); placeReact();
   $('#opps').classList.toggle('alert', !!v.window);
   if (!v.window && fx.stampsOn()) fx.clearStamps();
   renderStrip(v, meP);
