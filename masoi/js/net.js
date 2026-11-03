@@ -2,6 +2,12 @@
 import { createGame, applyAction, viewFor, actors, timeout, phaseMs, DEFAULT_OPTS, presetRoles, roleList, ROLES, MAX_PLAYERS, MIN_PLAYERS, P, isWolfRole } from './engine.js?v=3';
 import { botAction, botDayPlan, botWolfLine, botGhostLine, botLastWords } from './bot.js?v=3';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
+import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
+// câu chọc riêng của Ma Sói (bảng thả emoji – shared/ui/react.js)
+export const MS_PHRASES = ['Sói là mày!', 'Tui là dân thật', 'Treo nó đi!', 'Oan quá trời', 'Nghi lắm nha', 'Khai lẹ đi!'];
+const BOT_POOLS = { attack: ['Sói là mày!', 'Treo nó đi!', 'Nghi lắm nha', 'Khai lẹ đi!'], hurt: ['Oan quá trời', 'Tui là dân thật'], win: ['GG'], reply: ['Nghi lắm nha', 'Tui là dân thật'] };
+// emoji chỉ được thả lúc trời sáng (ban đêm thả là lộ ai đang thức)
+export const REACT_PHASES = ['dawn', 'day', 'vote', 'last', 'hunter'];
 const NS = 'bgvn-masoi', PREFIX = 'bgvn-masoi-', GAME = 'masoi';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
@@ -18,6 +24,7 @@ export class Host {
     this.state = null; this.conns = new Map(); this.timers = {}; this.botT = {}; this.curPk = null; this.deadline = 0; this.total = 1; this.lastChat = {};
     this.opts = JSON.parse(JSON.stringify(DEFAULT_OPTS));
     this.tut = { seen: [], off: false }; this.paused = null; this.replayAt = null;
+    this.lim = hostLimiter(); this.botReactAt = 0;
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));
       this.state = restore.state; this.code = restore.code; this.opts = restore.opts || this.opts;
@@ -55,6 +62,8 @@ export class Host {
       if (this.state) { this.schedule(); this.broadcast(); }
     } else if (msg.t === 'action') {
       const p = this.conns.get(conn.peer); if (p) this.act(p.id, msg.a);
+    } else if (msg.t === 'react') {
+      const p = this.conns.get(conn.peer); if (p) this.react(p.id, msg.e);
     }
   }
   onLeave(conn) {
@@ -149,6 +158,33 @@ export class Host {
       this.schedule(); this.broadcast();
     }
   }
+  // ---- thả emoji / chọc nhau: chủ phòng kiểm tra luật rồi phát lại ----
+  // Người sống: chỉ lúc trời sáng (sáng/thảo luận/bỏ phiếu/trăng trối/Thợ Săn). Người chết: chỉ hồn ma khác thấy.
+  // Hết ván: ai cũng thả, cả bàn thấy.
+  react(from, e) {
+    const s = this.state;
+    if (this.dead || !s || !isReact(e, MS_PHRASES) || !this.lim(from)) return false;
+    const p = P(s, from); if (!p) return false;
+    let ghostOnly = false;
+    if (s.phase !== 'ended') { if (!p.alive) ghostOnly = true; else if (!REACT_PHASES.includes(s.phase)) return false; }
+    const msg = { t: 'react', e, from };
+    const sees = id => { if (!ghostOnly) return true; const q = P(s, id); return q && !q.alive; };
+    for (const q of this.players) if (q.conn && sees(q.id)) try { q.conn.send(msg); } catch (x) {}
+    if (sees('host')) this.h.onReact && this.h.onReact(msg);
+    const sender = this.players.find(q => q.id === from);
+    if (sender && !sender.isBot && !ghostOnly && Math.random() < 0.3) this.botSay(null, 'reply', 900 + Math.random() * 900);
+    return true;
+  }
+  // bot thả emoji (pid null: 1 bot còn sống ngẫu nhiên); giãn cách ≥ 6 giây để không ồn
+  botSay(pid, mood, delay = 1000) {
+    const s = this.state; if (!s) return;
+    const now = Date.now(); if (now < this.botReactAt) return;
+    const bots = s.players.filter(p => p.isBot && (pid ? p.id === pid : p.alive));
+    if (!bots.length) return;
+    this.botReactAt = now + 6000;
+    const b = bots[Math.floor(Math.random() * bots.length)], pk = s.pk;
+    setTimeout(() => { const st = this.state; if (!this.dead && st && (st.pk === pk || st.phase === 'ended')) this.react(b.id, pickReact(mood, BOT_POOLS)); }, delay);
+  }
   // chủ phòng bấm ⏩ Bỏ phiếu sớm
   earlyVote() { const s = this.state; if (!s || s.phase !== 'day') return; timeout(s); this.schedule(); this.broadcast(); }
   // xem lại cuối ván: chủ phòng chiếu trang nào thì cả hội theo trang đó
@@ -174,7 +210,10 @@ export class Host {
   // quản trò: đồng hồ pha + hẹn giờ cho bot
   schedule() {
     const s = this.state; if (!s) return;
-    if (s.phase === 'ended') { this.clearTimers(); this.curPk = s.pk; this.paused = null; return; }
+    if (s.phase === 'ended') {
+      if (this.curPk !== s.pk && s.winner) { const wb = s.players.filter(p => p.isBot && s.winner.ids.includes(p.id)); if (wb.length && Math.random() < 0.6) this.botSay(wb[Math.floor(Math.random() * wb.length)].id, 'win', 4500); }
+      this.clearTimers(); this.curPk = s.pk; this.paused = null; return;
+    }
     if (this.paused) { if (s.pk !== this.paused.pk) { this.paused.pk = s.pk; this.paused.left = phaseMs(s); this.curPk = s.pk; this.clearTimers(); } return; } // đang dừng: không chạy giờ, bot cũng chờ
     const now = Date.now();
     if (s.pk !== this.curPk) { // pha mới
@@ -233,6 +272,10 @@ export class Host {
       if (wb.length && Math.random() < 0.8) { const b = wb[Math.floor(Math.random() * wb.length)]; this.later('wolfchat', rnd(1200, 2400), () => { const st = this.state; if (st.pk !== pk) return; const r = applyAction(st, b.id, { type: 'chat', ch: 'wolf', text: botWolfLine(st, P(st, b.id)) }); if (r.ok) this.broadcast(); }); }
     }
     if (s.phase === 'last' && this.isBot(s.condemned)) say('lastw', rnd(1200, 3000), s.condemned, 'all', botLastWords(s, P(s, s.condemned)));
+    // bot thỉnh thoảng thả emoji / chọc nhau lúc trời sáng
+    if (s.phase === 'day' && Math.random() < 0.7) this.botSay(null, Math.random() < 0.7 ? 'attack' : 'reply', rnd(2500, 9000));
+    if (s.phase === 'vote' && Math.random() < 0.35) this.botSay(null, 'attack', rnd(1500, 5000));
+    if (s.phase === 'last' && this.isBot(s.condemned) && Math.random() < 0.6) this.botSay(s.condemned, 'hurt', rnd(3500, 6000));
     if (s.phase === 'dawn' || s.phase === 'last') {
       const ghosts = bots.filter(p => !p.alive && p.diedDay === s.day);
       ghosts.forEach((g, i) => { if (Math.random() < 0.45) say('ghost' + i, rnd(2500, 6000), g.id, 'ghost', botGhostLine()); });
@@ -267,11 +310,13 @@ export class Client {
         if (msg.t === 'lobby') this.h.onLobby(msg.info, msg.code, msg.started);
         else if (msg.t === 'state') this.h.onState(msg.view);
         else if (msg.t === 'error') this.h.onError(msg.msg);
+        else if (msg.t === 'react') this.h.onReact && this.h.onReact(msg);
         else if (msg.t === 'kicked') { this.h.onError('Bạn đã bị mời ra khỏi phòng.'); this.leave(); }
       },
     });
   }
   act(a) { this.room.send({ t: 'action', a }); }
+  react(e) { this.room.send({ t: 'react', e }); }
   destroy() { this.room.destroy(); }
   leave() { this.destroy(); session.clear(GAME); }
 }

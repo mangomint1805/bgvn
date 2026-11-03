@@ -1,11 +1,12 @@
-import { Host, Client, MAX, MIN, loadSnapshot, session } from './net.js?v=3';
+import { Host, Client, MAX, MIN, loadSnapshot, session, MS_PHRASES, REACT_PHASES } from './net.js?v=4';
+import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { ROLES, ROLE_ORDER, STEP_TEXT, TEAM_NAME, roleList, presetRoles, isWolfRole, DEFAULT_OPTS } from './engine.js?v=3';
 import { openReplay, replayFollowUpdate } from './replay.js?v=3';
 import { coachCheck, coachHide, coachTipEnd } from './coach.js?v=3';
 import { roleCardSVG, cardBackSVG, roleChip, roleDot, bambooSVG, dinhSVG, hillsSVG, starsHTML, firefliesHTML, heroSVG } from './art.js?v=3';
 import * as fx from './fx.js?v=3';
-import { openGuide } from './guide.js?v=3';
+import { openGuide } from './guide.js?v=4';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=4';
 
 const $ = s => document.querySelector(s);
@@ -79,8 +80,9 @@ function moodFor(v) {
 $('#name').value = ls.get('bgvn-name') || '';
 function myName() { const n = $('#name').value.trim() || 'Bạn'; ls.set('bgvn-name', n); return n; }
 const handlers = {
-  onLobby(info, code, started) { lobby = info; $('#room-code').textContent = code; if (!started) { view = null; fresh = true; curPk = -1; renderLobby(); if (!$('#screen-lobby').classList.contains('active')) { if (modalKey !== 'end') closeModal(); show('screen-lobby'); setBody(null); } } },
+  onLobby(info, code, started) { lobby = info; if (!started) reacts.setVisible(false); $('#room-code').textContent = code; if (!started) { view = null; fresh = true; curPk = -1; renderLobby(); if (!$('#screen-lobby').classList.contains('active')) { if (modalKey !== 'end') closeModal(); show('screen-lobby'); setBody(null); } } },
   onState(v) { onState(v); },
+  onReact(msg) { reacts.show(msg); },
   onError(m) { toast(m); fx.sfx.bad(); },
   onJoined(id) { myId = id; },
   onDisconnect() {},
@@ -106,7 +108,7 @@ $('#btn-join').onclick = () => {
 $('#join-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
 $('#join-code').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase(); });
 const qcode = new URLSearchParams(location.search).get('room'); if (qcode) $('#join-code').value = qcode.toUpperCase();
-function leave() { if (net) (net.leave ? net.leave() : net.destroy()); net = null; view = null; lobby = null; closeModal(); coachHide(); show('screen-home'); setBody(null); setTheme('night'); moodFor(null); }
+function leave() { if (net) (net.leave ? net.leave() : net.destroy()); net = null; view = null; lobby = null; closeModal(); coachHide(); reacts.setVisible(false); show('screen-home'); setBody(null); setTheme('night'); moodFor(null); }
 $('#btn-leave-lobby').onclick = leave;
 $('#btn-leave').onclick = () => openModal(`<h2>Rời làng?</h2><p class="ctr">${isHost ? 'Bạn là chủ phòng – rời đi sẽ kết thúc ván cho mọi người.' : 'Bạn có thể vào lại bằng mã phòng (máy làm giùm lúc bạn vắng).'}</p><div class="btns"><button class="btn" onclick="__closeModal()">Ở lại</button><button class="btn red" id="m-leave">Rời ván</button></div>`);
 document.addEventListener('click', e => { if (e.target.id === 'm-leave') leave(); });
@@ -294,6 +296,10 @@ function newChat(v) {
 function render() {
   if (!view) return;
   renderPhase(); renderSeats(); renderAct(); renderDock();
+  // thả emoji: người sống chỉ lúc trời sáng (đêm thả là lộ ai đang thức); hồn ma thì chỉ hồn ma khác thấy
+  const m = view.me, on = !!m && (view.phase === 'ended' || !m.alive || REACT_PHASES.includes(view.phase));
+  reacts.setVisible(on);
+  $('#seats-wrap').classList.toggle('has-react', on);
 }
 
 // ---------- đầu trang ----------
@@ -692,6 +698,17 @@ function endModal() {
   const b = $('#e-again'); if (b) b.onclick = () => { closeModal(); net.restart(); };
   $('#e-replay').onclick = () => openReplay(ctx(), 0);
 }
+// ---------- thả emoji / chọc nhau (shared/ui/react.js) ----------
+const reacts = createReactions({
+  send: e => { if (!net) return; if (isHost) net.react('host', e); else net.react(e); },
+  seatEl: id => document.querySelector(`.seat[data-pid="${id}"]`),
+  myId: () => myId,
+  nameOf: id => pname(id),
+  mount: $('#react-slot'), place: 'right:10px;bottom:8px',
+  phrases: MS_PHRASES,
+  onShow: () => fx.sfx.chat(),
+});
+reacts.setVisible(false);
 if (location.hash === '#debug') window.__dbg = () => ({ net, view, sel, tab, modalKey });
 
 // ---------- Tải lại trang: tự khôi phục phòng / tự vào lại ----------

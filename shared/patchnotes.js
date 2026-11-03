@@ -5,6 +5,9 @@ export const GAMES = {
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
 };
 export const NOTES = [
+  { id: '20261103-9', date: '03/11/2026', game: 'masoi', title: 'Thả emoji, chọc nhau', items: [
+    '😂 Thả emoji / chọc nhau ("Sói là mày!", "Oan quá trời"…) lúc trời sáng – ban đêm nút ẩn cho khỏi lộ ai đang thức, hồn ma thì chỉ hồn ma thấy.',
+  ] },
   { id: '20261103-8', date: '03/11/2026', game: 'uno', title: 'Thấy rõ ai chơi ai, thả emoji, tính điểm', items: [
     '🎯 Móc túi, tặng quà, nhắm +4, No U dội ngược… có mũi tên bay từ người làm tới người bị, kèm dòng chữ ngắn.',
     '😂 Nút thả emoji và câu chọc ("Ăn +4 đi cưng", "Cứu tui"…), cả bàn đều thấy; bot cũng biết chọc lại.',

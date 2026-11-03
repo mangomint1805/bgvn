@@ -5,7 +5,8 @@ import { botAction } from '../js/bot.js?v=3';
 let pass = 0, failN = 0;
 const ok = (c, msg) => { if (c) pass++; else { failN++; console.log('  ✗', msg); } };
 const eq = (a, b, msg) => ok(JSON.stringify(a) === JSON.stringify(b), `${msg} (được ${JSON.stringify(a)}, cần ${JSON.stringify(b)})`);
-function test(name, f) { const before = failN; try { f(); } catch (e) { failN++; console.log('  ✗ EXCEPTION', e.stack); } console.log((failN === before ? '✓ ' : '✗ ') + name); }
+const pending = [];
+function test(name, f) { const before = failN; const done = () => console.log((failN === before ? '✓ ' : '✗ ') + name); try { const r = f(); if (r && r.then) { pending.push(r.then(done, e => { failN++; console.log('  ✗ EXCEPTION', e.stack); done(); })); return; } } catch (e) { failN++; console.log('  ✗ EXCEPTION', e.stack); } done(); }
 
 // tạo ván với vai cố định theo thứ tự: roles[i] cho người 'p'+i
 function mk(roles, opts = {}) {
@@ -374,5 +375,28 @@ test('Ván tập: ép vai cho người chơi', () => {
   }
   ok(true, 'ép vai 30 lần');
 });
+
+test('Thả emoji: ban đêm cấm, ban ngày cả làng thấy, hồn ma chỉ hồn ma thấy', async () => {
+  const { Host, MS_PHRASES } = await import('../js/net.js?v=4');
+  const got = [];
+  const h = new Host('Chủ', { onLobby() {}, onState() {}, onError() {}, onReact: m => got.push(m) }, true);
+  h.addBot(5); h.opts.auto = false; h.opts.roles = { wolf: 1 };
+  h.start(); h.clearTimers(); h.schedule = () => {}; h.broadcast = () => {};
+  const s = h.state, sent = {};
+  const fake = id => ({ send: m => (sent[id] = sent[id] || []).push(m) });
+  h.players[1].conn = fake(h.players[1].id); h.players[2].conn = fake(h.players[2].id);
+  ok(s.phase === 'night', 'đang đêm');
+  ok(!h.react('host', '😂'), 'ban đêm không thả được');
+  ok(!h.react('host', 'hack <b>'), 'câu lạ bị chặn');
+  while (s.phase !== 'day') timeout(s);
+  h.lim = () => true;
+  ok(h.react('host', MS_PHRASES[0]) && got.length === 1 && sent[h.players[1].id].length === 1, 'ban ngày: chủ phòng + người khác đều thấy');
+  const dead = P(s, h.players[1].id); dead.alive = false;
+  got.length = 0; sent[h.players[1].id] = []; sent[h.players[2].id] = [];
+  ok(h.react(dead.id, '💀'), 'hồn ma thả được');
+  ok(!got.length && !sent[h.players[2].id].length && sent[h.players[1].id].length === 1, 'chỉ hồn ma thấy (người sống không nhận)');
+  h.destroy();
+});
+await Promise.all(pending);
 console.log(`\n${pass} kiểm tra đạt, ${failN} lỗi`);
-if (failN) process.exit(1);
+process.exit(failN ? 1 : 0);

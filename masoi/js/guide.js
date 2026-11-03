@@ -62,7 +62,7 @@ export function openGuide(openModal) {
         <li>Ban đêm: <b>ai cũng cúi xuống điện thoại</b> (cả người không có việc) để không lộ ai đang bấm. Máy tự gọi từng vai.</li>
         <li>Bật <b>🗣️ Quản trò đọc</b> trên <b>1 máy</b> (máy chủ phòng, để giữa bàn) để có giọng dẫn truyện – nếu trình duyệt có giọng tiếng Việt.</li>
         <li>Ban ngày thì cãi nhau ngoài đời 😆, chỉ điểm và bỏ phiếu trên máy.</li></ol>
-      <h3>Mẹo</h3><ul><li>Bảng 📒 trong khung chat là <b>sổ tay riêng</b>: kết quả soi, ai là người yêu, ai bị cắn…</li><li>Chỉnh nhạc/âm thanh ở thanh trên cùng. Tắt nhạc vẫn còn tiếng dế, gà gáy, sói tru.</li></ul>
+      <h3>Mẹo</h3><ul><li>Nút <b>😂</b> góc dưới khu ghế: thả emoji / chọc nhau (“Sói là mày!”, “Oan quá trời”…). Người sống chỉ dùng được <b>lúc trời sáng</b> (ban đêm nút ẩn, để không lộ ai đang thức). Hồn ma thả thì chỉ hồn ma khác thấy. Hết ván thì ai cũng thả được.</li><li>Bảng 📒 trong khung chat là <b>sổ tay riêng</b>: kết quả soi, ai là người yêu, ai bị cắn…</li><li>Chỉnh nhạc/âm thanh ở thanh trên cùng. Tắt nhạc vẫn còn tiếng dế, gà gáy, sói tru.</li></ul>
       <p class="note">Bản fan-made phi thương mại. “Ma Sói” là trò chơi dân gian, luật tự do. Toàn bộ hình vẽ, chữ, âm thanh tự làm.</p>`],
   };
   const keys = Object.keys(tabs);

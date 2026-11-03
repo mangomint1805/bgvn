@@ -515,3 +515,7 @@ body.peeking .peek{display:flex}
   .thief-pick .tp{flex-basis:112px}.thief-pick .tp svg{max-height:40vh;width:auto;margin:0 auto}
   .modal-box h2{font-size:20px;margin-bottom:4px}
 }
+
+/* nút thả emoji: góc dưới phải khu ghế, ghế cuối được chừa chỗ khi cuộn */
+.react-slot{position:relative;height:0;flex:none;z-index:6}
+.seats-wrap.has-react:not(.ring){padding-bottom:58px}
