@@ -1,7 +1,10 @@
 // Lớp mạng Scribble it!: chủ phòng giữ state + đồng hồ, máy khách gửi hành động & nét vẽ.
 // Nét vẽ đi riêng (tin 'draw' theo lô ~100ms, chủ phòng chuyển tiếp), người vào muộn nhận lại cả lịch sử ('canvas').
-import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, bookItems, shiftTime, cleanOpts, DEFAULT_OPTS, maxPlayers, MAX_CROWD, MAX_NORMAL } from './engine.js?v=5';
+import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, bookItems, shiftTime, cleanOpts, DEFAULT_OPTS, maxPlayers, MAX_CROWD, MAX_NORMAL, checkTease } from './engine.js?v=7';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
+import { isReact, hostLimiter } from '../../shared/ui/react.js?v=2';
+// Câu chọc cố định (bảng thả emoji – shared/ui/react.js). Không cho gõ tự do qua kênh này nên không thể lộ đáp án Đoán hình.
+export const PHRASES = ['Vẽ gì zậy trời', 'Picasso đây rồi', 'Đoán bừa đi!', 'Ủa alo?', 'Nét căng đét!', 'Hiểu chết liền'];
 const NS = 'bgvn-scribble', PREFIX = 'bgvn-scribble-', GAME = 'scribble';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export const MAX = MAX_CROWD; // chế độ Đông vui tới 30 người, các chế độ khác tối đa 12
@@ -21,7 +24,7 @@ export class Host {
   constructor(name, handlers, restore = null, offline = false) {
     this.h = handlers; this.isHost = true; this.offline = !!(offline || (restore && restore.offline));
     this.players = [{ id: 'host', name, token: token(), conn: null, connected: true }];
-    this.opts = { ...DEFAULT_OPTS }; this.state = null; this.conns = new Map(); this.lastGuess = {};
+    this.opts = { ...DEFAULT_OPTS }; this.state = null; this.conns = new Map(); this.lastGuess = {}; this.lim = hostLimiter();
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.id === 'host' }));
       this.opts = cleanOpts(restore.opts || {}); this.state = restore.state || null; this.code = restore.code; this.bookSent = null;
@@ -81,6 +84,8 @@ export class Host {
     else if (msg.t === 'draw') this.drawFrom(p.id, msg.ops);
     else if (msg.t === 'sync') this.sendCanvas(p);
     else if (msg.t === 'needbook') this.sendBook(p);
+    else if (msg.t === 'react') this.react(p.id, msg.e);
+    else if (msg.t === 'tease') this.tease(p.id, msg.text);
   }
   onLeave(conn) {
     const p = this.conns.get(conn.peer); if (!p) return;
@@ -119,6 +124,24 @@ export class Host {
     this.state = null; this.players = this.players.filter(p => p.connected);
     for (const p of this.players) { p.lastKey = null; this.send(p, { t: 'state', view: null }); }
     this.h.onState(null); this.pushLobby();
+  }
+  // thả emoji / câu chọc: chủ phòng gán from theo kết nối, lọc câu lạ + chống spam rồi phát cho cả phòng
+  react(from, e) {
+    if (this.dead || !isReact(e, PHRASES) || !this.players.some(p => p.id === from) || !this.lim(from)) return false;
+    const msg = { t: 'react', e, from };
+    for (const p of this.players) if (p.id !== 'host') this.send(p, msg);
+    this.h.onReact && this.h.onReact(msg); return true;
+  }
+  // câu chọc gõ tự do: chủ phòng làm sạch + lọc lộ đáp án (engine.checkTease) + chống spam chung với emoji
+  tease(from, raw) {
+    if (this.dead || typeof raw !== 'string' || raw.length > 400 || !this.players.some(p => p.id === from)) return false;
+    const r = checkTease(this.state, from, raw), p = this.players.find(x => x.id === from);
+    if (r.guess) { this.actFrom(from, { type: 'guess', text: r.text }); return false; } // gõ trúng/gần trúng đáp án: tính là lượt đoán
+    if (!r.ok) { if (!r.silent) { if (from === 'host') this.h.onError(r.reason); else this.send(p, { t: 'error', msg: r.reason }); } return false; }
+    if (!this.lim(from)) return false;
+    const msg = { t: 'tease', text: r.text, from };
+    for (const q of this.players) if (q.id !== 'host') this.send(q, msg);
+    this.h.onTease && this.h.onTease(msg); return true;
   }
   act(a) { this.actFrom('host', a); }
   actFrom(pid, a) {
@@ -192,6 +215,8 @@ export class Client {
         else if (msg.t === 'draw') this.h.onDraw(msg.ops, msg.cv);
         else if (msg.t === 'canvas') this.h.onCanvas(msg);
         else if (msg.t === 'book') this.h.onBook(msg);
+        else if (msg.t === 'react') this.h.onReact && this.h.onReact(msg);
+        else if (msg.t === 'tease') this.h.onTease && this.h.onTease(msg);
         else if (msg.t === 'error') this.h.onError(msg.msg);
         else if (msg.t === 'kicked') { this.h.onError('Bạn đã bị mời ra khỏi phòng.'); this.leave(); this.h.onFail && this.h.onFail(); }
       },
@@ -201,6 +226,8 @@ export class Client {
   draw(ops) { this.room.send({ t: 'draw', ops }); }
   sync() { this.room.send({ t: 'sync' }); }
   needBook() { this.room.send({ t: 'needbook' }); }
+  react(e) { this.room.send({ t: 'react', e }); }
+  tease(text) { this.room.send({ t: 'tease', text }); }
   destroy() { this.room.destroy(); }
   leave() { this.destroy(); session.clear(GAME); }
 }

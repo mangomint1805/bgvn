@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { norm, isMatch, isNear, leaks, maskWord, wordLens, within1 } from '../js/match.js';
 import { CATS, CAT_KEYS, DEFAULT_CATS, totalWords, buildPool, parseCustom, randomPrompt } from '../js/words.js';
-import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, setRandom, chainFor, bookItems, shiftTime, cleanOpts, buildPlan, itemOps, garticScores, GMODES, GMODE_KEYS, maxPlayers, CHOOSE_MS, TURN_END_MS, GRACE_MS, OFF_SKIP_MS, groupSizes, groupsOf, frameCount, REVEAL_AUTO } from '../js/engine.js';
+import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, setRandom, chainFor, bookItems, shiftTime, cleanOpts, buildPlan, itemOps, garticScores, GMODES, GMODE_KEYS, maxPlayers, CHOOSE_MS, TURN_END_MS, GRACE_MS, OFF_SKIP_MS, groupSizes, groupsOf, frameCount, REVEAL_AUTO, checkTease, cleanTease, TEASE_MAX } from '../js/engine.js';
 import { cleanOps, pushOp, simplifyOps, opsBytes, encodePts, decodePts, PALETTE } from '../js/ops.js';
 import { encodeGif, GifWriter, UI_COLORS } from '../js/gif.js';
 
@@ -441,6 +441,40 @@ t('GIF: mã hoá đúng chuẩn, giữ đúng màu từng điểm, độ trễ t
   const gw = new GifWriter(BW, BH, { extra: UI_COLORS }); gw.frame({ width: BW, height: BH, data: big }, 150); gw.frame({ width: BW, height: BH, data: big }, 7);
   const g2 = decodeGif(gw.finish()); assert.deepEqual(g2.delays, [150, 7]); assert.deepEqual(g2.frames[0], bi); assert.deepEqual(g2.frames[1], bi);
   assert.deepEqual(g2.pal[20], [255, 248, 232], 'màu giấy nằm trong bảng màu');
+});
+
+
+// ---------- câu chọc gõ tự do: lọc lộ đáp án ----------
+t('câu chọc tự do: làm sạch HTML, cắt độ dài', () => {
+  assert.equal(cleanTease('  <b>hello</b>   <script>x</script> nè  '), 'hello x nè');
+  assert.equal(cleanTease('a<img src=x onerror=1>b'), 'a b'); assert.ok(!/[<>]/.test(cleanTease('1 < 2 > 0')));
+  assert.equal([...cleanTease('ă'.repeat(99))].length, TEASE_MAX); assert.equal(cleanTease('a\u0000‮b\n\tc'), 'a b c');
+  assert.equal(checkTease(null, 'x', '   ').ok, false);
+});
+t('câu chọc tự do ở Đoán hình: hoạ sĩ/người đã đoán bị chặn, người chưa đoán gõ trúng thì thành lượt đoán', () => {
+  const s = createGame(P(4), { mode: 'guess', rounds: 1 }, 0);
+  const dr = s.drawer; applyAction(s, dr, { type: 'choose', idx: 0 }, 10);
+  s.word = 'bánh mì'; const [g1, g2, g3] = s.players.map(p => p.id).filter(id => id !== dr);
+  assert.deepEqual(checkTease(s, g1, 'Vẽ gì zậy trời'), { ok: true, text: 'Vẽ gì zậy trời' });
+  assert.equal(checkTease(s, dr, 'BANH MI nè').reason, 'Câu này lộ đáp án rồi 🤫', 'hoạ sĩ lộ đáp án');
+  assert.equal(checkTease(s, dr, 'banh my').ok, false, 'gần đúng cũng chặn'); assert.ok(checkTease(s, dr, 'vẽ xấu quá').ok);
+  s.guessed[g2] = 300;
+  assert.equal(checkTease(s, g2, 'là bánhmì đó').reason, 'Câu này lộ đáp án rồi 🤫', 'người đã đoán ra cũng chặn');
+  assert.deepEqual(checkTease(s, g1, 'Bánh Mì'), { ok: false, guess: true, text: 'Bánh Mì' }, 'gõ trúng -> lượt đoán');
+  assert.equal(checkTease(s, g1, 'banh mj').guess, true, 'gần đúng -> lượt đoán (được báo "gần đúng" riêng)');
+  const r = checkTease(s, g3, 'chắc là banh mi kẹp'); assert.equal(r.ok, false); assert.ok(r.silent && !r.reason, 'chứa đáp án: im lặng bỏ, không báo (báo là lộ)');
+  // lượt đã hết: đáp án công khai -> thoải mái
+  s.phase = 'turnEnd'; assert.ok(checkTease(s, dr, 'bánh mì mà đoán không ra').ok);
+  // lúc chọn từ: hoạ sĩ không được lộ 1 trong 3 từ
+  s.phase = 'choose'; s.choices = ['con mèo', 'cái ghế', 'phở']; assert.equal(checkTease(s, dr, 'chọn con meo nha').ok, false); assert.ok(checkTease(s, g1, 'con mèo').ok, 'người khác không biết từ');
+});
+t('câu chọc tự do ở Tam sao thất bản: không lộ câu của chuỗi đang làm, chiếu lại thì tự do', () => {
+  const s = createGame(Pn(3), { mode: 'gartic' }, 0);
+  s.order.forEach((id, i) => applyAction(s, id, { type: 'submit', step: 0, text: ['con mèo hát karaoke', 'xe buýt bay', 'Minto ngủ gật'][i] }, 1));
+  const id = s.order[1], prompt = viewFor(s, id, 1).task.prompt.t;
+  assert.equal(checkTease(s, id, 'tui phải vẽ ' + prompt).ok, false, 'không lộ đề mình đang vẽ');
+  assert.ok(checkTease(s, id, 'Picasso đây rồi').ok);
+  s.phase = 'reveal'; s.reveal = { c: 0, u: 0 }; assert.ok(checkTease(s, id, prompt).ok, 'chiếu lại: thoải mái');
 });
 
 // ---------- mô phỏng ngẫu nhiên: không ván nào kẹt ----------

@@ -507,5 +507,39 @@ export function viewFor(s, pid, now = Date.now()) {
   }
   return v;
 }
+// ======================= CÂU CHỌC GÕ TỰ DO (bảng thả emoji) =======================
+// Làm sạch: bỏ thẻ HTML / ký tự điều khiển, gộp khoảng trắng, tối đa TEASE_MAX ký tự.
+export const TEASE_MAX = 40;
+export function cleanTease(raw) {
+  return [...String(raw == null ? '' : raw).replace(/<[^>]*>?/g, ' ').replace(/[<>]/g, '').replace(/[\u0000-\u001f\u007f​-‏‪-‮⁦-⁩]/g, ' ').replace(/\s+/g, ' ').trim()].slice(0, TEASE_MAX).join('').trim();
+}
+// câu có lộ (chứa / đúng / gần đúng) 1 trong các đáp án không – dùng đúng bộ so khớp của Đoán hình
+export const leaksAny = (text, answers) => answers.some(a => a && (leaks(text, a) || isMatch(text, a) || isNear(text, a)));
+// Chủ phòng kiểm câu chọc tự do của pid. Trả về:
+//   { ok: true, text }                        -> phát cho cả phòng (bong bóng cạnh thẻ người gửi)
+//   { ok: false, reason }                     -> không phát, báo nhẹ cho người gửi
+//   { ok: false, silent: true }               -> không phát, KHÔNG báo gì (báo là lộ luôn đáp án cho người chưa đoán)
+//   { ok: false, guess: true, text }          -> người chưa đoán gõ trúng / gần trúng: chuyển thành lượt đoán
+export function checkTease(s, pid, raw) {
+  const text = cleanTease(raw);
+  if (!text) return { ok: false, reason: 'Câu trống' };
+  if (!s || !pl(s, pid)) return { ok: true, text };
+  if (s.mode === 'guess') {
+    if (s.phase === 'choose' && pid === s.drawer && leaksAny(text, s.choices || [])) return { ok: false, reason: 'Câu này lộ đáp án rồi 🤫' };
+    if (s.phase !== 'draw' || !s.word) return { ok: true, text };
+    if (!leaksAny(text, [s.word])) return { ok: true, text };
+    if (pid === s.drawer || s.guessed[pid] != null) return { ok: false, reason: 'Câu này lộ đáp án rồi 🤫' };
+    if (isMatch(text, s.word) || isNear(text, s.word)) return { ok: false, guess: true, text };
+    return { ok: false, silent: true };
+  }
+  // Tam sao thất bản: đang chơi thì không được tiết lộ câu đề / câu của chuỗi mình đang làm (người sau còn phải đoán)
+  if (s.mode === 'gartic' && s.phase === 'play') {
+    const c = chainFor(s, pid); if (c < 0) return { ok: true, text };
+    const texts = s.book[c].filter(it => it && it.t && !it.miss).map(it => it.t);
+    if (leaksAny(text, texts)) return { ok: false, reason: 'Câu này lộ đề rồi 🤫 – để dành lúc chiếu lại nha' };
+  }
+  return { ok: true, text };
+}
+
 // Bảng xếp hạng (điểm cao trước)
 export function ranking(players) { return players.slice().sort((a, b) => b.score - a.score); }

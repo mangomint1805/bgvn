@@ -594,3 +594,13 @@ textarea{font-family:var(--hand);font-size:19px;font-weight:400;background:repea
   .rv-bar .btn.big{width:auto;flex:1 1 180px;max-width:280px;min-height:44px;padding:6px 14px;font-size:18px}
   .rv-bar .rv-ctl{margin-top:0}.rv-bar .rv-links .link{padding:4px 6px}
 }
+
+/* nút thả emoji / chọc nhau (shared/ui/react.js) gắn vào thanh trên, cùng kiểu nút .ic */
+.rx-slot{position:relative;flex:none;width:42px;height:42px}
+.rx-slot:not(:has(.bgr-btn:not([style*="display: none"]))){display:none}
+.topbar .rx-slot .bgr-btn{width:42px;height:42px;border:2px solid var(--ink);border-radius:var(--wob4,12px);box-shadow:2px 2px 0 var(--ink);font-size:21px;z-index:4}
+@media (max-width:380px){.topbar{gap:6px;padding-left:8px;padding-right:8px}}
+.bgr-panel .rx-free{display:flex;gap:5px;margin-top:7px}
+.bgr-panel .rx-free input{flex:1;min-width:0;height:40px;border:2px solid #2a2340;border-radius:12px;padding:0 10px;font:600 15px "Be Vietnam Pro",sans-serif;background:#fff}
+.bgr-panel .rx-free button{flex:none;width:44px;height:40px;border:0;border-radius:12px;background:#f0353f;color:#fff;font-size:18px;cursor:pointer}
+.rx-free-bub{max-width:min(300px,calc(100vw - 16px));white-space:normal;overflow-wrap:anywhere;text-align:center}

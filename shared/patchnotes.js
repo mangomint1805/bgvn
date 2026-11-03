@@ -5,6 +5,9 @@ export const GAMES = {
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
 };
 export const NOTES = [
+  { id: '20261103-11', date: '03/11/2026', game: 'scribble', title: 'Thả emoji, gõ câu chọc tự do', items: [
+    '😂 Thả emoji / chọc nhau ngay trong ván: câu dựng sẵn hoặc gõ tự do (≤ 40 ký tự), câu nào lộ đáp án thì tự chặn.',
+  ] },
   { id: '20261103-10', date: '03/11/2026', game: 'meono', title: 'Thả emoji, chọc nhau', items: [
     '😂 Thả emoji và chọc nhau kiểu mèo ngay trong ván ("Bốc đi bé!", "ĐÉO nhé!", "Bom đâu rồi?"…), bot thỉnh thoảng cũng chọc lại.',
   ] },

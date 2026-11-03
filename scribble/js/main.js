@@ -1,13 +1,14 @@
-import { Host, Client, MAX, maxPlayers, loadSnapshot, session } from './net.js?v=5';
+import { Host, Client, MAX, maxPlayers, loadSnapshot, session, PHRASES } from './net.js?v=8';
+import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { Board, buildToolbar, opsToCanvas, W, H } from './draw.js?v=5';
 import { CATS, CAT_KEYS, DEFAULT_CATS, buildPool, randomPrompt, parseCustom } from './words.js?v=5';
-import { REACTS, GMODES, GMODE_KEYS, buildPlan, groupSizes, frameCount, REVEAL_AUTO, FRAMES_ANIM, FRAMES_SOLO, GSIZE } from './engine.js?v=5';
+import { REACTS, GMODES, GMODE_KEYS, buildPlan, groupSizes, frameCount, REVEAL_AUTO, FRAMES_ANIM, FRAMES_SOLO, GSIZE, cleanTease, TEASE_MAX, leaksAny } from './engine.js?v=7';
 import { planFrames, totalMs, drawFrame, exportGif, exportVideo, videoType, FW, FH } from './export.js?v=5';
 import { encodeGif } from './gif.js?v=5';
 import { opsBytes, simplifyOps } from './ops.js?v=5';
 import * as fx from './fx.js?v=5';
-import { guideHTML } from './guide.js?v=5';
+import { guideHTML } from './guide.js?v=8';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=4';
 
 const $ = s => document.querySelector(s);
@@ -18,7 +19,15 @@ const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return
 let net = null, isHost = false, myId = null, lobby = null, view = null;
 
 // ---------- tiện ích giao diện ----------
-function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
+function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); syncReacts(id); }
+// ---------- thả emoji / chọc nhau (shared/ui/react.js): nút nằm trên thanh trên, không đè bảng vẽ / ô chat ----------
+let reacts = null;
+function syncReacts(id) {
+  if (!reacts) return;
+  const slot = id === 'screen-game' ? $('#g-rx') : id === 'screen-gartic' ? $('#t-rx') : null;
+  if (slot && reacts.button.parentElement !== slot) slot.appendChild(reacts.button);
+  reacts.setVisible(!!slot && !!net && !net.offline);
+}
 const active = id => $('#' + id).classList.contains('active');
 let toastT;
 function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
@@ -90,6 +99,8 @@ const handlers = {
   onCanvas(m) { onCanvas(m); },
   onBook(m) { onBook(m); },
   onError(m) { toast(m); fx.sfx.bad(); },
+  onReact(msg) { reacts && reacts.show(msg); },
+  onTease(msg) { showTease(msg); },
   onJoined(id) { myId = id; },
   onFail() { if (!view && !lobby) show('screen-home'); },
   onNet(t, k, retry) { netStatus(t, k, retry); },
@@ -454,7 +465,7 @@ function waitHTML(v, mine) {
   const extra = v.task && v.task.desc && v.task.desc.blind ? '<p class="muted">🙈 Tranh vẽ mù của bạn sẽ được mở ra lúc chiếu lại.</p>' : '';
   return `<div class="wait-card"><div class="big-emo">${mine ? '✅' : '👀'}</div><h3>${mine ? 'Đã nộp! Ngồi chờ hội bạn nha' : 'Đang xem ván…'}</h3>
     <p class="muted">${done}/${v.players.length} người xong</p>${extra}${grpWho(v)}
-    <ul class="who">${whoList(v).map(x => `<li class="${x.done ? 'done' : ''} ${x.on ? '' : 'off'}">${avatar(x.name)}<span>${esc(x.name)}</span><b>${x.done ? '✓' : x.on ? '…' : '📴'}</b></li>`).join('')}</ul>
+    <ul class="who">${whoList(v).map(x => `<li data-id="${x.id}" class="${x.done ? 'done' : ''} ${x.on ? '' : 'off'}">${avatar(x.name)}<span>${esc(x.name)}</span><b>${x.done ? '✓' : x.on ? '…' : '📴'}</b></li>`).join('')}</ul>
     ${mine ? '<button class="btn" id="t-edit">✏️ Sửa lại</button>' : ''}</div>`;
 }
 // Đông vui: phòng tới 30 người -> chỉ liệt kê nhóm của mình
@@ -819,6 +830,48 @@ document.addEventListener('keydown', e => {
 // chặn kéo-để-tải-lại khi đang vẽ trên điện thoại
 document.addEventListener('touchmove', e => { if (e.target.closest && e.target.closest('.board.editable')) e.preventDefault(); }, { passive: false });
 
+reacts = createReactions({
+  send: e => { if (!net) return; if (isHost) net.react('host', e); else net.react(e); },
+  // ghế = thẻ người chơi (Đoán hình) / dòng tên ở màn chờ (Tam sao thất bản); không thấy thì hiện giữa màn kèm tên
+  seatEl: id => { const el = document.querySelector(`.screen.active #g-players [data-id="${id}"], .screen.active .who [data-id="${id}"]`); return el; },
+  myId: () => myId, nameOf: id => pname(id),
+  mount: $('#g-rx'), place: 'left:0;top:0', phrases: PHRASES,
+  onShow: () => fx.sfx.react(),
+});
+syncReacts('');
+// ---- câu chọc gõ tự do: thêm ô gõ vào bảng emoji (module dùng chung chỉ có câu dựng sẵn) ----
+const seatOf = id => document.querySelector(`.screen.active #g-players [data-id="${id}"], .screen.active .who [data-id="${id}"]`);
+const teaseEcho = []; let teaseReady = 0;
+function showTease(msg, local = false) {
+  if (!msg || typeof msg.text !== 'string') return;
+  const text = cleanTease(msg.text); if (!text) return;
+  if (!local && msg.from === myId) { const i = teaseEcho.findIndex(x => x.text === text && Date.now() - x.t < 6000); if (i >= 0) { teaseEcho.splice(i, 1); return; } }
+  const el = seatOf(msg.from), r = el && el.getBoundingClientRect(), found = !!(r && (r.width || r.height));
+  const n = document.createElement('div'); n.className = 'bgr-bub rx-free-bub';
+  n.innerHTML = (found ? '' : `<b>${esc(pname(msg.from))}:</b> `) + esc(text);
+  document.body.appendChild(n);
+  const w = n.offsetWidth, h = n.offsetHeight, ax = found ? r.left + r.width / 2 : innerWidth / 2, top = found ? r.top : innerHeight * 0.3, bot = found ? r.bottom : innerHeight * 0.3;
+  let y = top - 6; if (y - h < 8) { y = bot + 6; n.classList.add('below'); }
+  n.style.left = Math.max(8 + w / 2, Math.min(innerWidth - 8 - w / 2, ax)) + 'px'; n.style.top = y + 'px';
+  setTimeout(() => n.remove(), 3200); fx.sfx.react();
+}
+new MutationObserver(ms => { for (const m of ms) for (const p of m.addedNodes) if (p.classList && p.classList.contains('bgr-panel')) {
+  p.insertAdjacentHTML('beforeend', `<form class="rx-free" autocomplete="off"><input maxlength="${TEASE_MAX}" placeholder="Gõ câu chọc…" aria-label="Câu chọc tự do" enterkeyhint="send"><button type="submit" aria-label="Gửi câu chọc">➤</button></form>`);
+  const f = p.querySelector('.rx-free'), inp = f.querySelector('input');
+  // bảng mở phía trên nút mà cao thêm thì kéo lại cho khỏi tràn
+  const rr = p.getBoundingClientRect(); if (rr.bottom > innerHeight - 8) p.style.top = Math.max(8, innerHeight - 8 - rr.height) + 'px';
+  f.onsubmit = e => {
+    e.preventDefault(); const text = cleanTease(inp.value); if (!text || !net) return;
+    if (Date.now() < teaseReady) { toast('Từ từ thôi 😆'); return; }
+    // mình đã biết đáp án / đề (hoạ sĩ, đã đoán ra, câu đề Tam sao) mà câu lộ ra thì báo luôn, khỏi gửi (chủ phòng vẫn lọc lại)
+    const v = view, known = !v ? [] : v.mode === 'guess' ? (v.phase === 'draw' && v.word ? [v.word] : v.phase === 'choose' && v.choices ? v.choices : []) : v.phase === 'play' && v.task && v.task.prompt && v.task.prompt.t ? [v.task.prompt.t] : [];
+    if (known.length && leaksAny(text, known)) { toast(v.mode === 'guess' ? 'Câu này lộ đáp án rồi 🤫' : 'Câu này lộ đề rồi 🤫 – để dành lúc chiếu lại nha'); fx.sfx.bad(); return; }
+    teaseReady = Date.now() + 1500; teaseEcho.push({ text, t: Date.now() });
+    showTease({ from: myId, text }, true);
+    if (isHost) net.tease('host', text); else net.tease(text);
+    reacts.close();
+  };
+} }).observe(document.body, { childList: true });
 if (location.hash === '#debug') window.__dbg = () => ({ net, view, cv, myId, gBoard, tBoard, book });
 
 // ---------- Tải lại trang: tự khôi phục phòng / tự vào lại ----------

@@ -1,4 +1,4 @@
-import { GMODES, GMODE_KEYS } from './engine.js?v=5';
+import { GMODES, GMODE_KEYS } from './engine.js?v=7';
 // Hướng dẫn luật Scribble it!
 export function guideHTML() {
   return `
@@ -56,6 +56,7 @@ export function guideHTML() {
       <ul>
         <li>Cần ít nhất <b>2 người</b>. Một người tạo phòng, gửi mã 5 ký tự (hoặc link mời) cho hội bạn.</li>
         <li>Chế độ Đoán hình cho phép vào giữa ván – vào là thấy lại toàn bộ tranh đang vẽ.</li>
+        <li>😂 <b>Thả emoji / chọc nhau</b>: nút 😂 trên thanh trên (trong ván online) – 8 emoji, câu chọc dựng sẵn (“Vẽ gì zậy trời”, “Picasso đây rồi”…) hoặc <b>gõ tự do</b> tối đa 40 ký tự, hiện bong bóng cạnh tên bạn. Chống lộ bài: ở Đoán hình, hoạ sĩ và người đã đoán ra không gửi được câu có đáp án (kể cả gần đúng); người chưa đoán gõ trúng thì tính luôn là đoán; ở Tam sao thất bản đang chơi thì không được lộ câu của chuỗi mình đang làm.</li>
         <li>Lỡ tải lại trang? Cứ mở lại, máy tự vào lại đúng phòng. Hoạ sĩ rớt mạng quá 8 giây thì bị bỏ lượt.</li>
         <li>Chỉ có một mình? Bấm <b>“✏️ Vẽ thử”</b> để luyện tay, hoặc <b>“🧑‍🎨 Hoạt hình 1 mình”</b> để vẽ một đoạn phim 3–12 khung (không cần mạng).</li>
       </ul>
