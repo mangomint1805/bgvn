@@ -3,9 +3,14 @@
 export const GAMES = {
   all: '🎲 BGVN', bang: '🤠 BANG!', uno: '🃏 UNO', typhu: '🏙️ Cờ Tỷ Phú', scribble: '🎨 Scribble it!',
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
-  xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê',
+  xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa',
 };
 export const NOTES = [
+  { id: '20261104-10', date: '04/11/2026', game: 'cangua', title: 'Game mới: Cờ cá ngựa 3D!', items: [
+    '🐴 Cờ cá ngựa 3D 2–4 người: 2 xúc xắc, đổ đôi hoặc 1+6 mới xuất chuồng và được đổ tiếp.',
+    '💥 Đứng đúng ô ngựa bạn là đá bay về chuồng. Không nhảy qua đầu, lên đích bậc 3-4-5-6 là thắng.',
+    '⚙️ Nhiều luật nhà chỉnh trong sảnh (1 hay 2 xúc xắc, dồn tổng hay tách, kiểu lên đích…), bot 3 mức.',
+  ] },
   { id: '20261104-09', date: '04/11/2026', game: 'catte', title: 'Thuật ngữ chuẩn: tùng', items: [
     '📚 Dùng đúng thuật ngữ "tùng": ăn vòng = ăn tùng, chưa có tùng nào là sắp chết ☠️. Hướng dẫn có thêm mục Thuật ngữ (tùng, tranh tùng, úp/thiệp, chưng, xổ, tới, vàng tùng).',
   ] },

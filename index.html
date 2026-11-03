@@ -52,6 +52,9 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:36px}
 .uno .art{top:96px!important;height:0!important}
 .tile:not(.bang):not(.uno) .art{padding-top:44px;box-sizing:border-box}
 .masoi .art{padding-bottom:4px}
+.cangua{background:conic-gradient(from 45deg at 50% 32%,#ffd54a 0 25%,#4aa3ff 0 50%,#ff5a5f 0 75%,#2fc76f 0)}.cangua h2{font-family:'Baloo 2';font-size:44px;color:#fff;text-shadow:3px 3px 0 #0006}.cangua .art{position:absolute;inset:0 0 40% 0;display:flex;align-items:center;justify-content:center;gap:4px;font-size:58px;filter:drop-shadow(0 6px 8px #0004)}
+.cangua .art span:nth-child(2){font-size:46px;transform:translateY(-12px)}
+
 .catte{background:radial-gradient(circle at 50% 30%,#5b6cff,#3340b8 55%,#1c2270)}.catte h2{font-family:'Baloo 2';font-size:44px;color:#fff;text-shadow:3px 3px 0 #0005}.catte .art{position:absolute;inset:0 0 40% 0;display:flex;align-items:center;justify-content:center;gap:8px}
 .catte .art span{display:grid;place-items:center;width:62px;height:90px;background:#fff;border-radius:10px;box-shadow:0 6px 14px #0004;font:800 28px 'Baloo 2',sans-serif;color:#222}.catte .art span:nth-child(2){background:repeating-linear-gradient(45deg,#ff6a3d 0 8px,#ff8a5c 8px 16px);color:#fff;font-size:22px;transform:translateY(-10px)}.catte .art span:nth-child(3){color:#d32f2f}
 
@@ -155,6 +158,13 @@ footer a{color:inherit}
       <div class="info"><h2>Ma Sói</h2><p>Làng quê đêm trăng: Sói, Tiên tri, Bảo vệ, Phù thủy, Thợ săn, Cupid… máy làm quản trò, ai cũng dùng điện thoại riêng 🌕</p>
         <div class="tags"><i>5–16 người</i><i>12 vai</i><i>Có bot</i></div></div>
     </a>
+    <a class="tile cangua" href="cangua/" data-game="cangua" data-min="2" data-max="4">
+      <span class="newtag" data-news="cangua">MỚI</span>
+      <div class="art"><span>🐴</span><span>🎲</span><span>🏁</span></div>
+      <span class="play">Chơi ▶</span>
+      <div class="info"><h2>Cờ cá ngựa</h2><p>Cờ cá ngựa 3D: đổ đôi xuất chuồng, đá ngựa bạn bay về chuồng, chơi online hoặc với bot 🐴💨</p>
+        <div class="tags"><i>2–4 người</i><i>3D</i><i>Đá nhau</i></div></div>
+    </a>
     <a class="tile tienlen" href="tienlen/" data-game="tienlen" data-min="2" data-max="4">
       <span class="newtag" data-news="tienlen">MỚI</span>
       <div class="art"><span>2♠</span><span>2♣</span><span>2♦</span><span>2♥</span></div>
@@ -189,7 +199,7 @@ footer a{color:inherit}
   <footer>Dự án fan-made phi thương mại · Ảnh minh hoạ BANG! là tranh thuộc phạm vi công cộng (Wikimedia Commons) · Game bài chỉ chơi bằng chip ảo, không cá cược tiền thật · Không liên kết với dV Giochi, Mattel, VNG/ZingPlay, Yoka Games hay Exploding Kittens · <a href="https://github.com/mangomint1805/bgvn">Mã nguồn</a></footer>
 </main>
 <script type="module">
-import { openNews, newsBadge } from './shared/ui/news.js?v=99';
+import { openNews, newsBadge } from './shared/ui/news.js?v=100';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 const json = k => { try { return JSON.parse(ls.get(k)); } catch (e) { return null; } };
 // 📝 Có gì mới
