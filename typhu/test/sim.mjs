@@ -1,11 +1,11 @@
 // Mô phỏng hàng trăm ván toàn bot: đếm ván kẹt / hành động lỗi / vi phạm bất biến. Chạy: node typhu/test/sim.mjs [số ván]
 import './load.mjs';
-import { createGame, applyAction, actorOf, setRandom, TILES, GROUPS } from '../js/engine.js?v=42';
-import { botAction } from '../js/bot.js?v=42';
+import { createGame, applyAction, actorOf, setRandom, TILES, GROUPS } from '../js/engine.js?v=43';
+import { botAction } from '../js/bot.js?v=43';
 const G = +process.argv[2] || 600;
 let seed = 12345; setRandom(() => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; });
-const st = { games: 0, stuck: 0, errs: 0, inv: 0, actions: 0, rounds: 0, maxRounds: 0, reasons: {}, trades: 0, auctions: 0, buybacks: 0, bankrupt: 0, landmarks: 0, byVariant: {} };
-const variants = [{}, { maxRounds: 30 }, { monopolyWin: false, maxRounds: 60 }, { auction: false, buyback: false }, { startMoney: 2500 }, { freeBuild: false }, { freeBuild: false, buyback: false }];
+const st = { games: 0, stuck: 0, errs: 0, inv: 0, actions: 0, rounds: 0, maxRounds: 0, reasons: {}, trades: 0, auctions: 0, buybacks: 0, bankrupt: 0, landmarks: 0, zingBuilds: 0, zingBad: 0, byVariant: {} };
+const variants = [{}, { maxRounds: 30 }, { monopolyWin: false, maxRounds: 60 }, { auction: false, buyback: false }, { startMoney: 2500 }, { freeBuild: false }, { freeBuild: false, buyback: false }, { freeBuild: 'zing' }, { freeBuild: 'zing', buyback: false, auction: false }];
 for (let g = 0; g < G; g++) {
   const np = 2 + (g % 5), opts = variants[g % variants.length];
   const s = createGame(Array.from({ length: np }, (_, i) => ({ id: 'b' + i, name: 'Bot' + i, isBot: true })), opts);
@@ -17,7 +17,9 @@ for (let g = 0; g < G; g++) {
     const r = applyAction(s, pid, a);
     if (!r.ok) { st.errs++; if (st.errs < 6) console.log('LỖI', r.reason, JSON.stringify(a), s.stage); break; }
     k++;
-    for (const e of s.ev) if (e.n > lastEv) { if (e.t === 'traded') st.trades++; if (e.t === 'sold' && e.pid) st.auctions++; if (e.t === 'buyback') st.buybacks++; if (e.t === 'bankrupt') st.bankrupt++; if (e.t === 'build' && e.h === 5) st.landmarks++; }
+    for (const e of s.ev) if (e.n > lastEv) { if (e.t === 'traded') st.trades++; if (e.t === 'sold' && e.pid) st.auctions++; if (e.t === 'buyback') st.buybacks++; if (e.t === 'bankrupt') st.bankrupt++; if (e.t === 'build' && e.h === 5) st.landmarks++;
+      // luật ZingPlay thật: chỉ được xây ở ô người đang tới lượt vừa dừng
+      if (e.t === 'build' && s.opts.freeBuild === 'zing') { st.zingBuilds++; if (e.tile !== s.landed || e.pid !== s.players[s.turn].id) { st.zingBad++; st.inv++; if (st.inv < 4) console.log('XÂY SAI Ô (zing)', JSON.stringify(e), s.landed); } } }
     lastEv = s.evn;
     // bất biến
     const bad = s.players.some(p => !p.out && p.cash < 0 && s.stage !== 'debt') ||

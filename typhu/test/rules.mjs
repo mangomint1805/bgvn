@@ -1,7 +1,8 @@
 // Unit test luật Cờ Tỷ Phú. Chạy: node typhu/test/rules.mjs
 import './load.mjs';
 import assert from 'assert/strict';
-import { createGame, applyAction, setRandom, TILES, CARDS, actorOf, rentOf, buybackPrice, netWorth } from '../js/engine.js?v=42';
+import { createGame, applyAction, setRandom, TILES, CARDS, actorOf, rentOf, buybackPrice, netWorth, canBuild, tradeImpact, tradeSideValue } from '../js/engine.js?v=43';
+import { botAction, judgeTrade } from '../js/bot.js?v=43';
 
 let pass = 0, fail = 0;
 function test(name, fn) { try { fn(); pass++; console.log('  ✓ ' + name); } catch (e) { fail++; console.log('  ✗ ' + name + '\n    ' + (e.stack || e).toString().split('\n').slice(0, 3).join('\n    ')); } }
@@ -81,7 +82,7 @@ test('bến xe thuê theo số bến, điện nước ×4 / ×10', () => {
   own(s, 'p1', 12); assert.equal(rentOf(s, 12, 8), 32); own(s, 'p1', 28); assert.equal(rentOf(s, 12, 8), 80);
   const s3 = game(); own(s3, 'p1', 12); s3.players[0].pos = 1; dice(5, 6); act(s3, 'p0', { type: 'roll' }); assert.equal(P(s3, 'p0').pos, 12); assert.equal(P(s3, 'p1').cash, 1500 + 44);
 });
-test('qua Bắt đầu nhận 200K', () => { const s = game(); s.players[0].pos = 38; dice(1, 3); act(s, 'p0', { type: 'roll' }); assert.equal(P(s, 'p0').pos, 2); assert.equal(P(s, 'p0').cash >= 1700 - 200, true); assert.ok(s.ev.some(e => e.t === 'salary')); });
+test('qua Bắt đầu nhận 200K', () => { const s = game(); s.players[0].pos = 38; cardTop(s, 'chest', 'stock'); /* thẻ ngẫu nhiên có thể dời quân → cố định */ dice(1, 3); act(s, 'p0', { type: 'roll' }); assert.equal(P(s, 'p0').pos, 2); assert.equal(P(s, 'p0').cash >= 1700 - 200, true); assert.ok(s.ev.some(e => e.t === 'salary')); });
 test('thuế', () => { const s = game(); dice(1, 3); act(s, 'p0', { type: 'roll' }); assert.equal(P(s, 'p0').cash, 1300); });
 test('ô Vào tù → ở tù, đổ đôi được ra, đổ đôi thì đi tiếp', () => {
   const s = game(); s.players[0].pos = 25; dice(2, 3); act(s, 'p0', { type: 'roll' }); const p = P(s, 'p0');
@@ -170,6 +171,83 @@ test('xây tự do: bán nhà ở ô lẻ (nhóm chưa đủ) không lỗi; nhà
   own(s, 'p1', 3); assert.equal(s.stage, 'roll');
   dice(1, 2); act(s, 'p0', { type: 'roll' }); act(s, 'p0', { type: 'skipBuyback' }); act(s, 'p0', { type: 'end' });
   act(s, 'p1', { type: 'mortgage', tile: 3 }); assert.equal(s.props[3].mort, true);
+});
+
+
+console.log('— Luật "ZingPlay thật" (chỉ xây ở ô vừa dừng) + xây nhiều nhà một lần');
+const Z = { freeBuild: 'zing' };
+test('zing: chưa dừng ở ô thì không xây; dừng ở đất mình thì xây được nhiều nhà một lần', () => {
+  const s = game(2, Z); own(s, 'p0', 1); own(s, 'p0', 3);
+  assert.equal(applyAction(s, 'p0', { type: 'build', tile: 1 }).ok, false, 'đầu lượt chưa dừng ô nào');
+  dice(1, 2); act(s, 'p0', { type: 'roll' }); assert.equal(s.landed, 3); assert.equal(s.stage, 'end');
+  assert.equal(canBuild(s, 'p0', 3), true); assert.equal(canBuild(s, 'p0', 1), false, 'ô không vừa dừng');
+  act(s, 'p0', { type: 'build', tile: 3, n: 3 }); assert.equal(s.props[3].h, 3); assert.equal(P(s, 'p0').cash, 1500 - 150);
+  assert.equal(s.ev.filter(e => e.t === 'build').length, 3, 'mỗi nhà 1 sự kiện để hoạt ảnh');
+  assert.equal(applyAction(s, 'p0', { type: 'build', tile: 1 }).ok, false);
+  act(s, 'p0', { type: 'end' }); assert.equal(s.landed, null);
+  dice(1, 2); act(s, 'p1', { type: 'roll' }); // p1 dừng ở đất p0 (trả thuê) – p0 không xây được ngoài lượt
+  assert.equal(applyAction(s, 'p0', { type: 'build', tile: 3 }).ok, false);
+});
+test('zing: đủ bộ màu cũng không bắt xây đều; Landmark chỉ ở lần dừng sau khi có sẵn 4 nhà; bán nhà ô nào cũng được', () => {
+  const s = game(2, Z); own(s, 'p0', 1); own(s, 'p0', 3); dice(1, 2); act(s, 'p0', { type: 'roll' });
+  assert.equal(applyAction(s, 'p0', { type: 'build', tile: 3, n: 5 }).ok, false, 'không lên thẳng 0 → Landmark');
+  act(s, 'p0', { type: 'build', tile: 3, n: 4 }); assert.equal(s.props[3].h, 4); assert.equal(s.props[1].h, 0); assert.equal(P(s, 'p0').cash, 1500 - 200);
+  assert.equal(applyAction(s, 'p0', { type: 'build', tile: 3 }).ok, false, 'cùng lần dừng chưa lên Landmark');
+  const s3 = game(2, Z); own(s3, 'p0', 3, 4); dice(1, 2); act(s3, 'p0', { type: 'roll' }); act(s3, 'p0', { type: 'build', tile: 3 }); assert.equal(s3.props[3].h, 5);
+  assert.ok(s3.log.at(-1).includes('LANDMARK'));
+  s.props[1].h = 1; act(s, 'p0', { type: 'sell', tile: 1 }); assert.equal(s.props[1].h, 0);
+});
+test('zing: vừa mua đất xong xây luôn; mua lại đất xong cũng xây được', () => {
+  const s = game(2, Z); dice(1, 2); act(s, 'p0', { type: 'roll' }); act(s, 'p0', { type: 'buy' }); act(s, 'p0', { type: 'build', tile: 3, n: 2 }); assert.equal(s.props[3].h, 2);
+  const s2 = game(2, Z); own(s2, 'p1', 3, 1); dice(1, 2); act(s2, 'p0', { type: 'roll' }); assert.equal(s2.stage, 'buyback'); act(s2, 'p0', { type: 'buyback' });
+  act(s2, 'p0', { type: 'build', tile: 3 }); assert.equal(s2.props[3].h, 2);
+});
+test('xây nhiều nhà thiếu tiền giữa chừng → hoàn lại hết, không mất tiền', () => {
+  const s = game(2, Z); own(s, 'p0', 3); dice(1, 2); act(s, 'p0', { type: 'roll' }); P(s, 'p0').cash = 120;
+  const r = applyAction(s, 'p0', { type: 'build', tile: 3, n: 3 }); assert.equal(r.ok, false); assert.match(r.reason, /2 nhà/);
+  assert.equal(s.props[3].h, 0); assert.equal(P(s, 'p0').cash, 120);
+});
+test('zing: đổ đôi dừng đất mình vẫn xây được trước khi đổ tiếp; đổ tiếp thì đổi ô', () => {
+  const s = game(2, Z); own(s, 'p0', 6); own(s, 'p0', 1); dice(3, 3); act(s, 'p0', { type: 'roll' }); assert.equal(s.stage, 'roll'); assert.equal(s.again, true);
+  act(s, 'p0', { type: 'build', tile: 6 }); dice(1, 2); act(s, 'p0', { type: 'roll' }); assert.equal(s.landed, 9);
+  assert.equal(applyAction(s, 'p0', { type: 'build', tile: 6 }).ok, false);
+});
+test('luật mặc định: xây nhiều nhà một lần vẫn phải đều tay khi đủ bộ (không xây lố, hoàn lại)', () => {
+  const s = game(); own(s, 'p0', 1); own(s, 'p0', 3); assert.equal(applyAction(s, 'p0', { type: 'build', tile: 1, n: 2 }).ok, false);
+  assert.equal(s.props[1].h, 0); assert.equal(P(s, 'p0').cash, 1500);
+  const s2 = game(); own(s2, 'p0', 6); act(s2, 'p0', { type: 'build', tile: 6, n: 2 }); assert.equal(s2.props[6].h, 2, 'chưa đủ bộ: xây tự do');
+});
+test('bot hiểu luật zing: chỉ xây ở ô vừa dừng, xây nhiều nhà một lần, không đòi xây ô khác', () => {
+  const s = game(2, Z); own(s, 'p0', 1); own(s, 'p0', 3); own(s, 'p0', 39); s.players.forEach(p => { p.isBot = true; });
+  let a = botAction(s, 'p0'); assert.notEqual(a.type, 'build', 'đầu lượt không xây');
+  dice(1, 2); act(s, 'p0', { type: 'roll' }); a = botAction(s, 'p0');
+  assert.equal(a.type, 'build'); assert.equal(a.tile, 3); assert.ok(a.n >= 2, 'xây nhiều nhà một lần'); act(s, 'p0', a);
+  for (let k = 0; k < 5; k++) { a = botAction(s, 'p0'); if (a.type === 'build') { assert.equal(a.tile, 3); act(s, 'p0', a); } else break; }
+  assert.ok(['end', 'trade', 'unmortgage'].includes(a.type));
+});
+
+console.log('— Giao dịch: tổng giá trị + cảnh báo gom bộ / sắp thắng');
+test('tổng giá trị 1 bên: tiền + đất (thế chấp tính nửa) + thẻ ra tù', () => {
+  const s = game(); own(s, 'p0', 1); own(s, 'p0', 39, 0, true);
+  assert.equal(tradeSideValue(s, { cash: 100, tiles: [1, 39], cards: 1 }), 100 + 60 + 200 + 50);
+});
+test('cảnh báo: kèo giúp gom đủ bộ màu, đủ 4 bến xe (= thắng), chỉ còn 1 bước là thắng', () => {
+  const s = game(); own(s, 'p0', 1); own(s, 'p1', 3);
+  let im = tradeImpact(s, 'p0', { to: 'p1', give: { cash: 200, tiles: [], cards: 0 }, get: { cash: 0, tiles: [3], cards: 0 } });
+  assert.deepEqual(im[0].newGroups, ['brown']); assert.equal(im[0].win, null); assert.equal(im[1].newGroups.length, 0);
+  [5, 15, 25].forEach(i => own(s, 'p1', i)); own(s, 'p0', 35);
+  im = tradeImpact(s, 'p0', { to: 'p1', give: { cash: 0, tiles: [35], cards: 0 }, get: { cash: 300, tiles: [], cards: 0 } });
+  assert.equal(im[1].allStations, true); assert.equal(im[1].win, 'stations');
+  const s2 = game(); [6, 8, 9, 1].forEach(i => own(s2, 'p0', i)); own(s2, 'p1', 3);
+  im = tradeImpact(s2, 'p0', { to: 'p1', give: { cash: 0, tiles: [], cards: 0 }, get: { cash: 0, tiles: [3], cards: 0 } });
+  assert.equal(im[0].near, true, '2 nhóm màu → còn 1 nhóm nữa là thắng');
+  s2.opts.monopolyWin = false; im = tradeImpact(s2, 'p0', { to: 'p1', give: { cash: 0, tiles: [], cards: 0 }, get: { cash: 0, tiles: [3], cards: 0 } });
+  assert.equal(im[0].near, false); assert.equal(im[0].win, null);
+});
+test('bot không nhận kèo làm đối phương thắng ngay dù trả rất nhiều tiền', () => {
+  const s = game(); [5, 15, 25].forEach(i => own(s, 'p0', i)); own(s, 'p1', 35); P(s, 'p0').cash = 5000;
+  act(s, 'p0', { type: 'trade', to: 'p1', give: { cash: 4000, tiles: [], cards: 0 }, get: { cash: 0, tiles: [35], cards: 0 } });
+  assert.equal(judgeTrade(s, 'p1'), false);
 });
 
 console.log(`\n${pass} đạt, ${fail} lỗi`);

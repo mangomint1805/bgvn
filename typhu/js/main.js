@@ -1,16 +1,19 @@
 // Cờ Tỷ Phú Sài Gòn – giao diện: trang chủ, tạo nhân vật, sảnh, ván chơi 3D, hoạt ảnh sự kiện.
-import { Host, Client, MAX, loadSnapshot, session, cleanAvatar } from './net.js?v=42';
+import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=43';
+import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.js?v=2';
 import {
   setData, TILES, GROUPS, GROUP_LIST, STATION_RENT, money, rentOf, canBuild, canSell, canMortgage, canUnmortgage, houseCost, mortgageValue,
   unmortgageCost, buildBlock, tradable, tradeError, buybackPrice, netWorth, tilesOf, ownsGroup, JAIL_FINE, MAX_TRADES, isProp,
-} from './engine.js?v=42';
-import { Board3D, THEMES } from './scene3d.js?v=42';
-import * as fx from './fx.js?v=42';
-import { guideHTML } from './guide.js?v=42';
+  tradeImpact, tradeSideValue,
+} from './engine.js?v=43';
+import { Board3D, THEMES } from './scene3d.js?v=43';
+import * as fx from './fx.js?v=43';
+import { guideHTML } from './guide.js?v=43';
 import { OPTIONS, PRESETS, buildAvatar, portrait } from '../../shared/js/avatar3d.js';
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
 import { netStatus } from '../../shared/ui/status.js';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=1';
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -19,7 +22,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const settings = fx.settings;
 
 // ---------- dữ liệu bàn cờ ----------
-const [tilesData, cardsData] = await Promise.all(['tiles.json?v=42', 'cards.json?v=42'].map(u => fetch(u).then(r => r.json())));
+const [tilesData, cardsData] = await Promise.all(['tiles.json?v=43', 'cards.json?v=43'].map(u => fetch(u).then(r => r.json())));
 setData(tilesData, cardsData);
 const VN = 'ẮẰẲẴẶẤẦẨẪẬĐđơưƯƠếềểễệ';
 const fontsReady = Promise.race([
@@ -119,13 +122,17 @@ function openSettings() {
     <div class="set-row"><b>🖥️ Chất lượng 3D</b>${seg('quality', [['low', 'Thấp'], ['med', 'Vừa'], ['high', 'Cao']], v => B && B.setQuality(v))}</div>
     <div class="set-row"><b>⏩ Tốc độ hoạt ảnh</b>${seg('speed', [['slow', 'Chậm'], ['normal', 'Vừa'], ['fast', 'Nhanh']])}</div>
     <p class="note">Máy yếu / điện thoại nóng: chọn chất lượng Thấp. Cài đặt được lưu trên máy này.</p>
-    <div class="mbtns">${btn('modal', '📖 Hướng dẫn luật', () => openGuide(), 'ghost')}</div>`, '', 'settings');
+    <div class="mbtns">${btn('modal', '📖 Hướng dẫn luật', () => openGuide(), 'ghost')}${btn('modal', '🧭 Xem lại hướng dẫn', () => replayTour(), 'ghost')}<button class="btn ghost" id="btn-news-set">📝 Có gì mới</button></div>`, '', 'settings');
+  const nb = $('#btn-news-set'); newsBadge(nb, 'typhu'); nb.onclick = () => { fx.sfx.click(); news(); };
   $('#vol-music').oninput = e => { settings.music = +e.target.value; fx.applyVolumes(); fx.saveSettings(); };
   $('#vol-sfx').oninput = e => { settings.sfx = +e.target.value; fx.applyVolumes(); fx.saveSettings(); };
   $('#vol-sfx').onchange = () => fx.sfx.cash();
 }
 $('#btn-settings').onclick = $('#btn-settings-home').onclick = openSettings;
 const openGuide = () => openModal(guideHTML(), 'wide', 'guide');
+// 📝 Có gì mới (patch notes dùng chung)
+function news() { openNews('typhu'); $$('.bgvn-dot').forEach(b => b.classList.toggle('bgvn-dot', false)); }
+for (const id of ['#btn-news-home', '#btn-news-lobby']) { const b = $(id); newsBadge(b, 'typhu'); b.onclick = () => { fx.sfx.click(); news(); }; }
 $('#btn-guide-home').onclick = openGuide;
 
 // ---------- kết nối ----------
@@ -141,6 +148,7 @@ const handlers = {
   onDisconnect() { netStatus('Mất kết nối – đang vào lại…', 'wait'); },
   onNet(t, k, retry) { netStatus(t, k, retry); },
   onFail() { leave(); },
+  onReact(msg) { reacts.show(msg); },
   onAfk(pid) { const p = shown && shown.players.find(x => x.id === pid); if (p) toast(`⏳ ${p.name} hết giờ – máy đánh giúp.`); },
 };
 function startHost(offline) {
@@ -174,7 +182,7 @@ const OPTS = [
   ['maxRounds', '⏱️ Giới hạn vòng', [[0, 'Không'], [20, '20'], [30, '30'], [50, '50']], 'Hết vòng thì ai nhiều tài sản nhất thắng.'],
   ['monopolyWin', '🏆 Thắng độc quyền', [[true, 'Bật'], [false, 'Tắt']], 'Trọn 3 nhóm màu hoặc cả 4 bến xe là thắng luôn.'],
   ['auction', '🔨 Đấu giá', [[true, 'Bật'], [false, 'Tắt']], 'Không mua thì đem ô đó ra đấu giá.'],
-  ['freeBuild', '🏗️ Xây nhà', [[true, 'Không cần đủ bộ'], [false, 'Phải đủ bộ màu']], 'Kiểu ZingPlay: đất của mình là xây được. Cổ điển: phải gom đủ nhóm màu mới xây.'],
+  ['freeBuild', '🏗️ Xây nhà', [[true, 'Không cần đủ bộ'], [false, 'Phải đủ bộ màu'], ['zing', 'ZingPlay thật']], 'Không cần đủ bộ: đất mình là xây được, lúc nào cũng được. Phải đủ bộ: luật cổ điển. ZingPlay thật: chỉ xây ở ô vừa dừng – đứng lên đất mình là hỏi luôn “Xây mấy nhà?”.'],
   ['buyback', '💥 Mua lại đất', [[true, 'Bật'], [false, 'Tắt']], 'Trả thuê xong được mua lại đường đó với giá gấp đôi.'],
   ['turnTime', '⏳ Thời gian suy nghĩ', [[0, 'Không'], [30, '30s'], [60, '60s'], [90, '90s']], 'Hết giờ máy đánh giúp (chơi online).', true],
 ];
@@ -208,7 +216,7 @@ $('#btn-start').onclick = () => { fx.actx(); net && net.start(); };
 
 // ================= VÁN CHƠI =================
 let B = null, shown = null, seenEv = 0, busy = false, deadlineAt = 0, winShown = false, logOpen = false;
-const queue = []; let pumping = false;
+const queue = []; let pumping = false, curAnim = '';
 const P = (v, id) => v.players.find(p => p.id === id);
 const cur = v => v.players[v.turn];
 const mineIds = v => v.controlled || [];
@@ -220,7 +228,8 @@ const multiLocal = v => mineIds(v).length > 1;
 const youOr = (v, id) => isMine(id) && !multiLocal(v) ? 'Bạn' : esc(nm(v, id));
 
 function resetGame() {
-  shown = null; seenEv = 0; busy = false; winShown = false; queue.length = 0; deadlineAt = 0;
+  if (typeof reacts !== 'undefined' && reacts) reacts.setVisible(false);
+  shown = null; seenEv = 0; busy = false; winShown = false; queue.length = 0; deadlineAt = 0; recap = { list: [], buf: null, open: false, hide: false }; renderRecap(); stopTour(false);
   if (B) { B.pick([]); }
   if (modalKey && modalKey !== 'avatar' && modalKey !== 'settings') closeModal();
 }
@@ -260,8 +269,10 @@ async function pump() {
       const fresh = !shown || v.evn < seenEv || !$('#screen-game').classList.contains('active');
       if (fresh) { await enterGame(v); continue; }
       const evs = v.ev.filter(e => e.n > seenEv); seenEv = v.evn;
+      try { collectRecap(evs, v); } catch (err) { console.error(err); }
       const fast = queue.length > 2 || document.hidden;
-      if (evs.length && !fast) { $('#panel').classList.add('busy'); for (const e of evs) { try { await animate(e, v); } catch (err) { console.error(err); } } }
+      const anim = evs.filter((e, k) => !(e.t === 'build' && evs.slice(k + 1).some(x => x.t === 'build' && x.tile === e.tile)));
+      if (anim.length && !fast) { $('#panel').classList.add('busy'); for (const e of anim) { curAnim = e.t; try { await animate(e, v); } catch (err) { console.error(err); } } curAnim = ''; }
       applyView(v);
     }
   } finally { pumping = false; }
@@ -273,6 +284,7 @@ async function enterGame(v) {
   B.sync(v); B.placeAll(v.players);
   const c = cur(v); B.setTurn(c.id); B.cam.mode = 'overview'; B.snap(); B.follow(c.id);
   seenEv = v.evn; winShown = v.phase === 'over';
+  recapReset(v);
   applyView(v);
   if (v.phase === 'playing' && v.round === 1 && v.evn <= 2) { fx.banner('Bắt đầu! 🎲', 'gold'); fx.sfx.turn(); }
   if (!ls.get('typhu-camhint')) { $('#cam-hint').hidden = false; setTimeout(() => { $('#cam-hint').hidden = true; }, 6000); ls.set('typhu-camhint', '1'); }
@@ -284,12 +296,15 @@ function applyView(v) {
   B.arrange(10, 300);
   if (v.phase === 'playing') B.setTurn(cur(v).id);
   $('#panel').classList.remove('busy');
+  reacts.setVisible(true);
   renderTop(); renderPlayers(); renderPanel(); renderLog();
   if (modalKey === 'manage') renderManage();
   else if (modalKey && modalKey.startsWith('tile:')) openTile(+modalKey.slice(5), true);
   else if (modalKey && modalKey.startsWith('player:')) openPlayer(modalKey.slice(7));
   else if (modalKey === 'trade' && v.stage !== 'roll' && v.stage !== 'end') closeModal();
+  else if (modalKey === 'ask' && !(askFor && askFor.tile === v.landed && v.actor === askFor.pid && canBuild(v, askFor.pid, askFor.tile))) closeModal();
   if (v.phase === 'over' && !winShown) { winShown = true; showWin(v); }
+  maybeAskBuild(v); maybeTour(v); renderRecap();
 }
 
 // ---------- hoạt ảnh từng sự kiện ----------
@@ -444,8 +459,9 @@ function renderPanel() {
   // nút xây nhà phải dễ thấy: có ô xây được thì nút sáng màu + số ô; đứng trên đất của mình thì có nút xây ngay tại chỗ
   const buildable = pid => pid ? tilesOf(v, pid).filter(i => canBuild(v, pid, i)) : [];
   const tools = pid => { const n = buildable(pid).length;
-    return [btn('panel', n ? `🏠 Xây nhà (${n})` : '🏗️ Tài sản', () => openManage(pid), n ? 'green sm' : 'ghost sm', false, 'Xây nhà, bán nhà, thế chấp, chuộc đất'), btn('panel', '🤝 Giao dịch', () => openTrade(pid), 'ghost sm', v.trades >= MAX_TRADES)]; };
+    return [btn('panel', n ? `🏠<span class="lbl"> Xây nhà</span> (${n})` : '🏗️<span class="lbl"> Tài sản</span>', () => openManage(pid), (n ? 'green sm' : 'ghost sm') + ' tool', false, 'Xây nhà, bán nhà, thế chấp, chuộc đất'), btn('panel', '🤝<span class="lbl"> Giao dịch</span>', () => openTrade(pid), 'ghost sm tool', v.trades >= MAX_TRADES, 'Giao dịch')]; };
   const buildHere = pid => { const i = A.pos; if (!pid || TILES[i].type !== 'city' || !canBuild(v, pid, i)) return null; const pr = v.props[i];
+    if (v.opts.freeBuild === 'zing') return btn('panel', `${pr.h === 4 ? '🏛️ Landmark' : '🏠 Xây'} tại đây…`, () => openBuildAsk(pid, i), 'gold', false, 'Xây mấy nhà ở ' + TILES[i].name);
     return btn('panel', `${pr.h === 4 ? '🏛️ Landmark' : '🏠 Xây'} tại đây −${money(houseCost(i))}`, () => send(pid, { type: 'build', tile: i }), 'gold', false, 'Xây ở ' + TILES[i].name); };
   switch (v.stage) {
     case 'roll': {
@@ -491,11 +507,11 @@ function renderPanel() {
       const T = v.trade;
       if (mine) {
         lines.push(head(T.from, `🤝 <b>${esc(nm(v, T.from))}</b> đề nghị giao dịch với ${who}:`));
-        lines.push(`<div class="sub">${tradeSummary(v, T, actor)}</div>`);
+        lines.push(`<div class="sub">${tradeSummary(v, T, actor)}</div>`, tradeWarn(v, T.from, T, actor, true));
         btns.push(btn('panel', '✅ Đồng ý', () => send(me, { type: 'accept' }), 'green main'), btn('panel', '🙅 Từ chối', () => send(me, { type: 'reject' }), 'red'), btn('panel', '🔍 Chi tiết', () => openOffer(v), 'ghost sm'));
       } else {
         lines.push(head(T.from, `🤝 <b>${youOr(v, T.from)}</b> đề nghị giao dịch với <b>${esc(nm(v, T.to))}</b>…`));
-        lines.push(`<div class="sub">${tradeSummary(v, T, null)}</div>`);
+        lines.push(`<div class="sub">${tradeSummary(v, T, null)}</div>`, tradeWarn(v, T.from, T, mineIds(v).find(id => id === T.from) || null, true));
         if (isMine(T.from)) btns.push(btn('panel', '↩️ Rút lại', () => send(T.from, { type: 'cancel' }), 'ghost'));
       }
       break;
@@ -539,7 +555,7 @@ const statusOf = (v, i) => { const pr = v.props[i]; if (!pr) return ''; return p
 function manageBtns(v, pid, i, scope = 'modal') {
   const st = v.stage, ok1 = ['roll', 'end'].includes(st), ok2 = ['roll', 'end', 'debt'].includes(st), pr = v.props[i], out = [];
   if (!pr || pr.owner !== pid || v.actor !== pid || cur(v).id !== pid) return '';
-  if (TILES[i].type === 'city' && ok1 && pr.h < 5) { const why = buildBlock(v, pid, i); out.push(btn(scope, pr.h === 4 ? `🏛️ Landmark -${money(houseCost(i))}` : `🏠 Xây -${money(houseCost(i))}`, () => send(pid, { type: 'build', tile: i }), 'green sm', !!why)); if (why) out.push(`<small class="why">⚠️ ${esc(why)}</small>`); }
+  if (TILES[i].type === 'city' && ok1 && pr.h < 5 && !(v.opts.freeBuild === 'zing' && v.landed !== i)) { const why = buildBlock(v, pid, i); out.push(btn(scope, pr.h === 4 ? `🏛️ Landmark -${money(houseCost(i))}` : `🏠 Xây -${money(houseCost(i))}`, () => send(pid, { type: 'build', tile: i }), 'green sm', !!why)); if (why) out.push(`<small class="why">⚠️ ${esc(why)}</small>`); }
   if (ok2 && canSell(v, pid, i)) out.push(btn(scope, `🔨 Bán nhà +${money(Math.floor(houseCost(i) / 2))}`, () => send(pid, { type: 'sell', tile: i }), 'gold sm'));
   if (ok2 && canMortgage(v, pid, i)) out.push(btn(scope, `🏦 Thế chấp +${money(mortgageValue(i))}`, () => send(pid, { type: 'mortgage', tile: i }), 'ghost sm'));
   if (ok1 && pr.mort) out.push(btn(scope, `🔑 Chuộc -${money(unmortgageCost(i))}`, () => send(pid, { type: 'unmortgage', tile: i }), 'blue sm', !canUnmortgage(v, pid, i)));
@@ -599,7 +615,7 @@ function renderManage() {
     ${groups.length ? `<div class="mg">${groups.map(g => `<div class="grp"><h5 style="--gc:${g.color}"><i></i>${g.name}${g.full ? ' ✅ đủ nhóm' : ` (${g.mine.length}/${g.tiles.length})`}</h5>
       ${g.mine.map(i => `<div class="row"><span class="nm" ${fnAttr('modal', () => openTile(i))}>${esc(tileName(i))} <small>${statusOf(v, i) || money(TILES[i].price)}</small></span>${manageBtns(v, pid, i)}</div>`).join('')}</div>`).join('')}</div>`
       : '<p class="note" style="text-align:center">Bạn chưa có miếng đất nào.</p>'}
-    <p class="note">${v.opts.freeBuild === false ? 'Xây nhà cần đủ nhóm màu' : 'Đất của mình là xây được, không cần đủ nhóm màu'}; đủ nhóm thì phải xây đều tay. 4 nhà rồi mới lên Landmark. Bán nhà được nửa giá. Thế chấp nhận nửa giá, chuộc lại +10%. Chỉ thao tác được trong lượt của mình.</p>`);
+    <p class="note">${v.opts.freeBuild === 'zing' ? 'Luật ZingPlay thật: chỉ xây được ở ô vừa dừng trong lượt này (không cần đủ bộ, không bắt xây đều)' : (v.opts.freeBuild === false ? 'Xây nhà cần đủ nhóm màu' : 'Đất của mình là xây được, không cần đủ nhóm màu') + '; đủ nhóm thì phải xây đều tay'}. 4 nhà rồi mới lên Landmark. Bán nhà được nửa giá. Thế chấp nhận nửa giá, chuộc lại +10%. Chỉ thao tác được trong lượt của mình.</p>`);
 }
 
 // ---------- giao dịch ----------
@@ -627,6 +643,7 @@ function openTrade(pid) {
           <label>💵 Tiền <input class="inp" type="number" min="0" step="10" max="${them.cash}" value="${st.get.cash || ''}" data-cash="get" placeholder="0"></label>
           ${them.cards.length ? `<label>🗝️ Thẻ ra tù <input class="inp" type="number" min="0" max="${them.cards.length}" value="${st.get.cards || ''}" data-cards="get" placeholder="0"></label>` : ''}</div>
       </div>
+      ${tradeValues(v, t, pid)}${tradeWarn(v, pid, t, pid)}
       <p class="sub" id="tr-err" style="text-align:center;color:#c62828;min-height:20px;margin:8px 0 0">${err && err !== 'Giao dịch trống' ? esc(err) : ''}</p>
       <div class="mbtns"><button class="btn ghost" data-close>Huỷ</button>${btn('modal', `📨 Gửi đề nghị · còn ${MAX_TRADES - v.trades} lần`, () => { closeModal(); send(pid, { type: 'trade', ...t }); }, 'pri', !!err || v.trades >= MAX_TRADES)}</div>`);
     $$('#modal-box [data-tile]').forEach(c => c.onchange = () => { const s = st[c.dataset.side], i = +c.dataset.tile; s.tiles = c.checked ? [...s.tiles, i] : s.tiles.filter(x => x !== i); draw(); });
@@ -642,8 +659,240 @@ function openOffer(v) {
   const me = T.to;
   openModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>🤝 Lời đề nghị từ ${esc(nm(v, T.from))}</h2>
     <div class="tr-cols"><div class="tr-col"><h4>Bạn nhận</h4><div class="mg">${side(T.give)}</div></div><div class="tr-col"><h4>Bạn đưa</h4><div class="mg">${side(T.get)}</div></div></div>
+    ${tradeValues(v, T, me, true)}${tradeWarn(v, T.from, T, me)}
     <div class="mbtns">${btn('modal', '✅ Đồng ý', () => { closeModal(); send(me, { type: 'accept' }); }, 'green')}${btn('modal', '🙅 Từ chối', () => { closeModal(); send(me, { type: 'reject' }); }, 'red')}</div>`, 'wide', 'offer');
 }
+
+// tổng giá trị mỗi bên + chênh lệch (asReceiver: người xem là người NHẬN lời đề nghị)
+function tradeValues(v, t, viewer, asReceiver = false) {
+  const empty = x => !x.cash && !x.tiles.length && !x.cards;
+  if (empty(t.give) && empty(t.get)) return '';
+  const vGive = tradeSideValue(v, t.give), vGet = tradeSideValue(v, t.get);
+  const out = asReceiver ? vGet : vGive, inn = asReceiver ? vGive : vGet, d = inn - out;
+  const you = multiLocal(v) && viewer ? esc(nm(v, viewer)) : 'Bạn';
+  return `<div class="tr-val"><div><small>${you} đưa</small><b>${money(out)}</b></div>
+    <div class="df ${d > 0 ? 'up' : d < 0 ? 'down' : ''}">${d > 0 ? `▲ Lời ${money(d)}` : d < 0 ? `▼ Bù ${money(-d)}` : '⚖️ Ngang giá'}</div>
+    <div><small>${you} nhận</small><b>${money(inn)}</b></div></div>
+    <p class="note tr-note">Giá trị = tiền + giá đất + nhà (đất thế chấp tính nửa giá, thẻ ra tù ${money(JAIL_FINE)}).</p>`;
+}
+// cảnh báo nổi bật: kèo giúp ai gom đủ bộ màu / đủ 4 bến xe / thắng ngay / sắp thắng
+function tradeWarn(v, from, t, viewer, compact = false) {
+  let imp; try { imp = tradeImpact(v, from, t); } catch (e) { return ''; }
+  const who = pid => viewer && pid === viewer && !multiLocal(v) ? 'bạn' : esc(nm(v, pid));
+  const msgs = [];
+  for (const x of imp) {
+    if (x.win) { msgs.push({ lv: 3, h: `🏆 Kèo này giúp <b>${who(x.pid)}</b> THẮNG NGAY (${x.win === 'groups' ? 'trọn 3 nhóm màu' : 'đủ 4 bến xe'})!` }); continue; }
+    if (x.newGroups.length) msgs.push({ lv: 2, h: `⚠️ Kèo này giúp <b>${who(x.pid)}</b> gom đủ bộ màu ${x.newGroups.map(g => `<span class="gchip" style="--gc:${GROUPS[g].color}">${esc(GROUPS[g].name)}</span>`).join(' ')}` });
+    if (x.allStations) msgs.push({ lv: 2, h: `⚠️ Kèo này giúp <b>${who(x.pid)}</b> gom đủ 4 bến xe 🚌` });
+    if (x.near) msgs.push({ lv: 2, h: `🔥 <b>${who(x.pid).replace(/^b/, 'B')}</b> sắp thắng: ${x.groups >= 2 ? 'có 2 nhóm màu, thêm 1 nhóm nữa là thắng' : 'có 3/4 bến xe, thêm 1 bến nữa là thắng'}` });
+  }
+  if (!msgs.length) return '';
+  msgs.sort((a, b) => b.lv - a.lv);
+  const list = compact ? msgs.slice(0, 1) : msgs;
+  return `<div class="tr-warn${compact ? ' sm' : ''}">${list.map(m => `<div class="${m.lv === 3 ? 'win' : ''}">${m.h}</div>`).join('')}</div>`;
+}
+
+// ---------- luật ZingPlay thật: đứng lên đất mình thì hỏi "Xây mấy nhà?" ----------
+let askFor = null, askedKey = '';
+function maybeAskBuild(v) {
+  if (v.phase !== 'playing' || v.opts.freeBuild !== 'zing' || v.landed == null) return;
+  const pid = v.actor, i = v.landed;
+  if (!isMine(pid) || cur(v).id !== pid || !['end', 'roll'].includes(v.stage) || !canBuild(v, pid, i)) return;
+  const land = [...v.ev].reverse().find(e => e.t === 'land' && e.pid === pid);
+  const key = `${v.round}:${v.turn}:${i}:${land ? land.n : 0}`;
+  if (askedKey === key || $('#modal').classList.contains('open') || $('#card-ov').classList.contains('open')) return;
+  askedKey = key; openBuildAsk(pid, i);
+}
+function openBuildAsk(pid, i) {
+  const v = shown, t = TILES[i], pr = v && v.props[i], p = v && P(v, pid); if (!pr || !p) return;
+  const c = houseCost(i), opts = [];
+  const cap = (v.landH || 0) >= 4 ? 5 : 4; // Landmark chỉ ở lần dừng sau khi đã đủ 4 nhà
+  for (let n = 1; pr.h + n <= cap && n * c <= p.cash; n++) opts.push(n);
+  if (!opts.length) return;
+  askFor = { pid, tile: i };
+  const lab = n => pr.h + n === 5 ? (n > 1 ? `🏛️ ${n - 1} nhà + Landmark` : '🏛️ Landmark') : `🏠 ${n} nhà`;
+  openModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>🏗️ Xây mấy nhà?</h2>
+    <div class="deed" style="--gc:${gColor(i)}"><div class="hd"><small>${multiLocal(v) ? esc(p.name) + ' · ' : ''}Bạn vừa dừng ở đất của mình</small><b>${esc(t.name)}</b></div>
+    <div class="own">Đang có: ${pr.h ? (pr.h === 5 ? '🏛️ Landmark' : '🏠×' + pr.h) : 'đất trống'} · mỗi nhà ${money(c)} · bạn có ${money(p.cash)}</div></div>
+    <div class="ask-grid">${opts.map(n => btn('modal', `${lab(n)}<small>−${money(n * c)} · thuê ${money(t.rent[pr.h + n])}</small>`, () => { closeModal(); send(pid, { type: 'build', tile: i, n }); }, pr.h + n === 5 ? 'gold' : 'green')).join('')}</div>
+    <p class="note" style="text-align:center">Luật ZingPlay thật: chỉ xây được ở ô vừa dừng. Có sẵn 4 nhà thì lần dừng sau mới lên được 🏛️ Landmark.</p>
+    <div class="mbtns"><button class="btn ghost" data-close>Thôi, để sau</button></div>`, '', 'ask');
+}
+
+// ---------- tóm tắt "lượt vừa rồi" của người khác ----------
+let recap = { list: [], buf: null, open: false, hide: false };
+function recapReset(v) { recap = { list: [], buf: v && v.phase === 'playing' ? { pid: cur(v).id, ev: [] } : null, open: false, hide: false }; renderRecap(); }
+function collectRecap(evs, v) {
+  for (const e of evs) {
+    if (e.t === 'turn' || e.t === 'win') {
+      const prev = recap.buf; flushRecap(v);
+      if (prev && isMine(prev.pid) && e.t === 'turn' && !isMine(e.pid)) { recap.list = []; recap.open = false; } // mình vừa xong lượt → bắt đầu gom tóm tắt mới
+      recap.buf = e.t === 'turn' ? { pid: e.pid, ev: [] } : null; continue;
+    }
+    if (!recap.buf) recap.buf = { pid: (shown && cur(shown).id) || e.pid, ev: [] };
+    recap.buf.ev.push(e);
+  }
+}
+function flushRecap(v) {
+  const b = recap.buf; recap.buf = null;
+  if (!b || isMine(b.pid) || !b.ev.length) return;
+  const r = summarize(b, v); if (!r) return;
+  recap.list.push(r); if (recap.list.length > 6) recap.list.shift();
+  recap.hide = false;
+  if (r.imp) fx.sfx.notify();
+}
+function summarize(b, v) {
+  const me = id => isMine(id), N = id => me(id) ? (multiLocal(v) ? esc(nm(v, id)) : 'bạn') : esc(nm(v, id));
+  const head = [], det = []; let imp = false, seg = null;
+  const builds = {};
+  for (const e of b.ev) {
+    switch (e.t) {
+      case 'roll': if (!e.util) { seg = `đổ ${e.d[0]}+${e.d[1]}`; head.push(seg); } det.push(`🎲 Đổ ${e.d[0]} + ${e.d[1]}${e.util ? ' (tính tiền điện nước)' : ''}`); break;
+      case 'land': { const t = `→ <b>${esc(tileName(e.tile))}</b>`; if (head.length && head[head.length - 1] === seg) head[head.length - 1] = seg + ' ' + t; else head.push(t); det.push(`📍 Dừng ở ${esc(tileName(e.tile))}`); break; }
+      case 'pay': {
+        const why = { rent: 'tiền thuê', tax: 'thuế', jail: 'phạt ra tù', card: 'theo thẻ', gift: 'mừng' }[e.why] || '';
+        const txt = e.to ? `trả ${N(e.to)} ${money(e.amt)}` : `nộp ${money(e.amt)}${why ? ' ' + why : ''}`;
+        if (me(e.to) || me(e.from)) { imp = true; head.push(me(e.from) && e.from !== b.pid ? `<b>${N(e.from)}</b> mừng ${money(e.amt)}` : `<b class="hot">${txt}</b>`); }
+        else if (e.amt >= 300) { imp = imp || e.why === 'rent'; head.push(txt); }
+        det.push(`💸 ${e.from === b.pid ? '' : N(e.from) + ' '}${e.to ? 'trả ' + N(e.to) : 'nộp ngân hàng'} ${money(e.amt)}${why ? ' (' + why + ')' : ''}`); break;
+      }
+      case 'buy': head.push(`mua ${esc(tileName(e.tile))}`); det.push(`🏷️ Mua ${esc(tileName(e.tile))} giá ${money(e.amt)}`); break;
+      case 'sold': if (e.pid) { const t = `${e.pid === b.pid ? '' : N(e.pid) + ' '}thắng đấu giá ${esc(tileName(e.tile))} ${money(e.amt)}`; head.push(t); det.push('🔨 ' + t); } else det.push(`🔨 Không ai mua ${esc(tileName(e.tile))}`); break;
+      case 'buyback': { const mine = me(e.from); imp = imp || mine; const t = `💥 mua lại ${esc(tileName(e.tile))} của ${N(e.from)} (${money(e.amt)})`; head.push(mine ? `<b class="hot">${t}</b>` : t); det.push(t); break; }
+      case 'build': builds[e.tile] = Math.max(builds[e.tile] || 0, e.h); break;
+      case 'card': head.push(`rút “${esc(e.title)}”`); det.push(`${e.deck === 'chance' ? '❓ Cơ hội' : '💰 Khí vận'}: ${esc(e.title)} – ${esc(e.text)}`); break;
+      case 'jail': head.push('🚔 vào tù'); det.push('🚔 Vào tù'); break;
+      case 'free': det.push('🔓 Ra tù'); break;
+      case 'salary': det.push(`💵 Qua Bắt đầu +${money(e.amt)}`); break;
+      case 'gain': det.push(`💰 Nhận ${money(e.amt)}`); break;
+      case 'mort': det.push(`🏦 Thế chấp ${esc(tileName(e.tile))} (+${money(e.amt)})`); break;
+      case 'unmort': det.push(`🔑 Chuộc ${esc(tileName(e.tile))}`); break;
+      case 'sell': det.push(`🔨 Bán nhà ở ${esc(tileName(e.tile))}`); break;
+      case 'traded': { const mine = me(e.from) || me(e.to); imp = imp || mine; const t = `🤝 chốt kèo với ${N(e.from === b.pid ? e.to : e.from)}`; head.push(mine ? `<b class="hot">${t}</b>` : t); det.push(t); break; }
+      case 'reject': det.push(`🙅 ${N(e.to)} từ chối giao dịch`); break;
+      case 'bankrupt': { imp = true; const t = `💀 ${N(e.pid)} phá sản${e.to ? ' → tài sản về ' + N(e.to) : ''}`; head.push(`<b class="hot">${t}</b>`); det.push(t); break; }
+    }
+  }
+  for (const i in builds) { const h = builds[i], t = h === 5 ? `🏛️ lên Landmark ${esc(tileName(+i))}` : `🏠 xây tới ${h} nhà ở ${esc(tileName(+i))}`; head.push(t); det.push(t); }
+  if (!head.length && !det.length) return null;
+  return { pid: b.pid, head: `<b>${esc(nm(v, b.pid).replace(' 🤖', ''))}</b> ${head.slice(0, 4).join(', ')}${head.length > 4 ? '…' : ''}`, det, imp };
+}
+function renderRecap() {
+  const el = $('#recap'); if (!el) return;
+  const L = recap.list;
+  if (!L.length || recap.hide || !shown) { el.hidden = true; el.innerHTML = ''; return; }
+  // dòng gọn: lượt quan trọng gần nhất (dính tới bạn / phá sản / thuê lớn), không có thì lượt mới nhất
+  const top = [...L].reverse().find(r => r.imp) || L[L.length - 1];
+  el.hidden = false; el.classList.toggle('imp', !!top.imp); el.classList.toggle('open', recap.open);
+  el.innerHTML = `<div class="rc-top"><button class="rc-main" aria-expanded="${recap.open}" title="Bấm để xem chi tiết">📣 <span>${recap.open ? `<b>Lượt vừa rồi</b> · ${L.length} lượt của người khác` : top.head}</span>${L.length > 1 && !recap.open ? `<i class="more">+${L.length - 1}</i>` : ''}<i class="car">${recap.open ? '▴' : '▾'}</i></button><button class="rc-x" aria-label="Ẩn tóm tắt">✕</button></div>
+    ${recap.open ? `<div class="rc-body">${L.slice().reverse().map(r => `<div class="rc-turn ${r.imp ? 'imp' : ''}"><div class="rh">${r.head}</div><ul>${r.det.map(d => `<li>${d}</li>`).join('')}</ul></div>`).join('')}
+      <button class="chip sm rc-log">📜 Nhật ký đầy đủ</button></div>` : ''}`;
+  el.querySelector('.rc-main').onclick = () => { fx.sfx.click(); recap.open = !recap.open; renderRecap(); };
+  el.querySelector('.rc-x').onclick = () => { fx.sfx.click(); recap.hide = true; recap.open = false; renderRecap(); };
+  const lg = el.querySelector('.rc-log'); if (lg) lg.onclick = () => { recap.open = false; renderRecap(); $('#btn-log').click(); };
+}
+
+// ---------- chỉ dẫn lần đầu (bong bóng lần lượt chỉ vào từng nút) ----------
+const TOUR_KEY = 'typhu-tour-v1';
+let tour = null;
+function maybeTour(v) {
+  if (tour || ls.get(TOUR_KEY) || v.phase !== 'playing' || v.stage !== 'roll' || !isMine(v.actor) || cur(v).inJail) return;
+  if ($('#modal').classList.contains('open') || $('#card-ov').classList.contains('open')) return;
+  startTour();
+}
+function replayTour() {
+  closeModal();
+  if (shown && $('#screen-game').classList.contains('active')) startTour();
+  else { ls.set(TOUR_KEY, ''); toast('🧭 Hướng dẫn sẽ hiện khi bạn vào ván.'); }
+}
+function tourTile() {
+  const v = shown; if (!v || !B) return null;
+  const me = mineIds(v).map(id => P(v, id)).find(p => p && !p.out); const from = me ? me.pos : 0;
+  for (let k = 1; k < 40; k++) { const i = (from + k) % 40; if (TILES[i].type === 'city') return i; }
+  return 1;
+}
+function tileRect(i) {
+  if (!B || i == null) return null;
+  const r = $('#game3d').getBoundingClientRect(), p = B.tileCenter(i).project(B.camera);
+  if (p.z > 1 || Math.abs(p.x) > 1.05 || Math.abs(p.y) > 1.05) return null;
+  const x = r.left + (p.x + 1) / 2 * r.width, y = r.top + (1 - p.y) / 2 * r.height;
+  return { left: x - 26, top: y - 26, right: x + 26, bottom: y + 26, width: 52, height: 52 };
+}
+function tourSteps() {
+  const v = shown, zing = v && v.opts.freeBuild === 'zing';
+  const q = s => () => { const el = $(s); return el && el.offsetParent ? el.getBoundingClientRect() : null; };
+  const byText = (sel, txt) => () => { const el = [...document.querySelectorAll(sel)].find(b => b.textContent.includes(txt) || (b.title || '').includes(txt)); return el && el.offsetParent ? el.getBoundingClientRect() : null; };
+  const myCard = () => { const id = v && mineIds(v)[0]; const el = id && pcEl(id); return el ? el.getBoundingClientRect() : null; };
+  return [
+    { at: q('#panel .btn.main'), t: '🎲 Đổ xúc xắc', d: 'Tới lượt thì bấm nút to này để đi. Đổ <b>đôi</b> được đổ tiếp, đôi 3 lần liền là vào tù!' },
+    { at: () => tileRect(tour && tour.tile), pick: true, t: '🏙️ Ô đất & bảng giá', d: 'Bấm vào <b>ô bất kỳ</b> trên bàn để xem giá, tiền thuê, chủ đất. Dừng ở ô trống thì được mua. Kéo để xoay bàn, chụm để phóng to.' },
+    { at: byText('#panel .btn', 'Xây nhà'), t: '🏠 Xây nhà', d: zing ? 'Luật <b>ZingPlay thật</b>: chỉ xây ở ô vừa dừng. Đứng lên đất mình là tự hiện hộp <b>“Xây mấy nhà?”</b>.' : 'Đất của bạn là xây được nhà. Có ô xây được thì nút này <b>sáng xanh</b> kèm số ô. 4 nhà → lên 🏛️ Landmark.' },
+    { at: byText('#panel .btn', 'Giao dịch'), t: '🤝 Giao dịch', d: 'Đổi đất + tiền với người khác. Bảng giao dịch tính sẵn <b>tổng giá trị</b> mỗi bên và cảnh báo nếu kèo giúp ai gom đủ bộ.' },
+    { at: myCard, t: '💵 Tài sản & thế chấp', d: 'Thẻ của bạn: tiền mặt và 💎 tổng tài sản. Hết tiền thì mở <b>🏗️ Tài sản</b> để bán nhà (nửa giá) hoặc <b>thế chấp</b> đất (chuộc lại +10%).' },
+    { at: q('#panel .btn.main'), t: '✅ Kết thúc lượt', d: 'Đi xong, mua/xây xong thì nút <b>Kết thúc lượt</b> hiện đúng chỗ này – bấm để nhường lượt. Chúc bạn thành đại gia Sài Gòn! 🏙️' },
+  ];
+}
+function startTour() {
+  stopTour(false);
+  const layer = document.createElement('div'); layer.id = 'tour'; layer.className = 'tour';
+  layer.innerHTML = '<div class="tour-spot"></div><div class="tour-bub" role="dialog" aria-live="polite"><i class="tour-arr"></i><div class="tour-c"></div></div>';
+  document.body.appendChild(layer);
+  $('#cam-hint').hidden = true;
+  tour = { k: 0, el: layer, steps: tourSteps(), tile: tourTile(), raf: 0 };
+  drawTour();
+  const loop = () => { if (!tour) return; placeTour(); tour.raf = requestAnimationFrame(loop); }; loop();
+}
+function drawTour() {
+  const T = tour, st = T.steps[T.k], last = T.k === T.steps.length - 1;
+  T.el.querySelector('.tour-c').innerHTML = `<div class="tour-h"><b>${st.t}</b><small>${T.k + 1}/${T.steps.length}</small></div><p>${st.d}</p>
+    <div class="tour-b"><button class="btn ghost sm" data-tour="skip">Bỏ qua</button><button class="btn pri sm" data-tour="next">${last ? 'Xong 🎉' : 'Tiếp →'}</button></div>`;
+  T.el.querySelectorAll('[data-tour]').forEach(b => b.onclick = () => { fx.sfx.click(); if (b.dataset.tour === 'skip' || last) stopTour(true); else { T.k++; drawTour(); } });
+  if (B) B.pick(st.pick && T.tile != null ? [T.tile] : []);
+  placeTour();
+}
+function placeTour() {
+  const T = tour; if (!T) return;
+  const st = T.steps[T.k], bub = T.el.querySelector('.tour-bub'), spot = T.el.querySelector('.tour-spot'), arr = T.el.querySelector('.tour-arr');
+  let r = null; try { r = st.at(); } catch (e) {}
+  if (!r || !r.width) { const pe = $('#panel'); r = pe && pe.offsetParent ? pe.getBoundingClientRect() : null; }
+  const W = innerWidth, H = innerHeight, pad = 6;
+  if (r) { Object.assign(spot.style, { display: 'block', left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + pad * 2 + 'px', height: r.height + pad * 2 + 'px' }); }
+  else spot.style.display = 'none';
+  const bw = Math.min(330, W - 24); bub.style.width = bw + 'px';
+  const bh = bub.offsetHeight, gap = 14;
+  let x, y, side;
+  if (!r) { x = (W - bw) / 2; y = (H - bh) / 2; side = 'none'; }
+  else {
+    const below = H - r.bottom - pad, above = r.top - pad, right = W - r.right - pad, left = r.left - pad;
+    if (above >= bh + gap) side = 'top'; else if (below >= bh + gap) side = 'bottom'; else if (right >= bw + gap) side = 'right'; else if (left >= bw + gap) side = 'left'; else side = above > below ? 'top' : 'bottom';
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    if (side === 'top' || side === 'bottom') { x = Math.max(12, Math.min(W - bw - 12, cx - bw / 2)); y = side === 'top' ? r.top - pad - gap - bh : r.bottom + pad + gap; }
+    else { y = Math.max(8, Math.min(H - bh - 8, cy - bh / 2)); x = side === 'right' ? r.right + pad + gap : r.left - pad - gap - bw; }
+    y = Math.max(4, Math.min(H - bh - 4, y));
+    arr.className = 'tour-arr ' + side;
+    if (side === 'top' || side === 'bottom') { arr.style.left = Math.max(16, Math.min(bw - 16, cx - x)) + 'px'; arr.style.top = ''; }
+    else { arr.style.top = Math.max(16, Math.min(bh - 16, cy - y)) + 'px'; arr.style.left = ''; }
+  }
+  bub.style.left = x + 'px'; bub.style.top = y + 'px'; bub.dataset.side = side;
+}
+function stopTour(done) {
+  if (!tour) return;
+  cancelAnimationFrame(tour.raf); tour.el.remove(); tour = null;
+  if (B) B.pick([]);
+  if (done) ls.set(TOUR_KEY, '1');
+}
+
+// ---------- thả emoji / chọc nhau (shared/ui/react.js): ghế = thẻ người chơi, emoji bay cả trên đầu quân 3D ----------
+var reacts = createReactions({
+  send: e => { if (!net) return; if (isHost) net.react('host', e); else net.react(e); },
+  seatEl: id => pcEl(id),
+  myId: () => myId,
+  nameOf: id => { const p = shown && P(shown, id); return p ? p.name.replace(' 🤖', '') : ''; },
+  mount: $('#game3d'), place: 'right:8px;bottom:8px',
+  phrases: TYPHU_PHRASES,
+  onShow: msg => { fx.sfx.notify(); if (B && shown && REACT_EMOJIS.includes(msg.e) && B.pawns[msg.from] && B.pawns[msg.from].visible !== false) B.floatAt(msg.from, msg.e, '#7a5cff'); },
+});
+reacts.setVisible(false);
 
 // ---------- kết thúc ván ----------
 function showWin(v) {
@@ -671,4 +920,4 @@ function showWin(v) {
   }
   if (ses && ses.role === 'client' && ses.code) { net = new Client(ses.code, meProfile(), handlers); isHost = false; $('#code-box').style.display = ''; }
 })();
-if (location.hash === '#debug') window.__dbg = () => ({ net, shown, B, showCard: e => showCard(e, shown), openTile, openManage, openTrade, openPlayer, showWin });
+if (location.hash === '#debug') window.__dbg = () => ({ net, shown, B, showCard: e => showCard(e, shown), openTile, openManage, openTrade, openPlayer, showWin, openBuildAsk, startTour, recap: () => recap, renderRecap, q: () => ({ pumping, queue: queue.length, busy, seenEv, anim: curAnim }) });

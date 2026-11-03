@@ -5,6 +5,14 @@ export const GAMES = {
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
 };
 export const NOTES = [
+  { id: '20261103-12', date: '03/11/2026', game: 'typhu', title: 'Chỉ dẫn, ZingPlay thật, giao dịch thông minh', items: [
+    '🧭 Lần đầu vào ván có chỉ dẫn từng bước (xem lại trong ⚙️).',
+    '🏗️ Luật mới "ZingPlay thật": đứng lên đất mình là hỏi luôn "Xây mấy nhà?".',
+    '🤝 Giao dịch hiện tổng giá trị mỗi bên và cảnh báo kèo giúp đối thủ gom bộ hay sắp thắng.',
+    '📣 Thẻ tóm tắt lượt vừa rồi của người khác, bấm để xem chi tiết.',
+    '😂 Thả emoji, chọc nhau ("Trả tiền thuê đi!", "Vô tù chơi"…), bot cũng biết chọc lại.',
+    '📱 Xoay ngang điện thoại gọn hơn; sửa lỗi chọn kiểu xây nhà trong sảnh không ăn.',
+  ] },
   { id: '20261103-11', date: '03/11/2026', game: 'scribble', title: 'Thả emoji, gõ câu chọc tự do', items: [
     '😂 Thả emoji / chọc nhau ngay trong ván: câu dựng sẵn hoặc gõ tự do (≤ 40 ký tự), câu nào lộ đáp án thì tự chặn.',
   ] },

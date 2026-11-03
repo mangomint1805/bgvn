@@ -1,8 +1,8 @@
 // Bot "thông minh vừa phải": mua đất có tính toán, xây đều, đấu giá theo định giá, giao dịch để gom đủ nhóm màu.
 import {
   TILES, GROUPS, GROUP_LIST, P, current, actorOf, alive, tilesOf, ownerOf, ownsGroup, rentOf, canBuild, canSell, canMortgage, canUnmortgage,
-  houseCost, unmortgageCost, mortgageValue, tradable, tradeError, buybackPrice, isProp, JAIL_FINE, MAX_TRADES,
-} from './engine.js?v=42';
+  houseCost, unmortgageCost, mortgageValue, tradable, tradeError, buybackPrice, isProp, JAIL_FINE, MAX_TRADES, zingBuild, tradeImpact,
+} from './engine.js?v=43';
 
 // tiền nên giữ lại để trả tiền thuê bất ngờ
 function reserve(s, pid) {
@@ -86,6 +86,16 @@ function raiseStep(s, pid) {
 // trong lượt: chuộc đất, xây nhà, đề nghị giao dịch
 function manage(s, pid, R) {
   const p = P(s, pid), own = tilesOf(s, pid);
+  // luật ZingPlay thật: chỉ xây được ở ô vừa dừng, cơ hội hiếm → xây luôn nhiều nhà một lần (giữ dự trữ thấp hơn chút)
+  if (zingBuild(s)) {
+    const i = s.landed;
+    if (i != null && canBuild(s, pid, i)) {
+      const c = houseCost(i), keep = Math.round(R * 0.8);
+      const cap = (s.landH || 0) >= 4 ? 5 : 4; // Landmark chỉ ở lần dừng sau
+      let n = 0; while (s.props[i].h + n < cap && p.cash - (n + 1) * c >= keep) n++;
+      if (n) return { type: 'build', tile: i, n };
+    }
+  }
   // xây: ưu tiên nhóm đắt (tiền thuê cao), giữ dự trữ
   const build = own.filter(i => canBuild(s, pid, i) && p.cash - houseCost(i) >= R).sort((a, b) => TILES[b].price - TILES[a].price || s.props[a].h - s.props[b].h)[0];
   if (build != null) return { type: 'build', tile: build };
@@ -113,7 +123,7 @@ function proposeTrade(s, pid, R) {
       const diff = Math.max(0, Math.round((TILES[i].price - TILES[j].price) / 10) * 10 + 20 * tries);
       if (p.cash - diff < R) continue;
       const t = { type: 'trade', to: o, give: { cash: diff, tiles: [j], cards: 0 }, get: { cash: 0, tiles: [i], cards: 0 } };
-      if (!tradeError(s, pid, t)) return t;
+      if (!tradeError(s, pid, t) && !tradeImpact(s, pid, t)[1].win) return t;
     }
     if (groupStat(s, o, g.id).mine >= 2 && tries < 2) continue; // họ cũng đang gom nhóm này – thử ít thôi
     const offer = Math.round(TILES[i].price * (1.6 + 0.3 * tries) / 10) * 10 + 40;
@@ -127,6 +137,9 @@ function proposeTrade(s, pid, R) {
 export function judgeTrade(s, pid) {
   const T = s.trade, me = P(s, pid), R = reserve(s, pid);
   if (tradeError(s, T.from, T)) return false;
+  const imp = tradeImpact(s, T.from, T);
+  if (imp[0].win && !imp[1].win) return false; // không bao giờ dâng chiến thắng cho đối phương
+  if (imp[1].win) return true;
   const valIn = T.give.tiles.reduce((a, i) => a + tileWorth(s, pid, i, T.give.tiles) * (s.props[i].mort ? 0.55 : 1), 0) + T.give.cash + T.give.cards * 40;
   let valOut = T.get.tiles.reduce((a, i) => a + tileWorth(s, pid, i) * (s.props[i].mort ? 0.55 : 1), 0) + T.get.cash + T.get.cards * 40;
   // nếu nhờ giao dịch mà đối phương đủ nhóm màu → đòi thêm

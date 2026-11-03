@@ -37,7 +37,7 @@ export function createGame(players, opts = {}) {
     v: 1, phase: 'playing', opts: o, round: 1, turn: 0, stage: 'roll',
     players: players.map(p => ({ id: p.id, name: p.name, isBot: !!p.isBot, avatar: p.avatar || null, color: p.color || '#ff5a5f', cash: o.startMoney, pos: 0, inJail: false, jailTurns: 0, cards: [], out: false, doubles: 0 })),
     props: {}, dice: [1, 1], rolled: false, again: false,
-    auction: null, trade: null, debt: null, buyback: null, buyTile: null,
+    auction: null, trade: null, debt: null, buyback: null, buyTile: null, landed: null,
     decks: { chance: shuffle([...CARDS.chance.keys()]), chest: shuffle([...CARDS.chest.keys()]) },
     trades: 0, tradeHist: {}, ev: [], evn: 0, log: [], winner: null, winReason: null, ranks: [],
   };
@@ -86,11 +86,19 @@ export function liquidity(s, pid) {
 // ---------------- kiểm tra hành động quản lý tài sản ----------------
 // lý do không xây được ('' = xây được). freeBuild (mặc định, kiểu ZingPlay): đất của mình là xây được, không cần đủ bộ màu;
 // đủ bộ màu thì vẫn phải xây đều tay. Tắt freeBuild = luật cổ điển (phải đủ bộ màu).
+// freeBuild = 'zing' ("ZingPlay thật"): chỉ xây ở ô mình VỪA DỪNG trong lượt này (kể cả ô vừa mua / mua lại), không cần đủ bộ, không bắt xây đều.
+// Landmark kiểu ZingPlay: chỉ nâng được khi ô đã có sẵn 4 nhà lúc mình tới (s.landH = số nhà lúc dừng) – không lên thẳng 0 → Landmark.
+export const zingBuild = s => s.opts.freeBuild === 'zing';
 export function buildBlock(s, pid, i) {
   const pr = s.props[i], t = TILES[i];
   if (!pr || pr.owner !== pid || t.type !== 'city') return 'Không phải đường của bạn';
   if (pr.h >= 5) return 'Đã lên Landmark rồi';
   if (pr.mort) return 'Đất đang thế chấp – chuộc lại trước';
+  if (zingBuild(s)) {
+    if (current(s).id !== pid || s.landed !== i) return 'Luật ZingPlay: chỉ xây được ở ô vừa dừng trong lượt này';
+    if (pr.h === 4 && (s.landH || 0) < 4) return 'Luật ZingPlay: Landmark xây ở lần dừng sau (ô phải có sẵn 4 nhà khi bạn tới)';
+    return P(s, pid).cash < houseCost(i) ? 'Không đủ tiền' : '';
+  }
   const g = GROUPS[t.group].tiles, full = ownsGroup(s, pid, t.group);
   if (!full && s.opts.freeBuild === false) return 'Cần sở hữu đủ cả nhóm màu mới xây được';
   if (full && g.some(j => s.props[j].mort)) return 'Có đất cùng màu đang thế chấp';
@@ -101,7 +109,7 @@ export function buildBlock(s, pid, i) {
 export const canBuild = (s, pid, i) => !buildBlock(s, pid, i);
 export function canSell(s, pid, i) {
   const pr = s.props[i]; if (!pr || pr.owner !== pid || !pr.h) return false;
-  if (!ownsGroup(s, pid, TILES[i].group)) return true; // chưa đủ bộ (luật xây tự do): bán ô nào cũng được
+  if (zingBuild(s) || !ownsGroup(s, pid, TILES[i].group)) return true; // chưa đủ bộ (luật xây tự do) / ZingPlay thật: bán ô nào cũng được
   const g = GROUPS[TILES[i].group].tiles; return pr.h >= Math.max(...g.map(j => s.props[j].h)); // đủ bộ: bán đều tay
 }
 // nhóm màu có nhà của CHÍNH chủ ô này (nhà của người khác cùng màu không cản mình thế chấp / giao dịch)
@@ -182,9 +190,15 @@ export function applyAction(s, pid, a) {
       if (!allowed.includes(s.stage)) return no('Lúc này chưa làm được');
       const i = +a.tile, t = TILES[i], pr = s.props[i];
       if (a.type === 'build') {
-        if (!canBuild(s, pid, i)) return no('Chưa xây được ở đây');
-        p.cash -= houseCost(i); pr.h++; ev(s, { t: 'build', pid, tile: i, h: pr.h, amt: houseCost(i) });
-        log(s, pr.h === 5 ? `🏛️ ${p.name} xây LANDMARK ở ${t.name}!` : `🏠 ${p.name} xây nhà thứ ${pr.h} ở ${t.name}.`);
+        // n > 1: xây nhiều nhà một lần (hộp "Xây mấy nhà?"); kiểm tra từng bước, hỏng giữa chừng thì hoàn lại hết
+        const n = Math.max(1, Math.min(5, Math.floor(+a.n) || 1)), h0 = pr ? pr.h : 0, c0 = p.cash;
+        for (let k = 0; k < n; k++) {
+          const why = buildBlock(s, pid, i);
+          if (why) { if (pr) { pr.h = h0; p.cash = c0; } return no(k ? `Chỉ xây thêm được ${k} nhà (${why})` : 'Chưa xây được ở đây' + (why ? ': ' + why : '')); }
+          p.cash -= houseCost(i); pr.h++;
+        }
+        for (let h = h0 + 1; h <= pr.h; h++) ev(s, { t: 'build', pid, tile: i, h, amt: houseCost(i) });
+        log(s, pr.h === 5 ? `🏛️ ${p.name} xây ${n > 1 ? (n - 1) + ' nhà + ' : ''}LANDMARK ở ${t.name}!` : n > 1 ? `🏠 ${p.name} xây ${n} nhà ở ${t.name} (giờ có ${pr.h}).` : `🏠 ${p.name} xây nhà thứ ${pr.h} ở ${t.name}.`);
       } else if (a.type === 'sell') {
         if (!canSell(s, pid, i)) return no('Không bán được nhà ở đây');
         const v = Math.floor(houseCost(i) / 2); pr.h--; p.cash += v; ev(s, { t: 'sell', pid, tile: i, h: pr.h, amt: v });
@@ -246,7 +260,7 @@ const no = reason => ({ ok: false, reason });
 // ---------------- đổ xúc xắc & di chuyển ----------------
 function doRoll(s, p) {
   const d = [d6(), d6()], dbl = d[0] === d[1], sum = d[0] + d[1];
-  s.dice = d; s.rolled = true; s.again = false; s.trades = s.trades || 0;
+  s.dice = d; s.rolled = true; s.again = false; s.trades = s.trades || 0; s.landed = null;
   ev(s, { t: 'roll', pid: p.id, d });
   log(s, `🎲 ${p.name} đổ ${d[0]} + ${d[1]} = ${sum}${dbl ? ' (đôi!)' : ''}.`);
   s.stage = 'resolving';
@@ -280,7 +294,7 @@ function goJail(s, p) {
 }
 function land(s, p) {
   const i = p.pos, t = TILES[i];
-  ev(s, { t: 'land', pid: p.id, tile: i });
+  s.landed = i; s.landH = s.props[i] ? s.props[i].h : 0; ev(s, { t: 'land', pid: p.id, tile: i });
   if (isProp(i)) {
     const pr = s.props[i];
     if (!pr) { s.stage = 'buy'; s.buyTile = i; return; }
@@ -419,7 +433,7 @@ function drawCard(s, p, deck) {
 }
 function landMult(s, p) {
   const i = p.pos, pr = s.props[i];
-  ev(s, { t: 'land', pid: p.id, tile: i });
+  s.landed = i; s.landH = pr ? pr.h : 0; ev(s, { t: 'land', pid: p.id, tile: i });
   if (!pr) { s.stage = 'buy'; s.buyTile = i; return; }
   if (pr.owner === p.id || pr.mort) { finishLanding(s); return; }
   // bến xe gấp đôi, điện nước đổ lại × 10
@@ -467,6 +481,24 @@ export function tradeError(s, from, t) {
   return null;
 }
 
+// tổng giá trị 1 bên của giao dịch: tiền + giá đất (đang thế chấp tính nửa giá) + nhà + thẻ ra tù (tính bằng tiền phạt tù)
+export const tradeSideValue = (s, side) => side.cash + side.tiles.reduce((a, i) => a + tileValue(s, i), 0) + side.cards * JAIL_FINE;
+// giao dịch này làm thay đổi gì cho mỗi bên: gom đủ nhóm màu mới, đủ 4 bến xe, thắng ngay, hay chỉ còn 1 bước là thắng
+export function tradeImpact(s, from, t) {
+  const after = i => t.give.tiles.includes(i) ? t.to : t.get.tiles.includes(i) ? from : ownerOf(s, i);
+  const st = STATIONS();
+  return [from, t.to].map(pid => {
+    const gBefore = GROUP_LIST.filter(g => g.tiles.every(i => ownerOf(s, i) === pid)).map(g => g.id);
+    const gAfter = GROUP_LIST.filter(g => g.tiles.every(i => after(i) === pid)).map(g => g.id);
+    const sBefore = st.filter(i => ownerOf(s, i) === pid).length, sAfter = st.filter(i => after(i) === pid).length;
+    const newGroups = gAfter.filter(g => !gBefore.includes(g)), allStations = sAfter >= st.length && sBefore < st.length;
+    const mw = !!s.opts.monopolyWin;
+    const win = mw && (gAfter.length >= 3 && newGroups.length ? 'groups' : allStations ? 'stations' : null) || null;
+    const near = mw && !win && ((gAfter.length === 2 && newGroups.length > 0) || (sAfter === st.length - 1 && sAfter > sBefore));
+    return { pid, newGroups, groups: gAfter.length, stations: sAfter, allStations, win, near };
+  });
+}
+
 // ---------------- thắng / chuyển lượt ----------------
 export function winCheckFor(s, pid) {
   if (!s.opts.monopolyWin) return null;
@@ -495,7 +527,7 @@ function nextTurn(s) {
     const j = (s.turn + step) % n;
     if (!s.players[j].out) { if (j <= s.turn) s.round++; k = j; break; }
   }
-  s.turn = k; s.stage = 'roll'; s.again = false; s.rolled = false; s.trades = 0; s.buyTile = null;
+  s.turn = k; s.stage = 'roll'; s.again = false; s.rolled = false; s.trades = 0; s.buyTile = null; s.landed = null;
   if (s.opts.maxRounds && s.round > s.opts.maxRounds) {
     s.round = s.opts.maxRounds;
     const best = alive(s).sort((a, b) => netWorth(s, b.id) - netWorth(s, a.id))[0];

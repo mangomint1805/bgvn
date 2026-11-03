@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏙️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/typhu.css?v=42">
+<link rel="stylesheet" href="css/typhu.css?v=43">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
 </head>
 <body>
@@ -28,7 +28,7 @@
       <button class="btn big" id="btn-create">✨ Tạo phòng online</button>
       <div class="join-row"><input id="join-code" maxlength="5" placeholder="MÃ PHÒNG" autocomplete="off"><button class="btn" id="btn-join">Vào</button></div>
     </div>
-    <div class="home-tools"><button class="chip" id="btn-guide-home">📖 Hướng dẫn</button><button class="chip" id="btn-settings-home">⚙️ Cài đặt</button></div>
+    <div class="home-tools"><button class="chip" id="btn-guide-home">📖 Hướng dẫn</button><button class="chip" id="btn-settings-home">⚙️ Cài đặt</button><button class="chip" id="btn-news-home">📝 Có gì mới</button></div>
     <p class="note">Bản fan-made phi thương mại cho hội bạn – không liên kết với nhà phát hành Cờ tỷ phú nào.</p>
   </div>
 </section>
@@ -36,7 +36,7 @@
 <section id="screen-lobby" class="screen">
   <div class="lobby">
     <div class="lobby-head">
-      <button class="chip" id="btn-leave-lobby">← Thoát</button>
+      <button class="chip" id="btn-leave-lobby">← Thoát</button><button class="chip" id="btn-news-lobby">📝 Có gì mới</button>
       <div class="code-box" id="code-box">Mã phòng <b id="room-code">…</b> <button class="chip sm" id="btn-copy">Sao chép link</button></div>
     </div>
     <div class="lobby-grid">
@@ -65,7 +65,7 @@
   </header>
   <div class="game-body">
     <div class="players" id="players"></div>
-    <div class="view3d" id="game3d"><div class="cam-hint" id="cam-hint" hidden>Kéo để xoay · chụm để phóng to · 🎯 để về góc nhìn</div></div>
+    <div class="view3d" id="game3d"><div class="recap" id="recap" hidden></div><div class="cam-hint" id="cam-hint" hidden>Kéo để xoay · chụm để phóng to · 🎯 để về góc nhìn</div></div>
     <div class="act" id="panel"></div>
   </div>
   <aside class="log" id="log"><h4>Nhật ký <button class="chip sm" id="btn-log-close">✕</button></h4><ol id="log-list"></ol></aside>
@@ -75,6 +75,6 @@
 <div class="card-ov" id="card-ov"><div class="flip" id="flip"><div class="face back" id="flip-back"></div><div class="face front" id="flip-front"></div></div><p class="tap">Chạm để đóng</p></div>
 <div class="toast" id="toast"></div>
 <div id="fx-layer"></div>
-<script type="module" src="js/main.js?v=42"></script>
+<script type="module" src="js/main.js?v=43"></script>
 </body>
 </html>

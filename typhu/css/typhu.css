@@ -42,7 +42,7 @@ h1,h2,h3,h4,.logo,.btn,.banner,.round-tag{font-family:"Baloo 2","Be Vietnam Pro"
 #name,.join-row input,.inp{width:100%;border:2px solid var(--line);border-radius:14px;padding:10px 12px;font-weight:700;font-size:17px;background:#fff;outline:none;min-height:46px}
 input:focus{border-color:var(--acc)}
 .btn-col{display:grid;gap:10px}.join-row{display:flex;gap:8px}.join-row input{text-transform:uppercase;letter-spacing:4px;text-align:center}
-.home-tools{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.home-tools{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
 
 /* ---------- sảnh ---------- */
 #screen-lobby{overflow:auto;padding:14px}
@@ -211,3 +211,58 @@ input:focus{border-color:var(--acc)}
 .act .btns .btn.tiny{flex:0 0 auto}
 #btn-start{position:sticky;bottom:10px;z-index:3}
 .tr-col label:has(.inp){white-space:nowrap}.tr-col label .inp{flex:1;width:auto;min-width:0}
+
+/* ---------- nâng cấp: hộp "Xây mấy nhà?" (ZingPlay thật) ---------- */
+.ask-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:12px}
+.ask-grid .btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:58px;font-size:18px}
+.ask-grid .btn small{font-family:"Be Vietnam Pro";font-size:12.5px;font-weight:700;opacity:.92}
+/* ---------- giao dịch: tổng giá trị + cảnh báo ---------- */
+.tr-val{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-top:10px;background:#f6f8fc;border-radius:14px;padding:8px 10px;text-align:center}
+.tr-val small{display:block;color:var(--muted);font-size:12px;font-weight:700}.tr-val b{font-family:"Baloo 2";font-size:20px;line-height:1.1}
+.tr-val .df{font-weight:800;font-size:14px;border-radius:999px;padding:4px 10px;background:#e9edf6;white-space:nowrap}
+.tr-val .df.up{background:#dff6e9;color:#137a4c}.tr-val .df.down{background:#ffe3e1;color:#b3261e}
+.tr-note{text-align:center;margin-top:4px}
+.tr-warn{margin-top:8px;border:2px solid #ffb020;background:#fff6dc;border-radius:14px;padding:7px 10px;font-weight:700;font-size:14px;color:#5a3d00;display:grid;gap:4px;animation:warnin .5s}
+.tr-warn .win{color:#b3261e}.tr-warn:has(.win){border-color:#e53935;background:#ffe9e7}
+.tr-warn b{font-weight:800}
+.tr-warn.sm{margin-top:0;padding:4px 8px;font-size:13px;border-radius:10px}
+@keyframes warnin{0%{transform:scale(.96)}50%{transform:scale(1.02)}}
+/* ---------- tóm tắt lượt vừa rồi ---------- */
+.recap{position:absolute;left:8px;top:8px;z-index:4;max-width:min(440px,calc(100% - 16px));background:#fffffff2;border-radius:14px;box-shadow:var(--shadow);border-left:5px solid #3d8bff;font-size:13.5px;animation:rcin .35s ease-out}
+.recap.imp{border-left-color:var(--red)}
+.recap .rc-top{display:flex;align-items:stretch}
+.recap .rc-main{flex:1;min-width:0;display:flex;align-items:center;gap:6px;border:0;background:none;text-align:left;padding:6px 4px 6px 9px;cursor:pointer;font-weight:600;min-height:40px;line-height:1.3}
+.recap .rc-main>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.recap.open .rc-main>span{white-space:normal}
+.recap .hot{color:#c62828}
+.recap .more{font-style:normal;background:#24314d;color:#fff;border-radius:999px;padding:0 7px;font-size:11.5px;font-weight:800;flex:none}
+.recap .car{font-style:normal;color:var(--muted);flex:none}
+.recap .rc-x{border:0;background:none;width:36px;min-height:40px;cursor:pointer;color:var(--muted);font-size:15px;flex:none}
+.recap .rc-body{max-height:min(46vh,320px);overflow:auto;padding:0 10px 8px;border-top:1px solid var(--line)}
+.recap .rc-turn{padding:6px 0 4px;border-bottom:1px dashed var(--line)}.recap .rc-turn.imp .rh{color:#b3261e}
+.recap .rc-turn ul{margin:2px 0 0;padding-left:18px;font-weight:500;font-size:13px;color:#3a4766}
+.recap .rc-log{margin-top:8px}
+@keyframes rcin{from{transform:translateY(-10px);opacity:0}}
+/* ---------- chỉ dẫn lần đầu ---------- */
+.tour{position:fixed;inset:0;z-index:45;pointer-events:none}
+.tour-spot{position:fixed;border-radius:16px;border:3px solid #ffd54a;box-shadow:0 0 0 9999px #1a234059,0 0 18px 4px #ffd54acc;transition:all .25s;pointer-events:none}
+.tour-bub{position:fixed;background:#fff;border-radius:18px;box-shadow:0 18px 40px -12px #000a;padding:12px 14px;pointer-events:auto;transition:left .25s,top .25s;border:2px solid #ffd54a}
+.tour-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.tour-h b{font-family:"Baloo 2";font-size:20px;line-height:1.1}.tour-h small{color:var(--muted);font-weight:700}
+.tour-bub p{margin:4px 0 8px;font-weight:500;font-size:14.5px;line-height:1.4}.tour-bub p b{font-weight:800}
+.tour-b{display:flex;gap:8px;justify-content:flex-end}.tour-b .btn{min-width:96px}
+.tour-arr{position:absolute;width:16px;height:16px;background:#fff;border:2px solid #ffd54a;transform:rotate(45deg)}
+.tour-arr.top{bottom:-9px;margin-left:-8px;border-top:0;border-left:0}.tour-arr.bottom{top:-9px;margin-left:-8px;border-bottom:0;border-right:0}
+.tour-arr.right{left:-9px;margin-top:-8px;border-top:0;border-right:0}.tour-arr.left{right:-9px;margin-top:-8px;border-bottom:0;border-left:0}.tour-arr.none{display:none}
+@media (prefers-reduced-motion:reduce){.tour-spot,.tour-bub{transition:none}}
+/* màn ngang thấp (điện thoại xoay ngang): nút phụ Xây nhà / Tài sản / Giao dịch chỉ còn biểu tượng để bảng nút gọn 1–2 hàng, cột trái thấy đủ thẻ người chơi */
+@media (orientation:landscape) and (max-height:560px){
+  .act .btns .btn.tool{flex:0 0 auto;min-width:48px;padding:6px 9px}
+  .act .btns .btn.tool .lbl{display:none}
+  .act{gap:4px}.act .line{min-height:22px;font-size:13.5px}.act .line img{width:24px;height:24px}
+  .act .dice-r{font-size:13px;padding:1px 6px}
+  .act .btns .btn.main{flex:2 1 120px}
+  .recap{max-width:min(380px,calc(100% - 16px))}
+}
+.cam-hint{max-width:calc(100% - 120px);white-space:normal;text-align:center}
+/* chấm đỏ "có bản mới" cho nút 📝 Có gì mới (CSS của shared/ui/news.js chỉ chèn khi mở hộp) */
+.bgvn-dot{position:relative}.bgvn-dot::after{content:"";position:absolute;top:2px;right:2px;width:10px;height:10px;border-radius:50%;background:#ff4d5e;box-shadow:0 0 0 2px #fff}

@@ -1,5 +1,5 @@
 // Hướng dẫn luật Cờ Tỷ Phú Sài Gòn (tiếng Việt)
-import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=42';
+import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=43';
 
 export function guideHTML() {
   const taxes = TILES.filter(t => t.type === 'tax').map(t => `${t.name} ${money(t.amount)}`).join(', ');
@@ -26,8 +26,9 @@ export function guideHTML() {
     <li>Ô đang <b>thế chấp</b> không thu tiền thuê. Ở tù vẫn thu tiền thuê bình thường.</li></ul>
   <h3>🏠 Xây nhà & Landmark</h3><ul>
     <li>Mặc định (kiểu ZingPlay): <b>đường của mình là xây được</b>, không cần đủ nhóm màu. Trong lượt của mình: bấm nút <b>🏠 Xây nhà</b> (nút xanh ở bảng dưới, hiện số ô xây được; không có ô nào thì nút tên <b>🏗️ Tài sản</b>), hoặc bấm thẳng vào ô trên bàn. Đứng trên đất của mình thì có nút <b>Xây tại đây</b>.</li>
-    <li>Chủ phòng có thể chọn luật cổ điển "Phải đủ bộ màu" trong sảnh.</li>
-    <li>Khi đã <b>đủ nhóm màu</b> thì phải <b>xây đều tay</b> (ô ít nhà nhất trong nhóm xây trước) và không ô nào trong nhóm đang thế chấp. Tối đa 4 nhà, sau đó nâng lên <b>🏛️ Landmark</b> (thuê cực đắt).</li>
+    <li>Chủ phòng chọn 1 trong 3 kiểu xây ở mục <b>🏗️ Xây nhà</b> trong sảnh: <b>Không cần đủ bộ</b> (mặc định), <b>Phải đủ bộ màu</b> (cổ điển), hoặc <b>ZingPlay thật</b>.</li>
+    <li><b>ZingPlay thật</b>: chỉ được xây ở <b>ô vừa dừng</b> trong lượt của mình (kể cả ô vừa mua hoặc vừa mua lại). Đứng lên đất mình là game tự hỏi <b>“Xây mấy nhà?”</b> – chọn 1, 2, 3, 4 nhà (tối đa đủ tiền). Ô đã có sẵn 4 nhà khi bạn dừng lại lần sau thì nâng được lên <b>🏛️ Landmark</b>. Kiểu này không cần đủ bộ màu và không bắt xây đều tay.</li>
+    <li>Hai kiểu kia: khi đã <b>đủ nhóm màu</b> thì phải <b>xây đều tay</b> (ô ít nhà nhất trong nhóm xây trước) và không ô nào trong nhóm đang thế chấp. Tối đa 4 nhà, sau đó nâng lên <b>🏛️ Landmark</b> (thuê cực đắt).</li>
     <li>Bán nhà lại cho ngân hàng được <b>nửa giá</b>, cũng phải bán đều tay.</li></ul>
   <h3>💥 Mua lại đất (kiểu ZingPlay)</h3><ul>
     <li>Trả tiền thuê ở <b>đường</b> của người khác xong, bạn được quyền <b>mua lại</b> ô đó với giá <b>gấp đôi giá trị</b> (giá đất + nhà). Nhà trên đất giữ nguyên.</li>
@@ -37,7 +38,9 @@ export function guideHTML() {
     <li>Chuộc lại: trả nửa giá <b>+ 10%</b>.</li></ul>
   <h3>🤝 Giao dịch</h3><ul>
     <li>Trong lượt của mình, đề nghị đổi đất + tiền + thẻ ra tù với 1 người. Người kia bấm <b>Đồng ý</b> mới thành.</li>
-    <li>Không giao được đất khi chủ ô còn nhà trong nhóm màu đó (bán nhà trước). Mỗi lượt tối đa 3 lời đề nghị.</li></ul>
+    <li>Không giao được đất khi chủ ô còn nhà trong nhóm màu đó (bán nhà trước). Mỗi lượt tối đa 3 lời đề nghị.</li>
+    <li>Bảng giao dịch tự tính <b>tổng giá trị</b> mỗi bên (tiền + giá đất + nhà; đất thế chấp tính nửa giá) và phần <b>chênh lệch</b>.</li>
+    <li>Kèo nào giúp ai đó <b>gom đủ bộ màu</b>, <b>đủ 4 bến xe</b>, <b>thắng ngay</b> hoặc <b>sắp thắng</b> thì hiện cảnh báo ⚠️ cho cả người gửi lẫn người nhận – đọc kỹ trước khi bấm Đồng ý!</li></ul>
   <h3>🚔 Tù</h3><ul>
     <li>Vào tù khi: dừng ở ô <b>Vào tù</b>, rút thẻ “Tù ngay”, hoặc đổ đôi 3 lần liền. Đứng ở ô Thăm tù bình thường thì chỉ là ghé thăm.</li>
     <li>Ra tù: nộp ${money(JAIL_FINE)} trước khi đổ, dùng <b>thẻ ra tù</b>, hoặc đổ ra <b>đôi</b> (đi luôn nhưng không đổ thêm).</li>
@@ -51,6 +54,8 @@ export function guideHTML() {
   <h3>🎮 Điều khiển</h3><ul>
     <li>Kéo để xoay bàn, chụm/cuộn để phóng to. Camera tự bám người đang đi; bấm <b>🎯</b> để về góc nhìn, <b>🗺️</b> để xem toàn bàn.</li>
     <li>Bấm vào một ô bất kỳ để xem bảng giá. Bấm vào thẻ người chơi để xem tài sản của họ.</li>
+    <li>Lần đầu vào ván có <b>chỉ dẫn từng bước</b> (bong bóng chỉ vào từng nút). Muốn xem lại: <b>⚙️ → 🧭 Xem lại hướng dẫn</b>.</li>
+    <li>Sau lượt của người khác, góc trên bàn cờ hiện thẻ <b>📣 tóm tắt lượt vừa rồi</b> (vd. “Tiến đổ 4+3 → Bùi Viện, trả bạn 950K”). Bấm để xem chi tiết các lượt, ✕ để ẩn. Nhật ký đầy đủ vẫn ở nút 📜.</li>
     <li>Chơi online: ai treo máy quá giờ thì máy đánh giúp; rớt mạng thì máy tạm đánh thay, tải lại trang là vào lại đúng ván.</li></ul>
   <p class="note">Bản fan-made phi thương mại cho hội bạn – không liên kết với nhà phát hành nào.</p></div>`;
 }
