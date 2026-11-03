@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M24 44 L22 18 L40 32 Z M76 44 L78 18 L60 32 Z' fill='%2326222b'/><circle cx='50' cy='60' r='31' fill='%2326222b'/><circle cx='40' cy='62' r='5' fill='%23ffd23f'/><circle cx='60' cy='62' r='5' fill='%23ffd23f'/><circle cx='74' cy='10' r='8' fill='%23ff8a00'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/meono.css?v=6">
+<link rel="stylesheet" href="css/meono.css?v=7">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
 </head>
 <body>
@@ -29,6 +29,7 @@
     </div>
     <div class="home-tools">
       <button class="chip" id="btn-guide-home">📖 Hướng dẫn</button>
+      <button class="chip" id="btn-news-home">📝 Có gì mới</button>
       <button class="chip" id="btn-music-home">🎵 Nhạc</button>
       <button class="home-cat mascot m-sleep" id="home-cat" aria-label="Mèo đang ngủ – chạm để vuốt ve"></button>
     </div>
@@ -67,11 +68,13 @@
     <div class="title-tag">💣 Mèo Nổ</div>
     <div class="tools">
       <select id="speed" class="chip" title="Tốc độ hiệu ứng" aria-label="Tốc độ hiệu ứng"></select>
+      <button class="chip" id="speed-btn" title="Tốc độ hiệu ứng (bấm để đổi)" aria-label="Tốc độ hiệu ứng">⚡</button>
       <button class="chip" id="btn-prob" title="Gợi ý xác suất bom">🎲</button>
       <button class="chip" id="btn-music" title="Nhạc nền">🎵</button>
       <input type="range" id="vol" min="0" max="1" step="0.05" title="Âm lượng nhạc" aria-label="Âm lượng nhạc">
       <button class="chip" id="btn-mute" title="Âm thanh">🔊</button>
       <button class="chip" id="btn-guide" title="Hướng dẫn">📖</button>
+      <button class="chip" id="btn-news" title="Có gì mới" aria-label="Có gì mới">📝</button>
       <button class="chip" id="btn-log" title="Nhật ký">📜</button>
     </div>
   </header>
@@ -100,6 +103,6 @@
 <div class="modal" id="modal"><div class="modal-box" id="modal-box"></div></div>
 <div class="toast" id="toast"></div>
 <div id="fx-layer"></div>
-<script type="module" src="js/main.js?v=6"></script>
+<script type="module" src="js/main.js?v=7"></script>
 </body>
 </html>

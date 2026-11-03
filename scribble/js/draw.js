@@ -1,6 +1,6 @@
 // Bảng vẽ: canvas logic 800×600 co giãn theo khung, vẽ bằng chuột/cảm ứng (pointer events),
 // gom điểm thành lô ~100ms để gửi qua mạng, hoàn tác/xoá/đổ màu đều là "thao tác" phát lại được.
-import { W, H, PALETTE, SIZES, COLOR_NAMES, pushOp, decodePts, encodePts } from './ops.js?v=4';
+import { W, H, PALETTE, SIZES, COLOR_NAMES, pushOp, decodePts, encodePts } from './ops.js?v=5';
 export { W, H, PALETTE, SIZES };
 
 const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));

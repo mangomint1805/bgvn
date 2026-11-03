@@ -1,9 +1,10 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn } from './net.js?v=6';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn } from './net.js?v=7';
 import { netStatus } from '../../shared/ui/status.js';
-import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat } from './engine.js?v=6';
-import { cardHTML, catSVG, bombSVG, cardIcon, mascotSVG } from './cards.js?v=6';
-import * as fx from './mfx.js?v=6';
-import { openGuide } from './guide.js?v=6';
+import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat, awards } from './engine.js?v=7';
+import { cardHTML, catSVG, bombSVG, cardIcon, mascotSVG, tint } from './cards.js?v=7';
+import * as fx from './mfx.js?v=7';
+import { openGuide } from './guide.js?v=7';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=2';
 setSpeedFn(fx.S);
 
 const $ = s => document.querySelector(s);
@@ -21,6 +22,7 @@ let freshIds = new Set(), skipped = 0, skippedSeen = 0, landingAt = 0;
 const AV_COL = ['#ff6b35', '#ff5d8f', '#e0a800', '#2fbf71', '#14b8a6', '#3a86ff', '#8e5cf7', '#d94dff', '#a0693a', '#5b6b8a'];
 const avColor = name => { let h = 0; for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return AV_COL[h % AV_COL.length]; };
 const clean = n => String(n).replace(' 🤖', '').trim();
+const furOf = id => tint(avColor(clean((view && view.players.find(p => p.id === id) || {}).name || '?')), 0.5); // màu lông mèo theo người chơi
 const avatar = (name, extra = '') => `<div class="av" style="background:${avColor(clean(name))}"><i class="ears"></i><b>${esc([...clean(name)][0] || '?').toUpperCase()}</b>${extra}</div>`;
 function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
 let toastT;
@@ -99,11 +101,12 @@ function renderLobby() {
   $('#opts').innerHTML = `
     <label class="opt"><span><b>⏱ Đồng hồ mỗi lượt</b><small>Hết giờ máy tự bốc giùm.</small></span>
       <select data-opt="turnTime" ${dis}>${[30, 45, 60, 90].map(n => `<option value="${n}" ${+o.turnTime === n ? 'selected' : ''}>${n} giây</option>`).join('')}</select></label>
-    <label class="opt"><input type="checkbox" data-opt="expansion" ${o.expansion ? 'checked' : ''} ${dis}><span><b>🪄 Thêm Cải Mệnh & Móc Đáy</b><small>Tắt để chơi bộ cơ bản.</small></span></label>`;
+    <label class="opt"><input type="checkbox" data-opt="expansion" ${o.expansion ? 'checked' : ''} ${dis}><span><b>🪄 Thêm Cải Mệnh & Móc Đáy</b><small>Tắt để chơi bộ cơ bản.</small></span></label>
+    <label class="opt ${o.chaos ? 'hot' : ''}"><input type="checkbox" data-opt="chaos" ${o.chaos ? 'checked' : ''} ${dis}><span><b>🌀 Bộ bài Hỗn loạn</b><small>Gấp đôi Đổ Vỏ${o.expansion ? ', Móc Đáy' : ''}, nhiều ĐÉO! & Xào Bài hơn, thêm 1 Gỡ Bom. Bớt mèo thường.</small></span></label>`;
   $$('#opts [data-opt]').forEach(i => i.onchange = () => net.setOpt(i.dataset.opt, i.type === 'checkbox' ? i.checked : i.value));
   const n = Math.max(2, ps.length), plan = deckPlan(n, o);
   const total = Object.values(plan).reduce((a, b) => a + b, 0);
-  $('#deck-info').innerHTML = `🃏 ${n} người: bộ ${total} lá, <b>${plan.bomb} Mèo Nổ</b>, ${plan.defuse} Gỡ Bom. Mỗi người 1 Gỡ Bom + 7 lá.`;
+  $('#deck-info').innerHTML = `🃏 ${n} người${o.chaos ? ' · <b>🌀 Hỗn loạn</b>' : ''}: bộ ${total} lá, <b>${plan.bomb} Mèo Nổ</b>, ${plan.defuse} Gỡ Bom, ${plan.attack} Đổ Vỏ, ${plan.nope} ĐÉO!. Mỗi người 1 Gỡ Bom + 7 lá.`;
   $('#btn-start').style.display = isHost ? '' : 'none';
   $('#wait-msg').style.display = isHost ? 'none' : '';
 }
@@ -112,7 +115,12 @@ $('#btn-start').onclick = () => { fx.actx(); net && net.start(); };
 
 // ---------- công cụ ----------
 $('#speed').innerHTML = Object.entries(fx.SPEEDS).map(([k, v]) => `<option value="${k}">⚡ ${v.name}</option>`).join('');
-$('#speed').value = fx.getSpeed(); $('#speed').onchange = e => fx.setSpeed(e.target.value);
+$('#speed').value = fx.getSpeed(); $('#speed').onchange = e => { fx.setSpeed(e.target.value); syncSpeed(); };
+// điện thoại: nút tốc độ gọn (bấm để xoay vòng Chậm → Vừa → Nhanh) thay cho ô chọn
+const SPEED_IC = { slow: '🐢', normal: '⚡', fast: '🚀' };
+function syncSpeed() { $('#speed').value = fx.getSpeed(); $('#speed-btn').textContent = SPEED_IC[fx.getSpeed()] || '⚡'; }
+$('#speed-btn').onclick = () => { const ks = Object.keys(fx.SPEEDS); const k = ks[(ks.indexOf(fx.getSpeed()) + 1) % ks.length]; fx.setSpeed(k); syncSpeed(); toast(`${SPEED_IC[k]} Tốc độ hiệu ứng: ${fx.SPEEDS[k].name}`); };
+syncSpeed();
 const syncMusic = () => { $('#btn-music').classList.toggle('on', fx.musicIsOn()); $('#btn-music-home').classList.toggle('on', fx.musicIsOn()); };
 $('#btn-music').onclick = $('#btn-music-home').onclick = () => { fx.actx(); fx.musicToggle(); syncMusic(); }; syncMusic();
 $('#vol').value = fx.musicVolume(); $('#vol').oninput = e => fx.musicVolume(+e.target.value);
@@ -121,6 +129,8 @@ $('#btn-mute').onclick = () => { fx.toggleMute(); syncMute(); }; syncMute();
 const syncProb = () => $('#btn-prob').classList.toggle('on', probOn);
 $('#btn-prob').onclick = () => { probOn = !probOn; ls.set('meono-prob', probOn ? '1' : '0'); syncProb(); toast(probOn ? '🎲 Đã bật gợi ý xác suất bom' : '🎲 Đã tắt gợi ý xác suất'); view && render(); }; syncProb();
 $('#btn-guide').onclick = $('#btn-guide-home').onclick = () => openGuide(openModal);
+// 📝 Có gì mới (patch notes dùng chung): chấm đỏ khi có bản chưa xem
+for (const id of ['#btn-news', '#btn-news-home']) { newsBadge($(id), 'meono'); $(id).onclick = () => { openNews('meono'); $$('#btn-news, #btn-news-home').forEach(b => b.classList.toggle('bgvn-dot', false)); }; }
 $('#btn-log').onclick = () => $('#log').classList.toggle('open');
 $('#btn-log-close').onclick = () => $('#log').classList.remove('open');
 
@@ -181,6 +191,7 @@ function render() {
   renderMeter(v);
   updateMascot();
   $('#opps').classList.toggle('alert', !!v.window);
+  if (!v.window && fx.stampsOn()) fx.clearStamps();
   renderStrip(v, meP);
   renderActions(v, meP);
   renderHand(v, meP);
@@ -354,7 +365,7 @@ function handlePending(v) {
 const posLabel = (p, n) => p === 0 ? 'TRÊN CÙNG – người kế bốc trúng ngay 😈' : p >= n ? 'DƯỚI CÙNG – để dành cho cuối ván' : `Lá thứ ${p + 1} từ trên xuống`;
 function defuseModal(v, key) {
   const n = v.deckCount; let pos = Math.min(n, Math.floor(Math.random() * (n + 1)));
-  openModal(`<div class="defuse"><div class="bomb-big">${bombSVG()}</div><h2>💣 Bốc trúng MÈO NỔ!</h2>
+  openModal(`<div class="defuse"><div class="bomb-big">${bombSVG('phew', furOf(myId))}</div><h2>💣 Bốc trúng MÈO NỔ!</h2>
     <p class="ctr">May quá, bạn có <b>✂️ Gỡ Bom</b>! Giờ <b>bí mật</b> nhét bom lại chồng bài (${n} lá) – chỉ mình bạn biết chỗ.</p>
     <div class="pos-box"><div class="pos-ends"><span>⬆ Trên cùng</span><span>Dưới cùng ⬇</span></div>
       <input type="range" id="pos" min="0" max="${n}" step="1" value="${pos}" aria-label="Vị trí nhét bom">
@@ -388,11 +399,17 @@ function showWin(v) {
   if (modalKey === 'win') return;
   const meWin = v.winner === myId;
   const rank = [...v.players].sort((a, b) => (a.place || 99) - (b.place || 99));
+  const who = id => id === myId ? '<b>Bạn</b>' : `<b>${esc(pname(id))}</b>`;
+  const aw = awards(v).slice(0, 8);
+  const badges = aw.length ? `<h3 class="aw-h">🏅 Huy hiệu ván này</h3><div class="awards">${aw.map((a, i) => `<div class="aw" style="--d:${i * 110}ms"><span class="aw-i">${a.icon}</span><span class="aw-t"><b class="aw-n">${a.title}</b><span>${a.ids.map(who).join(' & ')}</span><small>${a.desc}</small></span></div>`).join('')}</div>` : '';
+  const st = id => (v.stats || {})[id] || {};
+  const table = `<table class="stt"><thead><tr><th></th><th class="nm">Mèo</th><th title="Số lá đã bốc">🃏</th><th title="Bốc trúng Mèo Nổ (số lần gỡ được)">💣</th><th title="ĐÉO! người khác">🙅</th><th title="Bị Đổ Vỏ">🎒</th></tr></thead><tbody>${rank.map(p => { const s = st(p.id); return `<tr class="${p.id === myId ? 'mine' : ''}"><td>${p.place === 1 ? '👑' : '💥'}</td><td class="nm">${esc(clean(p.name))}${p.id === myId ? ' <small>(bạn)</small>' : ''}</td><td>${s.draws || 0}</td><td>${s.bombs || 0}${s.defused ? `<small> ✂️${s.defused}</small>` : ''}</td><td>${s.nopes || 0}</td><td>${s.attacked || 0}</td></tr>`; }).join('')}</tbody></table><p class="stt-key">🃏 lá đã bốc · 💣 trúng bom (✂️ gỡ được) · 🙅 ĐÉO! người khác · 🎒 bị Đổ Vỏ</p>`;
   setTimeout(() => {
     if (!view || view.phase !== 'ended' || modalKey === 'win') return;
     openModal(`<div class="win"><div class="big">${meWin ? '🏆' : '😼'}</div><h2>${meWin ? 'Bạn là con mèo sống sót cuối cùng!' : esc(pname(v.winner)) + ' thắng!'}</h2>
-      <ol class="rank">${rank.map(p => `<li>${p.place === 1 ? '👑' : '💥'} ${esc(clean(p.name))}${p.id === myId ? ' (bạn)' : ''}</li>`).join('')}</ol>
-      <div class="btns">${isHost ? '<button class="btn pri" id="m-again">🔁 Ván mới</button><button class="btn" id="m-lobby">Về sảnh</button>' : '<p>Chờ chủ phòng mở ván mới…</p>'}</div></div>`, '', 'win');
+      ${badges}${table}
+      <div class="btns">${isHost ? '<button class="btn pri" id="m-again">🔁 Ván mới</button><button class="btn" id="m-lobby">Về sảnh</button>' : '<p>Chờ chủ phòng mở ván mới…</p>'}</div></div>`, 'wide', 'win');
+    if (aw.length) setTimeout(() => fx.sfx.awards(), 300);
     const ag = $('#m-again'); if (ag) ag.onclick = () => { closeModal(); net.restart(); net.start(); };
     const lb = $('#m-lobby'); if (lb) lb.onclick = () => { closeModal(); net.restart(); };
   }, 3400 * fx.S());
@@ -431,8 +448,11 @@ function flyToDiscard(cards, from, delay = 0) {
   landing++; landingAt = Date.now();
   cards.forEach((c, i) => fx.fly(cardHTML(c), from, $('#discard'), { delay: delay + i * 110, duration: 420, rotate: (i - 1) * 8, onEnd: i === cards.length - 1 ? () => { landing = Math.max(0, landing - 1); renderDiscard(); fx.pop($('#discard .top')); } : null }));
 }
-function revealBomb(dur = 1300) {
-  const n = document.createElement('div'); n.className = 'reveal'; n.innerHTML = fx.comicBurst('#fff3b0', '#ff8a00', 12) + cardHTML({ t: 'bomb' }, 'lg') + '<b class="reveal-bang">!!</b>';
+// lá Mèo Nổ bốc trúng: mèo mang màu lông của người bốc; có Gỡ Bom → hú hồn, không có → khóc
+function revealBomb(dur = 1300, by = null, safe = true) {
+  const n = document.createElement('div'); n.className = 'reveal ' + (safe ? 'safe' : 'doom');
+  const who = by ? (by === myId ? 'BẠN' : esc(pname(by))) : '';
+  n.innerHTML = fx.comicBurst('#fff3b0', '#ff8a00', 12) + cardHTML({ t: 'bomb' }, 'lg', '', { mood: safe ? 'phew' : 'cry', fur: by ? furOf(by) : undefined }) + '<b class="reveal-bang">!!</b>' + (who ? `<span class="reveal-who">${who}${safe ? ' · có Gỡ Bom 😮‍💨' : ' · hết Gỡ Bom 😭'}</span>` : '');
   $('#fx-layer').appendChild(n); setTimeout(() => n.remove(), dur * fx.S());
 }
 function playEvents(evs, prev) {
@@ -443,6 +463,7 @@ function playEvents(evs, prev) {
     switch (e.k) {
       case 'start': run(() => dealAnim()); t += 900 * S; break;
       case 'play': run(() => {
+        fx.clearStamps();
         flyToDiscard(e.cards || [], seatEl(e.by));
         const [txt, s] = KIND_FX[e.kind] || ['', 'play']; fx.sfx.play(); setTimeout(() => (fx.sfx[s] || fx.sfx.play)(), 200 * S);
         fx.banner(txt, 'k-' + e.kind);
@@ -450,7 +471,9 @@ function playEvents(evs, prev) {
         if (e.to) setTimeout(() => fx.floatText(seatEl(e.to), e.to === myId ? '😨 Bạn!' : '🎯'), 300 * S);
       }); t += 250 * S; break;
       case 'nope': run(() => {
-        flyToDiscard([e.card || { t: 'nope' }], seatEl(e.by)); fx.sfx.nope(); setMood('panic', 900); fx.banner('🙅 ĐÉO!', 'nope'); fx.shake($('#strip'));
+        flyToDiscard([e.card || { t: 'nope' }], seatEl(e.by)); setMood('panic', 900); fx.shake($('#strip'));
+        const lv = e.nopes || 1; fx.sfx.stamp(lv);
+        fx.stamp({ level: lv, who: e.by === myId ? 'Bạn' : pname(e.by), cancel: lv % 2 === 1, at: fx.ctr($('#center')) });
       }); t += 250 * S; break;
       case 'noped': run(() => { fx.sfx.denied(); fx.floatText(seatEl(e.by), '❌ Bị ĐÉO!', 'bad'); }); break;
       case 'resolve': run(() => {
@@ -466,11 +489,11 @@ function playEvents(evs, prev) {
         if (mine && e.card) { freshIds = new Set([e.card.id]); setTimeout(() => { freshIds.clear(); $$('#hand .fresh').forEach(x => x.classList.remove('fresh')); }, 2500 * S); setTimeout(() => { fx.floatText($('#hand'), 'Phù… an toàn 😮‍💨', 'ok'); }, 450 * S); render(); }
       }); t += 300 * S; break;
       case 'bomb': {
-        run(() => { revealBomb(1400); fx.sfx.fuse(); fx.shake($('#table')); setMood('panic', 1800); fx.banner(e.by === myId ? '💣 BẠN BỐC TRÚNG MÈO NỔ!' : `💣 ${pname(e.by)} bốc trúng Mèo Nổ!`, 'bomb'); });
+        run(() => { revealBomb(1400, e.by, true); fx.sfx.fuse(); fx.shake($('#table')); setMood('panic', 1800); fx.banner(e.by === myId ? '💣 BẠN BỐC TRÚNG MÈO NỔ!' : `💣 ${pname(e.by)} bốc trúng Mèo Nổ!`, 'bomb'); });
         t += 1500 * S; break;
       }
       case 'boom': {
-        run(() => { revealBomb(1100); fx.sfx.fuse(); fx.banner(e.by === myId ? '💣 MÈO NỔ… không có Gỡ Bom!' : `💣 ${pname(e.by)} bốc trúng Mèo Nổ!`, 'bomb'); });
+        run(() => { revealBomb(1100, e.by, false); fx.sfx.fuse(); fx.sfx.meow(0.2, 0.75, 0.07); fx.banner(e.by === myId ? '💣 MÈO NỔ… không có Gỡ Bom!' : `💣 ${pname(e.by)} bốc trúng Mèo Nổ!`, 'bomb'); });
         setTimeout(() => { setMood('dizzy', 2600); fx.sfx.boom(); fx.explode(seatEl(e.by) || $('#deck'), [catSVG('cat1'), catSVG('cat2'), catSVG('cat3'), catSVG('cat4'), catSVG('cat5')]); fx.banner(e.by === myId ? '💥 Bạn đã nổ tung!' : `💥 ${pname(e.by)} nổ tung!`, 'boom'); }, at + 1100 * S);
         t += 2600 * S; break;
       }

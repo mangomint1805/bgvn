@@ -5,6 +5,20 @@ export const GAMES = {
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
 };
 export const NOTES = [
+  { id: '20261103-6', date: '03/11/2026', game: 'meono', title: 'Lá nào cũng có mèo 🐱', items: [
+    'Vẽ lại cả 15 lá: mỗi lá là 1 chú mèo làm đúng việc của lá (ôm bom, cắt dây, chỉ tay đổ vỏ, đeo kính đen né gắt, bói cầu, vẫy đũa…).',
+    'ĐÉO! đóng dấu mộc to giữa bàn kèm tiếng "cộp" và mèo rít; ĐÉO! chồng ĐÉO! thì dấu chồng lên nhau (đỏ = bị huỷ, xanh = được cứu lại).',
+    'Bốc trúng Mèo Nổ: mèo trên lá mang màu của người bốc – còn Gỡ Bom thì hú hồn, hết Gỡ Bom thì khóc.',
+    'Cuối ván có huy hiệu vui (👑 Vua ĐÉO, 💣 Nam châm hút bom, 🎒 Chuyên gia gánh vỏ…) và bảng số liệu từng người.',
+    'Chủ phòng bật được bộ bài 🌀 Hỗn loạn: gấp đôi Đổ Vỏ và Móc Đáy, nhiều ĐÉO! và Xào Bài hơn, thêm 1 Gỡ Bom.',
+  ] },
+  { id: '20261103-5', date: '03/11/2026', game: 'scribble', title: 'Chiếu album tự động & tải cả album', items: [
+    '⏯️ Album tự lật sau 3/5/8 giây (hoặc tắt); chủ phòng Tạm dừng / Chạy tiếp, cả phòng thấy cùng lúc.',
+    '⬇️ "Tải cả album": gộp mọi chuỗi thành 1 GIF có tên người + câu/đoán, hoặc quay video MP4/WebM, có thanh tiến trình.',
+    '🎉 Đông vui chia nhóm (~6 người/nhóm), chiếu lần lượt "Nhóm 2/5", chủ phòng bỏ qua nhóm được.',
+    '🎞️ Hoạt hình / Phông nền chọn được 4–16 khung, Một mình 3–12 khung, chỉnh tốc độ phim mặc định trong sảnh.',
+    '🛠️ Nút bấm hết rung khi rê chuột, bấm "Xong" không còn hụt.',
+  ] },
   { id: '20261103-4', date: '03/11/2026', game: 'all', title: 'Rà soát toàn bộ 7 game', items: [
     'UNO: sửa lỗi ô "Lá mở rộng" không bật được – giờ Luật rừng có sẵn No U, Khiên, +?, Tặng quà, Móc túi, Đổi tay, Bão tố, Up…',
     'UNO: đồng hồ chống treo máy (40 giây mỗi lượt, 20 giây khi bốc phạt), gợi ý đúng khi người khác đang chọn mục tiêu.',

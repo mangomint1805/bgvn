@@ -99,7 +99,26 @@ export const sfx = {
   meow, purr, hiss, chirp,
   pet() { const r = Math.random(); if (r < 0.4) purr(1, 0.5); else if (r < 0.75) meow(0, 1.1 + Math.random() * 0.4, 0.08); else chirp(0, 1.1, 0.08); },
   win() { arp([523, 659, 784, 1047, 784, 1047, 1319], 0.11, 'triangle', 0.1); meow(0.8, 1.2, 0.07); },
+  // ĐÉO!: tiếng con dấu đóng "cộp" + mèo rít; ĐÉO! chồng càng nhiều càng rít cao
+  stamp(level = 1) {
+    const k = Math.min(6, level - 1);
+    tone(120, 0.22, 'sine', 0.55, -80); noise(0.12, 420, 1.1, 0, 'lowpass', 0.8); noise(0.05, 2400, 0.35, 0.004, 'bandpass', 0.7);
+    tone(62, 0.3, 'sine', 0.35, -20, 0.01);
+    hiss(0.5, 0.3, 0.07);
+    screech(0.09, 1 + k * 0.12);
+  },
+  awards() { arp([784, 988, 1175, 1568], 0.09, 'triangle', 0.08); chirp(0.4, 1.3, 0.06); },
 };
+// mèo rít (yowl): răng cưa cao, rung mạnh, trượt xuống
+function screech(at = 0, pitch = 1, g = 0.06) {
+  const a = actx(); if (!a || muted) return; const t = a.currentTime + at;
+  const o = a.createOscillator(); o.type = 'sawtooth';
+  o.frequency.setValueAtTime(900 * pitch, t); o.frequency.linearRampToValueAtTime(1350 * pitch, t + 0.08); o.frequency.exponentialRampToValueAtTime(620 * pitch, t + 0.5);
+  const lfo = a.createOscillator(); lfo.frequency.value = 17; const lg = a.createGain(); lg.gain.value = 60 * pitch; lfo.connect(lg); lg.connect(o.frequency);
+  const f = a.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 2.5; f.frequency.setValueAtTime(2200, t); f.frequency.linearRampToValueAtTime(1400, t + 0.5);
+  const gn = a.createGain(); gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.03); gn.gain.setValueAtTime(g, t + 0.25); gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
+  o.connect(f); f.connect(gn); gn.connect(master); o.start(t); lfo.start(t); o.stop(t + 0.6); lfo.stop(t + 0.6);
+}
 
 // ---------- hiệu ứng DOM ----------
 function layer() { let l = document.getElementById('fx-layer'); if (!l) { l = document.createElement('div'); l.id = 'fx-layer'; document.body.appendChild(l); } return l; }
@@ -187,6 +206,32 @@ export function confetti() {
     layer().appendChild(d); setTimeout(() => d.remove(), 4200);
   }
 }
+// ---------- con dấu ĐÉO! đóng giữa màn hình: mỗi lần ĐÉO! thêm 1 dấu, lệch góc khác nhau ----------
+const ST_ROT = [-11, 9, -4, 15, -17, 6, -8, 13], ST_DX = [0, 16, -14, 9, -18, 20, -6, 12], ST_DY = [0, -12, 12, -4, 8, -14, 16, -8];
+export function stamp({ level = 1, who = '', cancel = true, at = null } = {}) {
+  const L = layer(); let box = L.querySelector('.nope-stack');
+  if (!box) { box = document.createElement('div'); box.className = 'nope-stack'; L.appendChild(box); }
+  if (at) { box.style.left = at.x + 'px'; box.style.top = at.y + 'px'; }
+  box.classList.remove('bye'); clearTimeout(box._t);
+  [...box.children].forEach(c => c.classList.add('old'));
+  const i = (level - 1) % ST_ROT.length;
+  const n = document.createElement('div');
+  n.className = 'stamp ' + (cancel ? 'cancel' : 'save');
+  n.style.setProperty('--r', ST_ROT[i] + 'deg'); n.style.setProperty('--dx', ST_DX[i] + 'px'); n.style.setProperty('--dy', ST_DY[i] + 'px');
+  n.style.animationDuration = Math.round(520 * S()) + 'ms';
+  n.innerHTML = `<b>ĐÉO!</b><small>${level > 1 ? `#${level} · ` : ''}${who ? who + ' · ' : ''}${cancel ? 'HUỶ!' : 'cứu lại!'}</small>`;
+  box.appendChild(n);
+  while (box.children.length > 6) box.firstChild.remove();
+  // tự dọn nếu không ai gọi clearStamps (vd. mất state)
+  box._t = setTimeout(() => clearStamps(), 9000);
+  if (!reduced()) { document.body.classList.remove('thud'); void document.body.offsetWidth; document.body.classList.add('thud'); setTimeout(() => document.body.classList.remove('thud'), 300); }
+}
+export function clearStamps() {
+  const box = layer().querySelector('.nope-stack'); if (!box || box.classList.contains('bye')) return;
+  clearTimeout(box._t); box.classList.add('bye'); setTimeout(() => { if (box.classList.contains('bye')) box.remove(); }, 450);
+}
+export const stampsOn = () => !!layer().querySelector('.nope-stack:not(.bye)');
+
 const bq = []; let busy = false;
 export const bannerBusy = () => busy;
 export function banner(text, cls = '') { bq.push([text, cls]); if (bq.length > 3) bq.splice(0, bq.length - 3); if (!busy) nextB(); }

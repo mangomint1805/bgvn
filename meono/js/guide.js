@@ -1,6 +1,6 @@
 // Hướng dẫn luật Mèo Nổ (tiếng Việt)
-import { cardHTML } from './cards.js?v=6';
-import { CARD } from './engine.js?v=6';
+import { cardHTML } from './cards.js?v=7';
+import { CARD } from './engine.js?v=7';
 const row = items => `<div class="cards-row">${items.map(([t, txt]) => `<div>${cardHTML({ t }, 'sm')}<span><b>${CARD[t].name}</b> <i class="en">(${CARD[t].en})</i>: ${txt}</span></div>`).join('')}</div>`;
 
 export function openGuide(openModal) {
@@ -29,10 +29,11 @@ export function openGuide(openModal) {
         ['bottom', 'bốc lá <b>dưới cùng</b> thay vì trên cùng – kết thúc lượt. Dưới đáy cũng có thể có bom đó!'],
         ['nope', 'huỷ hành động vừa đánh (xem tab ĐÉO!).'],
       ])}
-      <h3>Mèo thường (5 loại)</h3>${row([['cat1', 'không có tác dụng riêng.'], ['cat2', 'đánh đôi / bộ ba.'], ['cat3', 'đánh đôi / bộ ba.'], ['cat4', 'đánh đôi / bộ ba.'], ['cat5', 'đánh đôi / bộ ba.']])}
+      <h3>Mèo thường (5 loại)</h3>${row([['cat1', 'mèo cam béo tròn, mắt híp. Không có tác dụng riêng.'], ['cat2', 'mèo xám sọc vằn, mắt xanh lá.'], ['cat3', 'mèo trắng – cam – đen đeo chuông vàng.'], ['cat4', 'mèo kem mặt nâu, mắt xanh dương, dáng kiêu.'], ['cat5', 'mèo lông xù như cục bông, đeo nơ hồng.']])}
       <p>🐾 Mèo thường có dấu <b>🐾×2</b> ở góc phải: chỉ có tác dụng khi <b>đánh theo cặp</b> (đôi / bộ ba cùng loại). Tên tiếng Anh trong ngoặc là tên lá tương ứng ở game gốc <i>Exploding Kittens</i> (chỉ để tham chiếu).</p>
       <p>💡 <b>Bấm giữ</b> (điện thoại) hoặc <b>chuột phải</b> vào lá trên tay để xem lá to và tác dụng; bấm chồng bỏ để xem lá vừa đánh.</p>
-      <p>Chủ phòng có thể tắt <b>Cải Mệnh</b> và <b>Móc Đáy</b> trong sảnh để chơi bản cơ bản.</p>`],
+      <p>Chủ phòng có thể tắt <b>Cải Mệnh</b> và <b>Móc Đáy</b> trong sảnh để chơi bản cơ bản.</p>
+      <p>🐱 Lá nào cũng có 1 chú mèo đang làm đúng việc của lá: Mèo Nổ ôm bom, Gỡ Bom đeo kính cầm kéo, Đổ Vỏ chỉ tay sang con khác, Né Gắt đeo kính đen lướt né… Nhìn hình là nhớ tác dụng. Khi ai đó bốc trúng Mèo Nổ, chú mèo trên lá mang <b>màu lông của người bốc</b>: còn Gỡ Bom thì mèo <b>hú hồn</b> 😮‍💨, hết Gỡ Bom thì mèo <b>khóc</b> 😭.</p>`],
     combo: ['🙅 Combo & ĐÉO!', () => `
       <h3>Combo mèo</h3><ul>
         <li><b>ĐÔI</b> (2 mèo cùng loại): chọn 1 người, <b>rút ngẫu nhiên</b> 1 lá trên tay họ.</li>
@@ -43,7 +44,21 @@ export function openGuide(openModal) {
         <li>Ai cầm lá <b>ĐÉO!</b> sẽ thấy nút <b>ĐÉO!</b> to đỏ. Bấm là huỷ hành động đó (lá đã đánh vẫn mất).</li>
         <li>Có người ĐÉO! thì cửa sổ <b>mở lại từ đầu</b>: người khác có thể ĐÉO! cái ĐÉO! đó để hành động có hiệu lực trở lại. Cứ thế chồng tiếp – số ĐÉO! lẻ là bị huỷ, chẵn là được.</li>
         <li>Không ĐÉO! được <b>Mèo Nổ</b> và <b>Gỡ Bom</b>. Cũng không thể ĐÉO! việc bốc bài.</li>
-        <li>ĐÉO! chỉ đánh được trong cửa sổ này, kể cả khi chưa tới lượt bạn. Bot cũng biết ĐÉO! đấy 😼</li></ul>`],
+        <li>ĐÉO! chỉ đánh được trong cửa sổ này, kể cả khi chưa tới lượt bạn. Bot cũng biết ĐÉO! đấy 😼</li>
+        <li>Mỗi lần ĐÉO!, một <b>con dấu mộc to</b> đóng "cộp" giữa bàn cho cả phòng thấy (kèm tiếng mèo rít). ĐÉO! chồng ĐÉO! thì dấu chồng lên nhau, lệch góc: dấu <b>đỏ "HUỶ!"</b> là hành động đang bị huỷ, dấu <b>xanh "cứu lại!"</b> là được hiệu lực trở lại.</li></ul>`],
+    modes: ['🌀 Chế độ', () => `
+      <h3>🌀 Bộ bài Hỗn loạn</h3><p>Chủ phòng bật trong sảnh. So với bộ thường:</p><ul>
+        <li><b>Gấp đôi Đổ Vỏ</b> và <b>Móc Đáy</b> (Móc Đáy chỉ có khi bật Cải Mệnh & Móc Đáy), <b>ĐÉO! ×1.8</b>, <b>Xào Bài ×1.6</b>.</li>
+        <li>Bớt mèo thường (×0.75) và bớt Né Gắt, Soi Kèo, Xin Vía (×0.8) để ván không dài ra.</li>
+        <li><b>Thêm 1 Gỡ Bom</b> trong chồng bài, vì Đổ Vỏ dồn lượt liên tục nên ai cũng phải bốc nhiều hơn. Số Mèo Nổ vẫn là số người − 1.</li></ul>
+      <p>Hợp với hội thích chơi xấu nhau: Đổ Vỏ qua lại, ĐÉO! chồng ĐÉO! liên tục 😈</p>
+      <h3>🏅 Huy hiệu cuối ván</h3><p>Hết ván, bảng kết quả trao huy hiệu vui theo số liệu cả ván, ví dụ:</p><ul>
+        <li>👑 <b>Vua ĐÉO</b> – ĐÉO! người khác nhiều nhất · 🙊 <b>Bị ĐÉO! sấp mặt</b> – bị ĐÉO! nhiều nhất</li>
+        <li>💣 <b>Nam châm hút bom</b> – bốc trúng nhiều Mèo Nổ nhất · ✂️ <b>Thợ gỡ bom</b> – gỡ bom từ 2 lần</li>
+        <li>🎒 <b>Chuyên gia gánh vỏ</b> – bị Đổ Vỏ nhiều nhất · 🫵 <b>Trùm đổ vỏ</b> – đổ vỏ người khác nhiều nhất</li>
+        <li>🃏 <b>Thánh bốc bài</b> · 🥷 <b>Siêu trộm</b> · 😿 <b>Bị móc túi</b> · 🔮 <b>Nhà tiên tri</b> · 🏃 <b>Né như né người yêu cũ</b></li>
+        <li>💥 <b>Ra đi đầu tiên</b> – người nổ sớm nhất · 🧘 <b>Né bom thần sầu</b> – thắng mà chưa từng bốc trúng bom</li></ul>
+      <p>Bằng điểm thì cùng nhận. Kèm bảng số liệu từng người: số lá đã bốc, số lần trúng bom (gỡ được mấy lần), số lần ĐÉO! và bị Đổ Vỏ.</p>`],
     tips: ['💡 Mẹo', () => `<ul>
       <li>Thanh <b>💣 nguy cơ</b> giữa bàn cho biết còn bao nhiêu bom trong bao nhiêu lá, và xác suất lá kế là bom. Tắt/bật bằng nút 🎲 trên thanh công cụ.</li>
       <li>Vừa Soi Kèo thấy bom trên cùng? Đánh <b>Đổ Vỏ / Né Gắt / Xào Bài / Móc Đáy</b> để thoát.</li>

@@ -1,6 +1,6 @@
 // Lớp mạng Scribble it!: chủ phòng giữ state + đồng hồ, máy khách gửi hành động & nét vẽ.
 // Nét vẽ đi riêng (tin 'draw' theo lô ~100ms, chủ phòng chuyển tiếp), người vào muộn nhận lại cả lịch sử ('canvas').
-import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, bookItems, shiftTime, cleanOpts, DEFAULT_OPTS, maxPlayers, MAX_CROWD, MAX_NORMAL } from './engine.js?v=4';
+import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, bookItems, shiftTime, cleanOpts, DEFAULT_OPTS, maxPlayers, MAX_CROWD, MAX_NORMAL } from './engine.js?v=5';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
 const NS = 'bgvn-scribble', PREFIX = 'bgvn-scribble-', GAME = 'scribble';
 const SNAP = 'bgvn-hostsnap-' + GAME;
@@ -129,6 +129,7 @@ export class Host {
     }
     const r = applyAction(this.state, pid, a, Date.now());
     if (!r.ok) { if (pid === 'host') this.h.onError(r.reason); else this.send(this.players.find(x => x.id === pid), { t: 'error', msg: r.reason }); return; }
+    if (a.type === 'autoReveal' && pid === 'host') this.opts = cleanOpts({ ...this.opts, revealAuto: a.sec }); // ván sau giữ lựa chọn này
     this.changed();
   }
   changed() {

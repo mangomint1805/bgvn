@@ -527,3 +527,62 @@ input#name,.join-row input,.opt select{border:2.5px solid var(--ink)}
 @media (max-width:640px){.card-detail{flex-direction:column;text-align:center}}
 .card-detail .mcard .mc-desc,.card-detail .mcard .mc-en{display:none}
 .is-act.lg .mc-desc,.is-act.md .mc-desc,.is-act.lg .mc-en,.is-act.md .mc-en,.t-bomb.lg .mc-desc{color:#fff;text-shadow:0 1px 2px #000c}
+
+/* ===== nâng cấp 11/2026: lá nào cũng có mèo, dấu mộc ĐÉO!, huy hiệu cuối ván ===== */
+.bomb-art .spark-g{transform-origin:90px 32px}
+.mc-art .art{overflow:visible}
+/* con dấu ĐÉO! giữa bàn: mỗi lần ĐÉO! thêm 1 dấu lệch góc */
+.nope-stack{position:fixed;left:50%;top:42%;width:0;height:0;z-index:2;transition:opacity .4s}
+.nope-stack.bye{opacity:0}
+.stamp{position:absolute;left:0;top:0;transform:translate(-50%,-50%) translate(var(--dx),var(--dy)) rotate(var(--r));display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:clamp(170px,min(58vw,72vh),330px);padding:4px 10px 8px;border-radius:18px;color:#e11d48;border:7px solid currentColor;background:#fff7f8f5;
+  box-shadow:inset 0 0 0 3px #fff7f8,inset 0 0 0 6px currentColor,0 10px 26px -10px #0008;font-family:"Baloo 2","Be Vietnam Pro",sans-serif;line-height:1;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -4.5 3.4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E") 0 0/160px 160px;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -4.5 3.4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E") 0 0/160px 160px;
+  animation:stampSlam .52s cubic-bezier(.3,1.6,.5,1) both}
+.stamp b{font-size:clamp(46px,min(21vw,24vh),118px);font-weight:800;letter-spacing:1px;line-height:.95;margin-top:4px}
+.stamp small{font-family:"Be Vietnam Pro",sans-serif;font-weight:800;font-size:clamp(12px,min(3.8vw,4vh),18px);letter-spacing:.3px;text-transform:uppercase;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stamp .lv{position:absolute;right:8px;top:4px;font-style:normal;font-weight:800;font-size:clamp(18px,5vw,26px)}
+.stamp.save{color:#1d4ed8;background:#f3f7fff5;box-shadow:inset 0 0 0 3px #f3f7ff,inset 0 0 0 6px currentColor,0 10px 26px -10px #0008}
+.stamp.old{opacity:.55;filter:saturate(.8)}
+@keyframes stampSlam{0%{opacity:0;transform:translate(-50%,-50%) translate(var(--dx),var(--dy)) rotate(calc(var(--r) - 14deg)) scale(2.6)}55%{opacity:1;transform:translate(-50%,-50%) translate(var(--dx),var(--dy)) rotate(var(--r)) scale(.92)}75%{transform:translate(-50%,-50%) translate(var(--dx),var(--dy)) rotate(var(--r)) scale(1.04)}100%{opacity:1;transform:translate(-50%,-50%) translate(var(--dx),var(--dy)) rotate(var(--r)) scale(1)}}
+body.thud #table{animation:thud .28s}
+@keyframes thud{30%{transform:translateY(5px) scale(.995)}}
+@media (prefers-reduced-motion:reduce){.stamp{animation:none!important}}
+/* lá Mèo Nổ khi bốc trúng: tên người bốc */
+.reveal-who{position:absolute;left:50%;top:calc(100% + 10px);transform:translateX(-50%);white-space:nowrap;background:#fff;border:2.5px solid var(--ink);border-radius:99px;padding:3px 12px;font-weight:800;font-size:15px;box-shadow:0 3px 0 var(--ink)}
+.reveal.doom .reveal-who{background:#2d2a32;color:#ffd23f}
+/* sảnh: tuỳ chọn hỗn loạn */
+.opt.hot{background:repeating-linear-gradient(-45deg,#fff0f6 0 12px,#f3e8ff 12px 24px);box-shadow:0 0 0 2px #a855f7}
+/* cuối ván: huy hiệu + bảng số liệu */
+.aw-h{margin:10px 0 6px;font-size:19px}
+.awards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;text-align:left}
+.aw{display:flex;gap:8px;align-items:center;background:#fff6ec;border:2px solid #2d2a321f;border-radius:14px;padding:6px 8px;animation:awIn .45s backwards;animation-delay:var(--d)}
+.aw-i{font-size:28px;line-height:1;flex:none;width:36px;text-align:center}
+.aw-t{display:flex;flex-direction:column;min-width:0;line-height:1.2;font-size:14px}
+.aw-n{font-family:"Baloo 2","Be Vietnam Pro",sans-serif;font-size:16px;color:var(--pri)}
+.aw-t small{color:var(--muted);font-weight:600;font-size:12.5px}
+@keyframes awIn{from{opacity:0;transform:translateY(10px) scale(.9)}}
+.stt{width:100%;border-collapse:collapse;margin:10px 0 2px;font-size:14px;font-weight:700}
+.stt th,.stt td{padding:5px 4px;text-align:center;border-bottom:1.5px solid #2d2a3214}
+.stt th{font-size:15px}
+.stt .nm{text-align:left;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stt tr.mine td{background:#fff1e0}
+.stt small{color:var(--muted);font-weight:700;font-size:12px}
+.stt-key{font-size:12px;color:var(--muted);margin:2px 0 0}
+.reveal .mcard.lg{--cw:168px;--ch:238px}
+.reveal .mcard .mc-desc,.reveal .mcard .mc-en{display:none}
+.reveal .mcard.lg .mc-name{font-size:28px}
+@media (max-height:680px){.reveal .mcard.lg{--cw:150px;--ch:212px}}
+/* thanh công cụ điện thoại: ô tốc độ thành nút icon để chừa chỗ nút 📝 Có gì mới */
+#speed-btn{display:none}
+@media (max-width:640px){select#speed{display:none}#speed-btn{display:inline-flex}}
+@media (max-width:380px){.topbar{padding:6px 5px;gap:4px}.tools{gap:3px}.tools .chip{min-width:40px;padding:4px 5px}}
+@media (max-width:640px){
+  .awards{grid-template-columns:1fr 1fr;gap:5px}
+  .aw{padding:5px 6px;gap:5px;align-items:flex-start}
+  .aw-i{font-size:21px;width:24px}
+  .aw-n{font-size:14px;line-height:1.1}.aw-t{font-size:12.5px}.aw-t small{font-size:12px}
+  .win .big{font-size:48px}
+  .stt{font-size:13px}.stt th,.stt td{padding:4px 2px}
+}

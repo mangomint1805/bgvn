@@ -2,8 +2,9 @@
 import assert from 'node:assert/strict';
 import { norm, isMatch, isNear, leaks, maskWord, wordLens, within1 } from '../js/match.js';
 import { CATS, CAT_KEYS, DEFAULT_CATS, totalWords, buildPool, parseCustom, randomPrompt } from '../js/words.js';
-import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, setRandom, chainFor, bookItems, shiftTime, cleanOpts, buildPlan, itemOps, garticScores, GMODES, GMODE_KEYS, maxPlayers, CHOOSE_MS, TURN_END_MS, GRACE_MS, OFF_SKIP_MS } from '../js/engine.js';
-import { cleanOps, pushOp, simplifyOps, opsBytes, encodePts, decodePts } from '../js/ops.js';
+import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, setRandom, chainFor, bookItems, shiftTime, cleanOpts, buildPlan, itemOps, garticScores, GMODES, GMODE_KEYS, maxPlayers, CHOOSE_MS, TURN_END_MS, GRACE_MS, OFF_SKIP_MS, groupSizes, groupsOf, frameCount, REVEAL_AUTO } from '../js/engine.js';
+import { cleanOps, pushOp, simplifyOps, opsBytes, encodePts, decodePts, PALETTE } from '../js/ops.js';
+import { encodeGif, GifWriter, UI_COLORS } from '../js/gif.js';
 
 let passed = 0;
 const t = (name, fn) => { try { fn(); passed++; } catch (e) { console.error('✗', name); throw e; } };
@@ -240,7 +241,7 @@ t('Tốc chiến / Vẽ mù / Đông vui: đồng hồ ngắn hơn Bình thườ
   S.forEach((d, k) => assert.ok(d.ms < N[k].ms, 'tốc chiến ngắn hơn ở bước ' + k)); X.forEach((d, k) => assert.ok(d.ms < N[k].ms));
   assert.ok(X[1].blind && X[1].mask > 0 && !X[1].maskAll && X[3].maskAll, 'vẽ mù: che một phần rồi che hết');
   const C = buildPlan({ ...o, gmode: 'crowd' }, 30); assert.equal(C.length, 6, '30 người: chuỗi chỉ qua 6 người'); assert.ok(C[1].ms < N[1].ms);
-  assert.equal(buildPlan({ ...o, gmode: 'crowd' }, 8).length, 4);
+  assert.equal(buildPlan({ ...o, gmode: 'crowd' }, 8).length, 6, '8 người = 1 nhóm, chuỗi qua 6 người');
 });
 t('Nhìn trộm: sau câu đầu chỉ vẽ, xem hình trước có giới hạn, giờ giảm dần', () => {
   const s = createGame(Pn(5), { mode: 'gartic', gmode: 'knockoff', drawTime: 80 }, 0); let now = 0;
@@ -338,12 +339,117 @@ t('tải lại trang (chủ phòng): kế hoạch & đồng hồ giữ nguyên',
   assert.equal(j.deadline, dl + 5000); assert.deepEqual(j.plan, s.plan); assert.equal(viewFor(j, 'host', 6000).task.role, 'write');
 });
 
+
+// ---------- nâng cấp 11/2026: chiếu tự động, nhóm Đông vui, số khung ----------
+function playAll(s, now = 0) { let g = 0; while (s.phase === 'play' && g++ < 60) { doStep(s, now, auto); now += 1000; } return now; }
+t('chiếu lại tự động: mặc định 5 giây, ô cuối chuỗi dừng gấp đôi, tạm dừng/tiếp đồng bộ', () => {
+  assert.equal(cleanOpts({}).revealAuto, 5); assert.equal(cleanOpts({ revealAuto: 0 }).revealAuto, 0); assert.equal(cleanOpts({ revealAuto: 7 }).revealAuto, 5); assert.equal(cleanOpts({ revealAuto: 8 }).revealAuto, 8);
+  const s = createGame(Pn(3), { mode: 'gartic', revealAuto: 3 }, 0); let now = playAll(s);
+  assert.equal(s.phase, 'reveal'); assert.equal(s.reveal.auto, 3); assert.equal(s.deadline, now - 1000 + 3000);
+  now = s.deadline - 1; assert.equal(tick(s, now), false); assert.equal(s.reveal.u, 0);
+  let v = viewFor(s, 'p1', now); assert.equal(v.total, 3000); assert.equal(v.left, 1); assert.equal(v.reveal.auto, 3);
+  now += 1; assert.equal(tick(s, now), true); assert.equal(s.reveal.u, 1, 'tự sang bước');
+  while (s.reveal.u < s.steps - 1) { now = s.deadline; tick(s, now); }
+  assert.equal(s.reveal.ms, 6000, 'ô cuối chuỗi: gấp đôi');
+  assert.equal(applyAction(s, 'p1', { type: 'pause', on: true }, now).ok, false, 'chỉ chủ phòng tạm dừng');
+  assert.ok(applyAction(s, 'host', { type: 'pause', on: true }, now).ok); assert.equal(s.deadline, 0); assert.equal(viewFor(s, 'p2', now).reveal.paused, true);
+  assert.equal(tick(s, now + 60000), false, 'đang tạm dừng thì đứng yên'); assert.equal(viewFor(s, 'p2', now).total, 0);
+  assert.ok(applyAction(s, 'host', { type: 'pause', on: false }, now).ok); assert.equal(s.deadline, now + 6000);
+  now = s.deadline; tick(s, now); assert.deepEqual([s.reveal.c, s.reveal.u], [1, 0], 'sang chuỗi tiếp');
+  assert.equal(applyAction(s, 'host', { type: 'autoReveal', sec: 4 }, now).ok, false, 'chỉ 0/3/5/8 giây');
+  assert.ok(applyAction(s, 'host', { type: 'autoReveal', sec: 0 }, now).ok); assert.equal(s.deadline, 0); assert.equal(tick(s, now + 1e6), false, 'tắt tự động: đứng yên');
+  assert.equal(applyAction(s, 'host', { type: 'pause', on: true }, now).ok, false);
+  assert.ok(applyAction(s, 'host', { type: 'next' }, now).ok); assert.equal(s.reveal.u, 1, 'vẫn bấm tay được');
+  assert.ok(applyAction(s, 'host', { type: 'autoReveal', sec: 8 }, now).ok); assert.equal(s.deadline, now + 8000);
+  applyAction(s, 'host', { type: 'next' }, now + 100); assert.equal(s.deadline, now + 100 + 8000, 'bấm tay thì đếm lại từ đầu');
+  const j = JSON.parse(JSON.stringify(s)); shiftTime(j, 5000); assert.equal(j.deadline, s.deadline + 5000, 'tải lại trang: đồng hồ chiếu dời theo');
+  let g = 0; now = s.deadline; while (s.phase === 'reveal' && g++ < 100) { tick(s, now); now = s.deadline || now; }
+  assert.equal(s.phase, 'end'); assert.equal(s.deadline, 0); assert.equal(REVEAL_AUTO.join(), '0,3,5,8');
+});
+t('Đông vui: chia nhóm ≥ 4 người, chuỗi chỉ chuyền trong nhóm', () => {
+  const o = { gmode: 'crowd' };
+  assert.deepEqual(groupSizes(30, o), [6, 6, 6, 6, 6]); assert.deepEqual(groupSizes(13, o), [7, 6]); assert.deepEqual(groupSizes(8, o), [8]);
+  assert.deepEqual(groupSizes(30, { gmode: 'crowd', gSize: 4 }), [5, 5, 4, 4, 4, 4, 4]); assert.deepEqual(groupSizes(30, { gmode: 'crowd', gSize: 8 }), [8, 8, 7, 7]);
+  assert.deepEqual(groupSizes(9, { gmode: 'normal' }), [9], 'kiểu khác: 1 nhóm'); assert.equal(cleanOpts({ gSize: 99 }).gSize, 8); assert.equal(cleanOpts({}).gSize, 6);
+  for (const [n, gs] of [[30, 6], [13, 6], [17, 5], [26, 4], [3, 6]]) {
+    const s = createGame(Pn(n), { mode: 'gartic', gmode: 'crowd', gSize: gs }, 0), G = groupsOf(s);
+    assert.equal(G.reduce((t, g) => t + g[1], 0), n); assert.ok(G.length === 1 || G.every(g => g[1] >= 4));
+    assert.ok(G.length === 1 || s.steps <= Math.min(...G.map(g => g[1])), 'không ai làm 1 chuỗi 2 lần');
+    for (let k = 0; k < s.steps; k++) assert.equal(new Set(s.order.map(id => chainFor(s, id, k))).size, n, 'mỗi bước mỗi người 1 chuỗi khác nhau');
+    for (const [a, g] of G) for (let c = a; c < a + g; c++) for (let k = 0; k < s.steps; k++) { const i = s.order.findIndex(id => chainFor(s, id, k) === c); assert.ok(i >= a && i < a + g, 'chuỗi ở trong nhóm'); }
+    if (G.length > 1) { const who = new Set(); for (let k = 0; k < s.steps; k++) who.add(s.order.find(id => chainFor(s, id, k) === 0)); assert.equal(who.size, s.steps); }
+    assert.deepEqual(viewFor(s, 'host', 0).groups, G);
+  }
+  const s = createGame(Pn(12), { mode: 'gartic', gmode: 'crowd', revealAuto: 0 }, 0); let now = playAll(s);
+  assert.equal(s.phase, 'reveal'); assert.deepEqual(groupsOf(s), [[0, 6], [6, 6]]); assert.equal(bookItems(s).length, 12 * s.steps);
+  assert.equal(applyAction(s, 'p3', { type: 'skipGroup' }, now).ok, false);
+  applyAction(s, 'host', { type: 'next' }, now); assert.ok(applyAction(s, 'host', { type: 'skipGroup' }, now).ok); assert.deepEqual([s.reveal.c, s.reveal.u], [6, 0], 'bỏ qua phần còn lại của nhóm 1');
+  assert.ok(applyAction(s, 'host', { type: 'skipGroup' }, now).ok); assert.equal(s.phase, 'end', 'nhóm cuối: bỏ qua là xem album');
+});
+t('Hoạt hình / Phông nền / Một mình: chọn số khung, tốc độ phim mặc định', () => {
+  assert.equal(cleanOpts({ frames: 99 }).frames, 16); assert.equal(cleanOpts({ frames: 1 }).frames, 3); assert.equal(cleanOpts({}).frames, 0);
+  assert.equal(cleanOpts({ fps: 30 }).fps, 12); assert.equal(cleanOpts({}).fps, 4);
+  assert.equal(frameCount({ gmode: 'animation', frames: 0 }, 3), 6); assert.equal(frameCount({ gmode: 'animation', frames: 0 }, 9), 9); assert.equal(frameCount({ gmode: 'background', frames: 3 }, 9), 4);
+  assert.equal(frameCount({ gmode: 'solo', frames: 0 }, 1), 5); assert.equal(frameCount({ gmode: 'solo', frames: 16 }, 1), 12);
+  const a = createGame(Pn(3), { mode: 'gartic', gmode: 'animation', frames: 10, fps: 8 }, 0);
+  assert.equal(a.steps, 10); assert.ok(a.plan.every(d => d.role === 'frame')); assert.equal(viewFor(a, 'p1', 0).opts.fps, 8);
+  playAll(a); assert.equal(a.phase, 'reveal'); assert.equal(bookItems(a).length, 30);
+  const b = createGame(Pn(2), { mode: 'gartic', gmode: 'background', frames: 7 }, 0); assert.equal(b.steps, 7); assert.equal(b.plan[0].role, 'bg');
+  const s = createGame(Pn(1), { mode: 'gartic', gmode: 'solo', frames: 9 }, 0); assert.equal(s.steps, 9);
+  for (let k = 0; k < 9; k++) { const tk = viewFor(s, 'host', 0).task; assert.equal(tk.frame, k + 1); applyAction(s, 'host', { type: 'submit', step: k, ops: L(k * 10, 5, k + 1) }, 0); }
+  assert.equal(s.phase, 'reveal'); assert.equal(bookItems(s).length, 9);
+});
+
+
+// ---------- GIF tự viết: giải mã lại để chắc chắn đúng chuẩn ----------
+function decodeGif(b) {
+  let p = 0; const u8 = () => b[p++], u16 = () => b[p++] | (b[p++] << 8);
+  assert.equal(String.fromCharCode(...b.slice(0, 6)), 'GIF89a'); p = 6;
+  const w = u16(), h = u16(), f = u8(); p += 2; const pal = []; for (let i = 0; i < 2 << (f & 7); i++) pal.push([u8(), u8(), u8()]);
+  const frames = [], delays = []; let loop = false;
+  for (;;) {
+    const t = u8();
+    if (t === 0x3b) break;
+    if (t === 0x21) { const l = u8(); if (l === 0xf9) { p += 2; delays.push(u16()); p += 1; } else if (l === 0xff) { loop = true; p += 12; } while (b[p]) p += b[p] + 1; p++; continue; }
+    assert.equal(t, 0x2c); p += 8; u8();
+    const min = u8(), data = []; for (let n = u8(); n; n = u8()) { for (let i = 0; i < n; i++) data.push(b[p++]); }
+    // LZW giải nén
+    const clear = 1 << min, eoi = clear + 1; let size = min + 1, dict = [], out = [], bit = 0, prev = null;
+    const reset = () => { dict = Array.from({ length: eoi + 1 }, (_, i) => [i]); size = min + 1; prev = null; };
+    reset();
+    for (;;) {
+      let code = 0; for (let i = 0; i < size; i++, bit++) code |= ((data[bit >> 3] >> (bit & 7)) & 1) << i;
+      if (code === clear) { reset(); continue; } if (code === eoi) break;
+      let e = code < dict.length ? dict[code] : prev.concat(prev[0]);
+      if (prev) { dict.push(prev.concat(e[0])); if (dict.length === (1 << size) && size < 12) size++; }
+      out.push(...e); prev = e;
+    }
+    frames.push(out);
+  }
+  return { w, h, pal, frames, delays, loop };
+}
+t('GIF: mã hoá đúng chuẩn, giữ đúng màu từng điểm, độ trễ từng khung', () => {
+  const W = 37, H = 23, mk = fn => { const d = new Uint8ClampedArray(W * H * 4), idx = []; for (let i = 0; i < W * H; i++) { const k = fn(i), c = PALETTE[k]; idx.push(k); d.set([1, 3, 5].map(j => parseInt(c.slice(j, j + 2), 16)).concat(255), i * 4); } return { img: { width: W, height: H, data: d }, idx }; };
+  let sd = 9; const rnd = () => (sd = (sd * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const A = mk(() => Math.floor(rnd() * 20)), B = mk(i => (i >> 3) % 20);
+  const g = decodeGif(encodeGif([A.img, B.img], { delay: 30 }));
+  assert.equal(g.w, W); assert.equal(g.frames.length, 2); assert.ok(g.loop); assert.deepEqual(g.delays, [30, 30]);
+  assert.deepEqual(g.frames[0], A.idx); assert.deepEqual(g.frames[1], B.idx);
+  // ảnh lớn đủ để bảng mã LZW đầy (4096) rồi xoá lại
+  const BW = 400, BH = 300, big = new Uint8ClampedArray(BW * BH * 4), bi = [];
+  for (let i = 0; i < BW * BH; i++) { const k = Math.floor(rnd() * 20), c = PALETTE[k]; bi.push(k); big.set([1, 3, 5].map(j => parseInt(c.slice(j, j + 2), 16)).concat(255), i * 4); }
+  const gw = new GifWriter(BW, BH, { extra: UI_COLORS }); gw.frame({ width: BW, height: BH, data: big }, 150); gw.frame({ width: BW, height: BH, data: big }, 7);
+  const g2 = decodeGif(gw.finish()); assert.deepEqual(g2.delays, [150, 7]); assert.deepEqual(g2.frames[0], bi); assert.deepEqual(g2.frames[1], bi);
+  assert.deepEqual(g2.pal[20], [255, 248, 232], 'màu giấy nằm trong bảng màu');
+});
+
 // ---------- mô phỏng ngẫu nhiên: không ván nào kẹt ----------
 const N = +process.argv[2] || 200; let stuck = 0, errs = 0;
 for (let gi = 0; gi < N; gi++) {
-  const n = 2 + (gi % 7), mode = gi % 2 ? 'gartic' : 'guess';
+  const mode = gi % 2 ? 'gartic' : 'guess';
   const gmode = GMODE_KEYS[Math.floor(gi / 2) % GMODE_KEYS.length];
-  const s = createGame(P(n), { mode, gmode, rounds: 1 + (gi % 3), drawTime: 30 + (gi % 5) * 30, cSteps: 2 + (gi % 9), cKinds: ['frame', 'text', 'draw', 'frame', 'text', 'draw', 'draw', 'frame', 'text', 'text'] }, 0);
+  const n = mode === 'gartic' && gmode === 'crowd' ? 8 + (gi % 23) : 2 + (gi % 7);
+  const s = createGame(P(n), { mode, gmode, rounds: 1 + (gi % 3), drawTime: 30 + (gi % 5) * 30, revealAuto: [0, 3, 5, 8][gi % 4], frames: gi % 3 ? 0 : 3 + (gi % 14), gSize: 4 + (gi % 5), cSteps: 2 + (gi % 9), cKinds: ['frame', 'text', 'draw', 'frame', 'text', 'draw', 'draw', 'frame', 'text', 'text'] }, 0);
   let now = 0, steps = 0;
   while (s.phase !== 'end' && steps++ < 5000) {
     now += 500 + Math.floor(Math.random() * 3000);
@@ -357,7 +463,7 @@ for (let gi = 0; gi < N; gi++) {
       }
     } else if (s.phase === 'play') {
       if (Math.random() < 0.7) { const kind = viewFor(s, who, now).task?.kind; applyAction(s, who, kind === 'draw' ? { type: 'submit', step: s.step, ops: Math.random() < 0.5 ? [] : L(5, 5, steps) } : { type: 'submit', step: s.step, text: 'abc' }, now); }
-    } else if (s.phase === 'reveal') { applyAction(s, 'host', { type: 'next' }, now); if (Math.random() < 0.3) applyAction(s, who, { type: 'react', key: s.reveal.c + ':0', e: '🔥' }); if (Math.random() < 0.3) applyAction(s, who, { type: 'vote', key: s.reveal.c + ':' + s.reveal.u, v: 1 }); }
+    } else if (s.phase === 'reveal') { const r = Math.random(); applyAction(s, 'host', r < 0.5 ? { type: 'next' } : r < 0.6 ? { type: 'pause', on: Math.random() < 0.5 } : r < 0.65 ? { type: 'skipGroup' } : r < 0.7 ? { type: 'autoReveal', sec: [0, 3, 5, 8][Math.floor(Math.random() * 4)] } : { type: 'noop' }, now); if (Math.random() < 0.3) applyAction(s, who, { type: 'react', key: s.reveal.c + ':0', e: '🔥' }); if (Math.random() < 0.3) applyAction(s, who, { type: 'vote', key: s.reveal.c + ':' + s.reveal.u, v: 1 }); }
     tick(s, now);
     try { JSON.parse(JSON.stringify(s)); for (const p of s.players) viewFor(s, p.id, now); } catch (e) { errs++; console.log(e); break; }
   }

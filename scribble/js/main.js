@@ -1,12 +1,14 @@
-import { Host, Client, MAX, maxPlayers, loadSnapshot, session } from './net.js?v=4';
+import { Host, Client, MAX, maxPlayers, loadSnapshot, session } from './net.js?v=5';
 import { netStatus } from '../../shared/ui/status.js';
-import { Board, buildToolbar, opsToCanvas, W, H } from './draw.js?v=4';
-import { CATS, CAT_KEYS, DEFAULT_CATS, buildPool, randomPrompt, parseCustom } from './words.js?v=4';
-import { REACTS, GMODES, GMODE_KEYS } from './engine.js?v=4';
-import { encodeGif } from './gif.js?v=4';
-import { opsBytes, simplifyOps } from './ops.js?v=4';
-import * as fx from './fx.js?v=4';
-import { guideHTML } from './guide.js?v=4';
+import { Board, buildToolbar, opsToCanvas, W, H } from './draw.js?v=5';
+import { CATS, CAT_KEYS, DEFAULT_CATS, buildPool, randomPrompt, parseCustom } from './words.js?v=5';
+import { REACTS, GMODES, GMODE_KEYS, buildPlan, groupSizes, frameCount, REVEAL_AUTO, FRAMES_ANIM, FRAMES_SOLO, GSIZE } from './engine.js?v=5';
+import { planFrames, totalMs, drawFrame, exportGif, exportVideo, videoType, FW, FH } from './export.js?v=5';
+import { encodeGif } from './gif.js?v=5';
+import { opsBytes, simplifyOps } from './ops.js?v=5';
+import * as fx from './fx.js?v=5';
+import { guideHTML } from './guide.js?v=5';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=2';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -31,6 +33,14 @@ const pname = id => { const ps = (view && view.players) || (lobby && lobby.playe
 function download(canvas, name) {
   canvas.toBlob(b => { if (!b) { toast('Không tạo được ảnh 😢'); return; } const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); toast('Đã lưu ảnh 📸'); }, 'image/png');
 }
+function saveBlob(blob, name, msg) {
+  const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 8000); toast(msg);
+}
+const clampN = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const fmtDur = ms => { const t = Math.round(ms / 1000); return t >= 60 ? `${Math.floor(t / 60)} phút ${t % 60 ? (t % 60) + ' giây' : ''}`.trim() : t + ' giây'; };
+// nhóm (Đông vui) chứa chuỗi c: [chỉ số nhóm, chuỗi đầu nhóm, số chuỗi]
+const grpOf = (v, c) => { const gs = v.groups && v.groups.length ? v.groups : [[0, v.chains.length]]; const j = Math.max(0, gs.findIndex(([a, g]) => c >= a && c < a + g)); return [j, gs[j][0], gs[j][1]]; };
+const nGroups = v => v.groups && v.groups.length > 1 ? v.groups.length : 0;
 const fname = s => fx && String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[đĐ]/g, 'd').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'tranh';
 
 // ---------- âm thanh ----------
@@ -59,6 +69,8 @@ syncSound();
 const inkFx = { onInk: (d, tool) => fx.scribble(d, tool), onTool: k => (k === 'fill' ? fx.sfx.fill() : k === 'undo' ? fx.sfx.undo() : fx.sfx.crumple()) };
 const openGuide = () => openModal(guideHTML() + '<div class="m-btns"><button class="btn pri" data-close>Hiểu rồi! 👌</button></div>', 'wide');
 $('#btn-guide-home').onclick = $('#g-guide').onclick = $('#t-guide').onclick = openGuide;
+// 📝 Có gì mới (patch notes dùng chung): trang chủ, thanh trên trong ván (màn rộng) và bảng loa (điện thoại)
+$$('.news-btn').forEach(b => { newsBadge(b, 'scribble'); b.onclick = () => { $('#snd-pop').hidden = true; openNews('scribble'); $$('.news-btn').forEach(x => x.classList.remove('bgvn-dot')); }; });
 
 // ---------- trang chủ ----------
 $('#name').value = ls.get('bgvn-name') || '';
@@ -90,12 +102,31 @@ function startHost() {
 }
 $('#btn-create').onclick = startHost;
 // Hoạt hình một mình: chủ phòng không mạng, bắt đầu luôn
-$('#btn-solo').onclick = () => {
-  fx.actx(); fx.musicResumeIfOn();
-  if (net) net.leave();
-  net = new Host(myName(), handlers, null, true); isHost = true; myId = 'host';
-  net.setOpts({ mode: 'gartic', gmode: 'solo' }); net.start();
-};
+// chọn số khung / thời gian / tốc độ phim rồi vẽ luôn (cũng dùng cho nút "Vẽ đoạn mới")
+function openSolo() {
+  let pr = {}; try { pr = JSON.parse(ls.get('scribble-solo')) || {}; } catch (e) {}
+  let fr = clampN(+pr.frames || 5, FRAMES_SOLO[0], FRAMES_SOLO[1]), fps = clampN(+pr.fps || 4, 1, 12), dt = clampN(Math.round((+pr.drawTime || 80) / 10) * 10, 30, 180);
+  const per = d => Math.max(30, Math.round(d * 0.75));
+  openModal(`<h2>🧑‍🎨 Hoạt hình một mình</h2><p class="center muted">Tự vẽ từng khung – khung trước hiện mờ để bạn nhích dần. Vẽ xong là thành phim, tải GIF được. Không cần mạng.</p>
+    <div class="set row"><span>Số khung</span><div class="stepper"><button class="tb" id="so-m" aria-label="Bớt khung">−</button><b id="so-n">${fr}</b><button class="tb" id="so-p" aria-label="Thêm khung">+</button></div></div>
+    <label class="set"><span>Thời gian mỗi khung <b id="so-t-v">${per(dt)} giây</b></span><input type="range" id="so-t" min="30" max="180" step="10" value="${dt}"></label>
+    <label class="set"><span>Tốc độ phim <b id="so-f-v">${fps} khung/giây</b></span><input type="range" id="so-f" min="1" max="12" step="1" value="${fps}"></label>
+    <div class="m-btns"><button class="btn" data-close>Huỷ</button><button class="btn pri" id="so-go">▶ Bắt đầu vẽ</button></div>`);
+  const upd = () => { $('#so-n').textContent = fr; $('#so-m').disabled = fr <= FRAMES_SOLO[0]; $('#so-p').disabled = fr >= FRAMES_SOLO[1]; };
+  $('#so-m').onclick = () => { fr = clampN(fr - 1, FRAMES_SOLO[0], FRAMES_SOLO[1]); upd(); fx.sfx.pop(); };
+  $('#so-p').onclick = () => { fr = clampN(fr + 1, FRAMES_SOLO[0], FRAMES_SOLO[1]); upd(); fx.sfx.pop(); };
+  $('#so-t').oninput = e => { dt = +e.target.value; $('#so-t-v').textContent = per(dt) + ' giây'; };
+  $('#so-f').oninput = e => { fps = +e.target.value; $('#so-f-v').textContent = fps + ' khung/giây'; };
+  upd();
+  $('#so-go').onclick = () => {
+    ls.set('scribble-solo', JSON.stringify({ frames: fr, fps, drawTime: dt })); closeModal();
+    fx.actx(); fx.musicResumeIfOn();
+    if (net && net.offline) net.restart();
+    else { if (net) net.leave(); net = new Host(myName(), handlers, null, true); isHost = true; myId = 'host'; }
+    net.setOpts({ mode: 'gartic', gmode: 'solo', frames: fr, fps, drawTime: dt }); net.start();
+  };
+}
+$('#btn-solo').onclick = openSolo;
 $('#btn-join').onclick = () => {
   const code = $('#join-code').value.trim().toUpperCase(); if (code.length < 5) { toast('Nhập mã phòng 5 ký tự nhé.'); return; }
   fx.actx(); fx.musicResumeIfOn();
@@ -174,14 +205,32 @@ function renderSettings() {
       if (!['complement', 'animation', 'background', 'solo'].includes(o.gmode)) h += slider('s-text', o.gmode === 'icebreaker' ? 'Thời gian viết câu hỏi' : 'Thời gian viết / đoán', o.textTime, 20, 90, 5);
       if (['speed', 'secret', 'crowd', 'knockoff'].includes(o.gmode)) h += `<p class="hint-txt">⏱ Chế độ này tự rút ngắn đồng hồ so với số giây ở trên.</p>`;
     }
-    const n = lobby.players.length;
-    h += `<p class="hint-txt">${o.gmode === 'solo' ? 'Mỗi người tự vẽ 5 khung hoạt hình của riêng mình.' : o.gmode === 'crowd' ? `Phòng ${n} người: mỗi chuỗi đi qua ${Math.max(4, Math.min(6, Math.ceil(n / 2)))} người.` : o.gmode === 'custom' ? `${o.cSteps} bước, mỗi bước ${o.cTime} giây.` : `Có ${['animation', 'background'].includes(o.gmode) ? Math.max(6, n) : Math.max(4, n)} bước, ai cũng được góp mặt vào mọi chuỗi.`}</p>`;
+    const n = lobby.players.length, plan = buildPlan(o, Math.max(1, n)), gs = groupSizes(n, o);
+    const stepper = (key, label, val, txt) => `<div class="set row"><span>${label}</span><div class="stepper"><button class="tb" data-${key}="-1" ${dis} aria-label="Bớt">−</button><b class="${txt ? 'txt' : ''}">${val}</b><button class="tb" data-${key}="1" ${dis} aria-label="Thêm">+</button></div></div>`;
+    if (o.gmode === 'animation' || o.gmode === 'background') h += stepper('fr', 'Số khung', o.frames ? frameCount(o, n) : `Tự động · ${frameCount(o, n)}`, !o.frames);
+    if (o.gmode === 'solo') h += stepper('fr', 'Số khung mỗi người', frameCount(o, 1));
+    if (o.gmode === 'crowd') h += stepper('gs', 'Người mỗi nhóm', `~${o.gSize}`);
+    if (['animation', 'background', 'solo'].includes(o.gmode) || (o.gmode === 'custom' && o.cKinds.includes('frame'))) h += `<label class="set"><span>Tốc độ phim mặc định <b id="s-fps-v">${o.fps} khung/giây</b></span><input type="range" id="s-fps" min="1" max="12" step="1" value="${o.fps}" ${dis}></label>`;
+    h += `<div class="set row wrap"><span>Chiếu lại cuối ván</span><div class="seg">${REVEAL_AUTO.map(x => `<button class="sg ${o.revealAuto === x ? 'on' : ''}" data-ra="${x}" ${dis}>${x ? x + ' giây' : 'Bấm tay'}</button>`).join('')}</div></div>`;
+    const rv = o.revealAuto ? `Chiếu lại tự sang bước sau ${o.revealAuto} giây (chủ phòng tạm dừng được).` : 'Chiếu lại: chủ phòng bấm Tiếp từng bước.';
+    const many = plan.length > n && n > 1 && o.gmode !== 'solo' ? ' Nhiều bước hơn số người nên có người làm 2 lần.' : '';
+    h += `<p class="hint-txt">${o.gmode === 'solo' ? `Mỗi người tự vẽ ${plan.length} khung hoạt hình của riêng mình.` : o.gmode === 'crowd' ? (gs.length > 1 ? `Phòng ${n} người → <b>${gs.length} nhóm</b> (${gs.join(' + ')} người). Chuỗi chỉ chuyền trong nhóm, qua ${plan.length} người; cuối ván chiếu lần lượt từng nhóm.` : `Phòng ${n} người: 1 nhóm, mỗi chuỗi qua ${plan.length} người. Từ khoảng ${Math.max(8, Math.ceil(o.gSize * 1.5))} người sẽ chia nhóm.`) : o.gmode === 'custom' ? `${o.cSteps} bước, mỗi bước ${o.cTime} giây.` : `Có ${plan.length} bước, ai cũng được góp mặt vào mọi chuỗi.${many}`} ${rv}</p>`;
   }
   box.innerHTML = h;
   if (!isHost) return;
   $$('#settings [data-r]').forEach(b => b.onclick = () => net.setOpts({ rounds: o.rounds + +b.dataset.r }));
   $$('#settings [data-gm]').forEach(b => b.onclick = () => { net.setOpts({ gmode: b.dataset.gm }); fx.sfx.pop(); });
   $$('#settings [data-cs]').forEach(b => b.onclick = () => { const n = Math.max(2, Math.min(20, o.cSteps + +b.dataset.cs)); const ks = o.cKinds.slice(0, n); while (ks.length < n) ks.push(ks.length % 2 ? 'draw' : 'text'); net.setOpts({ cSteps: n, cKinds: ks }); });
+  $$('#settings [data-fr]').forEach(b => b.onclick = () => {
+    const n = lobby.players.length, d = +b.dataset.fr;
+    if (o.gmode === 'solo') { net.setOpts({ frames: clampN(frameCount(o, 1) + d, FRAMES_SOLO[0], FRAMES_SOLO[1]) }); return; }
+    // Tự động (theo số người) ↔ 4…16 khung
+    const cur = o.frames ? frameCount(o, n) : 0, list = [0]; for (let x = FRAMES_ANIM[0]; x <= FRAMES_ANIM[1]; x++) list.push(x);
+    net.setOpts({ frames: list[clampN(list.indexOf(cur) + d, 0, list.length - 1)] });
+  });
+  $$('#settings [data-gs]').forEach(b => b.onclick = () => net.setOpts({ gSize: clampN(o.gSize + +b.dataset.gs, GSIZE[0], GSIZE[1]) }));
+  $$('#settings [data-ra]').forEach(b => b.onclick = () => { net.setOpts({ revealAuto: +b.dataset.ra }); fx.sfx.pop(); });
+  const fpsEl = $('#s-fps'); if (fpsEl) { fpsEl.oninput = () => { $('#s-fps-v').textContent = fpsEl.value + ' khung/giây'; }; fpsEl.onchange = () => net.setOpts({ fps: +fpsEl.value }); }
   $$('#settings [data-ck]').forEach(b => b.onclick = () => { const ks = o.cKinds.slice(), i = +b.dataset.ck, L = ['text', 'draw', 'frame']; ks[i] = L[(L.indexOf(ks[i]) + 1) % 3]; net.setOpts({ cKinds: ks }); });
   $$('#settings [data-cat]').forEach(b => b.onclick = () => { const k = b.dataset.cat; const cats = o.cats.includes(k) ? o.cats.filter(x => x !== k) : [...o.cats, k]; if (!cats.length && !o.custom.length) { toast('Chọn ít nhất 1 chủ đề nha'); return; } net.setOpts({ cats }); });
   for (const [id, k] of [['s-draw', 'drawTime'], ['s-text', 'textTime'], ['s-ctime', 'cTime']]) {
@@ -376,7 +425,7 @@ function renderGartic(v, p) {
   if (v.gid !== bookGid) { book.clear(); bookGid = v.gid; bookAsked = 0; revealDom = null; }
   setClock(v);
   const gm = GMODES[v.gmode] || GMODES.normal, R0 = ROLE[v.kind] || ROLE.write;
-  $('#t-cap').textContent = v.phase === 'play' ? `${gm.icon} Bước ${v.step + 1}/${v.steps} · ${R0[1]}` : v.phase === 'reveal' ? `${gm.icon} Chiếu lại` : `📚 Album · ${gm.name}`;
+  $('#t-cap').textContent = v.phase === 'play' ? `${gm.icon} Bước ${v.step + 1}/${v.steps} · ${R0[1]}` : v.phase === 'reveal' ? `${gm.icon} Chiếu lại${nGroups(v) ? ` · Nhóm ${grpOf(v, v.reveal.c)[0] + 1}/${nGroups(v)}` : ''}${v.reveal.auto ? (v.reveal.paused ? ' · ⏸️ tạm dừng' : ` · tự chiếu ${v.reveal.auto}s`) : ''}` : `📚 Album · ${gm.name}`;
   $('#t-steps').innerHTML = Array.from({ length: v.steps }, (_, i) => { const r = ROLE[roleOf(v, i)] || ROLE.write; return `<i class="${v.phase !== 'play' || i < v.step ? 'done' : i === v.step ? 'cur' : ''}" title="${r[1]}">${r[0]}</i>`; }).join('');
   const play = $('#t-play'), wait = $('#t-wait'), rev = $('#t-reveal');
   if (v.phase === 'play') {
@@ -404,9 +453,20 @@ function waitHTML(v, mine) {
   const done = v.players.filter(x => x.done).length;
   const extra = v.task && v.task.desc && v.task.desc.blind ? '<p class="muted">🙈 Tranh vẽ mù của bạn sẽ được mở ra lúc chiếu lại.</p>' : '';
   return `<div class="wait-card"><div class="big-emo">${mine ? '✅' : '👀'}</div><h3>${mine ? 'Đã nộp! Ngồi chờ hội bạn nha' : 'Đang xem ván…'}</h3>
-    <p class="muted">${done}/${v.players.length} người xong</p>${extra}
-    <ul class="who">${v.players.map(x => `<li class="${x.done ? 'done' : ''} ${x.on ? '' : 'off'}">${avatar(x.name)}<span>${esc(x.name)}</span><b>${x.done ? '✓' : x.on ? '…' : '📴'}</b></li>`).join('')}</ul>
+    <p class="muted">${done}/${v.players.length} người xong</p>${extra}${grpWho(v)}
+    <ul class="who">${whoList(v).map(x => `<li class="${x.done ? 'done' : ''} ${x.on ? '' : 'off'}">${avatar(x.name)}<span>${esc(x.name)}</span><b>${x.done ? '✓' : x.on ? '…' : '📴'}</b></li>`).join('')}</ul>
     ${mine ? '<button class="btn" id="t-edit">✏️ Sửa lại</button>' : ''}</div>`;
+}
+// Đông vui: phòng tới 30 người -> chỉ liệt kê nhóm của mình
+function whoList(v) {
+  if (!nGroups(v)) return v.players;
+  const i = Math.max(0, v.chains.indexOf(myId)), [, a, g] = grpOf(v, i), ids = new Set(v.chains.slice(a, a + g));
+  return v.players.filter(x => ids.has(x.id));
+}
+function grpWho(v) {
+  if (!nGroups(v)) return '';
+  const [j] = grpOf(v, Math.max(0, v.chains.indexOf(myId))), mine = whoList(v);
+  return `<p class="grp-line"><span class="grp">Nhóm ${j + 1}/${nGroups(v)}</span> nhóm bạn: ${mine.filter(x => x.done).length}/${mine.length} xong</p>`;
 }
 // che đề (Vẽ mù): giữ chữ cái đầu mỗi từ, hoặc che hết
 const maskText = (t, all) => all ? '❓❓❓' : String(t).split(' ').map(w => [...w][0] + '•'.repeat(Math.max(0, [...w].length - 1))).join(' ');
@@ -425,8 +485,8 @@ function setupStep(v, t, key) {
     copy: `<span class="emo">👀</span><div><b>${ds.peek ? 'Nhìn kỹ rồi vẽ lại y chang!' : 'Chép lại hình này'}</b><small id="t-qn">${ds.peek ? `Chỉ được nhìn ${Math.round(ds.peek / 1000)} giây rồi bị che – vẽ theo trí nhớ` : 'Hình mẫu ở bên cạnh 👉'}</small></div>${!ds.peek && t.prompt && t.prompt.d ? '<div class="ref" id="t-ref"></div>' : ''}`,
     doodle: `<span class="emo">〰️</span><div><b>Vẽ vài nét bậy thật nhanh!</b><small>Người sau sẽ vẽ tiếp lên đó 😈</small></div>`,
     extend: `<span class="emo">🖍️</span><div><b>Vẽ tiếp lên tranh này</b><small>Nét cũ không xoá được – biến nó thành thứ gì đó hay ho!</small></div>`,
-    frame: t.onion ? `<span class="emo">🎞️</span><div><b>${t.frame ? `Khung ${t.frame}/5 – ` : ''}Vẽ khung kế tiếp</b><small>Khung trước hiện mờ – nhích từng chút cho thành chuyển động</small></div>`
-      : `<span class="emo">🎞️</span><div><b>${t.frame ? 'Khung 1/5 – ' : ''}${t.prompt && t.prompt.t ? 'Vẽ khung đầu cho câu này:' : 'Vẽ khung đầu tiên của đoạn hoạt hình'}</b>${t.prompt && t.prompt.t ? q(t.prompt.t) : sugg}</div>`,
+    frame: t.onion ? `<span class="emo">🎞️</span><div><b>${t.frame ? `Khung ${t.frame}/${v.steps} – ` : ''}Vẽ khung kế tiếp</b><small>Khung trước hiện mờ – nhích từng chút cho thành chuyển động</small></div>`
+      : `<span class="emo">🎞️</span><div><b>${t.frame ? `Khung 1/${v.steps} – ` : ''}${t.prompt && t.prompt.t ? 'Vẽ khung đầu cho câu này:' : 'Vẽ khung đầu tiên của đoạn hoạt hình'}</b>${t.prompt && t.prompt.t ? q(t.prompt.t) : sugg}</div>`,
     bg: `<span class="emo">🏞️</span><div><b>Vẽ phông nền</b><small>Phông này giữ nguyên, mọi khung sau vẽ đè lên</small>${sugg}</div>`,
     free: `<span class="emo">🎨</span><div><b>Vẽ gì cũng được!</b>${sugg}</div>`,
   };
@@ -510,7 +570,7 @@ function itemHTML(v, c, k) {
     ${vote}<div class="reacts">${REACTS.map(e => `<button class="re" data-e="${e}">${e}<small></small></button>`).join('')}</div></div>`;
 }
 // ---- hoạt hình: chiếu lặp các khung của 1 chuỗi, chỉnh tốc độ, tải GIF / ảnh ghép ----
-let anims = [];
+let anims = [], animFps = 4, animFpsGid = null; // tốc độ phim: mặc định do chủ phòng chọn trong sảnh, mỗi người kéo lại được
 function stopAnims() { anims.forEach(a => clearInterval(a.t)); anims = []; }
 function framesOf(v, c) {
   const out = [];
@@ -525,12 +585,13 @@ function animHTML() { return `<div class="anim"><div class="anim-head">🎬 <b>T
   <div class="dl-row"><button class="btn sm anim-gif">⬇ GIF</button><button class="btn sm anim-strip">⬇ Ảnh ghép</button></div></div>`; }
 function mountAnim(el, v, c) {
   const frames = framesOf(v, c); if (frames.length < 2) { el.remove(); return; }
-  const cv = el.querySelector('canvas'), ctx = cv.getContext('2d'); let i = 0, fps = +(ls.get('scribble-fps') || 4);
+  if (animFpsGid !== v.gid) { animFpsGid = v.gid; animFps = (v.opts && v.opts.fps) || 4; }
+  const cv = el.querySelector('canvas'), ctx = cv.getContext('2d'); let i = 0, fps = animFps;
   el.querySelector('.anim-fps').value = fps;
   const show = () => { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 400, 300); ctx.drawImage(frames[i % frames.length], 0, 0, 400, 300); i++; };
   const a = { t: 0 }; const run = () => { clearInterval(a.t); a.t = setInterval(show, 1000 / fps); el.querySelector('.fps').textContent = fps + ' khung/giây'; };
   show(); run(); anims.push(a);
-  el.querySelector('.anim-fps').oninput = e => { fps = +e.target.value; ls.set('scribble-fps', fps); run(); };
+  el.querySelector('.anim-fps').oninput = e => { fps = animFps = +e.target.value; run(); };
   const nm = fname(pname(v.chains[c]));
   el.querySelector('.anim-gif').onclick = () => {
     const off = document.createElement('canvas'); off.width = 400; off.height = 300; const o = off.getContext('2d', { willReadFrequently: true });
@@ -551,19 +612,26 @@ function leaderHTML(v) {
   const rows = Object.entries(v.scores).sort((a, b) => b[1] - a[1]);
   return `<div class="lb"><h4>🏆 Bảng điểm</h4><ol>${rows.map(([id, pt], i) => `<li class="${id === myId ? 'me' : ''}"><span>${i === 0 && pt > 0 ? '👑' : i + 1 + '.'}</span>${avatar(pname(id))}<b>${esc(pname(id))}</b><i>${pt}</i></li>`).join('')}</ol><small class="muted">+100 mỗi 👍 · chuỗi giữ được ý gốc: mọi người góp mặt +200</small></div>`;
 }
+let lastGrpBanner = '';
 function renderReveal(v, p) {
   const box = $('#t-reveal'), n = v.chains.length;
   const end = v.phase === 'end';
   const c = end ? Math.min(albumSel, n - 1) : v.reveal.c, upto = end ? v.steps - 1 : v.reveal.u;
+  const G = nGroups(v), [gj, ga, gg] = grpOf(v, c);
   const dk = v.gid + '|' + c + '|' + end;
   if (!revealDom || revealDom.key !== dk) {
     stopAnims();
     const kept = v.kept && v.kept[c] != null ? (v.kept[c] ? ' <span class="kept ok">✅ giữ được ý gốc</span>' : ' <span class="kept">💥 lạc đề</span>') : '';
-    box.innerHTML = `<div class="rv-head">${end ? `<div class="tabs">${v.chains.map((id, i) => `<button class="chip ${i === c ? 'on' : ''}" data-tab="${i}">${esc(pname(id))}</button>`).join('')}</div>` : ''}
-      <h3>${avatar(pname(v.chains[c]))} ${v.gmode === 'icebreaker' ? 'Câu hỏi của' : v.rot === false ? 'Hoạt hình của' : 'Chuỗi của'} ${esc(pname(v.chains[c]))} <small>${c + 1}/${n}</small>${kept}</h3></div>
+    const chip = i => `<button class="chip ${i === c ? 'on' : ''}" data-tab="${i}">${esc(pname(v.chains[i]))}</button>`;
+    const tabs = !end ? '' : (G ? `<div class="tabs grp-tabs">${v.groups.map(([a], j) => `<button class="chip sm ${j === gj ? 'on' : ''}" data-tab="${a}">Nhóm ${j + 1}</button>`).join('')}</div>` : '')
+      + `<div class="tabs">${Array.from({ length: G ? gg : n }, (_, i) => chip(G ? ga + i : i)).join('')}</div>`;
+    box.innerHTML = `<div class="rv-head">${tabs}
+      <h3>${avatar(pname(v.chains[c]))} <span class="rv-t">${v.gmode === 'icebreaker' ? 'Câu hỏi của' : v.rot === false ? 'Hoạt hình của' : 'Chuỗi của'} ${esc(pname(v.chains[c]))}</span> <small>${G ? `${c - ga + 1}/${gg}` : `${c + 1}/${n}`}</small>${G ? ` <span class="grp">Nhóm ${gj + 1}/${G}</span>` : ''}${kept}</h3></div>
       <div class="feed" id="t-feed"></div><div class="rv-bar" id="t-bar"></div>`;
-    revealDom = { key: dk, shown: -1, anim: false };
+    revealDom = { key: dk, shown: -1, anim: false, bar: '' };
     $$('#t-reveal [data-tab]').forEach(b => b.onclick = () => { albumSel = +b.dataset.tab; revealDom = null; renderReveal(view, null); });
+    // Đông vui: sang nhóm mới thì báo to
+    if (G && !end && v.reveal.u === 0 && c === ga && lastGrpBanner !== v.gid + ':' + gj) { lastGrpBanner = v.gid + ':' + gj; fx.banner(`Nhóm ${gj + 1}/${G} 🎉`, 'blue'); }
   }
   const feed = $('#t-feed');
   for (let k = revealDom.shown + 1; k <= upto; k++) {
@@ -591,22 +659,95 @@ function renderReveal(v, p) {
     const vt = (v.votes || {})[el.dataset.key] || { up: 0, down: 0, mine: 0 };
     el.querySelectorAll('.vt').forEach(b => { const up = b.dataset.v === '1'; b.querySelector('small').textContent = (up ? vt.up : vt.down) || ''; b.classList.toggle('on', vt.mine === (up ? 1 : -1)); });
   }
-  // thanh điều khiển
+  // thanh điều khiển (chỉ vẽ lại khi đổi – nút không bị thay giữa lúc bấm)
   const bar = $('#t-bar');
+  const barKey = JSON.stringify(end ? ['end', c, v.scores || null, isHost, !!(net && net.offline)] : [v.reveal.c, v.reveal.u, v.reveal.auto, v.reveal.paused, isHost]);
+  if (revealDom.bar === barKey) return;
+  revealDom.bar = barKey;
   if (!end) {
-    const r = v.reveal, last = r.u >= v.steps - 1, lastChain = r.c >= n - 1;
+    const r = v.reveal, last = r.u >= v.steps - 1, lastChain = r.c >= n - 1, lastInGroup = r.c >= ga + gg - 1;
+    const label = !last ? 'Tiếp ▶' : lastChain ? 'Xem album 🏁' : G && lastInGroup ? `Sang nhóm ${gj + 2} ▶` : 'Chuỗi tiếp theo ▶';
+    const status = r.auto ? (r.paused ? '⏸️ Đang tạm dừng' : `⏩ Tự chiếu mỗi ${r.auto} giây`) : '';
     bar.innerHTML = isHost
-      ? `<button class="btn big pri" id="t-next">${!last ? 'Tiếp ▶' : !lastChain ? 'Chuỗi tiếp theo ▶' : 'Xem album 🏁'}</button><button class="link" id="t-skip">Bỏ qua, xem album luôn</button>`
-      : `<p class="muted center">Chủ phòng đang bấm tiếp… ${v.gmode === 'score' ? 'chấm 👍/👎 từng bước nào!' : 'thả cảm xúc đi nào 😂🔥💀'}</p>`;
+      ? `<button class="btn big pri" id="t-next">${label}</button>
+        <div class="rv-ctl">${r.auto ? `<button class="btn sm ${r.paused ? 'blue' : ''}" id="t-pause">${r.paused ? '▶ Chạy tiếp' : '⏸️ Tạm dừng'}</button>` : ''}
+          <span class="seg-w"><span class="seg-l">Tự chiếu</span><div class="seg" role="group" aria-label="Tự chiếu">${REVEAL_AUTO.map(x => `<button class="sg ${r.auto === x ? 'on' : ''}" data-ra="${x}" aria-label="${x ? x + ' giây' : 'Bấm tay'}">${x ? x + 's' : 'Tắt'}</button>`).join('')}</div></span></div>
+        <div class="rv-links">${G && gj < G - 1 ? `<button class="link" id="t-skipg">⏭️ Bỏ qua nhóm ${gj + 1}</button>` : ''}<button class="link" id="t-skip">Bỏ qua, xem album luôn</button></div>`
+      : `<p class="muted center">${status ? `<b class="rv-st">${status}</b> · ` : 'Chủ phòng đang bấm tiếp… '}${v.gmode === 'score' ? 'chấm 👍/👎 từng bước nào!' : 'thả cảm xúc đi nào 😂🔥💀'}</p>`;
     const nx = $('#t-next'); if (nx) nx.onclick = () => net.act({ type: 'next' });
     const sk = $('#t-skip'); if (sk) sk.onclick = () => net.act({ type: 'skipReveal' });
+    const sg = $('#t-skipg'); if (sg) sg.onclick = () => net.act({ type: 'skipGroup' });
+    const pa = $('#t-pause'); if (pa) pa.onclick = () => { fx.sfx.pop(); net.act({ type: 'pause', on: !r.paused }); };
+    $$('#t-bar [data-ra]').forEach(b => b.onclick = () => { fx.sfx.pop(); net.act({ type: 'autoReveal', sec: +b.dataset.ra }); });
   } else {
-    bar.innerHTML = `${leaderHTML(v)}<div class="dl-row"><button class="btn" id="t-dl1">⬇ Tải chuỗi này</button><button class="btn pri" id="t-dlall">⬇ Tải cả album</button></div>${isHost ? `<button class="btn big blue" id="t-again">🔁 ${net && net.offline ? 'Vẽ đoạn mới' : 'Về sảnh chơi tiếp'}</button>` : '<p class="muted center">Đợi chủ phòng mở ván mới…</p>'}`;
+    bar.innerHTML = `${leaderHTML(v)}<div class="dl-row"><button class="btn" id="t-dl1">🖼️ Ảnh chuỗi này</button><button class="btn pri" id="t-dlall">⬇️ Tải cả album</button></div>${isHost ? `<button class="btn big blue" id="t-again">🔁 ${net && net.offline ? 'Vẽ đoạn mới' : 'Về sảnh chơi tiếp'}</button>` : '<p class="muted center">Đợi chủ phòng mở ván mới…</p>'}`;
     $('#t-dl1').onclick = () => download(albumCanvas(view, [c]), `scribble-${fname(pname(view.chains[c]))}.png`);
-    $('#t-dlall').onclick = () => download(albumCanvas(view, view.chains.map((_, i) => i)), 'scribble-album.png');
-    const ag = $('#t-again'); if (ag) ag.onclick = () => { if (net.offline) { net.restart(); net.start(); } else net.restart(); };
+    $('#t-dlall').onclick = () => openExport(view, c);
+    const ag = $('#t-again'); if (ag) ag.onclick = () => { if (net.offline) openSolo(); else net.restart(); };
     if (endShownT !== v.gid) { endShownT = v.gid; fx.sfx.win(); fx.fireworks(3500); }
   }
+}
+
+// ---------- tải cả album: GIF động / video / ảnh ghép ----------
+async function fontsReady() {
+  try { await Promise.all(['800 40px "Shantell Sans"', '700 20px "Shantell Sans"', '700 16px "Be Vietnam Pro"', '800 18px "Be Vietnam Pro"', '600 18px "Be Vietnam Pro"', '30px "Patrick Hand"'].map(f => document.fonts.load(f, 'Ảnh ạ ữ'))); } catch (e) {}
+}
+function openExport(v, cur) {
+  const G = nGroups(v), [gj, ga, gg] = grpOf(v, cur), vt = videoType(), gm = GMODES[v.gmode] || GMODES.normal;
+  const HOLDS = [1500, 2500, 4000];
+  let hold = +(ls.get('scribble-hold') || 2500); if (!HOLDS.includes(hold)) hold = 2500;
+  let scope = 'all', job = null;
+  const chains = () => scope === 'all' ? v.chains.map((_, i) => i) : Array.from({ length: gg }, (_, i) => ga + i);
+  const info = {
+    v, book, pname, color: avColor, roleInfo: k => ROLE[roleOf(v, k)] || ROLE.draw, groupOf: c => grpOf(v, c),
+    drawing: (c, k) => drawingImg(c + ':' + k, book.get(c + ':' + k).d),
+    title: 'Tam sao thất bản · ' + gm.name,
+    sub: '',
+  };
+  const plan = () => { const ch = chains(); info.sub = `${scope === 'all' ? '' : `Nhóm ${gj + 1} · `}${ch.length} chuỗi · ${new Set(ch.map(c => v.chains[c])).size} người vẽ · ${new Date().toLocaleDateString('vi-VN')}`; return planFrames({ v, chains: ch, hold, fps: animFpsGid === v.gid ? animFps : (v.opts && v.opts.fps) || 4, roleOf: k => roleOf(v, k) }); };
+  const missing = v.chains.some((_, c) => Array.from({ length: v.steps }, (_, k) => !book.has(c + ':' + k)).some(Boolean));
+  if (missing) { net.needBook(); toast('Album chưa tải đủ – đợi vài giây rồi thử lại nha'); return; }
+  const seg = (id, items, on) => `<div class="seg" id="${id}">${items.map(([k, t]) => `<button class="sg ${k === on ? 'on' : ''}" data-k="${k}">${t}</button>`).join('')}</div>`;
+  openModal(`<h2>⬇️ Tải cả album</h2><p class="center muted ex-intro">Gộp mọi chuỗi thành 1 file chạy lần lượt: mỗi bước một khung, có tên người và câu/đoán.</p>
+    <canvas class="ex-prev" width="${FW}" height="${FH}" aria-label="Xem trước khung đầu"></canvas>
+    <div class="set row wrap"><span>Mỗi bước hiện</span>${seg('ex-hold', HOLDS.map(h => [h, String(h / 1000).replace('.', ',') + ' giây']), hold)}</div>
+    ${G ? `<div class="set row wrap"><span>Tải</span>${seg('ex-scope', [['all', `Cả ${G} nhóm`], ['grp', `Chỉ nhóm ${gj + 1}`]], scope)}</div>` : ''}
+    <p class="hint-txt center" id="ex-sum"></p>
+    <div class="ex-btns"><button class="btn pri" id="ex-gif">🖼️ GIF động</button>${vt ? `<button class="btn blue" id="ex-vid">🎬 Video ${/mp4/.test(vt) ? 'MP4' : 'WebM'}</button>` : ''}<button class="btn" id="ex-png">🧩 Ảnh ghép</button></div>
+    ${vt ? '' : '<p class="hint-txt center">Trình duyệt này chưa quay video được – tải GIF nhé.</p>'}
+    <div class="ex-prog" id="ex-prog" hidden><div class="bar"><i id="ex-bar"></i></div><small id="ex-msg"></small><button class="btn sm" id="ex-cancel">Huỷ</button></div>
+    <div class="m-btns"><button class="btn" data-close id="ex-close">Đóng</button></div>`, 'export');
+  const sum = () => {
+    const f = plan(), ms = totalMs(f);
+    $('#ex-sum').textContent = `${f.length} khung · dài khoảng ${fmtDur(ms)}${vt ? ` · video quay mất chừng đó thời gian` : ''}`;
+    const pc = $('.ex-prev'); if (pc && f[1]) { const x = pc.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); drawFrame(x, f[1], info); }
+  };
+  fontsReady().then(() => { if ($('#ex-sum')) sum(); });
+  sum();
+  $$('#ex-hold .sg').forEach(b => b.onclick = () => { hold = +b.dataset.k; ls.set('scribble-hold', hold); $$('#ex-hold .sg').forEach(x => x.classList.toggle('on', x === b)); sum(); });
+  $$('#ex-scope .sg').forEach(b => b.onclick = () => { scope = b.dataset.k; $$('#ex-scope .sg').forEach(x => x.classList.toggle('on', x === b)); sum(); });
+  const busy = on => { modalLock = on; $$('#modal-box .ex-btns .btn, #modal-box .seg .sg').forEach(b => b.disabled = on); $('#ex-prog').hidden = !on; $('#ex-close').hidden = on; };
+  const nm = `scribble-album${scope === 'grp' ? '-nhom' + (gj + 1) : ''}`;
+  const run = async (kind) => {
+    if (job) return;
+    await fontsReady();
+    const frames = plan(), total = totalMs(frames); job = { cancel: false }; busy(true);
+    const t0 = Date.now();
+    const prog = x => { const bar = $('#ex-bar'); if (!bar) return; bar.style.width = Math.round(x * 100) + '%';
+      $('#ex-msg').textContent = kind === 'gif' ? `Đang ghép GIF… ${Math.round(x * 100)}%` : `Đang quay video… ${fmtDur(x * total)} / ${fmtDur(total)} (giữ tab này mở nhé)`; };
+    prog(0);
+    try {
+      const blob = kind === 'gif' ? await exportGif(frames, info, prog, job) : await exportVideo(frames, info, prog, job);
+      if (blob) { saveBlob(blob, `${nm}.${kind === 'gif' ? 'gif' : /mp4/.test(blob.type) ? 'mp4' : 'webm'}`, kind === 'gif' ? `Đã lưu GIF (${(blob.size / 1048576).toFixed(1)} MB) 🎞️` : 'Đã lưu video 🎬'); fx.sfx.win(); }
+      else toast('Đã huỷ');
+    } catch (e) { console.error(e); toast('Xuất không được 😢 ' + (e && e.message || '')); }
+    window.__lastExport = { kind, ms: Date.now() - t0, frames: frames.length };
+    job = null; if ($('#ex-prog')) busy(false);
+  };
+  $('#ex-gif').onclick = () => run('gif');
+  const vb = $('#ex-vid'); if (vb) vb.onclick = () => run('video');
+  $('#ex-png').onclick = () => download(albumCanvas(v, chains()), `${nm}.png`);
+  $('#ex-cancel').onclick = () => { if (job) job.cancel = true; };
 }
 // Ảnh album ghép: mỗi chuỗi một cột, mỗi bước một ô
 function wrapText(ctx, text, maxW) {
