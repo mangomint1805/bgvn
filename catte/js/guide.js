@@ -1,6 +1,6 @@
 // Hướng dẫn luật Cát tê (tiếng Việt, có ví dụ)
-import { cardHTML } from './cards.js?v=1';
-import { parseCard } from './engine.js?v=1';
+import { cardHTML } from './cards.js?v=2';
+import { parseCard } from './engine.js?v=2';
 const row = ids => `<div class="g-row">${ids.split(' ').map(x => x === '_' ? cardHTML(null, 'sm') : cardHTML(parseCard(x), 'sm')).join('')}</div>`;
 
 export function openGuide(openModal) {
@@ -10,6 +10,13 @@ export function openGuide(openModal) {
       <p>Lá nhỏ nhất là <b>2</b>, lớn nhất là <b>A (Át)</b>: 2 &lt; 3 &lt; … &lt; 10 &lt; J &lt; Q &lt; K &lt; A. <b>Chất không phân cao thấp</b> – ♠ ♣ ♦ ♥ ngang nhau.</p>
       ${row('2S 7D JC QH KS AH')}
       <h3>Mục tiêu</h3><p>Ăn được <b>vòng thứ 6 (vòng cuối)</b> – gọi là <b>TỚI</b> – để hốt cả nồi chip. Một ván có 6 vòng, mỗi vòng ai cũng ra 1 lá.</p>
+      <h3>📚 Thuật ngữ</h3><ul>
+        <li><b>Tùng</b>: lá lớn nhất của một vòng – ăn vòng đó là <b>ăn tùng</b> / <b>có tùng</b> ✅, và được cầm cái vòng sau.</li>
+        <li><b>Tranh tùng</b>: vòng 1–4, ai cũng cố giành ít nhất 1 tùng để sống.</li>
+        <li><b>Đè</b>: ra lá cùng chất lớn hơn lá đang ăn. <b>Úp</b> (thiệp): bỏ 1 lá úp xuống, không tranh vòng đó.</li>
+        <li><b>Chết</b>: hết vòng 4 mà không có tùng nào ☠️ (có nơi gọi là <b>vàng tùng</b> khi úp trắng cả 4 vòng).</li>
+        <li><b>Chưng</b> (trưng): vòng 5, cả bàn chọn lá úp rồi lật cùng lúc. <b>Xổ</b>: vòng 6 lật lá cuối.</li>
+        <li><b>Tới</b>: ăn tùng vòng 6 – thắng ván, hốt nồi 🏆. <b>Tới trắng</b> (ăn trắng): thắng ngay lúc chia bài.</li></ul>
       <h3>Thứ tự đi</h3><p>Người <b>cầm cái</b> (cái) ra lá đầu tiên, sau đó lần lượt từng người theo vòng bàn (ngược chiều kim đồng hồ: người ngồi bên <b>phải</b> bạn đi sau bạn). Ai ăn vòng thì cầm cái vòng sau.</p>
       <p>Ván đầu bốc thăm người cầm cái; từ ván sau, <b>người tới ván trước cầm cái</b>.</p>`],
     play: ['⚔️ Đè / Úp', () => `
@@ -22,7 +29,7 @@ export function openGuide(openModal) {
       <p>Lưu ý: muốn đè phải lớn hơn <b>lá đang thắng</b>, không phải lá của cái. Có lá đè được vẫn có quyền úp (giấu bài).</p>
       <h3>Trên web</h3><p>Lá đè được sẽ <b>sáng viền xanh ⬆</b>. Chạm 1 lá để chọn, rồi bấm <b>Đè</b> hoặc <b>Úp</b>. Chạm 2 lần vào lá = làm luôn (đè nếu đè được, không thì úp).</p>`],
     dead: ['☠️ Chết & Lật bài', () => `
-      <h3>Chết (bị loại)</h3><p>Hết <b>vòng 4</b>, ai <b>chưa ăn được vòng nào</b> là <b>CHẾT</b> ☠️ – nghỉ ván này, mất tiền cược. Trên bàn, người chưa có vòng nào sẽ hiện ☠️ để cả bàn biết ai đang nguy.</p>
+      <h3>Chết (bị loại)</h3><p>Hết <b>vòng 4</b>, ai <b>chưa ăn được vòng nào</b> (không có <b>tùng</b>) là <b>CHẾT</b> ☠️ – nghỉ ván này, mất tiền cược. Trên bàn, người chưa có vòng nào sẽ hiện ☠️ để cả bàn biết ai đang nguy.</p>
       <p>Nếu chỉ còn đúng <b>1 người sống</b> (ăn trọn cả 4 vòng) thì người đó thắng luôn – <b>ăn trắng</b> 🧹.</p>
       <h3>Vòng 5–6: LẬT BÀI 🔥</h3><p>Những người còn sống mỗi người còn 2 lá. Từ đây <b>không úp nữa</b>, lá nào cũng lật ngửa, lá <b>cùng chất vòng lớn nhất</b> ăn.</p><ul>
         <li><b>Vòng 5 – Chưng bài</b> (mặc định): người cầm cái ra 1 lá ngửa, những người khác <b>cùng lúc</b> chọn 1 lá úp ("chưng"), rồi <b>lật cùng lúc</b>. Không ai biết người khác chọn gì!</li>

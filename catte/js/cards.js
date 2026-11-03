@@ -1,5 +1,5 @@
 // Lá bài Tây tự vẽ bằng CSS: số to ở góc, chất to giữa lá, lưng lá thiết kế riêng BGVN.
-import { SUIT_SYM, rankLabel, isRed } from './engine.js?v=1';
+import { SUIT_SYM, rankLabel, isRed } from './engine.js?v=2';
 const FACE = { 11: 'J', 12: 'Q', 13: 'K' };
 // card: {id,r,s} | null (lưng lá). cls: lớp thêm. attrs: thuộc tính thêm
 export function cardHTML(c, cls = '', attrs = '') {

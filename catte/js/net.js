@@ -1,6 +1,6 @@
 // Lớp mạng Cát tê: chủ phòng giữ state, người vào chỉ gửi action. Kết nối dùng chung shared/net/room.js
-import { createGame, applyAction, viewFor, waitingOn, nextHand, getPlayer, DEFAULT_OPTS, OPT_CHOICES, MAX_PLAYERS, CUT } from './engine.js?v=1';
-import { botAction } from './bot.js?v=1';
+import { createGame, applyAction, viewFor, waitingOn, nextHand, getPlayer, DEFAULT_OPTS, OPT_CHOICES, MAX_PLAYERS, CUT } from './engine.js?v=2';
+import { botAction } from './bot.js?v=2';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 // Câu chọc cho bảng thả emoji (≤ 24 ký tự)

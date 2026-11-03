@@ -1,11 +1,11 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, CT_PHRASES, NEXT_MS } from './net.js?v=1';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, CT_PHRASES, NEXT_MS } from './net.js?v=2';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=98';
-import { cardName, rankLabel, SUIT_SYM, SUIT_NAME, WHITE_NAME, OPT_CHOICES, CUT, REFILL, parseCard } from './engine.js?v=1';
-import { cardHTML, cardTxt, suitTxt } from './cards.js?v=1';
-import * as fx from './cfx.js?v=1';
-import { openGuide } from './guide.js?v=1';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=99';
+import { cardName, rankLabel, SUIT_SYM, SUIT_NAME, WHITE_NAME, OPT_CHOICES, CUT, REFILL, parseCard } from './engine.js?v=2';
+import { cardHTML, cardTxt, suitTxt } from './cards.js?v=2';
+import * as fx from './cfx.js?v=2';
+import { openGuide } from './guide.js?v=2';
 setSpeedFn(fx.S);
 
 const $ = s => document.querySelector(s);
@@ -188,7 +188,7 @@ function renderProg(v) {
   for (let i = 1; i <= 6; i++) {
     const h = hist.find(x => x.no === i), w = h && pl(h.winner);
     pips.push(`<span class="pip-t ${i > CUT ? 'fire' : ''} ${i === cur ? 'cur' : ''} ${h ? 'done' : ''}" title="Vòng ${i}${h ? ': ' + esc(pname(h.winner)) + ' ăn' : ''}" ${w ? `style="--c:${avColor(w.name)}"` : ''}>${h ? (h.winner === myId ? '⭐' : initial(w ? w.name : '?')) : i > CUT ? '🔥' : i}</span>`);
-    if (i === CUT) pips.push('<span class="cut" title="Hết vòng 4: ai chưa ăn vòng nào là chết">☠️</span>');
+    if (i === CUT) pips.push('<span class="cut" title="Hết vòng 4: ai chưa có tùng nào là chết">☠️</span>');
   }
   let right = '';
   if (v.phase === 'handEnd') right = v.result ? `🏆 <b>${esc(pname(v.result.winner))}</b>` : '';
@@ -255,19 +255,19 @@ function renderPrompt(v) {
     cls = 'mine';
     if (!t.plays.length) {
       h = t.no > CUT ? `👑 Bạn cầm cái vòng ${t.no} – LẬT BÀI!` : `👑 Bạn cầm cái vòng ${t.no}`;
-      sub = t.no > CUT ? 'Ra lá mà người khác không đè được nha.' : !m.won ? `Đánh lá bất kỳ · <b>chưa ăn vòng nào</b> – còn ${CUT - t.no + 1} vòng để sống ☠️` : 'Đánh lá bất kỳ. Có tồn rồi, giữ lá to cho lật bài 😎';
+      sub = t.no > CUT ? 'Ra lá mà người khác không đè được nha.' : !m.won ? `Đánh lá bất kỳ · <b>chưa có tùng nào</b> – còn ${CUT - t.no + 1} vòng để tranh tùng ☠️` : 'Đánh lá bất kỳ. Có tồn rồi, giữ lá to cho lật bài 😎';
       if (t.no > CUT) cls += ' hot';
     } else if (t.no > CUT) { h = '🔥 Lật bài! Chọn 1 lá'; sub = `Lá đang ăn ${cardTxt(t.top.card)} – lá ${suitTxt(t.lead)} lớn hơn mới ăn.`; cls += ' hot'; }
     else {
       const can = (v.legal || []).some(x => !x.down);
       h = '⚔️ ĐÈ hoặc ÚP?';
       sub = can ? `Lá đang ăn ${cardTxt(t.top.card)} · lá <b class="okc">sáng xanh ⬆</b> đè được` : `Không có lá ${suitTxt(t.lead)} lớn hơn ${cardTxt(t.top.card)} – úp 1 lá thôi 🙈`;
-      if (!m.won) sub += ` · ${t.no === CUT ? '<b class="bad">vòng cuối để sống!</b>' : 'chưa có tồn ☠️'}`;
+      if (!m.won) sub += ` · ${t.no === CUT ? '<b class="bad">vòng cuối để sống!</b>' : 'chưa có tùng ☠️'}`;
     }
   } else {
     const w = (v.waiting || [])[0];
     h = `⏳ <b>${esc(pname(w))}</b> đang ${t && !t.plays.length ? 'cầm cái' : 'suy nghĩ'}…`;
-    sub = t && t.top ? `Lá đang ăn: ${cardTxt(t.top.card)} của ${esc(pname(t.top.pid))}` : (m.won ? `Bạn đã ăn ${m.won} vòng ✅` : (t && t.no <= CUT ? 'Bạn chưa ăn vòng nào ☠️' : ''));
+    sub = t && t.top ? `Lá đang ăn: ${cardTxt(t.top.card)} của ${esc(pname(t.top.pid))}` : (m.won ? `Bạn có ${m.won} tùng ✅` : (t && t.no <= CUT ? 'Bạn chưa có tùng nào ☠️' : ''));
   }
   const p = $('#prompt'); p.className = 'prompt ' + cls;
   p.innerHTML = `<div class="ph">${h}</div><div class="ps">${sub}</div>`;
@@ -480,7 +480,7 @@ function playEvents(evs) {
         setTimeout(() => {
           const el = seatAv(e.winner);
           if (e.winner === myId) fx.sfx.myTrick(); else fx.sfx.trick();
-          fx.floatText(el, e.no <= CUT && first ? (e.winner === myId ? 'Sống rồi! 😮‍💨' : 'Có tồn ✅') : `Ăn vòng ${e.no} ✅`, 'ok');
+          fx.floatText(el, e.no <= CUT && first ? (e.winner === myId ? 'Sống rồi! 😮‍💨' : 'Có tùng ✅') : `Ăn vòng ${e.no} ✅`, 'ok');
           fx.pop($(`.seat[data-pid="${e.winner}"]`), 'pop');
         }, 250 * S);
         if (e.no < 6) holdT = setTimeout(() => gather(), 1050 * S);

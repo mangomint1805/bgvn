@@ -6,6 +6,9 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê',
 };
 export const NOTES = [
+  { id: '20261104-09', date: '04/11/2026', game: 'catte', title: 'Thuật ngữ chuẩn: tùng', items: [
+    '📚 Dùng đúng thuật ngữ "tùng": ăn vòng = ăn tùng, chưa có tùng nào là sắp chết ☠️. Hướng dẫn có thêm mục Thuật ngữ (tùng, tranh tùng, úp/thiệp, chưng, xổ, tới, vàng tùng).',
+  ] },
   { id: '20261104-08', date: '04/11/2026', game: 'catte', title: 'Game mới: Cát tê!', items: [
     '🂡 Cát tê 2–6 người: 6 lá, 6 vòng – đè cùng chất lớn hơn hoặc úp bỏ. Hết vòng 4 chưa ăn vòng nào là chết ☠️.',
     '🔥 Vòng 5 chưng bài, vòng 6 lật – ai ăn vòng cuối là tới, hốt nồi. Tới trắng: tứ quý, 6 lá đồng chất, 6 lá dưới 6.',
