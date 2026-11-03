@@ -3,9 +3,14 @@
 export const GAMES = {
   all: '🎲 BGVN', bang: '🤠 BANG!', uno: '🃏 UNO', typhu: '🏙️ Cờ Tỷ Phú', scribble: '🎨 Scribble it!',
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
-  xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên',
+  xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê',
 };
 export const NOTES = [
+  { id: '20261104-08', date: '04/11/2026', game: 'catte', title: 'Game mới: Cát tê!', items: [
+    '🂡 Cát tê 2–6 người: 6 lá, 6 vòng – đè cùng chất lớn hơn hoặc úp bỏ. Hết vòng 4 chưa ăn vòng nào là chết ☠️.',
+    '🔥 Vòng 5 chưng bài, vòng 6 lật – ai ăn vòng cuối là tới, hốt nồi. Tới trắng: tứ quý, 6 lá đồng chất, 6 lá dưới 6.',
+    '🧧 Chip ảo, hết thì xin mẹ. Luật thưởng & kiểu vòng 5 chỉnh trong sảnh.',
+  ] },
   { id: '20261104-07', date: '04/11/2026', game: 'tienlen', title: 'Game mới: Tiến Lên miền Nam!', items: [
     '🐷 Tiến Lên miền Nam 2–4 người: lẻ, đôi, sám, sảnh, đôi thông, tứ quý – chặt heo, chặt chồng, tới trắng, thối heo, cóng.',
     '💡 Chạm 1 lá là gợi ý bộ đánh được, có nút Gợi ý và nút 🔪 Chặt! sáng lên khi chặt được.',

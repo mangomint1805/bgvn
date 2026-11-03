@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cát tê – 6 lá, đè hay úp?</title>
+<meta name="description" content="Cát tê (Catte) tiếng Việt chơi online cùng bạn bè: 6 lá, đè hay úp, chết, lật bài. Chơi vui bằng chip ảo, có bot.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='14' width='52' height='72' rx='9' fill='%23fff' stroke='%231d2a3a' stroke-width='5' transform='rotate(-12 36 50)'/><rect x='38' y='12' width='52' height='72' rx='9' fill='%23fff' stroke='%231d2a3a' stroke-width='5' transform='rotate(10 64 48)'/><text x='66' y='62' font-size='34' text-anchor='middle' fill='%23e5383b' transform='rotate(10 64 48)'>♥</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/catte.css?v=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+</head>
+<body>
+<div class="bg-deco" aria-hidden="true"></div>
+
+<!-- TRANG CHỦ -->
+<section id="screen-home" class="screen active">
+  <a class="back-hub" href="../">← Bàn chơi BGVN</a>
+  <div class="home-card">
+    <div class="hero" id="hero"></div>
+    <h1 class="logo">Cát <span>tê</span></h1>
+    <p class="tag">6 lá, 6 vòng. Đè hay úp? Không ăn vòng nào là <b>chết</b> ☠️, ăn vòng cuối là <b>TỚI</b> 🏆</p>
+    <label class="fld"><span>Tên của bạn</span><input id="name" maxlength="16" placeholder="Nhập tên…" autocomplete="nickname"></label>
+    <div class="btn-col">
+      <button class="btn big pri" id="btn-create">✨ Tạo phòng online</button>
+      <div class="join-row"><input id="join-code" maxlength="5" placeholder="MÃ PHÒNG" autocapitalize="characters" aria-label="Mã phòng"><button class="btn" id="btn-join">Vào</button></div>
+      <button class="btn big" id="btn-offline">🤖 Chơi với bot</button>
+    </div>
+    <div class="home-tools">
+      <button class="chip" id="btn-guide-home">📖 Hướng dẫn</button>
+      <button class="chip" id="btn-news-home" data-news="catte">📝 Có gì mới</button>
+      <button class="chip" id="btn-music-home">🎵 Nhạc</button>
+    </div>
+    <p class="note">🎈 Chơi vui bằng chip ảo, không cá cược tiền thật.<br>Bản fan-made phi thương mại – lá bài, hình vẽ tự thiết kế.</p>
+  </div>
+</section>
+
+<!-- SẢNH -->
+<section id="screen-lobby" class="screen">
+  <div class="lobby">
+    <div class="lobby-head">
+      <button class="chip" id="btn-leave-lobby">← Thoát</button>
+      <div class="code-box" id="code-box">Mã phòng <b id="room-code">…</b> <button class="chip sm" id="btn-copy">Sao chép link</button></div>
+    </div>
+    <div class="lobby-grid">
+      <div class="panel">
+        <h3>Người chơi <small id="pcount"></small></h3>
+        <ul id="plist" class="plist"></ul>
+        <button class="btn" id="btn-addbot">＋ Thêm bot</button>
+      </div>
+      <div class="panel">
+        <h3>Tuỳ chỉnh luật</h3>
+        <div id="opts" class="opts"></div>
+      </div>
+    </div>
+    <button class="btn big pri" id="btn-start">▶ Chia bài!</button>
+    <p class="wait" id="wait-msg">⏳ Đang chờ chủ phòng chia bài…</p>
+    <p class="note ctr">🎈 Chơi vui bằng chip ảo, không cá cược tiền thật.</p>
+  </div>
+</section>
+
+<!-- VÁN CHƠI -->
+<section id="screen-game" class="screen">
+  <header class="topbar">
+    <button class="chip" id="btn-leave" aria-label="Rời bàn">←</button>
+    <div class="title-tag"><span>🂡 Cát tê</span><small id="hand-no"></small></div>
+    <div class="tools">
+      <button class="chip" id="speed-btn" title="Tốc độ hiệu ứng" aria-label="Tốc độ hiệu ứng">⚡</button>
+      <button class="chip" id="btn-music" title="Nhạc nền" aria-label="Nhạc nền">🎵</button>
+      <button class="chip" id="btn-mute" title="Âm thanh" aria-label="Âm thanh">🔊</button>
+      <button class="chip" id="btn-guide" title="Hướng dẫn" aria-label="Hướng dẫn">📖</button>
+      <button class="chip" id="btn-news" title="Có gì mới" aria-label="Có gì mới" data-news="catte">📝</button>
+      <button class="chip" id="btn-log" title="Nhật ký" aria-label="Nhật ký">📜</button>
+    </div>
+  </header>
+  <div class="prog" id="prog"></div>
+  <div class="play">
+    <div class="table" id="table">
+      <div class="felt" id="felt"><div class="pot" id="pot"></div></div>
+      <div id="seats"></div>
+    </div>
+    <div class="me" id="me">
+      <div class="prompt" id="prompt"></div>
+      <div class="clockbar" id="clockbar"><i></i></div>
+      <div class="hand" id="hand"></div>
+      <div class="actions" id="actions"></div>
+    </div>
+  </div>
+  <aside class="log" id="log"><h4>📜 Nhật ký <button class="chip sm" id="btn-log-close" aria-label="Đóng">✕</button></h4><ol id="log-list"></ol></aside>
+</section>
+
+<div class="sd" id="sd" aria-live="polite"></div>
+<div class="modal" id="modal"><div class="modal-box" id="modal-box"></div></div>
+<div class="toast" id="toast"></div>
+<div id="fx-layer"></div>
+<script type="module" src="js/main.js?v=1"></script>
+</body>
+</html>
