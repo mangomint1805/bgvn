@@ -6,7 +6,7 @@
 <title>BANG! Việt hóa – chơi online với bạn bè</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rye&family=Bevan&family=Oswald:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=13">
+<link rel="stylesheet" href="css/style.css?v=14">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A4%A0%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -34,7 +34,7 @@
       <div class="theme-pick" id="speed-pick"></div>
       <div class="theme-pick"><button id="btn-music-home">🎵 Nhạc nền: tắt</button></div>
     </div>
-    <button id="btn-guide-home" class="btn guide-btn">📖 Hướng dẫn chơi</button>
+    <div class="home-help"><button id="btn-guide-home" class="btn guide-btn">📖 Hướng dẫn chơi</button><button id="btn-news-home" class="btn guide-btn news-btn" data-news="bang">📝 Có gì mới</button></div>
     <p class="foot">Chủ phòng cần giữ tab mở suốt ván. 4–7 người, có thể thêm bot.</p>
   </div>
 </section>
@@ -51,6 +51,8 @@
         <button id="btn-start" class="btn primary">Bắt đầu</button>
       </div>
       <p id="lobby-msg" class="muted">Đang chờ chủ phòng bắt đầu…</p>
+      <button id="btn-newbie" class="btn small newbie-btn" aria-pressed="true">🐣 Chế độ Người mới</button>
+      <p class="muted nb-note">Mẹo theo vai trò và tình huống hiện ngay trên bàn (chỉ máy bạn thấy).</p>
       <button id="btn-leave" class="btn small ghost">Rời phòng</button>
     </div>
   </div>
@@ -69,8 +71,11 @@
       <button id="btn-music" class="btn icon ghost" title="Nhạc nền">🎵</button>
       <input id="music-vol" class="vol" type="range" min="0" max="1" step="0.05" title="Âm lượng nhạc">
       <button id="btn-mute" class="btn icon ghost" title="Hiệu ứng âm thanh">🔊</button>
+      <button id="btn-newbie-g" class="btn icon ghost" title="Chế độ Người mới">🐣</button>
+      <button id="btn-news-g" data-news="bang" class="btn icon ghost" title="Có gì mới">📝<span class="nb-lbl"> Có gì mới</span></button>
     </div>
     <button id="btn-guide" class="btn icon ghost" title="Hướng dẫn">📖</button>
+    <button id="btn-recap" class="btn small ghost" title="Lượt vừa rồi: ai đánh gì lên ai">⏪<span class="hide-m"> Lượt vừa rồi</span></button>
     <button id="btn-log-toggle" class="btn small ghost" title="Nhật ký ván">📜<span class="hide-m"> Nhật ký</span></button>
   </header>
 
@@ -91,19 +96,20 @@
       <div id="me-info" class="me-info"></div>
     </div>
     <div class="me-mid">
+      <div id="coach" class="coach hidden" aria-live="polite"></div>
       <div id="me-hand" class="hand"></div>
       <div id="actions" class="actions"></div>
     </div>
     <div class="me-right"><div class="muted small-label">Trang bị</div><div id="me-table" class="me-table"></div></div>
   </div>
 
-  <aside id="log" class="log hidden"><h3>Nhật ký</h3><div id="log-list"></div></aside>
+  <aside id="log" class="log hidden"><div class="log-head"><h3>Nhật ký</h3><button id="btn-recap-log" class="btn small">⏪ Lượt vừa rồi</button></div><div id="log-list"></div></aside>
   <div id="modal" class="modal hidden"><div class="modal-box" id="modal-box"></div></div>
 </section>
 
 <div id="toast" class="toast hidden"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
-<script type="module" src="js/main.js?v=12"></script>
+<script type="module" src="js/main.js?v=13"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@ export const GAMES = {
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
 };
 export const NOTES = [
-  { id: '20261104-03', date: '04/11/2026', game: 'bang', title: 'Né một chạm, xem lại lượt, mẹo người mới, thả emoji', items: [
+  { id: '20261104-04', date: '04/11/2026', game: 'bang', title: 'Né một chạm, xem lại lượt, mẹo người mới, thả emoji', items: [
     '🛡️ Bị bắn mà có Missed! (hoặc BANG! khi bị Indians/Duel): hiện sẵn nút xanh "Dùng Missed!" – bấm một phát là né, hoặc "Chịu đòn".',
     '⏪ Nút "Lượt vừa rồi": tóm tắt ai bắn ai, né hay trúng, ai Panic! ai… kèm bảng "Ai tấn công ai" cả ván để đoán vai.',
     '🎨 Mỗi người một màu, nhật ký và dòng tin giữa bàn tô tên theo màu cho dễ theo dõi.',

@@ -18,6 +18,7 @@ export function createGame(playerList) {
   const state = {
     phase: 'playing', players: [], deck: shuffle(buildDeck()), discard: [],
     turn: 0, step: 'play', pending: [], log: [], winner: null, turnCount: 0,
+    acts: [], actSeq: 0, // nhật ký có cấu trúc (công khai): ai đánh gì lên ai – cho "Lượt vừa rồi" và bot suy vai
   };
   playerList.forEach((pl, i) => {
     const role = roles[i], ch = chars[i];
@@ -34,6 +35,14 @@ export function createGame(playerList) {
 
 // ---------- Tiện ích ----------
 function log(s, msg) { s.log.push(msg); if (s.log.length > 200) s.log.shift(); }
+// Ghi 1 hành động công khai: {by, to?, card, ...}. n = số lượt, t = người đang tới lượt.
+function act(s, o) {
+  if (!s.acts) { s.acts = []; s.actSeq = 0; }
+  o.id = ++s.actSeq; o.n = s.turnCount; o.t = s.players[s.turn] ? s.players[s.turn].id : null;
+  s.acts.push(o); if (s.acts.length > 300) s.acts.shift();
+  return o.id;
+}
+function actById(s, id) { return id && s.acts ? s.acts.find(a => a.id === id) : null; }
 function name(p) { return p ? p.name : '?'; }
 function sheriffOf(s) { return s.players.find(p => p.role === 'sheriff'); }
 export function getPlayer(s, id) { return s.players.find(p => p.id === id); }
@@ -93,6 +102,7 @@ function beginTurn(s) {
   const p = current(s);
   p.bangs = 0; s.turnCount++;
   log(s, `— Lượt của ${name(p)} —`);
+  act(s, { by: p.id, card: 'turn' });
   // Dynamite
   const dyn = p.table.find(c => c.type === 'dynamite');
   if (dyn) {
@@ -100,6 +110,7 @@ function beginTurn(s) {
     if (boom) {
       discardCard(s, p, dyn.id);
       log(s, `💥 Dynamite nổ! ${name(p)} mất 3 máu.`);
+      act(s, { to: p.id, card: 'dynamite', res: 'boom' });
       damage(s, p, 3, null);
       if (!p.alive) return; // post() sẽ chuyển lượt
     } else {
@@ -114,6 +125,7 @@ function beginTurn(s) {
   if (jail) {
     const free = drawCheck(s, p, isHeart, 'Jail');
     discardCard(s, p, jail.id);
+    act(s, { to: p.id, card: 'jail', res: free ? 'free' : 'stuck' });
     if (!free) { log(s, `${name(p)} bị giam, mất lượt.`); s.step = 'skipped'; nextTurn(s); return; }
     log(s, `${name(p)} thoát khỏi Jail.`);
   }
@@ -173,6 +185,7 @@ function damage(s, target, amount, source) {
 function killPlayer(s, p, killer) {
   p.alive = false; p.hp = 0; p.revealed = true;
   log(s, `☠️ ${name(p)} bị loại! Vai trò: ${ROLES[p.role].name}.`);
+  act(s, { by: killer && killer !== p ? killer.id : null, to: p.id, card: 'kill', role: p.role });
   const vulture = s.players.find(q => q.alive && q.character === 'vulturesam');
   const cards = [...p.hand, ...p.table]; p.hand = []; p.table = [];
   if (vulture) { vulture.hand.push(...cards); log(s, `Vulture Sam lấy hết bài của ${name(p)}.`); }
@@ -295,7 +308,7 @@ function handleTurnAction(s, p, a) {
       if (p.hp >= p.maxHp) return { ok: false, reason: 'Máu đã đầy.' };
       for (const id of a.cardIds) if (!p.hand.some(c => c.id === id)) return { ok: false, reason: 'Không có lá này.' };
       for (const id of a.cardIds) discardCard(s, p, id);
-      p.hp++; log(s, `Sid Ketchum bỏ 2 lá, hồi 1 máu.`); return { ok: true };
+      p.hp++; log(s, `Sid Ketchum bỏ 2 lá, hồi 1 máu.`); act(s, { by: p.id, card: 'sid' }); return { ok: true };
     }
     case 'end_turn':
       if (p.hand.length > p.hp) { s.step = 'discard'; s.pending.push({ type: 'discard', player: p.id }); return { ok: true }; }
@@ -322,10 +335,11 @@ function playCard(s, p, a) {
     case 'bang': {
       discardCard(s, p, c.id); p.bangs++;
       log(s, `${name(p)} 💥 bắn ${name(target)}!`);
-      pushShot(s, p, target, p.character === 'slabthekiller' ? 2 : 1, 'bang');
+      const aid = act(s, { by: p.id, to: target.id, card: 'bang', via: c.type });
+      pushShot(s, p, target, p.character === 'slabthekiller' ? 2 : 1, 'bang', aid);
       break;
     }
-    case 'beer': discardCard(s, p, c.id); p.hp++; log(s, `${name(p)} uống Beer, hồi 1 máu.`); break;
+    case 'beer': discardCard(s, p, c.id); p.hp++; log(s, `${name(p)} uống Beer, hồi 1 máu.`); act(s, { by: p.id, card: 'beer' }); break;
     case 'panic': case 'catbalou': {
       discardCard(s, p, c.id);
       let taken;
@@ -336,51 +350,57 @@ function playCard(s, p, a) {
         if (!target.hand.length) { const tc = target.table[0]; taken = removeCard(target, tc.id); }
         else { const rc = pick(target.hand); taken = removeCard(target, rc.id); }
       }
+      const fromTable = !!(a.pick && a.pick !== 'hand');
       if (type === 'panic') { p.hand.push(taken); log(s, `${name(p)} dùng Panic! lấy 1 lá của ${name(target)}.`); }
       else { s.discard.push(taken); log(s, `${name(p)} dùng Cat Balou, ${name(target)} phải bỏ ${cardLabel(taken)}.`); }
+      act(s, { by: p.id, to: target.id, card: type, got: (fromTable || type === 'catbalou') && taken ? taken.type : null });
       break;
     }
-    case 'stagecoach': discardCard(s, p, c.id); giveCards(s, p, 2); log(s, `${name(p)} dùng Stagecoach, rút 2 lá.`); break;
-    case 'wellsfargo': discardCard(s, p, c.id); giveCards(s, p, 3); log(s, `${name(p)} dùng Wells Fargo, rút 3 lá.`); break;
-    case 'saloon': discardCard(s, p, c.id); for (const q of alivePlayers(s)) if (q.hp < q.maxHp) q.hp++; log(s, `${name(p)} mở Saloon, ai cũng hồi 1 máu.`); break;
+    case 'stagecoach': discardCard(s, p, c.id); giveCards(s, p, 2); log(s, `${name(p)} dùng Stagecoach, rút 2 lá.`); act(s, { by: p.id, card: type }); break;
+    case 'wellsfargo': discardCard(s, p, c.id); giveCards(s, p, 3); log(s, `${name(p)} dùng Wells Fargo, rút 3 lá.`); act(s, { by: p.id, card: type }); break;
+    case 'saloon': discardCard(s, p, c.id); for (const q of alivePlayers(s)) if (q.hp < q.maxHp) q.hp++; log(s, `${name(p)} mở Saloon, ai cũng hồi 1 máu.`); act(s, { by: p.id, card: type }); break;
     case 'store': {
       discardCard(s, p, c.id);
       const al = alivePlayers(s); const start = al.indexOf(p);
       const queue = []; for (let i = 0; i < al.length; i++) queue.push(al[(start + i) % al.length].id);
       const cards = []; for (let i = 0; i < al.length; i++) { const d = drawFromDeck(s); if (d) cards.push(d); }
       log(s, `${name(p)} mở General Store: ${cards.map(cardLabel).join(', ')}.`);
+      act(s, { by: p.id, card: 'store' });
       s.pending.push({ type: 'store', player: queue[0], queue, cards });
       break;
     }
     case 'indians': {
       discardCard(s, p, c.id); log(s, `${name(p)} gọi Indians! tấn công tất cả.`);
       const queue = orderFrom(s, p).map(q => q.id);
-      if (queue.length) s.pending.push({ type: 'respond', kind: 'indians', source: p.id, player: queue[0], queue, need: 1 });
+      const aid = act(s, { by: p.id, card: 'indians', hit: [] });
+      if (queue.length) s.pending.push({ type: 'respond', kind: 'indians', source: p.id, player: queue[0], queue, need: 1, actId: aid });
       break;
     }
     case 'gatling': {
       discardCard(s, p, c.id); log(s, `${name(p)} quét Gatling!`);
       const queue = orderFrom(s, p);
+      const aid = act(s, { by: p.id, card: 'gatling', hit: [] });
       // mỗi người: thùng rượu tự động, rồi vào hàng chờ nếu chưa né
       const need = {};
       const ids = [];
       for (const q of queue) { const n = 1 - barrelSaves(s, q, 1); if (n > 0) { ids.push(q.id); need[q.id] = n; } else log(s, `${name(q)} né được nhờ Barrel.`); }
-      if (ids.length) s.pending.push({ type: 'respond', kind: 'gatling', source: p.id, player: ids[0], queue: ids, need: 1, needMap: need });
+      if (ids.length) s.pending.push({ type: 'respond', kind: 'gatling', source: p.id, player: ids[0], queue: ids, need: 1, needMap: need, actId: aid });
       break;
     }
     case 'duel': {
       discardCard(s, p, c.id); log(s, `${name(p)} thách ${name(target)} Duel!`);
-      s.pending.push({ type: 'respond', kind: 'duel', player: target.id, other: p.id, source: p.id });
+      const aid = act(s, { by: p.id, to: target.id, card: 'duel' });
+      s.pending.push({ type: 'respond', kind: 'duel', player: target.id, other: p.id, source: p.id, actId: aid });
       break;
     }
     case 'jail': {
-      removeCard(p, c.id); target.table.push(c); log(s, `${name(p)} nhốt ${name(target)} vào Jail.`); break;
+      removeCard(p, c.id); target.table.push(c); log(s, `${name(p)} nhốt ${name(target)} vào Jail.`); act(s, { by: p.id, to: target.id, card: 'jail' }); break;
     }
     default: {
       // bài xanh để trước mặt
       removeCard(p, c.id);
       if (info.kind === 'gun') { const g = gunOf(p); if (g) discardCard(s, p, g.id); }
-      p.table.push(c); log(s, `${name(p)} trang bị ${info.name}.`);
+      p.table.push(c); log(s, `${name(p)} trang bị ${info.name}.`); act(s, { by: p.id, card: c.type });
     }
   }
   return { ok: true };
@@ -396,10 +416,10 @@ function barrelSaves(s, q, need) {
   return saves;
 }
 
-function pushShot(s, source, target, need, kind) {
+function pushShot(s, source, target, need, kind, aid) {
   need -= barrelSaves(s, target, need);
-  if (need <= 0) { log(s, `${name(target)} né được nhờ Barrel.`); return; }
-  s.pending.push({ type: 'respond', kind, source: source.id, player: target.id, need });
+  if (need <= 0) { log(s, `${name(target)} né được nhờ Barrel.`); const a = actById(s, aid); if (a) a.res = 'barrel'; return; }
+  s.pending.push({ type: 'respond', kind, source: source.id, player: target.id, need, actId: aid });
 }
 
 // ---------- Xử lý prompt ----------
@@ -473,9 +493,11 @@ function handleRespond(s, p, pr, a) {
     }
     s.pending.pop();
   };
+  const rec = actById(s, pr.actId);
   if (a.type === 'take_hit') {
-    if (pr.kind === 'duel') { log(s, `${name(p)} thua Duel.`); s.pending.pop(); damage(s, p, 1, getPlayer(s, pr.other)); return { ok: true }; }
+    if (pr.kind === 'duel') { log(s, `${name(p)} thua Duel.`); if (rec) rec.lost = p.id; s.pending.pop(); damage(s, p, 1, getPlayer(s, pr.other)); return { ok: true }; }
     log(s, `${name(p)} trúng đòn.`);
+    if (rec) { if (rec.hit) rec.hit.push(p.id); else rec.res = 'hit'; }
     advanceQueue(); damage(s, p, 1, source); return { ok: true };
   }
   if (a.type !== 'respond_card') return { ok: false, reason: 'Chọn lá đáp trả hoặc chịu đòn.' };
@@ -490,7 +512,7 @@ function handleRespond(s, p, pr, a) {
   // bang / gatling
   pr.need--;
   log(s, `${name(p)} đánh ${cardLabel(c)} né đạn.`);
-  if (pr.need <= 0) { advanceQueue(); }
+  if (pr.need <= 0) { if (rec && !rec.hit) rec.res = 'missed'; advanceQueue(); }
   return { ok: true };
 }
 
@@ -502,6 +524,7 @@ export function viewFor(s, pid) {
     phase: s.phase, winner: s.winner, turn: s.turn, step: s.step, turnCount: s.turnCount,
     deckCount: s.deck.length, discardTop: s.discard.length ? s.discard[s.discard.length - 1] : null, discardCount: s.discard.length,
     log: s.log.slice(-40),
+    acts: (s.acts || []).slice(-120),
     me: pid,
     players: s.players.map(p => ({
       id: p.id, name: p.name, isBot: p.isBot, hp: p.hp, maxHp: p.maxHp, alive: p.alive, character: p.character,

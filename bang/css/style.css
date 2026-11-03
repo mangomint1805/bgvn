@@ -717,3 +717,105 @@ label { display: block; font-weight: 700; margin: 12px 0 4px; text-align: left; 
   .pile, .pile-empty { width: 44px; height: 62px; } .piles .pcard.sm { --w: 44px; }
   .center { gap: 4px; } .prompt { padding: 5px 8px; font-size: 12px; } .prompt.hint { font-size: 12px; padding: 5px 10px; } .prompt .ptitle { font-size: 14px; } .feed div:not(.new) { display: none; }
 }
+
+/* ================= NÂNG CẤP: màu người chơi, né một chạm, ⏪ tóm tắt, 🐣 người mới ================= */
+.pn { display: inline-block; font-weight: 800; font-style: normal; color: #fff; background: var(--pc, #6b5440); padding: 0 6px; border-radius: 999px; line-height: 1.45; text-shadow: 0 1px 0 rgba(0,0,0,.25); white-space: nowrap; }
+.feed .pn { padding: 0 5px; }
+.seat .pname::before, .me-info .pname::before { content: ''; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--pc, transparent); margin-right: 4px; vertical-align: 1px; box-shadow: 0 0 0 1.5px rgba(255,255,255,.7); }
+.log-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.log-head h3 { margin: 0; }
+.log-head .btn { min-height: 34px; font-size: 13px; padding: 3px 10px; box-shadow: 0 2px 0 var(--on); }
+.log #log-list div.who { border-left: 4px solid var(--pc); padding-left: 7px; }
+.log #log-list div.turnline { margin-top: 6px; font-weight: 800; border-bottom: 0; }
+/* né một chạm */
+.prompt .resp-row .resp-btn { background: #2f9a52; color: #fff; border-color: #1d6b37; box-shadow: 0 3px 0 #1d6b37; }
+.prompt .resp-row .resp-btn .suit.red { color: #ffd0c8; } .prompt .resp-row .resp-btn .suit.black { color: #10301b; }
+.prompt .resp-row .btn { min-height: 42px; }
+.prompt .resp-row .btn:disabled { opacity: .6; }
+/* ⏪ Lượt vừa rồi */
+.recap { text-align: left; }
+.recap h3 { text-align: center; }
+.recap h4 { margin: 14px 0 6px; font-family: 'Oswald'; font-weight: 600; font-size: 16px; }
+.rc-turn { border: 1px solid var(--line); border-radius: 12px; padding: 7px 10px; margin: 8px 0; background: rgba(255,255,255,.25); }
+.rc-turn.last { border: 2px solid var(--accent, #d9a73a); background: rgba(255,214,120,.16); }
+.rc-h { font-family: 'Oswald'; font-size: 15px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.rc-lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--on2); }
+.rc-turn ul { margin: 4px 0 0; padding-left: 4px; list-style: none; }
+.rc-turn li { padding: 3px 0; font-size: 14px; line-height: 1.6; }
+.rc-turn i { font-style: normal; font-weight: 800; } .rc-turn i.ok { color: #2f8a4c; } .rc-turn i.bad { color: #c0392b; }
+[data-theme="night"] .rc-turn i.ok { color: #7fdc9b; } [data-theme="night"] .rc-turn i.bad { color: #ff8a7a; }
+.rc-none { margin: 4px 0 0; font-size: 13px; }
+.rc-tally div { padding: 3px 0; font-size: 14px; line-height: 1.7; border-bottom: 1px dashed var(--line); }
+.rc-hint { font-size: 13px; color: var(--on2); margin: 8px 0 12px; }
+.recap > .btn { display: block; margin: 10px auto 0; }
+/* 🐣 người mới */
+.coach { flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; justify-content: center; max-width: min(720px, 100%); margin: 0 auto 2px; padding: 5px 12px; border-radius: 12px; font-size: 13px; line-height: 1.35; text-align: center;
+  background: #fff6d6; color: #3a2a14; border: 1px solid #e2c47c; box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+.coach.hidden { display: none; }
+.coach .co-role { font-weight: 600; }
+.coach .co-tip { color: #5b3a10; }
+.coach .pn { font-size: 12px; }
+.newbie-btn { margin: 6px auto 0; display: block; min-height: 40px; }
+.newbie-btn.on { background: #fff1c4; border-color: #b9852a; }
+.nb-note { font-size: 12px; margin: 4px 0 8px; }
+.tb-opts .nb-lbl { display: none; }
+@media (max-width: 760px) {
+  .tb-opts .nb-lbl { display: inline; }
+  .coach { font-size: 12px; padding: 4px 8px; gap: 2px 8px; margin-bottom: 0; }
+  .coach .pn { font-size: 11px; }
+  .rc-turn li, .rc-tally div { font-size: 13px; }
+  #btn-recap { padding: 4px 6px; font-size: 12px; }
+}
+/* màn thấp / ngang: mẹo chỉ 1 dòng */
+@media (max-height: 500px) and (orientation: landscape) {
+  .coach { font-size: 11px; padding: 2px 8px; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .coach .co-role { display: none; }
+}
+#btn-recap, #btn-log-toggle { white-space: nowrap; flex: 0 0 auto; }
+@media (max-width: 1180px) { #btn-recap .hide-m { display: none; } }
+/* 📝 Có gì mới */
+.home-help { display: flex; gap: 10px; margin-top: 16px; }
+.home-help .guide-btn { margin-top: 0; flex: 1 1 0; min-height: 44px; }
+.bgvn-dot { position: relative; }
+.bgvn-dot::after { content: ''; position: absolute; top: 2px; right: 2px; width: 10px; height: 10px; border-radius: 50%; background: #ff4d5e; box-shadow: 0 0 0 2px #fff; }
+.news-btn.bgvn-dot::after { top: -4px; right: -4px; width: 12px; height: 12px; }
+@media (max-width: 380px) { .home-help .guide-btn { font-size: 14px; padding: 9px 8px; } }
+/* nút của hộp nhắc đưa xuống thanh dưới (điện thoại dọc) */
+#actions.prompt-acts { gap: 6px; }
+#actions.prompt-acts { flex-wrap: nowrap; }
+#actions.prompt-acts .btn { min-height: 44px; font-size: 14px; padding: 6px 10px; white-space: nowrap; min-width: 0; }
+.me-left { position: relative; }
+#actions.prompt-acts .resp-btn { background: #2f9a52; color: #fff; border-color: #1d6b37; box-shadow: 0 3px 0 #1d6b37; }
+#actions.prompt-acts .resp-btn .suit.red { color: #ffd0c8; } #actions.prompt-acts .resp-btn .suit.black { color: #10301b; }
+#actions.prompt-acts .btn:disabled { opacity: .6; }
+.prompt .co-inline { margin-top: 3px; font-size: 12px; font-style: normal; color: var(--on); background: #fff6d6; border-radius: 8px; padding: 2px 8px; display: inline-block; }
+.prompt .co-inline .pn { font-size: 11px; }
+@media (min-width: 761px) { .coach { margin-bottom: 10px; } }
+/* nút thả emoji: máy tính đặt ở mép dưới bàn (giữa các ghế), điện thoại dọc đưa xuống góc phải dưới */
+/* màn vừa (máy tính bảng, điện thoại xoay ngang): gom cài đặt vào ⚙️ để thanh trên không tràn */
+@media (min-width: 761px) and (max-width: 1100px) {
+  #btn-more { display: inline-flex; }
+  .topbar { position: relative; }
+  .tb-opts { display: none; position: absolute; right: 8px; top: calc(100% + 6px); flex-direction: column; align-items: stretch; gap: 8px; padding: 12px; border-radius: 14px; background: linear-gradient(180deg, #2b1d12, #1e140b); box-shadow: 0 12px 30px rgba(0,0,0,.45); z-index: 20; min-width: 200px; }
+  .tb-opts.open { display: flex; }
+  .tb-opts select, #theme-select { max-width: none; width: 100%; padding: 6px 8px; font-size: 14px; }
+  .tb-opts .vol { display: block; width: 100%; }
+  .tb-opts .nb-lbl { display: inline; }
+  #turn-info { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+@media (max-width: 760px) { .me-left .me-id { min-width: 0; padding-right: 50px; } .me-left .me-id .pname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+@media (max-height: 500px) and (orientation: landscape) { .me-left .me-id { padding-right: 0; } }
+@media (min-width: 761px) {
+  .me-left:has(#coach) { flex-direction: column; align-items: stretch; gap: 8px; }
+  .me-left .coach { margin: 0; max-width: none; width: 100%; justify-content: flex-start; text-align: left; box-sizing: border-box; contain: inline-size; }
+}
+/* điện thoại xoay ngang: hộp chọn lá (General Store, Kit Carlson…) nổi giữa màn như hộp thoại, không đè tay bài */
+@media (max-height: 500px) and (orientation: landscape) {
+  #screen-game > .table-wrap:has(.center.big) { z-index: 7; }
+  .center.big { position: fixed; inset: 0; transform: none; width: auto; max-width: none !important; margin: 0; padding: 10px; z-index: 8; display: flex; align-items: center; justify-content: center; background: rgba(20,12,6,.5); animation: fade .15s; }
+  .center.big .prompt { width: min(94vw, 560px); max-height: calc(100dvh - 20px); overflow: auto; padding: 10px; box-shadow: 0 14px 40px rgba(0,0,0,.5); }
+  .center.big .prompt .pcard { --w: 70px; }
+  .center.big .piles, .center.big .feed { display: none; }
+}
+.center.narrow .prompt .inrange, .center.narrow .prompt .co-inline { display: none; }
+@media (max-width: 1100px) { .tb-opts.open #speed-select { max-width: none; width: 100%; padding: 6px 8px; font-size: 14px; } }

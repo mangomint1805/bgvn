@@ -1,25 +1,82 @@
 // Bot đơn giản cho Bang!
-import { getPlayer, current, alivePlayers, topPrompt, getPlayOptions, responseCards, distance } from './engine.js';
-import { CARD_INFO } from './cards.js';
+import { getPlayer, current, alivePlayers, topPrompt, getPlayOptions, responseCards, distance } from './engine.js?v=2';
+import { CARD_INFO, rolesFor } from './cards.js';
 
 function rnd(a) { return a[Math.floor(Math.random() * a.length)]; }
 
-// Bot "nghi ngờ": ai có vẻ là địch với bot?
-function enemiesOf(s, me) {
-  const others = alivePlayers(s).filter(p => p !== me);
-  const sheriff = others.find(p => p.role === 'sheriff');
-  switch (me.role) {
-    case 'outlaw': return sheriff ? [sheriff, ...others.filter(p => p.revealed && p.role === 'deputy')] : others;
-    case 'deputy': return others.filter(p => p.role !== 'sheriff' && !(p.revealed && p.role === 'deputy'));
-    case 'sheriff': return others.filter(p => !(p.revealed && p.role === 'deputy'));
-    case 'renegade': {
-      // giúp cảnh sát giết tội phạm trước, còn ít người thì quay sang cảnh sát
-      const outlaws = others.filter(p => p.revealed && p.role === 'outlaw');
-      if (others.length <= 1) return others;
-      return others.filter(p => p.role !== 'sheriff').length ? others.filter(p => p.role !== 'sheriff') : others;
+// ---------- Trí nhớ của bot: "ai đã bắn ai" (chỉ dùng thông tin công khai trong s.acts) ----------
+const HOSTILE = { bang: 2, duel: 2, jail: 1.5, panic: 1, catbalou: 1 };
+// Điểm "phe luật" của từng người nhìn từ góc của `me`: dương = có vẻ phe Cảnh sát, âm = có vẻ Tội phạm.
+export function suspicion(s, me) {
+  const sheriff = s.players.find(p => p.role === 'sheriff');
+  const sc = {}; for (const p of s.players) sc[p.id] = 0;
+  const acts = (s.acts || []).filter(a => a.by && a.to && HOSTILE[a.card] && a.by !== a.to);
+  const known = id => { const q = s.players.find(p => p.id === id); return q && (q.revealed || q === me) ? q.role : null; };
+  const recent = n => s.turnCount - n <= alivePlayers(s).length; // trong khoảng 1 vòng gần đây
+  for (let pass = 0; pass < 2; pass++) {
+    const prev = { ...sc };
+    for (const p of s.players) sc[p.id] = 0;
+    for (const a of acts) {
+      const w = HOSTILE[a.card] * (recent(a.n) ? 1.5 : 1);
+      const vr = known(a.to);
+      if (sheriff && a.to === sheriff.id) sc[a.by] -= w * 1.5;            // bắn sếp: rất đáng ngờ
+      else if (vr === 'outlaw') sc[a.by] += w * 0.8;                      // bắn Tội phạm đã lộ / bắn mình (nếu mình là Tội phạm)
+      else if (vr === 'deputy') sc[a.by] -= w * 0.8;                      // bắn Phó
+      else if (pass) {                                                   // bắn người đang bị nghi
+        if (prev[a.to] <= -2) sc[a.by] += w * 0.6;
+        else if (prev[a.to] >= 2) sc[a.by] -= w * 0.5;
+      }
     }
   }
-  return others;
+  for (const p of s.players) if (p.revealed) sc[p.id] = p.role === 'outlaw' ? -99 : p.role === 'sheriff' || p.role === 'deputy' ? 99 : 0;
+  return sc;
+}
+
+// Mức ưu tiên tấn công từng người (≤ 0: không đánh). Trả về {id: số}
+function priorities(s, me) {
+  const others = alivePlayers(s).filter(p => p !== me);
+  const sc = suspicion(s, me);
+  const sheriff = others.find(p => p.role === 'sheriff');
+  const total = rolesFor(s.players.length) || [];
+  const outlawsLeft = total.filter(r => r === 'outlaw').length - s.players.filter(p => !p.alive && p.role === 'outlaw').length;
+  const deputiesLeft = total.filter(r => r === 'deputy').length - s.players.filter(p => !p.alive && p.role === 'deputy').length;
+  const late = s.turnCount > 18 * s.players.length; // ván quá dài: bớt dè dặt để không ai treo ván
+  // ai vừa bắn sếp (trong 1 vòng gần đây)?
+  const hitSheriff = {};
+  if (sheriff) for (const a of s.acts || []) if (a.to === sheriff.id && HOSTILE[a.card] && s.turnCount - a.n <= others.length + 1) hitSheriff[a.by] = (hitSheriff[a.by] || 0) + 1;
+  const pr = {};
+  for (const p of others) {
+    const v = sc[p.id];
+    let x = 0;
+    switch (me.role) {
+      case 'outlaw':
+        if (p.role === 'sheriff') x = 10 + (5 - p.hp);
+        else if (p.revealed && p.role === 'deputy') x = 6;
+        else if (v > 0) x = 2 + Math.min(4, v);
+        else if (v === 0) x = 0.6;
+        else x = late ? 0.3 : 0; // người đang bắn sếp: chắc là đồng đội
+        break;
+      case 'deputy':
+        if (p.role === 'sheriff') x = 0; // KHÔNG BAO GIỜ bắn sếp
+        else if (v < 0) x = 3 - v + (hitSheriff[p.id] ? 6 : 0);
+        else if (v === 0) x = 0.6;
+        else x = late ? 0.3 : 0;
+        break;
+      case 'sheriff':
+        if (!deputiesLeft) x = 3 + Math.max(0, -v); // không còn Phó: ai cũng là địch
+        else if (v < 0) x = 3 - v + (hitSheriff[p.id] ? 4 : 0);
+        else if (v === 0) x = 0.8;
+        else x = (late || v < 2) ? 0.3 : 0; // có vẻ là Phó: tránh bắn nhầm
+        break;
+      case 'renegade':
+        if (p.role === 'sheriff') x = outlawsLeft > 0 ? 0 : (others.length === 1 ? 10 : 1); // giữ sếp sống tới cuối
+        else if (outlawsLeft > 0) x = v < 0 ? 3 - v : v === 0 ? 0.8 : 0.4;
+        else x = 5;
+        break;
+    }
+    pr[p.id] = x;
+  }
+  return pr;
 }
 
 // Trả về action cho bot `pid`, hoặc null nếu không phải việc của bot
@@ -36,7 +93,8 @@ export function botAction(s, pid) {
           return { type: 'kit_choose', keep: sorted.slice(0, 2).map(c => c.id) };
         }
         if (pr.character === 'jessejones') {
-          const t = enemiesOf(s, me).filter(p => p.hand.length).sort((a, b) => b.hand.length - a.hand.length)[0];
+          const pri = priorities(s, me);
+          const t = alivePlayers(s).filter(p => p !== me && p.hand.length && pri[p.id] > 0).sort((a, b) => pri[b.id] - pri[a.id] || b.hand.length - a.hand.length)[0];
           if (t && Math.random() < 0.7) return { type: 'draw_from_player', target: t.id };
         }
         if (pr.character === 'pedroramirez' && s.discard.length) {
@@ -65,7 +123,12 @@ export function botAction(s, pid) {
   }
   if (current(s) !== me || s.step !== 'play') return null;
 
-  const enemies = enemiesOf(s, me);
+  const pri = priorities(s, me);
+  const sheriff = alivePlayers(s).find(p => p.role === 'sheriff');
+  // Phó / Kẻ hai mặt (khi còn Tội phạm) không tung đòn đánh cả bàn lúc sếp yếu
+  const outlawsLeft = (rolesFor(s.players.length) || []).filter(r => r === 'outlaw').length - s.players.filter(p => !p.alive && p.role === 'outlaw').length;
+  const protectSheriff = sheriff && (me.role === 'deputy' || (me.role === 'renegade' && outlawsLeft > 0));
+  const massOk = !protectSheriff || sheriff.hp >= 3;
   const opts = me.hand.map(c => ({ c, o: getPlayOptions(s, pid, c.id) })).filter(x => x.o.ok);
   const find = t => opts.find(x => x.c.type === t);
 
@@ -89,22 +152,25 @@ export function botAction(s, pid) {
   }
   x = find('dynamite'); if (x && Math.random() < 0.5) return { type: 'play_card', cardId: x.c.id };
   // 4. Tấn công
-  const pickTarget = targets => {
-    const ids = targets.filter(id => enemies.some(e => e.id === id));
-    const pool = ids.length ? ids : (me.role === 'renegade' ? targets : []);
+  const pickTarget = (targets, min = 0.5) => {
+    const pool = targets.filter(id => pri[id] >= min);
     if (!pool.length) return null;
-    // ưu tiên máu thấp
-    return pool.map(id => getPlayer(s, id)).sort((a, b) => a.hp - b.hp || a.hand.length - b.hand.length)[0].id;
+    // ưu tiên cao nhất, rồi máu thấp
+    return pool.map(id => getPlayer(s, id)).sort((a, b) => pri[b.id] - pri[a.id] || a.hp - b.hp || a.hand.length - b.hand.length)[0].id;
   };
   x = find('jail'); if (x) { const t = pickTarget(x.o.targets); if (t) return { type: 'play_card', cardId: x.c.id, target: t }; }
   x = find('panic'); if (x) { const t = pickTarget(x.o.targets); if (t) return { type: 'play_card', cardId: x.c.id, target: t, pick: pickCard(s, t) }; }
   x = find('catbalou'); if (x) { const t = pickTarget(x.o.targets); if (t) return { type: 'play_card', cardId: x.c.id, target: t, pick: pickCard(s, t) }; }
   const myBangs = me.hand.filter(c => c.type === 'bang').length;
-  x = find('gatling'); if (x && alivePlayers(s).length >= 3) return { type: 'play_card', cardId: x.c.id };
-  x = find('indians'); if (x) return { type: 'play_card', cardId: x.c.id };
+  x = find('gatling'); if (x && alivePlayers(s).length >= 3 && massOk) return { type: 'play_card', cardId: x.c.id };
+  x = find('indians'); if (x && massOk) return { type: 'play_card', cardId: x.c.id };
   x = find('bang') || (me.character === 'calamityjanet' ? find('missed') : null);
   if (x) { const t = pickTarget(x.o.targets); if (t) return { type: 'play_card', cardId: x.c.id, target: t }; }
-  x = find('duel'); if (x && myBangs >= 2) { const t = pickTarget(x.o.targets); if (t) return { type: 'play_card', cardId: x.c.id, target: t }; }
+  x = find('duel');
+  if (x) { // Duel: cần đủ BANG! để thắng; Tội phạm liều hơn khi nhắm vào sếp
+    const t = pickTarget(x.o.targets);
+    if (t && (myBangs >= 2 || (me.role === 'outlaw' && getPlayer(s, t).role === 'sheriff' && myBangs >= 1))) return { type: 'play_card', cardId: x.c.id, target: t };
+  }
   return { type: 'end_turn' };
 }
 

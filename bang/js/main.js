@@ -1,11 +1,13 @@
 // Giao diện + nối với lớp mạng
 import { CARD_INFO, CHARACTERS, ROLES, SUIT_SYMBOL, rankLabel, cardLabel, suitify } from './cards.js';
-import { Host, Client, loadSnapshot, session } from './net.js?v=10';
+import { Host, Client, loadSnapshot, session, BANG_PHRASES } from './net.js?v=11';
+import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=94';
 import { imgTag, avatarTag } from './images.js';
 import { S, SPEEDS, getSpeed, setSpeed, sfx, cardSfx, gunSfx, fly, shake, flash, floatText, banner, toggleMute, isMuted, shoot, arrows, explode, sparkle, confetti, stamp, screenShake } from './fx.js';
 import { THEMES, getTheme, setTheme, onThemeChange } from './themes.js';
-import { openGuide } from './guide.js?v=12';
+import { openGuide } from './guide.js?v=13';
 import { musicSetTheme, musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=9';
 
 const $ = s => document.querySelector(s);
@@ -13,6 +15,41 @@ const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls)
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 let net = null, isHost = false, myId = null, view = null, prevView = null, lobby = [];
+
+// ---------- Màu riêng cho từng người (nhật ký, ghế, tóm tắt lượt) ----------
+const PCOLORS = ['#d9412b', '#2b7fd0', '#2f9a52', '#c27a12', '#8e4fd0', '#cc3f86', '#138f8f', '#6f7f15'];
+function pcolor(pid) { const i = view ? view.players.findIndex(p => p.id === pid) : -1; return PCOLORS[(i < 0 ? 0 : i) % PCOLORS.length]; }
+function pTag(pid) {
+  const p = view && view.players.find(x => x.id === pid); if (!p) return '?';
+  return `<b class="pn" style="--pc:${pcolor(pid)}">${esc(p.name)}${p.role === 'sheriff' ? ' ⭐' : ''}${pid === myId ? ' (bạn)' : ''}</b>`;
+}
+// tô màu tên người chơi (và tên nhân vật của họ) trong 1 dòng nhật ký đã escape
+function colorize(line) {
+  if (!view) return line;
+  const keys = [];
+  for (const p of view.players) { keys.push([esc(p.name), p.id]); const ch = CHARACTERS[p.character]; if (ch) keys.push([esc(ch.name), p.id]); }
+  keys.sort((a, b) => b[0].length - a[0].length);
+  const marks = []; let out = line;
+  for (const [k, id] of keys) {
+    if (!k || !out.includes(k)) continue;
+    out = out.split(k).join('\u0001' + marks.length + '\u0002'); marks.push(`<b class="pn" style="--pc:${pcolor(id)}">${k}</b>`);
+  }
+  return out.replace(/\u0001(\d+)\u0002/g, (_, i) => marks[+i]);
+}
+function lineActor(line) {
+  if (!view) return null; let best = null;
+  for (const p of view.players) for (const k of [p.name, CHARACTERS[p.character]?.name]) if (k && line.startsWith(k) && (!best || k.length > best.k.length)) best = { k, id: p.id };
+  return best && best.id;
+}
+
+// ---------- Chế độ Người mới (mẹo ngay trên bàn) – lưu riêng từng máy ----------
+const NB_KEY = 'bgvn-bang-newbie';
+let newbie = (() => { try { const x = localStorage.getItem(NB_KEY); return x === null ? true : x === '1'; } catch (e) { return true; } })();
+function setNewbie(on) { newbie = !!on; try { localStorage.setItem(NB_KEY, newbie ? '1' : '0'); } catch (e) {} renderNewbieUI(); if (view && $('#screen-game').classList.contains('active')) render(); }
+function renderNewbieUI() {
+  const b1 = $('#btn-newbie'); if (b1) { b1.innerHTML = `🐣 Chế độ Người mới: <b>${newbie ? 'BẬT' : 'tắt'}</b>`; b1.classList.toggle('on', newbie); b1.setAttribute('aria-pressed', newbie); }
+  const b2 = $('#btn-newbie-g'); if (b2) { b2.innerHTML = `🐣<span class="nb-lbl"> Người mới: ${newbie ? 'bật' : 'tắt'}</span>`; b2.style.opacity = newbie ? 1 : .5; b2.setAttribute('aria-pressed', newbie); b2.title = 'Chế độ Người mới: ' + (newbie ? 'bật' : 'tắt'); }
+}
 let selectedCard = null;
 let sidMode = false, sidPick = [];
 
@@ -36,6 +73,7 @@ const handlers = {
   onLobby(players, code, started) { lobby = players; renderLobby(code); if (!started && !view) show('screen-lobby'); },
   onState(v) { if (discardQueue.length) setTimeout(sendNextDiscard, 120); else if (!(v && v.prompt && v.prompt.type === 'discard')) discardSel.clear(); setTimer(v && v.phase === 'playing' ? v.timer : null); prevView = view; view = v; markFresh(prevView, v); if (!v) { prevView = null; show('screen-lobby'); return; } const first = !$('#screen-game').classList.contains('active'); show('screen-game'); render(); musicMood(v); if (first) dealAnimation(); else animateDiff(prevView, view); },
   onError(msg) { toast(msg); },
+  onReact(msg) { reacts.show(msg); },
   onJoined(id) { myId = id; },
   onDisconnect() { toast('Mất kết nối với chủ phòng – đang tự vào lại…'); },
   onStatus(m) { const el = $('#lobby-msg'); if (el) el.textContent = m; },
@@ -62,7 +100,7 @@ setTimeout(resume, 0);
 $('#btn-create').onclick = () => {
   const n = getName(); if (!n) return;
   isHost = true; myId = 'host'; net?.leave?.();
-  net = new Host(n, handlers);
+  net = new Host(n, handlers); if (location.hash === '#debug') window.__net = net;
   $('#lobby-host-actions').classList.remove('hidden'); $('#lobby-msg').textContent = 'Gửi mã phòng cho bạn bè. Cần 4–7 người (có thể thêm bot).';
   show('screen-lobby'); $('#lobby-code').textContent = '…';
 };
@@ -92,6 +130,12 @@ $('#btn-add-bot').onclick = () => net?.addBot();
 $('#btn-start').onclick = () => net?.start();
 $('#btn-leave').onclick = () => { net?.leave ? net.leave() : net?.destroy(); location.href = location.pathname; };
 $('#btn-log-toggle').onclick = () => $('#log').classList.toggle('hidden');
+$('#btn-recap').onclick = $('#btn-recap-log').onclick = () => showRecap();
+$('#btn-newbie').onclick = () => setNewbie(!newbie);
+$('#btn-newbie-g').onclick = e => { e.stopPropagation(); setNewbie(!newbie); };
+renderNewbieUI();
+// 📝 Có gì mới (patch notes dùng chung)
+for (const id of ['#btn-news-home', '#btn-news-g']) { const b = $(id); newsBadge(b, 'bang'); b.onclick = e => { e.stopPropagation(); $('#tb-opts').classList.remove('open'); openNews('bang'); document.querySelectorAll('#btn-news-home,#btn-news-g').forEach(x => x.classList.remove('bgvn-dot')); }; }
 $('#btn-mute').textContent = isMuted() ? '🔇' : '🔊';
 $('#btn-mute').onclick = () => { $('#btn-mute').textContent = toggleMute() ? '🔇' : '🔊'; };
 document.body.appendChild($('#modal')); // nằm trên lớp hiệu ứng
@@ -112,9 +156,9 @@ document.addEventListener('click', e => { if (!e.target.closest('#tb-opts') && !
 // Đẩy khu giữa bàn xuống nếu bị ghế phía trên đè lên
 function fitCenter() {
   const table = $('#table'), c = table && table.querySelector('.center'); if (!c) return;
-  c.style.setProperty('--cpush', '0px'); c.style.maxWidth = '';
+  c.style.setProperty('--cpush', '0px'); c.style.maxWidth = ''; c.classList.remove('narrow');
   // lời nhắc có hàng lá bài để chọn: hiện nổi lên giữa màn hình (như hộp thoại) thay vì nhét vào giữa bàn
-  const big = innerWidth <= 760 && !!c.querySelector('.prompt .pcard');
+  const big = (innerWidth <= 760 || landCompact()) && !!c.querySelector('.prompt .pcard');
   c.classList.toggle('big', big); if (big) return;
   const tr = table.getBoundingClientRect(), cr = c.getBoundingClientRect(); let push = 0;
   for (const s of table.querySelectorAll('.seat')) {
@@ -134,6 +178,8 @@ function fitCenter() {
     if (r.left < r2.right && r.left > mid) half = Math.min(half, r.left - mid - 4);
   }
   if (half < r2.width / 2) c.style.maxWidth = Math.max(120, Math.round(half * 2)) + 'px';
+  // khu giữa bị ép quá hẹp (nhiều ghế, màn nhỏ): ẩn dòng phụ "trong tầm bắn" – số "cách" trên ghế đã cho biết
+  c.classList.toggle('narrow', half * 2 < 200);
 }
 let resizeT; addEventListener('resize', () => { requestAnimationFrame(fitCenter); clearTimeout(resizeT); resizeT = setTimeout(() => { if (view && $('#screen-game').classList.contains('active')) render(); }, 150); });
 function renderSpeedUI() {
@@ -224,6 +270,20 @@ const SEATS_P = { // màn hình dọc (điện thoại)
   5: [[15, 74], [15, 38], [50, 8], [85, 38], [85, 74]],
   6: [[15, 80], [14, 49], [27, 15], [73, 15], [86, 49], [85, 80]],
 };
+// đặt độ cao ghế theo chiều cao bàn HIỆN TẠI (gọi lại sau khi tay bài/nút dưới đổi cỡ làm bàn co giãn)
+function placeSeatTop(seat, table) {
+  const TH = table.clientHeight, portrait = !!seat.dataset.portrait, y = +seat.dataset.y, sh = seat.offsetHeight;
+  let top = seat.dataset.land ? y / 100 * TH : Math.min(Math.max(y / 100 * TH, portrait ? 52 : 78), TH - (portrait ? 48 : 70));
+  if (sh && TH > sh) top = Math.min(Math.max(top, sh / 2 + (seat.dataset.land ? 2 : 6)), TH - sh / 2 - 2);
+  seat.style.top = top + 'px';
+}
+// điện thoại xoay ngang (bàn thấp, rộng): ghế dồn 2 bên, chừa cột giữa cho chồng bài + hộp nhắc
+const SEATS_L = {
+  3: [[10, 62], [27, 30], [73, 30]],
+  4: [[9, 66], [27, 30], [73, 30], [91, 66]],
+  5: [[4, 80], [19, 22], [32, 30], [68, 30], [92, 66]],
+  6: [[4, 80], [19, 22], [32, 30], [68, 30], [81, 22], [96, 80]],
+};
 function seatEl(pid) { return document.querySelector(`.seat[data-pid="${pid}"]`); }
 
 const BULLET = '<svg viewBox="0 0 10 26"><path class="tip" d="M2 10 Q2 2.5 5 1 Q8 2.5 8 10 Z"/><rect class="case" x="2" y="10" width="6" height="12" rx=".6"/><rect class="rim" x="1.4" y="21.5" width="7.2" height="3.2" rx=".8"/><rect class="shine" x="3" y="11" width="1.1" height="10" rx=".5"/></svg>';
@@ -294,6 +354,7 @@ function render() {
   const pr = v.prompt;
   $('#turn-info').innerHTML = v.phase === 'ended' ? 'Ván đã kết thúc' : `<span class="hide-m">Lượt ${v.turnCount} · </span><b>${esc(cur.name)}</b>${cur.id === myId ? ' (bạn)' : ''}`;
 
+  renderCoach(); // trước khi xếp ghế: hộp mẹo đổi chiều cao khu dưới → bàn co lại
   // ---- Ghế quanh bàn ----
   const table = $('#table'); table.querySelectorAll('.seat').forEach(s => s.remove());
   const order = seatOrder(); const n = order.length;
@@ -302,12 +363,12 @@ function render() {
     if (k === 0) return; // mình ở dưới, hiện ở khu tay bài
     // vị trí ghế cố định theo số đối thủ: từ trái-dưới, lên trên, sang phải-dưới (chiều kim đồng hồ)
     const portrait = table.clientWidth < table.clientHeight * 1.15;
-    const L = (portrait ? SEATS_P : SEATS)[Math.max(3, Math.min(6, n - 1))];
+    const land = landCompact();
+    const L = (land ? SEATS_L : portrait ? SEATS_P : SEATS)[Math.max(3, Math.min(6, n - 1))];
     const [x, y] = L[k - 1] || [50, 10];
     const seat = el('div', 'seat' + (p.id === cur.id ? ' current' : '') + (!p.alive ? ' dead' : '') + (p.id === waitingId ? ' waiting' : ''));
-    seat.dataset.pid = p.id;
-    const TH = table.clientHeight, top = Math.min(Math.max(y / 100 * TH, portrait ? 52 : 78), TH - (portrait ? 48 : 70));
-    seat.style.left = x + '%'; seat.style.top = top + 'px';
+    seat.dataset.pid = p.id; seat.style.setProperty('--pc', pcolor(p.id));
+    seat.style.left = x + '%'; seat.dataset.y = y; seat.dataset.portrait = portrait ? 1 : ''; seat.dataset.land = land ? 1 : '';
     const ch = CHARACTERS[p.character];
     const role = p.role ? `<div class="role-chip ${p.role}">${ROLES[p.role].icon} ${ROLES[p.role].name}</div>`
       : `<div class="role-chip hidden-role">❓ Chưa lộ</div>`;
@@ -326,7 +387,7 @@ function render() {
     // giữ ghế nằm gọn trong bàn: không tràn mép màn hình, không chui xuống thanh trên
     const TW = table.clientWidth, sw = seat.offsetWidth, sh = seat.offsetHeight;
     if (sw && TW > sw) seat.style.left = Math.min(Math.max(x / 100 * TW, sw / 2 + 2), TW - sw / 2 - 2) + 'px';
-    if (sh && TH > sh) seat.style.top = Math.min(Math.max(top, sh / 2 + 6), TH - sh / 2 - 2) + 'px';
+    placeSeatTop(seat, table);
   });
   requestAnimationFrame(fitCenter);
 
@@ -343,6 +404,7 @@ function render() {
   mine.classList.toggle('dead', !m.alive);
   $('#me-cards').innerHTML = '';
   const R = m.role ? ROLES[m.role] : null;
+  $('#me-info').style.setProperty('--pc', pcolor(myId));
   $('#me-info').innerHTML = `<div class="me-top"><div class="me-ava"><div class="face">${avatarTag(m.character)}</div></div>
       <div class="me-id"><div class="pname">${esc(m.name)}</div>${hpDots(m)}</div>
       <div class="me-range"><b>${m.gunRange}</b><small>tầm bắn</small></div></div>
@@ -358,7 +420,7 @@ function render() {
   const discarding = pr && pr.player === myId && pr.type === 'discard';
   const cards = m.hand || []; const cnt = cards.length;
   { // xếp thẳng hàng: nhiều lá thì thu nhỏ bớt trước, hết cỡ mới chồng mép
-    const mob = innerWidth <= 760, max = mob ? 82 : 118, min = mob ? 62 : 86, avail = Math.max(200, mob ? innerWidth - 24 : innerWidth - (($('#me-info') || hand).getBoundingClientRect().right || 0) - 60);
+    const mob = innerWidth <= 760, max = mob ? 82 : 118, min = mob ? 62 : 86, mr = $('.me-right'), rightEdge = mr && m.table.length && mr.getBoundingClientRect().width ? mr.getBoundingClientRect().left - 10 : innerWidth, avail = Math.max(200, mob ? innerWidth - 24 : rightEdge - (($('.me-left') || $('#me-info') || hand).getBoundingClientRect().right || 0) - 60);
     const w = Math.max(min, Math.min(max, (avail - (cnt - 1) * 6) / Math.max(1, cnt)));
     const ov = cnt > 1 ? Math.min(3, ((avail - w) / (cnt - 1) - w) / 2) : 3;
     hand.style.setProperty('--hw', w + 'px'); hand.style.setProperty('--overlap', Math.max(-w * 0.3, ov) + 'px');
@@ -385,10 +447,20 @@ function render() {
     hand.appendChild(ce);
   });
   renderActions(); renderLog();
+  { const t = $('#table'); t.querySelectorAll('.seat').forEach(s => placeSeatTop(s, t)); requestAnimationFrame(fitCenter); }
+  reacts.setVisible(v.phase === 'playing' || v.phase === 'ended');
 }
 
+// điện thoại dọc: nút của hộp nhắc (né một chạm, bỏ bài) đưa xuống thanh dưới cho dễ bấm, giữa bàn khỏi bị dài
+let promptActs = [];
+// Nút của hộp nhắc (né một chạm, chịu đòn, bỏ bài) luôn nằm ở thanh nút dưới tay bài – cùng chỗ với "Kết thúc lượt",
+// giữa bàn chỉ còn tiêu đề + 1 dòng nên không đè ghế ở mọi cỡ màn.
+const mobPrompt = () => true;
+const landCompact = () => matchMedia('(max-height: 500px) and (orientation: landscape)').matches;
 function renderActions() {
   const a = $('#actions'); a.innerHTML = '';
+  if (promptActs.length) { a.classList.add('prompt-acts'); for (const b of promptActs) a.appendChild(b); promptActs = []; return; }
+  a.classList.remove('prompt-acts');
   const v = view, m = me(); const pr = v.prompt;
   if (v.phase === 'ended') {
     const names = { law: 'Phe Cảnh sát', outlaw: 'Tội phạm', renegade: 'Kẻ hai mặt' };
@@ -408,21 +480,24 @@ function renderActions() {
 function renderFeed() {
   const f = $('#feed'); if (!f) return;
   const lines = view.log.filter(l => !/^— Lượt|^Ván mới/.test(l)).slice(-3);
-  f.innerHTML = lines.map((l, i) => `<div class="${i === lines.length - 1 ? 'new' : ''}">${suitify(esc(l))}</div>`).join('');
+  f.innerHTML = lines.map((l, i) => `<div class="${i === lines.length - 1 ? 'new' : ''}">${suitify(colorize(esc(l)))}</div>`).join('');
 }
 function renderPrompt() {
-  const v = view, p = $('#prompt'); p.innerHTML = ''; p.className = 'prompt';
+  const v = view, p = $('#prompt'); p.innerHTML = ''; p.className = 'prompt'; promptActs = [];
   const pr = v.prompt;
   if (!pr || v.phase === 'ended') {
     const cur = v.players[v.turn];
     if (v.phase === 'playing') {
       p.classList.add('quiet');
-      if (cur.id !== myId) { p.innerHTML = `⏳ Đang tới lượt <b>${esc(cur.name)}</b>…`; return; }
+      const inl = newbie && landCompact() ? coachTips() : null; // màn ngang thấp: mẹo Người mới gộp vào đây
+      const inlHTML = inl && inl.tip ? `<div class="co-inline">${inl.tip}</div>` : '';
+      if (cur.id !== myId) { p.innerHTML = `⏳ Đang tới lượt <b>${esc(cur.name)}</b>…` + (inl ? `<div class="co-inline">${inl.role}</div>` : ''); return; }
       p.classList.add('hint');
       if (selectedCard && !me().hand.some(x => x.id === selectedCard)) selectedCard = null;
       if (selectedCard) { const c = me().hand.find(x => x.id === selectedCard); p.innerHTML = `👉 Bấm vào người <b>sáng viền đỏ</b> để dùng <b>${CARD_INFO[c.type].name}</b>. Người bị mờ là ở ngoài tầm.`; return; }
       const inRange = v.players.filter(q => q.alive && q.id !== myId && q.distance != null && q.distance <= me().gunRange).map(q => esc(q.name));
-      p.innerHTML = `<b>Lượt của bạn!</b> Bấm các lá <b>sáng màu</b> để đánh, xong bấm <b>Kết thúc lượt</b>.<br><span class="inrange">🎯 Trong tầm bắn (≤ ${me().gunRange}): ${inRange.length ? inRange.join(', ') : 'chưa ai – cần súng tầm xa hơn'}</span>`;
+      const shortHint = (newbie && innerWidth <= 760) || landCompact(); // mẹo Người mới đã nói cách chơi ở dưới: giữa bàn gọn lại
+      p.innerHTML = `<b>Lượt của bạn!</b>${shortHint ? '' : ' Bấm các lá <b>sáng màu</b> để đánh, xong bấm <b>Kết thúc lượt</b>.'}<br><span class="inrange">🎯 Trong tầm bắn (≤ ${me().gunRange}): ${inRange.length ? inRange.join(', ') : 'chưa ai – cần súng tầm xa hơn'}</span>${inlHTML}`;
     }
     return;
   }
@@ -434,10 +509,25 @@ function renderPrompt() {
   if (pr.type === 'respond') {
     p.appendChild(el('div', 'ptitle', kindText[pr.kind]));
     if (mine) {
-      const need = pr.kind === 'bang' || pr.kind === 'gatling' ? `Cần ${pr.need} lá Missed!` : 'Cần 1 lá BANG!';
-      p.appendChild(el('div', 'sub', `${need} – bấm lá viền xanh trên tay, hoặc chịu mất 1 máu.`));
-      const row = el('div', 'row'); const b = el('button', 'btn danger', '💔 Chịu đòn'); b.onclick = () => send({ type: 'take_hit' }); row.appendChild(b); p.appendChild(row);
-    } else p.appendChild(el('div', 'sub', `Đang chờ ${who.name}…`));
+      const dodge = pr.kind === 'bang' || pr.kind === 'gatling';
+      const need = dodge ? `Cần ${pr.need} lá Missed!` : 'Cần 1 lá BANG!';
+      // né một chạm: hiện sẵn nút cho từng lá đáp trả hợp lệ (vẫn bấm được lá viền xanh dưới tay)
+      const ids = v.myResponses || []; const hand = me().hand || [];
+      const cards = ids.map(id => hand.find(c => c.id === id)).filter(Boolean);
+      const pickC = []; for (const c of cards) if (!pickC.some(x => x.type === c.type)) pickC.push(c); // mỗi loại 1 nút trước
+      const mob = mobPrompt();
+      // mỗi loại lá 1 nút (bỏ lá nào cùng loại cũng như nhau) → hộp nhắc gọn 1 hàng, không đè ghế phía trên
+      p.appendChild(el('div', 'sub', cards.length ? (innerWidth <= 760 || landCompact() ? `${need} 👇` : `${need} – bấm nút xanh ở dưới.`) : `${need} – bạn không có lá nào để ${dodge ? 'né' : 'đáp trả'}, đành chịu đòn.`));
+      const row = el('div', 'row resp-row');
+      const lock = () => row.querySelectorAll('button').forEach(x => x.disabled = true);
+      const tight = mob && pickC.length > 1 && innerWidth < 430; // điện thoại hẹp + 2 loại lá: bỏ chữ "Dùng" cho vừa 1 hàng
+      for (const c of pickC.slice(0, 2)) {
+        const b = el('button', 'btn primary resp-btn', `${c.type === 'missed' ? '🛡️' : '💥'} ${tight ? '' : 'Dùng '}${suitify(esc(cardLabel(c)))}`);
+        b.onclick = () => { lock(); send({ type: 'respond_card', cardId: c.id }); }; row.appendChild(b);
+      }
+      const b = el('button', 'btn danger', mob && pickC.length > 1 ? '💔 Chịu' : '💔 Chịu đòn'); b.onclick = () => { lock(); send({ type: 'take_hit' }); }; row.appendChild(b);
+      if (mob) promptActs = [...row.children]; else p.appendChild(row);
+    } else p.appendChild(el('div', 'sub', `Đang chờ ${esc(who.name)}…`));
     return;
   }
   if (pr.type === 'discard') {
@@ -445,12 +535,12 @@ function renderPrompt() {
     const need = me().handCount - me().hp;
     for (const id of [...discardSel]) if (!me().hand.some(c => c.id === id)) discardSel.delete(id);
     p.appendChild(el('div', 'ptitle', `🗑️ Bỏ bớt ${need} lá`));
-    p.appendChild(el('div', 'sub', `Cuối lượt chỉ được giữ số lá bằng số máu (${me().hp}). Bấm chọn ${need} lá ở tay bên dưới (lá chọn sẽ có dấu ✕), rồi bấm nút.`));
+    p.appendChild(el('div', 'sub', mobPrompt() ? `Chỉ giữ được ${me().hp} lá (= số máu). Chọn ${need} lá ở tay rồi bấm nút dưới.` : `Cuối lượt chỉ được giữ số lá bằng số máu (${me().hp}). Bấm chọn ${need} lá ở tay bên dưới (lá chọn sẽ có dấu ✕), rồi bấm nút.`));
     const btns = el('div', 'row');
     const ok = el('button', 'btn primary', discardSel.size === need ? `🗑️ Bỏ ${need} lá đã chọn` : `Đã chọn ${discardSel.size}/${need}`);
     ok.disabled = discardSel.size !== need || discardQueue.length > 0;
     ok.onclick = () => { discardQueue = [...discardSel]; discardSel.clear(); sendNextDiscard(); };
-    btns.appendChild(ok); p.appendChild(btns);
+    btns.appendChild(ok); if (mobPrompt()) promptActs = [ok]; else p.appendChild(btns);
     return;
   }
   if (pr.type === 'store') {
@@ -470,6 +560,7 @@ function renderPrompt() {
       p.appendChild(el('div', 'ptitle', pr.character === 'jessejones' ? 'Jesse Jones: rút từ bộ bài, hoặc bấm 1 người để lấy 1 lá tay họ' : 'Pedro Ramirez: rút từ bộ bài, hoặc lấy lá trên cùng chồng bỏ'));
       const b1 = el('button', 'btn primary', 'Rút 2 từ bộ bài'); b1.onclick = () => send({ type: 'draw_from_deck' }); row.appendChild(b1);
       if (pr.character === 'pedroramirez' && v.discardTop) { const b2 = el('button', 'btn', `Lấy ${suitify(cardLabel(v.discardTop))}`); b2.onclick = () => send({ type: 'draw_from_discard' }); row.appendChild(b2); }
+      promptActs = [...row.children]; return; // nút ở thanh dưới, giống né một chạm
     }
     p.appendChild(row);
   }
@@ -481,8 +572,14 @@ function clickCard(c, o) {
   selectedCard = selectedCard === c.id ? null : c.id;
   render();
 }
-function chooseTarget(p) {
+function chooseTarget(p, sure) {
   const o = view.myOptions[selectedCard];
+  const mr = me().role, ct = me().hand.find(x => x.id === selectedCard)?.type;
+  if (newbie && !sure && p.role === 'sheriff' && (mr === 'deputy' || mr === 'renegade') && ['bang', 'missed', 'duel', 'jail', 'panic', 'catbalou'].includes(ct)) {
+    openModal(`<h3>🐣 Khoan đã!</h3><p>${mr === 'deputy' ? 'Bạn là <b>Phó cảnh sát</b> – bắn sếp ⭐ là đang giúp Tội phạm đó!' : 'Bạn là <b>Kẻ hai mặt</b> – sếp ⭐ chết sớm thì Tội phạm thắng, bạn cũng thua.'}</p><p class="muted">Vẫn muốn dùng <b>${CARD_INFO[ct].name}</b> lên ${esc(p.name)}?</p><div class="row" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn ghost" id="nb-no">Thôi, chọn người khác</button><button class="btn danger" id="nb-yes">Vẫn đánh</button></div>`);
+    $('#nb-no').onclick = closeModal; $('#nb-yes').onclick = () => { closeModal(); chooseTarget(p, true); };
+    return;
+  }
   if (!o.pickCard) { send({ type: 'play_card', cardId: selectedCard, target: p.id }); return; }
   const cardType = me().hand.find(x => x.id === selectedCard).type;
   openModal(`<h3>${CARD_INFO[cardType].name} → ${esc(p.name)}</h3><p class="muted">Lấy lá nào?</p><div class="cards" id="pick-row"></div><button class="btn ghost" id="pick-cancel">Huỷ</button>`);
@@ -518,7 +615,11 @@ function closeModal() { $('#modal').classList.add('hidden'); }
 let lastLogLen = 0;
 function renderLog() {
   const l = $('#log-list'); l.innerHTML = '';
-  for (const line of view.log) l.appendChild(el('div', '', suitify(esc(line))));
+  for (const line of view.log) {
+    const d = el('div', /^— Lượt/.test(line) ? 'turnline' : '', suitify(colorize(esc(line))));
+    const a = lineActor(line.replace(/^— Lượt của /, '')); if (a) d.style.setProperty('--pc', pcolor(a)), d.classList.add('who');
+    l.appendChild(d);
+  }
   l.scrollTop = l.scrollHeight;
   lastLogLen = view.log.length;
 }
@@ -690,3 +791,143 @@ function musicMood(v) {
   if (alive.length <= 2 || (meP && meP.alive && meP.hp <= 1) || (pr && pr.kind === 'duel') || (sheriff && sheriff.alive && sheriff.hp <= 1)) lv = 2;
   musicIntensity(lv);
 }
+
+// ---------- ⏪ Lượt vừa rồi: tóm tắt ai đánh gì lên ai ----------
+const HOSTILE_CARDS = ['bang', 'duel', 'panic', 'catbalou', 'jail'];
+function cardNm(t) { return CARD_INFO[t] ? CARD_INFO[t].name : t; }
+function actText(a) {
+  const B = pTag(a.by), T = pTag(a.to);
+  switch (a.card) {
+    case 'bang': return `💥 ${B} bắn ${T} → ${a.res === 'missed' ? '<i class="ok">né được</i>' : a.res === 'barrel' ? '<i class="ok">Barrel đỡ</i>' : a.res === 'hit' ? '<i class="bad">trúng 💔</i>' : '<i>đang chờ…</i>'}`;
+    case 'duel': return `⚔️ ${B} thách ${T} Duel → ${a.lost ? pTag(a.lost) + ' <i class="bad">thua</i>' : '<i>đang đấu…</i>'}`;
+    case 'panic': return `😱 ${B} Panic! lấy ${a.got ? '<b>' + cardNm(a.got) + '</b>' : '1 lá trên tay'} của ${T}`;
+    case 'catbalou': return `🐈 ${B} Cat Balou: ${T} bỏ <b>${a.got ? cardNm(a.got) : '1 lá'}</b>`;
+    case 'jail': return a.by ? `⛓️ ${B} nhốt ${T} vào Jail` : a.res === 'stuck' ? `⛓️ ${T} bị giam, <i class="bad">mất lượt</i>` : `🔓 ${T} thoát Jail`;
+    case 'gatling': case 'indians': return `${a.card === 'gatling' ? '🔫' : '🏹'} ${B} ${a.card === 'gatling' ? 'quét Gatling' : 'gọi Indians!'} → ${a.hit && a.hit.length ? 'trúng: ' + a.hit.map(pTag).join(', ') : '<i class="ok">không ai trúng</i>'}`;
+    case 'beer': return `🍺 ${B} uống Beer`;
+    case 'saloon': return `🥃 ${B} mở Saloon – ai cũng hồi 1 máu`;
+    case 'stagecoach': case 'wellsfargo': return `🛺 ${B} rút thêm bài (${cardNm(a.card)})`;
+    case 'store': return `🏪 ${B} mở General Store`;
+    case 'sid': return `💊 ${B} bỏ 2 lá hồi 1 máu`;
+    case 'dynamite': return a.res === 'boom' ? `🧨 Dynamite nổ: ${T} <i class="bad">mất 3 máu</i>` : `🧨 ${B} đặt Dynamite`;
+    case 'kill': return `☠️ ${T} bị loại${a.role ? ' – là <b>' + ROLES[a.role].name + '</b>' : ''}${a.by ? ' (bởi ' + B + ')' : ''}`;
+    default: return CARD_INFO[a.card] ? `🧰 ${B} trang bị <b>${cardNm(a.card)}</b>` : '';
+  }
+}
+function turnGroups(v) {
+  const groups = [];
+  for (const a of v.acts || []) {
+    let g = groups.length && groups[groups.length - 1].n === a.n ? groups[groups.length - 1] : null;
+    if (!g) { g = { n: a.n, by: a.card === 'turn' ? a.by : a.t, items: [] }; groups.push(g); }
+    if (a.card !== 'turn') g.items.push(a);
+  }
+  return groups;
+}
+function recapHTML() {
+  const v = view; const groups = turnGroups(v);
+  const alive = v.players.filter(p => p.alive).length;
+  const cur = v.phase === 'playing' ? v.turnCount : Infinity;
+  const show = groups.filter(g => g.n <= cur).slice(-(alive + 1)).reverse();
+  const lastDone = show.find(g => g.n < cur);
+  let h = `<div class="recap"><h3>⏪ Lượt vừa rồi</h3>`;
+  if (!show.length) h += '<p class="muted">Chưa có gì xảy ra.</p>';
+  for (const g of show) {
+    const lbl = g.n === cur ? 'Lượt này' : g === lastDone ? 'Lượt vừa rồi' : 'Trước đó';
+    const items = g.items.map(actText).filter(Boolean);
+    h += `<div class="rc-turn${g === lastDone ? ' last' : ''}"><div class="rc-h"><span class="rc-lbl">${lbl}</span> ${pTag(g.by)}</div>${items.length ? '<ul>' + items.map(x => `<li>${x}</li>`).join('') + '</ul>' : `<p class="muted rc-none">${g.n === cur ? 'Chưa đánh lá nào.' : 'Không đánh lá nào.'}</p>`}</div>`;
+  }
+  // ai tấn công ai trong cả ván (công khai) – để đoán vai
+  const tally = {};
+  for (const a of v.acts || []) if (a.by && a.to && a.by !== a.to && HOSTILE_CARDS.includes(a.card)) { const k = a.by; (tally[k] = tally[k] || {})[a.to] = (tally[k][a.to] || 0) + 1; }
+  const rows = Object.entries(tally);
+  if (rows.length) {
+    h += `<h4>🎯 Ai tấn công ai (cả ván)</h4><div class="rc-tally">` + rows.map(([by, m]) => `<div>${pTag(by)} → ${Object.entries(m).sort((a, b) => b[1] - a[1]).map(([to, k]) => `${pTag(to)}${k > 1 ? ' ×' + k : ''}`).join(' ')}</div>`).join('') + '</div>';
+    h += `<p class="rc-hint">💡 Hay tấn công sếp ⭐ → dễ là <b>Tội phạm</b>. Hay bắn kẻ bắn sếp → dễ là <b>phe Cảnh sát</b>. (Tính BANG!, Duel, Jail, Panic!, Cat Balou)</p>`;
+  }
+  return h + `<button class="btn" id="rc-close">Đóng</button></div>`;
+}
+function showRecap() { if (!view) return; openModal(recapHTML()); $('#rc-close').onclick = closeModal; }
+
+// ---------- 🐣 Mẹo cho Người mới ----------
+function coachTips() {
+  const v = view, m = me(); if (!m || !m.alive || v.phase !== 'playing' || !m.role) return null;
+  const sh = v.players.find(p => p.role === 'sheriff');
+  const shName = sh ? (sh.id === myId ? 'bạn' : esc(sh.name)) : '';
+  const role = { sheriff: '⭐ <b>Sếp:</b> bắn kẻ tấn công bạn, coi chừng nhầm Phó.',
+    deputy: `🎖️ <b>Phó:</b> đừng bắn sếp ⭐ ${shName}, bắn kẻ bắn sếp.`,
+    outlaw: `🤠 <b>Tội phạm:</b> dồn sức bắn sếp ⭐ ${shName}.`,
+    renegade: '🎭 <b>Hai mặt:</b> diệt Tội phạm trước, giữ sếp ⭐ tới cuối.' }[m.role];
+  const pr = v.prompt, hand = m.hand || [], has = t => hand.some(c => c.type === t);
+  const since = v.turnCount - v.players.filter(p => p.alive).length;
+  const attackersOf = to => [...new Set((v.acts || []).filter(a => a.to === to && a.by && a.by !== to && HOSTILE_CARDS.includes(a.card) && a.n > since).map(a => a.by))]
+    .filter(id => id !== myId && v.players.find(p => p.id === id)?.alive);
+  const myTurn = v.players[v.turn].id === myId && !pr && v.step === 'play';
+  // lá BANG! đánh được lúc này (Calamity Janet: cả Missed!)
+  const bc = v.myOptions ? hand.find(c => (c.type === 'bang' || c.type === 'missed') && v.myOptions[c.id]?.ok && v.myOptions[c.id].targetMode === 'player') : null;
+  const bangOpt = bc ? v.myOptions[bc.id] : null;
+  const inRange = id => !!bangOpt && bangOpt.targets.includes(id);
+  let tip = '';
+  if (pr && pr.player === myId) {
+    const ok = (v.myResponses || []).length;
+    if (pr.type === 'respond') {
+      if (pr.kind === 'bang' || pr.kind === 'gatling') tip = ok ? '💡 Bấm nút xanh 🛡️ ở dưới để né – khỏi mất máu.' : '💡 Không có Missed! – đành chịu. Nên giữ 1 lá Missed! hoặc có Barrel.';
+      else if (pr.kind === 'indians') tip = ok ? '💡 Bỏ 1 lá <b>BANG!</b> để khỏi mất máu (Missed! không chặn được).' : '💡 Indians chỉ chặn bằng BANG! – không có thì chịu.';
+      else tip = ok ? '💡 Duel: hai bên lần lượt bỏ BANG!, ai hết trước thì mất máu.' : '💡 Hết BANG! nên thua Duel, mất 1 máu.';
+    } else if (pr.type === 'discard') tip = '💡 Bỏ lá ít dùng (súng tầm ngắn, lá trùng); nên giữ <b>Missed!</b> và <b>Beer</b>.';
+    else if (pr.type === 'store') tip = '💡 Nên lấy Beer, Missed! hoặc súng tầm xa.';
+    else if (pr.type === 'draw_option') tip = '💡 Không chắc thì cứ rút từ bộ bài.';
+  } else if (myTurn) {
+    const blue = ['barrel', 'mustang', 'scope'].find(t => has(t) && !m.table.some(c => c.type === t));
+    const gun = hand.filter(c => CARD_INFO[c.type].kind === 'gun' && CARD_INFO[c.type].range > m.gunRange).sort((a, b) => CARD_INFO[b.type].range - CARD_INFO[a.type].range)[0];
+    const shAtk = sh && sh.id !== myId ? attackersOf(sh.id) : [], meAtk = attackersOf(myId);
+    if (m.hp <= 2 && m.hp < m.maxHp && has('beer')) tip = '🍺 Máu thấp – uống <b>Beer</b> ngay!';
+    else if (has('wellsfargo') || has('stagecoach')) tip = `💡 Đánh <b>${has('wellsfargo') ? 'Wells Fargo' : 'Stagecoach'}</b> trước để rút thêm bài.`;
+    else if (blue) tip = `🛡️ Trang bị <b>${cardNm(blue)}</b> – đặt trước mặt, có tác dụng mãi.`;
+    else if (gun) tip = `🔫 Trang bị <b>${cardNm(gun.type)}</b> để bắn xa ${CARD_INFO[gun.type].range}.`;
+    else if (m.role === 'outlaw' && sh && bangOpt) tip = inRange(sh.id) ? `🎯 Sếp ⭐ ${shName} đang trong tầm – <b>BANG!</b> ngay!` : `🔭 Sếp ⭐ ngoài tầm (cách ${sh.distance}) – cần súng xa hơn.`;
+    else if ((m.role === 'deputy' || m.role === 'renegade') && shAtk.length && bangOpt) { const t = shAtk.find(inRange) || shAtk[0]; tip = `🎯 ${pTag(t)} vừa tấn công sếp – nghi là <b>Tội phạm</b>${inRange(t) ? ', bắn trả!' : ' (đang ngoài tầm).'}`; }
+    else if (m.role === 'sheriff' && meAtk.length && bangOpt) { const t = meAtk.find(inRange) || meAtk[0]; tip = `🎯 ${pTag(t)} vừa tấn công bạn – có thể là <b>Tội phạm</b>.`; }
+    else if (m.hp <= 2) tip = '❤️ Máu thấp: giữ Missed! để né, đừng bỏ Beer.';
+    else if (hand.length > m.hp) tip = `🗑️ Cuối lượt chỉ được giữ ${m.hp} lá – đánh bớt bài trước khi kết thúc.`;
+    else tip = '💡 Bấm lá <b>sáng màu</b> để đánh, xong bấm <b>Kết thúc lượt</b>.';
+  } else {
+    if (m.hp <= 1 && has('beer')) tip = '🍺 Còn 1 máu: Beer trên tay sẽ tự cứu bạn.';
+    else tip = '👀 Để ý ai bắn ai – bấm <b>⏪</b> xem lượt vừa rồi để đoán vai.';
+  }
+  return { role, tip };
+}
+function renderCoach() {
+  const c = $('#coach'); if (!c) return;
+  // máy tính: đặt trên khung thông tin của mình (cột trái còn trống) để bàn chơi không bị thấp đi; điện thoại: trên tay bài
+  const home = innerWidth > 760 ? $('.me-left') : $('.me-mid');
+  if (c.parentElement !== home) home.insertBefore(c, home.firstChild);
+  const t = newbie && view && !landCompact() ? coachTips() : null;
+  c.classList.toggle('hidden', !t);
+  if (!t) { c.innerHTML = ''; return; }
+  c.innerHTML = `<span class="co-role">${t.role}</span>${t.tip ? `<span class="co-tip">${t.tip}</span>` : ''}`;
+}
+
+// ---------- 😂 Thả emoji / chọc nhau (shared/ui/react.js) ----------
+const reacts = createReactions({
+  send: e => { if (!net) return; if (isHost) net.react('host', e); else net.react(e); },
+  seatEl: id => id === myId ? $('#me-info') : $(`.seat[data-pid="${id}"] .plate`),
+  myId: () => myId,
+  nameOf: id => { const p = view && view.players.find(x => x.id === id); return p ? p.name.replace(' 🤖', '') : ''; },
+  mount: $('#table'), place: 'left:22%;bottom:8px', // điện thoại dọc: CSS đưa xuống góc phải dưới
+  phrases: BANG_PHRASES,
+  onShow: () => sfx.card(),
+});
+reacts.setVisible(false);
+// điện thoại dọc: nút 😂 nằm cố định góc phải dưới màn hình (gắn vào body để không bị khu tay bài che); máy tính: mép dưới bàn
+// Chỗ đặt nút 😂 (không đè lên gì): điện thoại dọc → trong khung thông tin của mình (giữa tên và ô tầm bắn);
+// màn vừa / điện thoại ngang → nằm trên thanh trên; máy tính → mép dưới bàn, giữa các ghế.
+function placeReactBtn() {
+  const rb = document.querySelector('.bgr-btn'); if (!rb) return;
+  const disp = rb.style.display, w = innerWidth, land = landCompact();
+  const mode = w <= 760 && !land ? 'me' : w <= 1100 || land ? 'bar' : 'table';
+  if (mode === 'me') { const ml = $('.me-left'); if (rb.parentElement !== ml) ml.appendChild(rb); rb.style.cssText = 'position:absolute;right:64px;top:7px;width:40px;height:40px;font-size:21px;z-index:3'; }
+  else if (mode === 'bar') { if (rb.parentElement !== $('.topbar')) $('.topbar').insertBefore(rb, $('#btn-guide')); rb.style.cssText = 'position:static;width:36px;height:36px;font-size:19px;flex:0 0 auto'; }
+  else { if (rb.parentElement !== $('#table')) $('#table').appendChild(rb); rb.style.cssText = 'position:absolute;left:22%;bottom:8px'; }
+  rb.style.display = disp;
+}
+placeReactBtn(); addEventListener('resize', placeReactBtn);

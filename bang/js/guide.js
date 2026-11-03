@@ -103,7 +103,8 @@ export function guideHTML() {
 <li><b>Phó cảnh sát:</b> giấu vai trò, bảo vệ sếp bằng cách bắn người tấn công sếp.</li>
 <li><b>Tội phạm:</b> dồn hoả lực vào Cảnh sát trưởng, phối hợp với nhau nhưng đừng lộ quá sớm.</li>
 <li><b>Kẻ hai mặt:</b> khó nhất game. Giả làm Phó, giúp sếp diệt Tội phạm, cuối ván mới lật mặt.</li>
-<li>Luôn giữ 1 lá Missed! hoặc Beer trên tay. Để ý ai bắn ai để đoán vai trò.</li></ul></section>
+<li>Luôn giữ 1 lá Missed! hoặc Beer trên tay. Để ý ai bắn ai để đoán vai trò – bấm <b>⏪ Lượt vừa rồi</b> để xem lại.</li>
+<li><b>🐣 Chế độ Người mới</b> (bật ở phòng chờ hoặc nút ⚙️ → 🐣): hiện mẹo theo vai trò và theo tình huống ngay trên bàn, ví dụ "Phó: đừng bắn sếp ⭐", "Máu thấp – uống Beer". Lần đầu chơi chế độ này tự bật; tắt đi thì máy nhớ luôn. Đang bật mà Phó/Kẻ hai mặt định bắn sếp thì game hỏi lại cho chắc.</li></ul></section>
 
 <section id="g-web"><h3>13. Chơi trên web này</h3><ul>
 <li><b>Tạo phòng</b> rồi gửi mã 5 ký tự hoặc link cho bạn bè. Thiếu người thì bấm <b>+ Thêm bot</b>.</li>
@@ -113,7 +114,12 @@ export function guideHTML() {
 <li><b>Đồng hồ:</b> mỗi lượt có 60 giây, mỗi lần phải đáp trả (né, bỏ bài…) có 20 giây. Hết giờ thì máy tự đánh thay để ván không bị treo.</li>
 <li>Vai trò, mục tiêu và kỹ năng của bạn luôn hiện ở góc dưới bên trái. Ô vàng lớn là <b>tầm bắn</b> của bạn.</li>
 <li>Thấy hiệu ứng nhanh quá? Chỉnh <b>Tốc độ hiệu ứng</b> (Chậm / Vừa / Nhanh) ở trang chủ hoặc thanh trên.</li>
-<li>Bị bắn: bấm lá viền xanh để né, hoặc <b>Chịu đòn</b>.</li></ul>
+<li><b>Né một chạm:</b> bị BANG!, Gatling, Indians hay Duel thì thanh nút dưới tay bài hiện sẵn nút xanh như "🛡️ Dùng Missed! ♠7" / "💥 Dùng BANG! ♥Q" – bấm một phát là xong. Vẫn có thể bấm lá viền xanh dưới tay, hoặc <b>Chịu đòn</b>.</li>
+<li><b>Màu người chơi:</b> mỗi người có 1 màu riêng (chấm màu cạnh tên). Nhật ký và dòng tin giữa bàn tô tên theo màu đó cho dễ theo dõi.</li>
+<li><b>⏪ Lượt vừa rồi</b> (thanh trên hoặc trong Nhật ký): tóm tắt mấy lượt gần nhất – ai bắn ai, né hay trúng, ai Panic! ai, ai nhốt ai… – kèm bảng <b>"Ai tấn công ai"</b> cả ván để đoán vai trò.</li>
+<li><b>😂 Thả emoji / chọc nhau:</b> bấm nút 😂 (điện thoại: trong khung tên của bạn; máy tính: mép dưới bàn) để thả emoji hoặc câu chọc kiểu Viễn Tây như "Né đi cưng!", "Bang bang 🔫", "Uống Beer đi". Cả bàn đều thấy; bot thỉnh thoảng chọc lại.</li>
+<li><b>📝 Có gì mới:</b> xem các bản cập nhật của game (ở trang chủ game hoặc nút ⚙️).</li>
+<li><b>Bot</b> chơi theo vai: Phó không bao giờ bắn sếp và ưu tiên bắn kẻ vừa bắn sếp; Cảnh sát trưởng nghi kẻ vừa tấn công mình; Tội phạm dồn sức vào sếp; Kẻ hai mặt giữ sếp sống tới khi hết Tội phạm. Bot chỉ dùng thông tin công khai (ai đã đánh ai), không nhìn trộm vai trò.</li></ul>
 <p class="g-note">Luật theo sách luật chính thức BANG! của Emiliano Sciarra (dV Giochi). Tranh minh hoạ: Remington, Russell, Harnett, Peto và các họa sĩ khác (public domain).</p></section>
 </div>`;
 }

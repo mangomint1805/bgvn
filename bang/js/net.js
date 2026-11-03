@@ -1,9 +1,13 @@
 // Lớp mạng BANG!: host giữ state + chạy engine, client chỉ gửi action. Kết nối dùng chung ở shared/net/room.js
-import { createGame, applyAction, viewFor, topPrompt, current, alivePlayers, responseCards, getPlayer } from './engine.js';
+import { createGame, applyAction, viewFor, topPrompt, current, alivePlayers, responseCards, getPlayer } from './engine.js?v=2';
 export const TURN_TIME = 60, PROMPT_TIME = 20; // giây: hết giờ thì máy tự đánh thay (chống treo máy)
-import { botAction } from './bot.js';
+import { botAction } from './bot.js?v=2';
 import { S } from './fx.js';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
+import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
+// Câu chọc riêng của BANG! (bảng thả emoji – shared/ui/react.js), mỗi câu ≤ 24 ký tự
+export const BANG_PHRASES = ['Né đi cưng!', 'Bang bang 🔫', 'Uống Beer đi', 'Trật rồi nha!', 'Sếp ơi cứu!', 'Tui là Phó mà 😭', 'Gà quá!'];
+const BOT_POOLS = { attack: ['Bang bang 🔫', 'Né đi cưng!', 'Trật rồi nha!'], hurt: ['Sếp ơi cứu!', 'Uống Beer đi'], win: ['Gà quá!', 'Bang bang 🔫'], reply: ['Né đi cưng!', 'Tui là Phó mà 😭'] };
 const NS = 'bgvn-bang', PREFIX = 'bangvn-', GAME = 'bang';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
@@ -19,6 +23,7 @@ export class Host {
     this.state = null;
     this.conns = new Map(); // peerId -> conn
     this.botTimer = null;
+    this.lim = hostLimiter(); this.botReactAt = 0;
     if (restore) { // tải lại trang: dựng lại phòng cũ, mọi người tự vào lại
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));
       this.state = restore.state; this.code = restore.code;
@@ -56,6 +61,8 @@ export class Host {
     } else if (msg.t === 'action') {
       const p = this.conns.get(conn.peer); if (!p) return;
       this.act(p.id, msg.a);
+    } else if (msg.t === 'react') {
+      const p = this.conns.get(conn.peer); if (p) this.react(p.id, msg.e);
     } else if (msg.t === 'ping') conn.send({ t: 'pong' });
   }
   onLeave(conn) {
@@ -93,7 +100,9 @@ export class Host {
   restart() { this.state = null; this.pushLobby(); for (const p of this.players) if (p.conn) p.conn.send({ t: 'state', view: null }); this.h.onState(null); }
   act(pid, a) {
     if (!this.state) return;
+    const before = this.state.actSeq || 0;
     const r = applyAction(this.state, pid, a);
+    if (r.ok) this.botReacts(before);
     if (!r.ok) { const p = this.players.find(x => x.id === pid); if (p && p.conn) p.conn.send({ t: 'error', msg: r.reason }); else if (pid === 'host') this.h.onError(r.reason); }
     this.scheduleBots(); this.broadcast();
   }
@@ -130,6 +139,36 @@ export class Host {
       return null;
     }, ms);
   }
+  // ---- thả emoji / chọc nhau: chủ phòng lọc rồi phát lại cho cả bàn ----
+  react(from, e) {
+    if (this.dead || !isReact(e, BANG_PHRASES) || !this.players.some(p => p.id === from) || !this.lim(from)) return false;
+    const msg = { t: 'react', e, from };
+    for (const p of this.players) if (p.conn) try { p.conn.send(msg); } catch (x) {}
+    this.h.onReact && this.h.onReact(msg);
+    const sender = this.players.find(p => p.id === from);
+    if (sender && !sender.isBot && Math.random() < 0.3) this.botSay(null, 'reply', 900 + Math.random() * 900);
+    return true;
+  }
+  botSay(pid, mood, delay = 1000) {
+    const now = Date.now(); if (now < this.botReactAt) return;
+    const alive = id => { const q = this.state && this.state.players.find(x => x.id === id); return q && (q.alive || mood === 'win'); };
+    const bots = this.players.filter(p => p.isBot && (!pid || p.id === pid) && alive(p.id));
+    if (!bots.length) return;
+    this.botReactAt = now + 6000;
+    const b = bots[Math.floor(Math.random() * bots.length)];
+    setTimeout(() => { if (!this.dead && this.state) this.react(b.id, pickReact(mood, BOT_POOLS)); }, delay);
+  }
+  // bot thỉnh thoảng chọc khi bắn trúng / bị trúng / thắng (đọc nhật ký có cấu trúc s.acts)
+  botReacts(before) {
+    const s = this.state; if (!s) return;
+    const isBot = id => (this.players.find(p => p.id === id) || {}).isBot;
+    if (s.phase === 'ended') { const w = s.players.find(p => p.alive && isBot(p.id) && (s.winner === 'law' ? ['sheriff', 'deputy'].includes(p.role) : p.role === s.winner)); if (w && Math.random() < 0.6) this.botSay(w.id, 'win', 1800); return; }
+    for (const e of (s.acts || []).filter(x => x.id > before && x.to && x.by)) {
+      if (e.res === 'hit' && isBot(e.to) && Math.random() < 0.3) this.botSay(e.to, 'hurt', 1300 + Math.random() * 700);
+      else if (e.res === 'hit' && isBot(e.by) && Math.random() < 0.2) this.botSay(e.by, 'attack', 900 + Math.random() * 600);
+      else if (e.res === 'missed' && isBot(e.to) && Math.random() < 0.3) this.botSay(e.to, 'reply', 900);
+    }
+  }
   destroy() { this.dead = true; clearTimeout(this.botTimer); clearTimeout(this.snapT); this.room && this.room.destroy(); }
   // rời phòng hẳn (không tự khôi phục khi tải lại)
   leave() { this.destroy(); try { localStorage.removeItem(SNAP); } catch (e) {} session.clear(GAME); }
@@ -149,11 +188,13 @@ export class Client {
         if (msg.t === 'lobby') this.h.onLobby(msg.players, msg.code, msg.started);
         else if (msg.t === 'state') this.h.onState(msg.view);
         else if (msg.t === 'error') this.h.onError(msg.msg);
+        else if (msg.t === 'react') this.h.onReact && this.h.onReact(msg);
         else if (msg.t === 'kicked') { this.h.onError('Bạn đã bị mời ra khỏi phòng.'); this.leave(); }
       },
     });
   }
   act(a) { this.room.send({ t: 'action', a }); }
+  react(e) { this.room.send({ t: 'react', e }); }
   destroy() { this.room.destroy(); }
   leave() { this.destroy(); session.clear(GAME); }
 }

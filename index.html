@@ -55,6 +55,26 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:36px}
 .play{padding:6px 16px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 footer a{color:inherit}
+/* 📝 Có gì mới + lọc theo số người */
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 14px;margin:-18px 0 26px}
+.news{position:relative;border:0;cursor:pointer;font:800 16px "Baloo 2",Nunito,sans-serif;color:#fff;background:linear-gradient(90deg,#ff4d5e,#ff9a3d);border-radius:999px;padding:8px 18px;min-height:44px;box-shadow:0 8px 18px -8px #ff4d5ecc}
+.news:hover{filter:brightness(1.06)}
+.bgvn-dot{position:relative}
+.news.bgvn-dot::after{content:"MỚI";position:absolute;top:-8px;right:-6px;background:#2a2340;color:#fff;font:800 10px/1 Nunito,sans-serif;padding:3px 6px;border-radius:999px;box-shadow:0 0 0 2px #fff;width:auto;height:auto}
+.filter{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;background:#fff9;border:1.5px solid #ecdfd0;border-radius:999px;padding:4px}
+.filter button{border:0;background:transparent;font:800 14px Nunito,sans-serif;color:var(--ink);border-radius:999px;padding:6px 14px;min-height:40px;cursor:pointer}
+.filter button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.tile.off{display:none}
+.empty-filter{display:none;text-align:center;color:var(--muted);grid-column:1/-1}
+/* nhãn MỚI trên ô game (góc trên trái) + nút Vào lại ván */
+.newtag{display:none;position:absolute;left:18px;top:18px;z-index:3;background:#ff4d5e;color:#fff;font:800 12px/1 Nunito,sans-serif;padding:6px 10px;border-radius:999px;box-shadow:0 0 0 2px #fff,0 6px 14px #0003;letter-spacing:.5px}
+.newtag.bgvn-dot{display:inline-block}
+.newtag.bgvn-dot::after{display:none}
+.play.resume{background:#2fc76f;color:#fff;box-shadow:0 0 0 3px #fff,0 8px 18px #0004;animation:rz 1.6s ease-in-out infinite}
+.play.resume small{display:block;font:700 11px/1.1 Nunito,sans-serif;opacity:.95;text-align:center}
+@keyframes rz{50%{transform:scale(1.05)}}
+@media (max-width:420px){.bar{margin-top:-24px}.filter button{padding:6px 10px;font-size:13px}.news{font-size:15px}}
+@media (prefers-reduced-motion:reduce){.play.resume{animation:none}}
 </style>
 </head>
 <body>
@@ -62,14 +82,22 @@ footer a{color:inherit}
 <main>
   <h1>🎲 <span>BGVN</span></h1>
   <p class="sub">Board game tiếng Việt – mở link là chơi cùng hội bạn, không cần cài đặt</p>
+  <div class="bar">
+    <button class="news" id="btn-news" type="button">📝 Có gì mới</button>
+    <div class="filter" role="group" aria-label="Lọc theo số người chơi">
+      <button type="button" data-f="all" aria-pressed="true">Tất cả</button><button type="button" data-f="2" aria-pressed="false">2 người</button><button type="button" data-f="4-7" aria-pressed="false">4–7</button><button type="button" data-f="8+" aria-pressed="false">8+</button>
+    </div>
+  </div>
   <div class="grid">
-    <a class="tile bang" href="bang/">
+    <a class="tile bang" href="bang/" data-game="bang" data-min="4" data-max="7">
+      <span class="newtag" data-news="bang">MỚI</span>
       <div class="art"><img src="bang/img/sheriff.jpg" alt=""><img src="bang/img/bang.jpg" alt=""><img src="bang/img/calamityjanet.jpg" alt=""></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>BANG!</h2><p>Đấu súng Viễn Tây: Cảnh sát trưởng, Phó cảnh sát, Tội phạm và Kẻ hai mặt – ai sẽ trụ lại?</p>
         <div class="tags"><i>4–7 người</i><i>Vai trò ẩn</i><i>Có bot</i></div></div>
     </a>
-    <a class="tile uno" href="uno/">
+    <a class="tile uno" href="uno/" data-game="uno" data-min="2" data-max="10">
+      <span class="newtag" data-news="uno">MỚI</span>
       <div class="art">
         <div class="uc" style="background:#ff4d5e;transform:rotate(-21deg)"><b style="color:#ff4d5e">7</b></div>
         <div class="uc" style="background:#ffc23d;transform:rotate(-7deg)"><b style="color:#e09a12">⊘</b></div>
@@ -80,39 +108,84 @@ footer a{color:inherit}
       <div class="info"><h2>UNO</h2><p>Đánh bài màu cực cuốn: Cổ điển, Luật rừng cộng dồn, và No Mercy +10 siêu gắt 💀</p>
         <div class="tags"><i>2–10 người</i><i>3 chế độ</i><i>Có bot</i></div></div>
     </a>
-    <a class="tile typhu" href="typhu/">
+    <a class="tile typhu" href="typhu/" data-game="typhu" data-min="2" data-max="6">
+      <span class="newtag" data-news="typhu">MỚI</span>
       <div class="art"><span>🏙️</span><span>🎲</span><span>💰</span></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Cờ Tỷ Phú</h2><p>Bàn cờ 3D 40 ô đường Sài Gòn: mua đất, xây nhà lên Landmark, đấu giá, giao dịch, mua lại đất 🏙️</p>
         <div class="tags"><i>2–6 người</i><i>3D</i><i>Nhân vật tự tạo</i><i>Có bot</i></div></div>
     </a>
-    <a class="tile scribble" href="scribble/">
+    <a class="tile scribble" href="scribble/" data-game="scribble" data-min="2" data-max="12">
+      <span class="newtag" data-news="scribble">MỚI</span>
       <div class="art"><span>🎨</span><span>✏️</span><span>🤔</span></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Scribble it!</h2><p>Vẽ bậy – đoán bừa: Đoán hình kiểu skribbl và Tam sao thất bản kiểu Gartic Phone 😂</p>
         <div class="tags"><i>2–12 người</i><i>2 chế độ</i><i>Có Tướng Liên Minh</i></div></div>
     </a>
-    <a class="tile meono" href="meono/">
+    <a class="tile meono" href="meono/" data-game="meono" data-min="2" data-max="8">
+      <span class="newtag" data-news="meono">MỚI</span>
       <div class="art"><span>🐱</span><span>💣</span><span>🙅</span></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Mèo Nổ</h2><p>Bốc bài hồi hộp: né Mèo Nổ, gỡ bom rồi nhét lại cho đứa khác, hô KHÔNG! đúng lúc 💥</p>
         <div class="tags"><i>2–8 người</i><i>Hồi hộp</i><i>Có bot</i></div></div>
     </a>
-    <a class="tile tamquoc" href="tamquoc/">
+    <a class="tile tamquoc" href="tamquoc/" data-game="tamquoc" data-min="2" data-max="8">
+      <span class="newtag" data-news="tamquoc">MỚI</span>
       <div class="art"><span>魏</span><span>蜀</span><span>吳</span></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Tam Quốc Sát</h2><p>Chúa công, Trung thần, Phản tặc, Nội gián – 25 võ tướng Ngụy Thục Ngô Quần, Sát – Né – Đào ⚔️</p>
         <div class="tags"><i>2–8 người</i><i>Vai trò ẩn</i><i>Có bot</i></div></div>
     </a>
-    <a class="tile masoi" href="masoi/">
+    <a class="tile masoi" href="masoi/" data-game="masoi" data-min="5" data-max="16">
+      <span class="newtag" data-news="masoi">MỚI</span>
       <div class="art"><span>🎋</span><span>🐺</span><span>🏮</span></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Ma Sói</h2><p>Làng quê đêm trăng: Sói, Tiên tri, Bảo vệ, Phù thủy, Thợ săn, Cupid… máy làm quản trò, ai cũng dùng điện thoại riêng 🌕</p>
         <div class="tags"><i>5–16 người</i><i>12 vai</i><i>Có bot</i></div></div>
     </a>
+    <p class="empty-filter" id="empty-filter">Không có game nào hợp số người này.</p>
     <div class="tile soon"><div><b style="font-size:22px">Sắp có thêm…</b><br>Góp ý game tiếp theo nhé 💌</div></div>
   </div>
   <footer>Dự án fan-made phi thương mại · Ảnh minh hoạ BANG! là tranh thuộc phạm vi công cộng (Wikimedia Commons) · Không liên kết với dV Giochi, Mattel, VNG/ZingPlay, Yoka Games hay Exploding Kittens · <a href="https://github.com/mangomint1805/bgvn">Mã nguồn</a></footer>
 </main>
+<script type="module">
+import { openNews, newsBadge } from './shared/ui/news.js?v=94';
+const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+const json = k => { try { return JSON.parse(ls.get(k)); } catch (e) { return null; } };
+// 📝 Có gì mới
+const nb = document.getElementById('btn-news');
+newsBadge(nb, null);
+nb.onclick = () => { openNews(); nb.classList.remove('bgvn-dot'); };
+document.querySelectorAll('.newtag[data-news]').forEach(t => newsBadge(t, t.dataset.news));
+// ▶ Vào lại ván: game nào còn phiên dở (bgvn-session-<game>, xem shared/net/room.js) thì hiện nút
+const FRESH = 3 * 3600e3;
+document.querySelectorAll('.tile[data-game]').forEach(tile => {
+  const g = tile.dataset.game, ses = json('bgvn-session-' + g);
+  if (!ses || !(Date.now() - ses.ts < FRESH)) return;
+  let inGame = true;
+  if (ses.role === 'host') { // chủ phòng chỉ khôi phục được khi còn ảnh chụp phòng
+    const snap = json('bgvn-hostsnap-' + g);
+    if (!snap || !(Date.now() - snap.ts < FRESH)) return;
+    inGame = !!snap.state;
+  }
+  const pill = tile.querySelector('.play'); if (!pill) return;
+  const where = /^(OFFLINE|SOLO)$/.test(ses.code || '') ? 'chơi với bot' : 'phòng ' + (ses.code || '');
+  pill.classList.add('resume');
+  pill.innerHTML = `▶ Vào lại ${inGame ? 'ván' : 'phòng'}<small>${where}</small>`;
+  tile.setAttribute('aria-label', `Vào lại ${inGame ? 'ván' : 'phòng'} ${tile.querySelector('h2').textContent} (${where})`);
+});
+// Lọc nhanh theo số người: hiện game có khoảng số người giao với khoảng đã chọn
+const RANGES = { all: [1, 99], '2': [2, 2], '4-7': [4, 7], '8+': [8, 99] };
+function applyFilter(f) {
+  if (!RANGES[f]) f = 'all';
+  const [a, b] = RANGES[f]; let shown = 0;
+  document.querySelectorAll('.tile[data-game]').forEach(t => { const ok = +t.dataset.min <= b && +t.dataset.max >= a; t.classList.toggle('off', !ok); if (ok) shown++; });
+  document.querySelectorAll('.filter button').forEach(x => x.setAttribute('aria-pressed', x.dataset.f === f));
+  document.getElementById('empty-filter').style.display = shown ? 'none' : 'block';
+  ls.set('bgvn-hub-filter', f);
+}
+document.querySelectorAll('.filter button').forEach(x => x.onclick = () => applyFilter(x.dataset.f));
+applyFilter(ls.get('bgvn-hub-filter') || 'all');
+</script>
 </body>
 </html>
