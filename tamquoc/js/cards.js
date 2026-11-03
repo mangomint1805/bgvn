@@ -184,7 +184,7 @@ export const SKILLS = {
 // ---------- Võ tướng ----------
 // han: chữ Hán trên chân dung; emo: vật biểu tượng; tag: lời giới thiệu vui
 export const GENERALS = {
-  caocao: { name: 'Tào Tháo', kingdom: 'wei', hp: 4, gender: 'm', lord: true, han: '操', emo: '🏯', skills: ['gianhung', 'hogia'], tag: 'Thà ta phụ người…' },
+  caocao: { name: 'Tào Tháo', kingdom: 'wei', hp: 4, gender: 'm', lord: true, han: '操', emo: '🏯', skills: ['gianhung', 'hogia'], tag: 'Thà ta phụ người, chứ không để người phụ ta' },
   simayi: { name: 'Tư Mã Ý', kingdom: 'wei', hp: 3, gender: 'm', han: '懿', emo: '🦊', skills: ['phandap', 'quytai'], tag: 'Kiên nhẫn là vũ khí' },
   xiahoudun: { name: 'Hạ Hầu Đôn', kingdom: 'wei', hp: 4, gender: 'm', han: '惇', emo: '👁️', skills: ['cuonglie'], tag: 'Đụng là cắn lại' },
   zhangliao: { name: 'Trương Liêu', kingdom: 'wei', hp: 4, gender: 'm', han: '遼', emo: '🐺', skills: ['duttap'], tag: 'Tám trăm kỵ phá vạn quân' },
@@ -200,7 +200,7 @@ export const GENERALS = {
   huangyueying: { name: 'Hoàng Nguyệt Anh', kingdom: 'shu', hp: 3, gender: 'f', han: '英', emo: '⚙️', skills: ['taptri', 'kytai'], tag: 'Kỹ sư đời Hán' },
   sunquan: { name: 'Tôn Quyền', kingdom: 'wu', hp: 4, gender: 'm', lord: true, han: '權', emo: '⚖️', skills: ['chehanh', 'cuuvien'], tag: 'Sinh con phải như Tôn Trọng Mưu' },
   ganning: { name: 'Cam Ninh', kingdom: 'wu', hp: 4, gender: 'm', han: '寧', emo: '🔔', skills: ['kytap'], tag: 'Trăm kỵ cướp trại' },
-  lvmeng: { name: 'Lữ Mông', kingdom: 'wu', hp: 4, gender: 'm', han: '蒙', emo: '📚', skills: ['khacky'], tag: 'Ba ngày không gặp…' },
+  lvmeng: { name: 'Lữ Mông', kingdom: 'wu', hp: 4, gender: 'm', han: '蒙', emo: '📚', skills: ['khacky'], tag: 'Ba ngày không gặp, phải nhìn bằng con mắt khác' },
   huanggai: { name: 'Hoàng Cái', kingdom: 'wu', hp: 4, gender: 'm', han: '蓋', emo: '🔥', skills: ['khonhuc'], tag: 'Một người đánh, một người chịu' },
   zhouyu: { name: 'Chu Du', kingdom: 'wu', hp: 3, gender: 'm', han: '瑜', emo: '🎼', skills: ['anhtu', 'phangian'], tag: 'Đàn sai một nốt cũng ngoái nhìn' },
   daqiao: { name: 'Đại Kiều', kingdom: 'wu', hp: 3, gender: 'f', han: '喬', emo: '🌺', skills: ['quocsac', 'luuly'], tag: 'Nhan sắc khuynh thành' },

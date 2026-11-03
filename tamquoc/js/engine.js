@@ -2,7 +2,7 @@
 // Mô hình: "ngăn xếp tác vụ" (s.stack). Mỗi tác vụ {k, stage, ...} được xử lý ở đỉnh ngăn xếp;
 // tác vụ cần người chơi quyết định thì gắn t.ask = {type, players:[...], ...} rồi chờ applyAction.
 // Tác vụ con trả kết quả qua s.ret cho tác vụ cha (cha đọc ngay khi được chạy lại).
-import { buildDeck, deckSize, CARD_INFO, GENERALS, LORD_IDS, SKILLS, ROLES, rolesFor, cardLabel, cardName, isRed, isBlack, SUIT_SYMBOL, SUIT_NAME, rankLabel, DECK_SIZE } from './cards.js?v=6';
+import { buildDeck, deckSize, CARD_INFO, GENERALS, LORD_IDS, SKILLS, ROLES, rolesFor, cardLabel, cardName, isRed, isBlack, SUIT_SYMBOL, SUIT_NAME, rankLabel, DECK_SIZE } from './cards.js?v=7';
 
 let rand = Math.random;
 export function setRandom(fn) { rand = fn; }
@@ -16,9 +16,9 @@ export function createGame(playerList, opts = {}) {
   const roles = rolesFor(n);
   if (!roles) throw new Error('Cần 2–8 người chơi');
   shuffle(roles);
-  const o = { exp: opts.exp !== false, expGen: opts.expGen !== false };
+  const o = { exp: opts.exp !== false, expGen: opts.expGen !== false, training: !!opts.training };
   const s = {
-    opts: o, deckSize: deckSize(o.exp),
+    opts: o, deckSize: deckSize(o.exp), gid: Date.now().toString(36) + Math.floor(rand() * 1e6).toString(36),
     phase: 'playing', players: [], deck: shuffle(buildDeck(o.exp)), discard: [], turn: 0, turnCount: 0, round: 0,
     stack: [], log: [], ev: [], seq: 0, winner: null, lean: {}, ret: null, tf: {}, nRoles: rolesFor(n),
   };
@@ -1500,7 +1500,7 @@ export function viewFor(s, pid) {
   const t = top(s); const ask = t && t.ask ? t.ask : null;
   const cur = current(s);
   const v = {
-    opts: s.opts, phase: s.phase, winner: s.winner, turn: s.turn, turnCount: s.turnCount, me: pid,
+    opts: s.opts, gid: s.gid || '', phase: s.phase, winner: s.winner, turn: s.turn, turnCount: s.turnCount, me: pid,
     deckCount: s.deck.length, discardTop: s.discard.length ? s.discard[s.discard.length - 1] : null, discardCount: s.discard.length,
     log: s.log.slice(-50), nRoles: s.nRoles,
     stage: t ? t.k : null,

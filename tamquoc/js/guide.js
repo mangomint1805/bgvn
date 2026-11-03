@@ -1,7 +1,7 @@
 // Hướng dẫn luật Tam Quốc Sát (bản BGVN) – soạn lại bằng lời của hội, rút gọn hợp lý cho bản web.
-import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, buildDeck, rolesFor, DECK_SIZE_BASE, DECK_SIZE_EXP, HORSE_NAMES, artKey } from './cards.js?v=6';
-import { cardHTML, portrait } from './art.js?v=6';
-import { IMG } from './images.js?v=6';
+import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, buildDeck, rolesFor, DECK_SIZE_BASE, DECK_SIZE_EXP, HORSE_NAMES, artKey } from './cards.js?v=7';
+import { cardHTML, portrait } from './art.js?v=7';
+import { IMG } from './images.js?v=7';
 
 const deck = buildDeck(true);
 const red = t => String(t).replace(/([♥♦])/g, '<span class="red">$1</span>');
@@ -44,7 +44,7 @@ export function guideHTML() {
 <div class="g-head"><h2>📖 Luật Tam Quốc Sát</h2><button class="btn sm" id="g-close">Đóng ✕</button></div>
 <nav class="g-toc">
   <a href="#g-goal">Vai trò</a><a href="#g-setup">Chuẩn bị</a><a href="#g-turn">Một lượt</a><a href="#g-dist">Khoảng cách</a><a href="#g-basic">Lá cơ bản</a>
-  <a href="#g-trick">Cẩm nang</a><a href="#g-delay">Trì hoãn</a><a href="#g-equip">Trang bị</a><a href="#g-judge">Phán định</a><a href="#g-dying">Hấp hối</a><a href="#g-gens">Võ tướng</a><a href="#g-exp">Mở rộng</a><a href="#g-web">Chơi trên web</a><a href="#g-tips">Mẹo</a><a href="#g-art">Nguồn tranh</a>
+  <a href="#g-trick">Cẩm nang</a><a href="#g-delay">Trì hoãn</a><a href="#g-equip">Trang bị</a><a href="#g-judge">Phán định</a><a href="#g-dying">Hấp hối</a><a href="#g-gens">Võ tướng</a><a href="#g-exp">Mở rộng</a><a href="#g-learn">🎓 Tập chơi</a><a href="#g-web">Chơi trên web</a><a href="#g-tips">Mẹo</a><a href="#g-art">Nguồn tranh</a>
 </nav>
 <div class="g-body">
 <p class="g-lead">Thời loạn Tam Quốc, 2–8 người ngồi quanh bàn. Mỗi người bí mật giữ một <b>thân phận</b> và điều khiển một <b>võ tướng</b> có kỹ năng riêng. Dùng bài Sát, Né, Đào, cẩm nang và trang bị để bảo vệ phe mình – nhưng ngoài Chúa công ra, chẳng ai biết ai là bạn, ai là thù!</p>
@@ -131,6 +131,16 @@ ${Object.keys(KINGDOMS).map(k => `<h4 class="g-kd" style="--kc:${KINGDOMS[k].col
 ${Object.keys(KINGDOMS).map(k => byK(k, true).length ? `<h4 class="g-kd" style="--kc:${KINGDOMS[k].color}">${KINGDOMS[k].han} ${KINGDOMS[k].name}</h4><div class="g-gens">${byK(k, true).map(general).join('')}</div>` : '').join('')}
 <p class="g-note">Một số kỹ năng được BGVN rút gọn cho bản web (VD Bất khuất: lật 1 lá làm vết sẹo, khác số mọi vết cũ thì hồi về 1 máu; Cứ thủ: lượt sau bị bỏ qua).</p>
 </section>
+
+<section id="g-learn"><h3>🎓 Tập chơi &amp; gợi ý cho người mới</h3><ul>
+<li><b>Trang chủ → "🎓 Tập chơi":</b> ván 4 người với 3 bot, bộ bài cơ bản (dễ nhớ), <b>không bấm giờ</b>, bot đánh chậm hơn cho dễ theo dõi. Chủ phòng online cũng có thể bật ô <b>"🎓 Tập chơi"</b> trong sảnh: cả phòng có gợi ý và gấp đôi thời gian suy nghĩ.</li>
+<li><b>Gợi ý 💡:</b> khi tới lượt bạn, "thầy" cho biết nên làm gì và <b>vì sao</b> (VD: <i>Sát Tiến – đang trong tầm, Tiến có thể là Phản tặc</i>). Lá được gợi ý sáng viền vàng có số thứ tự, ghế mục tiêu có cờ 💡. Bấm <b>"👉 Làm theo"</b> (trên điện thoại: bấm vào khung gợi ý giữa bàn) để làm đúng nước đó, hoặc cứ tự đánh.</li>
+<li>Khi bị hỏi đáp trả (bị Sát, Nam man, Vô giải, cứu người hấp hối…) thầy giải thích tình huống và nên đỡ hay chịu. Bấm <b>?</b> để xem giải thích đầy đủ + 6 pha của một lượt; bấm vào thanh pha (Đầu · Phán · Rút · Ra bài · Bỏ · Cuối) cũng xem được.</li>
+<li>Gợi ý chỉ dùng <b>thông tin công khai</b> (ai từng đánh/cứu ai) và vai của chính bạn – không nhìn trộm bài hay vai người khác. Bật/tắt bất cứ lúc nào bằng nút <b>💡</b> trong ⚙️ (cả ván thường).</li>
+<li><b>Kỹ năng:</b> bấm tên kỹ năng (chữ đỏ gạch chân, hoặc nút kỹ năng ở khu của bạn; nút kỹ năng trong pha Ra bài thì bấm giữ) để xem bảng chi tiết: tự động hay chủ động, khi nào dùng, cách bấm, 1 ví dụ.</li>
+<li><b>Cờ nước</b> trên ghế ghi cả chữ Hán lẫn chữ Việt: 魏 Ngụy · 蜀 Thục · 吳 Ngô · 群 Quần.</li>
+<li>Đầu ván có màn <b>bốc thẻ tre thân phận</b>: thẻ của bạn lật ra kèm ấn son, thẻ Chúa công lật cho cả bàn xem. Bấm "Bỏ qua" nếu vội.</li>
+</ul></section>
 
 <section id="g-web"><h3>13. Chơi trên web BGVN</h3><ul>
 <li><b>Tạo phòng</b> rồi gửi mã 5 ký tự (hoặc link) cho bạn bè. 2–8 người, thiếu thì thêm bot. Chủ phòng giữ tab mở suốt ván.</li>
