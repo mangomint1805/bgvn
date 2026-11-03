@@ -2,7 +2,7 @@
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
 import { buildAvatar } from '../../shared/js/avatar3d.js';
-import { buildCity } from './city.js?v=45';
+import { buildCity } from './city.js?v=47';
 
 export const FONT = '"Be Vietnam Pro", system-ui, sans-serif', TITLE = '"Baloo 2", "Be Vietnam Pro", system-ui, sans-serif';
 const TW = 1, TD = 1.6, CW = 1.6, L = 2 * CW + 9 * TW, TILE_H = 0.12;
@@ -168,7 +168,7 @@ export class Board3D {
     this.cam = { mode: 'overview', focus: null, az: 0, pol: 0.6, dist: 24, target: new THREE.Vector3(), cur: null, lastUser: 0 };
     this.root = new THREE.Group(); this.scene.add(this.root);
     this.initRenderer();
-    this.buildLights(); this.buildSky(); this.buildBoard(); this.buildDice(); this.buildCityLayer();
+    this.buildLights(); this.buildSky(); this.buildBoard(); this.buildDice(); this.buildCityLayer(); this.fwInit();
     this.setTheme(this.themeName);
     this.ray = new THREE.Raycaster(); this.ptr = new THREE.Vector2();
     this.ro = new ResizeObserver(() => this.resize()); this.ro.observe(el); this.resize();
@@ -476,18 +476,23 @@ export class Board3D {
     const cs = colors || ['#ff5a5f', '#ffd54a', '#2fc76f', '#3d8bff', '#ff7ac8', '#ffffff'];
     for (let k = 0; k < n; k++) setTimeout(() => this.firework(c.clone().add(new THREE.Vector3((Math.random() - 0.5) * 1.6, 0, (Math.random() - 0.5) * 1.6)), cs[(Math.random() * cs.length) | 0]), k * 260);
   }
+  fwInit() { this.fwPool = { lights: [0, 1].map(() => { const l = new THREE.PointLight(0xffffff, 0, 6); this.root.add(l); return l; }), li: 0, live: 0, mats: {}, rock: new THREE.SphereGeometry(0.05, 6, 4) }; }
+  // pháo hoa dùng lại đèn/vật liệu có sẵn: thêm/bớt PointLight mỗi lần làm three.js biên dịch lại toàn bộ shader → tụt FPS
   firework(at, color) {
-    const rocket = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 4), new THREE.MeshBasicMaterial({ color: col(color) })); rocket.position.copy(at); this.root.add(rocket);
+    if (!this.fwPool) this.fwInit();
+    const F = this.fwPool; if (F.live >= 6) return; F.live++;
+    const m = F.mats[color] || (F.mats[color] = { b: new THREE.MeshBasicMaterial({ color: col(color) }), p: new THREE.PointsMaterial({ color: col(color), size: 0.13, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }) });
+    const rocket = new THREE.Mesh(F.rock, m.b); rocket.position.copy(at); this.root.add(rocket);
     const top = 2.2 + Math.random() * 1.2;
     this.tween(450, t => { rocket.position.y = at.y + easeOut(t) * top; }).then(() => {
-      this.root.remove(rocket); const n = 70, geo = new THREE.BufferGeometry(), pos = new Float32Array(n * 3), vel = [];
+      this.root.remove(rocket); const n = 60, geo = new THREE.BufferGeometry(), pos = new Float32Array(n * 3), vel = [];
       for (let k = 0; k < n; k++) { pos.set([at.x, at.y + top, at.z], k * 3); const a = Math.random() * Math.PI * 2, b = Math.acos(Math.random() * 2 - 1), s = 1.6 + Math.random() * 0.6; vel.push([Math.sin(b) * Math.cos(a) * s, Math.cos(b) * s, Math.sin(b) * Math.sin(a) * s]); }
       geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: col(color), size: 0.13, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); this.root.add(pts);
-      const light = new THREE.PointLight(col(color), 4, 6); light.position.set(at.x, at.y + top, at.z); this.root.add(light);
+      const pm = m.p.clone(); const pts = new THREE.Points(geo, pm); this.root.add(pts);
+      const light = F.lights[F.li++ % F.lights.length]; light.color.set(col(color)); light.position.set(at.x, at.y + top, at.z); light.intensity = 4;
       let last = 0;
-      this.tween(1300, t => { const dt = t - last; last = t; for (let k = 0; k < n; k++) { vel[k][1] -= 3.2 * dt * 1.3; pos[k * 3] += vel[k][0] * dt * 1.3; pos[k * 3 + 1] += vel[k][1] * dt * 1.3; pos[k * 3 + 2] += vel[k][2] * dt * 1.3; vel[k][0] *= 0.985; vel[k][2] *= 0.985; } geo.attributes.position.needsUpdate = true; pts.material.opacity = 1 - t * t; light.intensity = 4 * (1 - t); })
-        .then(() => { this.root.remove(pts); this.root.remove(light); geo.dispose(); });
+      this.tween(1300, t => { const dt = t - last; last = t; for (let k = 0; k < n; k++) { vel[k][1] -= 3.2 * dt * 1.3; pos[k * 3] += vel[k][0] * dt * 1.3; pos[k * 3 + 1] += vel[k][1] * dt * 1.3; pos[k * 3 + 2] += vel[k][2] * dt * 1.3; vel[k][0] *= 0.985; vel[k][2] *= 0.985; } geo.attributes.position.needsUpdate = true; pm.opacity = 1 - t * t; light.intensity = Math.min(light.intensity, 4 * (1 - t)); })
+        .then(() => { this.root.remove(pts); geo.dispose(); pm.dispose(); light.intensity = 0; F.live--; });
     });
   }
   pawnPos(id) { const g = id && this.pawns[id]; return g ? g.position.clone().add(new THREE.Vector3(0, 0.5, 0)) : new THREE.Vector3(0, 0.4, 0); }

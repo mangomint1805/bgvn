@@ -104,7 +104,7 @@ if (typeof document !== 'undefined') document.addEventListener('visibilitychange
 // ---------- hiệu ứng DOM ----------
 function layer() { let l = document.getElementById('fx-layer'); if (!l) { l = document.createElement('div'); l.id = 'fx-layer'; document.body.appendChild(l); } return l; }
 export function confetti(n = 120) {
-  if (!settings.effects) return; const cols = ['#ff5a5f', '#ffd54a', '#2fc76f', '#3d8bff', '#ff7ac8', '#a259ff'];
+  if (!settings.effects) return; n = Math.min(n, matchMedia('(max-width: 700px)').matches ? 45 : 70); // ít mảnh hơn cho máy yếu đỡ giật const cols = ['#ff5a5f', '#ffd54a', '#2fc76f', '#3d8bff', '#ff7ac8', '#a259ff'];
   for (let i = 0; i < n; i++) {
     const d = document.createElement('i'); d.className = 'confetti'; d.style.background = cols[i % cols.length];
     d.style.left = Math.random() * 100 + 'vw'; d.style.animationDelay = Math.random() * 700 + 'ms';

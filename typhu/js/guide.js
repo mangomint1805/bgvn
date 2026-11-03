@@ -1,5 +1,5 @@
 // Hướng dẫn luật Cờ Tỷ Phú Sài Gòn (tiếng Việt)
-import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=45';
+import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=47';
 
 export function guideHTML() {
   const taxes = TILES.filter(t => t.type === 'tax').map(t => `${t.name} ${money(t.amount)}`).join(', ');

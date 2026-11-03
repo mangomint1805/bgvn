@@ -1,19 +1,19 @@
 // Cờ Tỷ Phú Sài Gòn – giao diện: trang chủ, tạo nhân vật, sảnh, ván chơi 3D, hoạt ảnh sự kiện.
-import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=45';
+import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=47';
 import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.js?v=2';
 import {
   setData, TILES, GROUPS, GROUP_LIST, STATION_RENT, money, rentOf, canBuild, canSell, canMortgage, canUnmortgage, houseCost, mortgageValue,
   unmortgageCost, travelOk, buildBlock, tradable, tradeError, buybackPrice, netWorth, tilesOf, ownsGroup, JAIL_FINE, MAX_TRADES, isProp,
   tradeImpact, tradeSideValue,
-} from './engine.js?v=45';
-import { Board3D, THEMES } from './scene3d.js?v=45';
-import * as fx from './fx.js?v=45';
-import { guideHTML } from './guide.js?v=45';
+} from './engine.js?v=47';
+import { Board3D, THEMES } from './scene3d.js?v=47';
+import * as fx from './fx.js?v=47';
+import { guideHTML } from './guide.js?v=47';
 import { OPTIONS, PRESETS, buildAvatar, portrait } from '../../shared/js/avatar3d.js';
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=92';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=93';
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -22,7 +22,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const settings = fx.settings;
 
 // ---------- dữ liệu bàn cờ ----------
-const [tilesData, cardsData] = await Promise.all(['tiles.json?v=45', 'cards.json?v=45'].map(u => fetch(u).then(r => r.json())));
+const [tilesData, cardsData] = await Promise.all(['tiles.json?v=47', 'cards.json?v=47'].map(u => fetch(u).then(r => r.json())));
 setData(tilesData, cardsData);
 const VN = 'ẮẰẲẴẶẤẦẨẪẬĐđơưƯƠếềểễệ';
 const fontsReady = Promise.race([
@@ -268,7 +268,7 @@ async function ensureBoard() {
       onCamera: m => { $('#btn-home-cam').classList.toggle('on', m === 'free'); $('#btn-overview').classList.toggle('on', m === 'overview'); },
     });
   } catch (e) { console.error(e); toast('Máy không hỗ trợ 3D (WebGL) – thử trình duyệt khác nhé.'); throw e; }
-  window.__B = B;
+  window.__B = B; if (B.dice) B.dice.forEach(d => { d.outer.visible = false; }); // xúc xắc giờ lăn giữa màn hình (lớp 2D)
   return B;
 }
 async function pump() {
@@ -329,7 +329,7 @@ async function animate(e, v) {
     }
     case 'roll': {
       B.follow(e.pid); fx.sfx.dice(); setDice(e.d);
-      await B.rollDice(e.d, B.pawnTile[e.pid] ?? 0);
+      await centerDice(e.d, isMine(e.pid) && rollPower != null ? rollPower : 0.5); rollPower = null;
       if (e.d[0] === e.d[1] && !e.util) { fx.banner('Đôi! 🎲🎲', 'gold sm'); }
       await sleep(150 * k()); break;
     }
@@ -413,6 +413,58 @@ function showCard(e, v) {
     }, 450 * k());
   });
 }
+// ---------- nút đổ giữa màn hình (giữ để lấy đà, kiểu ZingPlay) + xúc xắc lăn giữa màn hình ----------
+let rollPower = null, hold = null;
+function fabEl() {
+  let f = $('#rollfab'); if (f) return f;
+  f = document.createElement('button'); f.id = 'rollfab'; f.type = 'button'; f.hidden = true; f.setAttribute('aria-label', 'Giữ để đổ xúc xắc');
+  f.innerHTML = '<span class="ring"></span><span class="ic">🎲</span><b class="tx">GIỮ ĐỂ ĐỔ</b><i class="pw">Lực 0%</i>';
+  $('#game3d').appendChild(f);
+  const start = e => { if (f.hidden || hold || busy) return; e.preventDefault(); try { f.setPointerCapture && e.pointerId != null && f.setPointerCapture(e.pointerId); } catch (_) {}
+    hold = { t0: performance.now(), p: 0 }; f.classList.add('hold'); fx.sfx.click();
+    const tick = () => { if (!hold) return; const t = (performance.now() - hold.t0) / 1000; hold.p = (1 - Math.cos(t * Math.PI * 2 / 1.3)) / 2; f.style.setProperty('--p', hold.p.toFixed(3)); f.querySelector('.pw').textContent = `Lực ${Math.round(hold.p * 100)}%`; hold.raf = requestAnimationFrame(tick); };
+    tick(); };
+  const end = e => { if (!hold) return; const h = hold; hold = null; cancelAnimationFrame(h.raf); f.classList.remove('hold');
+    if (e && e.type === 'pointercancel') { f.style.setProperty('--p', 0); return; }
+    const quick = performance.now() - h.t0 < 180; rollPower = quick ? 0.35 + Math.random() * 0.4 : h.p;
+    const v = shown; if (!v || v.stage !== 'roll' || !isMine(v.actor)) return;
+    f.hidden = true; send(v.actor, { type: 'roll' }); };
+  f.addEventListener('pointerdown', start); f.addEventListener('pointerup', end); f.addEventListener('pointercancel', end); f.addEventListener('lostpointercapture', e => { if (hold) end(e); });
+  f.addEventListener('contextmenu', e => e.preventDefault());
+  f.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) start(e); });
+  f.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') end(e); });
+  return f;
+}
+function updateFab(v) {
+  const f = fabEl(), show = !!v && v.phase === 'playing' && v.stage === 'roll' && isMine(v.actor) && !busy;
+  if (!show && hold) { cancelAnimationFrame(hold.raf); hold = null; f.classList.remove('hold'); }
+  f.hidden = !show; if (!show) return;
+  const A = P(v, v.actor); f.classList.toggle('jail', !!A.inJail);
+  f.querySelector('.tx').textContent = A.inJail ? 'ĐỔ ĐÔI ĐỂ RA' : v.again ? 'ĐỔ TIẾP!' : 'GIỮ ĐỂ ĐỔ';
+  if (!hold) { f.style.setProperty('--p', 0); f.querySelector('.pw').textContent = multiLocal(v) ? esc(A.name) : 'Giữ rồi thả'; }
+}
+const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
+const faceHTML = n => `<div class="df">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(c => `<i${PIPS[n].includes(c) ? ' class="on"' : ''}></i>`).join('')}</div>`;
+// mặt n hướng ra người xem: góc xoay của khối
+const FACE_ROT = { 1: [0, 0], 2: [0, -90], 3: [-90, 0], 4: [90, 0], 5: [0, 90], 6: [0, 180] };
+function centerDice(d, power = 0.5) {
+  let ov = $('#dice-ov');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'dice-ov'; ov.setAttribute('aria-hidden', 'true'); $('#game3d').appendChild(ov); }
+  const cube = () => `<div class="dc"><div class="dcube">${[1, 6, 2, 5, 3, 4].map((n, k) => `<div class="fc f${k}">${faceHTML(n)}</div>`).join('')}</div></div>`;
+  ov.innerHTML = `<div class="dbox">${cube()}${cube()}</div><div class="dsum"></div>`; ov.className = 'show';
+  const ms = Math.round((750 + power * 650) * k()), spins = 2 + Math.round(power * 3);
+  [...ov.querySelectorAll('.dcube')].forEach((c, i) => {
+    const [rx, ry] = FACE_ROT[d[i]], X = rx + 360 * (spins + i), Y = ry + 360 * (spins + 1 - i) * (i ? -1 : 1);
+    c.style.transition = 'none'; c.style.transform = `rotateX(${(Math.random() * 360) | 0}deg) rotateY(${(Math.random() * 360) | 0}deg)`;
+    c.parentNode.style.setProperty('--ms', ms + 'ms'); c.parentNode.style.setProperty('--h', (40 + power * 70).toFixed(0) + 'px');
+    requestAnimationFrame(() => requestAnimationFrame(() => { c.style.transition = `transform ${ms}ms cubic-bezier(.15,.7,.25,1)`; c.style.transform = `rotateX(${X}deg) rotateY(${Y}deg)`; c.parentNode.classList.add('go'); }));
+  });
+  return sleep(ms + 60).then(() => {
+    ov.querySelector('.dsum').innerHTML = `${d[0]} + ${d[1]} = <b>${d[0] + d[1]}</b>${d[0] === d[1] ? ' <em>ĐÔI!</em>' : ''}`; ov.classList.add('done');
+    setTimeout(() => { if (ov.classList.contains('done')) ov.className = ''; }, Math.round(900 * k()));
+    return sleep(Math.round(380 * k()));
+  });
+}
 function setDice(d) { const el = $('#panel .dice-r'); if (el) el.textContent = `🎲 ${d[0]} + ${d[1]}`; }
 const pcEl = id => $(`.pc[data-id="${CSS.escape(id || '')}"]`);
 function flashPc(id) { const el = pcEl(id); if (!el) return; el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
@@ -478,12 +530,12 @@ function renderPanel() {
       if (!mine) { lines.push(head(actor, `⏳ <b>${who}</b> ${A.inJail ? 'đang ở tù, tính cách ra…' : 'chuẩn bị đổ xúc xắc…'}`)); break; }
       if (A.inJail) {
         lines.push(head(actor, `⛓️ <b>${who}</b> đang ở tù (lượt ${A.jailTurns + 1}/3)`));
-        btns.push(btn('panel', '🎲 Đổ đôi để ra', () => send(me, { type: 'roll' }), 'pri main'));
+        lines.push('<div class="sub">🎲 Giữ nút xúc xắc giữa màn hình để đổ đôi ra tù, hoặc:</div>');
         btns.push(btn('panel', `🔓 Nộp ${money(JAIL_FINE)}`, () => send(me, { type: 'payJail' }), 'gold', A.cash < JAIL_FINE));
         if (A.cards.length) btns.push(btn('panel', '🗝️ Dùng thẻ', () => send(me, { type: 'useCard' }), 'green'));
       } else {
         lines.push(head(actor, v.again ? `🎲 Đôi! <b>${who}</b> được đổ tiếp` : `🎲 Tới lượt <b>${who === 'Bạn' ? 'bạn' : who}</b>!`));
-        btns.push(btn('panel', '🎲 Đổ xúc xắc', () => send(me, { type: 'roll' }), 'pri main'));
+        lines.push('<div class="sub">👇 <b>Giữ</b> nút 🎲 giữa màn hình để lấy đà, <b>thả</b> ra là đổ (bấm nhanh cũng được).</div>');
       }
       btns.push(...tools(me)); break;
     }
@@ -553,6 +605,7 @@ function renderPanel() {
     default: lines.push(head(actor, `⏳ ${who}…`));
   }
   el.innerHTML = lines.join('') + (btns.length ? `<div class="btns">${btns.join('')}</div>` : '');
+  updateFab(v);
   el.classList.toggle('busy', busy);
 }
 function tradeSummary(v, T, viewer) {
@@ -840,7 +893,7 @@ function tourSteps() {
   const byText = (sel, txt) => () => { const el = [...document.querySelectorAll(sel)].find(b => b.textContent.includes(txt) || (b.title || '').includes(txt)); return el && el.offsetParent ? el.getBoundingClientRect() : null; };
   const myCard = () => { const id = v && mineIds(v)[0]; const el = id && pcEl(id); return el ? el.getBoundingClientRect() : null; };
   return [
-    { at: q('#panel .btn.main'), t: '🎲 Đổ xúc xắc', d: 'Tới lượt thì bấm nút to này để đi. Đổ <b>đôi</b> được đổ tiếp, đôi 3 lần liền là vào tù!' },
+    { at: q('#rollfab'), t: '🎲 Đổ xúc xắc', d: 'Tới lượt thì <b>giữ</b> nút to này để lấy đà rồi <b>thả</b> ra (bấm nhanh cũng được). Đổ <b>đôi</b> được đổ tiếp, đôi 3 lần liền là vào tù!' },
     { at: () => tileRect(tour && tour.tile), pick: true, t: '🏙️ Ô đất & bảng giá', d: 'Bấm vào <b>ô bất kỳ</b> trên bàn để xem giá, tiền thuê, chủ đất. Dừng ở ô trống thì được mua. Kéo để xoay bàn, chụm để phóng to.' },
     { at: byText('#panel .btn', 'Xây nhà'), t: '🏠 Xây nhà', d: zing ? 'Luật <b>ZingPlay thật</b>: chỉ xây ở ô vừa dừng. Đứng lên đất mình là tự hiện hộp <b>“Xây mấy nhà?”</b>.' : 'Đất của bạn là xây được nhà. Có ô xây được thì nút này <b>sáng xanh</b> kèm số ô. 4 nhà → lên 🏛️ Landmark.' },
     { at: byText('#panel .btn', 'Giao dịch'), t: '🤝 Giao dịch', d: 'Đổi đất + tiền với người khác. Bảng giao dịch tính sẵn <b>tổng giá trị</b> mỗi bên và cảnh báo nếu kèo giúp ai gom đủ bộ.' },

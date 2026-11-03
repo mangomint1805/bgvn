@@ -5,6 +5,11 @@ export const GAMES = {
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
 };
 export const NOTES = [
+  { id: '20261104-01', date: '04/11/2026', game: 'typhu', title: 'Giữ để đổ xúc xắc, lăn giữa màn hình, hết giật pháo hoa', items: [
+    '🎲 Nút đổ xúc xắc to ở giữa màn hình: giữ để lấy đà (vòng lực chạy), thả ra là đổ – kiểu ZingPlay. Bấm nhanh cũng được.',
+    '🎯 Xúc xắc lăn ngay giữa màn hình, hiện tổng điểm, đổ đôi có chữ ĐÔI!',
+    '🎆 Pháo hoa / hoa giấy không còn làm tụt FPS (dùng lại đèn, ít mảnh hơn trên điện thoại).',
+  ] },
   { id: '20261103-17', date: '03/11/2026', game: 'typhu', title: 'Bãi đậu xe = Du lịch, chữ ô góc gọn gàng', items: [
     '✈️ Dừng ở Bãi đậu xe được chọn 1 ô bất kỳ (trừ Vào tù) để bay tới ngay – bấm ô sáng trên bàn hoặc nút 🗺️ Chọn ô. Bay ngược qua Bắt đầu vẫn nhận 200K. Tắt được trong sảnh.',
     '🚔 Sửa chữ ô Nhà tù, Vào tù, Bắt đầu bị cắt/tràn ra ngoài.',
