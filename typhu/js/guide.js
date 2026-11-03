@@ -1,5 +1,5 @@
 // Hướng dẫn luật Cờ Tỷ Phú Sài Gòn (tiếng Việt)
-import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=43';
+import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=44';
 
 export function guideHTML() {
   const taxes = TILES.filter(t => t.type === 'tax').map(t => `${t.name} ${money(t.amount)}`).join(', ');
@@ -32,7 +32,7 @@ export function guideHTML() {
     <li>Bán nhà lại cho ngân hàng được <b>nửa giá</b>, cũng phải bán đều tay.</li></ul>
   <h3>💥 Mua lại đất (kiểu ZingPlay)</h3><ul>
     <li>Trả tiền thuê ở <b>đường</b> của người khác xong, bạn được quyền <b>mua lại</b> ô đó với giá <b>gấp đôi giá trị</b> (giá đất + nhà). Nhà trên đất giữ nguyên.</li>
-    <li>Không mua lại được ô có <b>Landmark</b>, ô đang thế chấp, bến xe và công ty.</li></ul>
+    <li>Ô <b>đang thế chấp</b> vẫn mua lại được (không phải trả thuê trước): ngân hàng trừ khoản chuộc (nửa giá +10%) từ tiền mua, chủ cũ nhận phần còn lại, người mua nhận đất đã chuộc sạch. Không mua lại được ô có <b>Landmark</b>, bến xe và công ty.</li></ul>
   <h3>🏦 Thế chấp</h3><ul>
     <li>Thế chấp một ô nhận ngay <b>nửa giá</b> đất. Muốn thế chấp đường thì phải bán hết nhà <b>của mình</b> trong nhóm màu đó trước.</li>
     <li>Chuộc lại: trả nửa giá <b>+ 10%</b>.</li></ul>

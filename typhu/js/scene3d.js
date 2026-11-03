@@ -2,7 +2,7 @@
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
 import { buildAvatar } from '../../shared/js/avatar3d.js';
-import { buildCity } from './city.js?v=43';
+import { buildCity } from './city.js?v=44';
 
 export const FONT = '"Be Vietnam Pro", system-ui, sans-serif', TITLE = '"Baloo 2", "Be Vietnam Pro", system-ui, sans-serif';
 const TW = 1, TD = 1.6, CW = 1.6, L = 2 * CW + 9 * TW, TILE_H = 0.12;

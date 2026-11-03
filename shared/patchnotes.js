@@ -5,6 +5,9 @@ export const GAMES = {
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
 };
 export const NOTES = [
+  { id: '20261103-16', date: '03/11/2026', game: 'typhu', title: 'Mua lại đất đang thế chấp', items: [
+    '💥 Dừng ở đường của người khác đang thế chấp vẫn được mua lại (giá gấp đôi). Ngân hàng trừ khoản chuộc, chủ cũ nhận phần còn lại, mình nhận đất sạch nợ.',
+  ] },
   { id: '20261103-15', date: '03/11/2026', game: 'uno', title: 'Lá Up phạt theo độ dài chuỗi', items: [
     '⬆️ Gãy chuỗi Up giờ phải rút đúng số lá số đã được đánh từ lúc lá Up ra (ít nhất 1) – chuỗi càng dài càng đau.',
   ] },

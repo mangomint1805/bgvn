@@ -177,7 +177,10 @@ export function applyAction(s, pid, a) {
       if (a.type === 'buyback') {
         const pr = s.props[i], price = buybackPrice(s, i), old = P(s, pr.owner);
         if (p.cash < price) { finishLanding(s); return no('Không đủ tiền mua lại'); }
-        p.cash -= price; old.cash += price; pr.owner = pid;
+        // đất đang thế chấp: ngân hàng thu lại khoản chuộc từ tiền mua, người mua nhận đất sạch nợ
+        const bank = pr.mort ? unmortgageCost(i) : 0;
+        p.cash -= price; old.cash += price - bank; pr.owner = pid; pr.mort = false;
+        if (bank) log(s, `🏦 Ngân hàng thu ${money(bank)} nợ thế chấp, ${old.name} nhận ${money(price - bank)}.`);
         ev(s, { t: 'buyback', pid, from: old.id, tile: i, amt: price });
         log(s, `💥 ${p.name} MUA LẠI ${TILES[i].name} của ${old.name} với giá ${money(price)}!`);
         if (checkWin(s)) return ok();
@@ -299,7 +302,7 @@ function land(s, p) {
     const pr = s.props[i];
     if (!pr) { s.stage = 'buy'; s.buyTile = i; return; }
     if (pr.owner === p.id) { finishLanding(s); return; }
-    if (pr.mort) { log(s, `😌 ${t.name} đang thế chấp – không phải trả tiền thuê.`); finishLanding(s); return; }
+    if (pr.mort) { log(s, `😌 ${t.name} đang thế chấp – không phải trả tiền thuê.`); if (t.type === 'city') { cont(s, 'buyback:' + i); return; } finishLanding(s); return; }
     const rent = rentOf(s, i, s.dice[0] + s.dice[1]), owner = P(s, pr.owner);
     log(s, `💸 ${p.name} trả ${money(rent)} tiền thuê ${t.name} cho ${owner.name}.`);
     charge(s, p, [{ pid: owner.id, amt: rent }], t.type === 'city' ? 'buyback' : 'finish', 'rent', i);
@@ -323,7 +326,7 @@ function cont(s, then) {
   if (then === 'jailMove') { moveBy(s, p, s.dice[0] + s.dice[1]); return ok(); }
   if (then && then.startsWith('buyback:')) {
     const i = +then.split(':')[1], pr = s.props[i];
-    if (s.opts.buyback && pr && pr.owner !== p.id && pr.h < 5 && !pr.mort && TILES[i].type === 'city' && p.cash >= buybackPrice(s, i) && !p.out) { s.stage = 'buyback'; s.buyback = { tile: i, price: buybackPrice(s, i) }; return ok(); }
+    if (s.opts.buyback && pr && pr.owner !== p.id && pr.h < 5 && TILES[i].type === 'city' && p.cash >= buybackPrice(s, i) && !p.out) { s.stage = 'buyback'; s.buyback = { tile: i, price: buybackPrice(s, i) }; return ok(); }
   }
   if (then === 'continue') return ok();
   finishLanding(s); return ok();
