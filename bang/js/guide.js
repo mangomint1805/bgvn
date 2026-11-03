@@ -109,7 +109,8 @@ export function guideHTML() {
 <li><b>Tạo phòng</b> rồi gửi mã 5 ký tự hoặc link cho bạn bè. Thiếu người thì bấm <b>+ Thêm bot</b>.</li>
 <li>Chủ phòng giữ tab mở suốt ván. Ai rớt mạng thì tải lại trang và vào cùng mã; sau 20 giây chưa về thì bot đánh thay.</li>
 <li>Bấm lá sáng trên tay để đánh. Lá cần mục tiêu thì bấm tiếp vào người sáng viền đỏ; người ngoài tầm sẽ mờ đi.</li>
-<li>Rê chuột lên lá bài để xem mô tả, bấm vào người chơi để xem nhân vật.</li>
+<li>Rê chuột lên lá bài (điện thoại: <b>nhấn giữ</b> lá bài) để xem mô tả; bấm vào người chơi để xem nhân vật và trang bị.</li>
+<li><b>Đồng hồ:</b> mỗi lượt có 60 giây, mỗi lần phải đáp trả (né, bỏ bài…) có 20 giây. Hết giờ thì máy tự đánh thay để ván không bị treo.</li>
 <li>Vai trò, mục tiêu và kỹ năng của bạn luôn hiện ở góc dưới bên trái. Ô vàng lớn là <b>tầm bắn</b> của bạn.</li>
 <li>Thấy hiệu ứng nhanh quá? Chỉnh <b>Tốc độ hiệu ứng</b> (Chậm / Vừa / Nhanh) ở trang chủ hoặc thanh trên.</li>
 <li>Bị bắn: bấm lá viền xanh để né, hoặc <b>Chịu đòn</b>.</li></ul>

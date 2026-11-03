@@ -12,9 +12,9 @@ export const CARD_NAME = {
   wild: 'Đổi màu', wd4: 'Đổi màu +4', wtd4: 'Cộng nhắm +4', wup: 'Up', tornado: 'Bão tố', wrd4: 'Đổi màu đảo chiều +4', wd6: 'Đổi màu +6', wd10: 'Đổi màu +10', roulette: 'Vòng quay màu', nou: 'No U', shield: 'Khiên', dq: '+?', gift: 'Tặng quà', steal: 'Móc túi', wswap: 'Đổi tay',
 };
 export const MODES = {
-  classic: { name: 'Cổ điển', rules: { stackDraw: false, stackAny: false, stackSkip: false, sevenZero: false, drawUntil: false, mercy: false, noActionFinish: false } },
-  house:   { name: 'Luật rừng', rules: { stackDraw: true, stackAny: true, stackSkip: true, sevenZero: false, drawUntil: false, mercy: false, noActionFinish: true } },
-  nomercy: { name: 'No Mercy', rules: { stackDraw: true, stackAny: false, stackSkip: false, sevenZero: true, drawUntil: true, mercy: true, noActionFinish: false } },
+  classic: { name: 'Cổ điển', rules: { stackDraw: false, stackAny: false, stackSkip: false, sevenZero: false, drawUntil: false, mercy: false, noActionFinish: false, extras: false } },
+  house:   { name: 'Luật rừng', rules: { stackDraw: true, stackAny: true, stackSkip: true, sevenZero: false, drawUntil: false, mercy: false, noActionFinish: true, extras: true } },
+  nomercy: { name: 'No Mercy', rules: { stackDraw: true, stackAny: false, stackSkip: false, sevenZero: true, drawUntil: true, mercy: true, noActionFinish: false, extras: false } },
 };
 export const isWild = c => c.color === 'W';
 

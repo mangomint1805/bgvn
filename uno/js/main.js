@@ -1,8 +1,8 @@
-import { Host, Client, MAX, loadSnapshot, session } from './net.js?v=14';
+import { Host, Client, MAX, loadSnapshot, session } from './net.js?v=15';
 import { netStatus } from '../../shared/ui/status.js';
-import { MODES, COLOR_NAME, cardText, DRAW_VALUE } from './engine.js?v=14';
+import { MODES, COLOR_NAME, cardText, DRAW_VALUE } from './engine.js?v=15';
 import * as fx from './ufx.js';
-import { openGuide } from './guide.js';
+import { openGuide } from './guide.js?v=15';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -44,7 +44,7 @@ $('#hero-cards').innerHTML = hero.map((c, i) => cardHTML(c, '', `style="transfor
 function myName() { const n = $('#name').value.trim() || 'Bạn'; ls.set('bgvn-name', n); return n; }
 const handlers = {
   onLobby(info, code, started) { lobby = info; $('#room-code').textContent = code; if (!started) { view = null; prevView = null; renderLobby(); if (!$('#screen-lobby').classList.contains('active')) show('screen-lobby'); } },
-  onState(v) { if (!v) { view = null; closeModal(); show('screen-lobby'); renderLobby(); return; } prevView = view; view = v; if (!$('#screen-game').classList.contains('active')) { show('screen-game'); prevView = null; } render(); animate(prevView, view); },
+  onState(v) { afkEnd = v && v.timer ? Date.now() + v.timer.ms : 0; afkPid = v && v.timer ? v.timer.pid : null; if (!v) { view = null; closeModal(); show('screen-lobby'); renderLobby(); return; } prevView = view; view = v; if (!$('#screen-game').classList.contains('active')) { show('screen-game'); prevView = null; } render(); animate(prevView, view); },
   onError(m) { toast(m); fx.sfx.bad(); },
   onJoined(id) { myId = id; },
   onDisconnect() {},
@@ -87,7 +87,7 @@ const RULE_INFO = {
 };
 const MODE_DESC = {
   classic: 'Luật chuẩn 108 lá. Không có lá đánh được thì rút 1 lá, hợp thì đánh luôn.',
-  house: 'Luật rừng quen thuộc: cộng dồn +2/+4, Khoá mõm chồng Khoá mõm, tự bốc phạt từng lá, không về bằng lá chức năng, không chặn ngang.',
+  house: 'Luật rừng quen thuộc: cộng dồn +2/+4, Khoá mõm chồng Khoá mõm, tự bốc phạt từng lá, không về bằng lá chức năng, có sẵn lá mở rộng (No U, Khiên, +?, Bão tố…).',
   nomercy: 'Bộ 168 lá cực gắt: +6, +10, Quay màu, Xả màu, 7–0, ≥ 25 lá là bị loại!',
 };
 function renderLobby() {
@@ -250,7 +250,7 @@ function renderHint(v, meP) {
     else h.innerHTML = `😈 <b>${esc(pname(o.player))}</b> đang bốc phạt… ${o.until ? `tìm màu ${col}, ` : `còn ${o.left} lá, `}đã bốc ${o.got}`;
     return;
   }
-  if (v.pending) { h.innerHTML = v.pending.player === myId ? '👉 Bạn đang chọn…' : `⏳ ${esc(pname(v.pending.player))} đang ${v.pending.type === 'swap' ? 'chọn người đổi bài' : 'chọn màu'}…`; return; }
+  if (v.pending) { h.innerHTML = v.pending.player === myId ? '👉 Bạn đang chọn…' : `⏳ ${esc(pname(v.pending.player))} đang ${({ swap: 'chọn người đổi bài', target: { steal: 'chọn người để móc túi', gift: 'chọn người nhận quà', wswap: 'chọn người đổi tay' }[v.pending.card] || 'chọn người bị nhắm +4', roulette: 'chọn màu cho Vòng quay' })[v.pending.type] || 'chọn màu'}…`; return; }
   const cur = v.players[v.turn];
   if (cur.id !== myId) { h.innerHTML = `Lượt của <b>${esc(cur.name)}</b> · màu ${dot}`; return; }
   h.classList.add('mine');
@@ -280,8 +280,8 @@ function onCardClick(id) {
   const v = view; if (!isMyTurn()) { toast('Chưa tới lượt bạn 😤'); return; }
   const c = me().hand.find(x => x.id === id); if (!c) return;
   if (!v.playable.includes(id)) { fx.sfx.bad(); fx.shake($(`#hand [data-id="${id}"]`)); toast(v.rules.noActionFinish && (me().hand.length === 1 || (c.type === 'discall' && me().hand.every(x => x.color === c.color))) && c.type !== 'n' ? 'Không được về bằng lá chức năng – lá cuối phải là lá số!' : v.stack ? (v.rules.stackAny ? 'Đang bị dồn: chỉ chồng được lá +2/+4' : `Phải chồng lá rút ≥ +${v.stack.last}`) : v.mustPlay ? 'Chỉ được đánh lá vừa rút' : 'Lá này không hợp màu/số'); return; }
-  if (c.type === 'wtd4') { pickColor('Chọn màu tiếp theo', Object.assign(col => pickTarget('🎯 Nhắm ai rút 4 lá?', t => send({ type: 'play', cardId: id, color: col, target: t })), { cancel: true })); return; }
-  if (c.type === 'wswap') { pickColor('Chọn màu tiếp theo', Object.assign(col => pickTarget('🤝 Đổi nguyên tay bài với ai?', t => send({ type: 'play', cardId: id, color: col, target: t })), { cancel: true })); return; }
+  if (c.type === 'wtd4') { pickColor('🎯 Cộng nhắm +4 – chọn màu tiếp theo', Object.assign(col => pickTarget('🎯 Nhắm ai rút 4 lá?', t => send({ type: 'play', cardId: id, color: col, target: t })), { cancel: true })); return; }
+  if (c.type === 'wswap') { pickColor('🤝 Đổi tay – chọn màu tiếp theo', Object.assign(col => pickTarget('🤝 Đổi nguyên tay bài với ai?', t => send({ type: 'play', cardId: id, color: col, target: t })), { cancel: true })); return; }
   if (c.type === 'steal') { pickTarget('🫳 Móc túi ai? (lấy ngẫu nhiên 1 lá)', t => send({ type: 'play', cardId: id, target: t }), null, 2); return; }
   if (c.type === 'gift') { pickTarget('🎁 Tặng quà cho ai?', t => pickGift(id, gs => send({ type: 'play', cardId: id, target: t, give: gs }))); return; }
   if (c.type === 'dq') { send({ type: 'play', cardId: id }); return; }
@@ -429,6 +429,15 @@ function dealAnim(v) {
   setTimeout(() => { fx.banner('Bắt đầu! 🎉', ''); fx.sfx.turn(); }, (k * 45 + 400) * fx.S());
   void n;
 }
+// ---------- đồng hồ chống treo máy: còn ≤ 15 giây thì nhắc ----------
+let afkEnd = 0, afkPid = null, afkBeep = 0;
+setInterval(() => {
+  const el = $('#afk'); if (!el) return;
+  const left = afkEnd ? Math.max(0, Math.ceil((afkEnd - Date.now()) / 1000)) : 0;
+  const on = !!(afkEnd && afkPid === myId && view && view.phase === 'playing' && left <= 15);
+  el.style.display = on ? '' : 'none';
+  if (on) { el.textContent = `⏳ ${left}s`; if (left <= 5 && left !== afkBeep) { afkBeep = left; fx.sfx.turn(); } }
+}, 250);
 if (location.hash === '#debug') window.__dbg = () => ({ net, view });
 
 // ---------- Tải lại trang: tự khôi phục phòng / tự vào lại ----------

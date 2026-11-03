@@ -678,3 +678,42 @@ label { display: block; font-weight: 700; margin: 12px 0 4px; text-align: left; 
   .center.big .piles, .center.big .feed { display: none; }
 }
 @media (max-width: 420px) { .topbar .logo.small { display: none; } }
+
+/* ================= RÀ SOÁT 11/2026 ================= */
+/* trang chủ: ô mã phòng + nút Vào phòng gọn 1 dòng, nút đủ to để bấm */
+.join-row input { flex: 1; min-width: 0; }
+.join-row .btn { white-space: nowrap; flex: 0 0 auto; }
+#btn-offline { min-height: 44px; font-size: 15px; }
+.theme-pick button { min-height: 36px; }
+.g-head .btn { white-space: nowrap; flex: 0 0 auto; }
+/* thông báo nhanh trong ván: hiện ở trên, không che bài trên tay */
+#screen-game.active ~ #toast { top: 62px; bottom: auto; }
+/* khu trang bị trống thì ẩn luôn nhãn "Trang bị" */
+.me-right.empty { display: none; }
+/* điện thoại: khối thông tin của mình chiếm đủ bề ngang (không bị dạt sang phải) */
+.me-cards:empty { display: none; }
+@media (max-width: 760px) { .me-left .me-info { flex: 1; } #lobby-players li .btn { min-height: 36px; } #btn-leave { min-height: 40px; padding: 6px 16px; } }
+/* điện thoại xoay ngang: thu gọn khu của mình để còn chỗ cho bàn chơi */
+@media (max-height: 500px) and (orientation: landscape) {
+  .me { grid-template-columns: auto 1fr auto; gap: 8px; padding: 2px 8px 4px; }
+  .me-info { width: 230px; max-width: 32vw; padding: 5px 8px; }
+  .me-cols { display: none; }
+  .me-ava { width: 36px; height: 36px; } .me-range { width: 40px; height: 40px; } .me-range b { font-size: 18px; } .me-range small { font-size: 7px; }
+  #me-hand.hand .pcard, .hand .pcard { --w: 60px !important; }
+  .hand { min-height: 0 !important; padding: 12px 6px 2px !important; }
+  .hand .pcard .cshort { display: none; } .hand .pcard { height: calc(var(--w) * 1.42); grid-template-rows: calc(var(--w) * .2) 1fr calc(var(--w) * .26); }
+  #actions .btn.primary { font-size: 14px; padding: 6px 14px; }
+  .me-right .pcard.sm { --w: 38px; }
+  .topbar { padding: 4px 8px; }
+  #card-tip { display: none; }
+  .seat { width: 86px; } .seat .avatar { width: 40px; height: 40px; }
+  .seat .plate { min-width: 84px; padding: 5px 4px 3px; } .seat .pname { font-size: 12px; max-width: 86px; } .seat .pchar, .seat .role-chip.hidden-role { display: none; }
+  .seat .role-chip { font-size: 9px; padding: 0 5px; margin-top: 1px; }
+  .hpbar i.bul { width: 7px; height: 16px; } .seat .stats span { font-size: 10px; padding: 0 4px; } .seat .stats { margin-top: 1px; }
+  .hfan .backs { height: 17px; width: calc(14px + var(--n, 1) * 4px); } .hfan .backs i { width: 10px; height: 15px; margin-left: -5px; } .hfan b { font-size: 11px; }
+  .dist { width: 28px; height: 28px; right: -12px; } .dist b { font-size: 13px; } .dist small { font-size: 6px; }
+  .eqchip { padding: 1px; font-size: 0; gap: 0; } .eqchip b { display: none; } .eqchip img { width: 16px; height: 21px; }
+  .equip.right { left: calc(50% + 30px); } .equip.left { right: calc(50% + 30px); }
+  .pile, .pile-empty { width: 44px; height: 62px; } .piles .pcard.sm { --w: 44px; }
+  .center { gap: 4px; } .prompt { padding: 5px 8px; font-size: 12px; } .prompt.hint { font-size: 12px; padding: 5px 10px; } .prompt .ptitle { font-size: 14px; } .feed div:not(.new) { display: none; }
+}

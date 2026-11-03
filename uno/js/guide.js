@@ -29,7 +29,7 @@ export function openGuide(openModal, cardHTML) {
         [C('W', 'wd10'), '<b>Đổi màu +10</b>: người kế rút 10 😱'],
         [C('W', 'roulette'), '<b>Quay màu</b>: người kế chọn 1 màu rồi lật bài tới khi ra màu đó – lật bao nhiêu giữ bấy nhiêu!'],
       ])}
-      <h3>Lá mở rộng (chủ phòng bật trong sảnh)</h3>${row(cardHTML, [
+      <h3>Lá mở rộng (Luật rừng bật sẵn; chế độ khác thì chủ phòng bật trong sảnh)</h3>${row(cardHTML, [
         [C('W', 'wtd4'), '<b>Cộng nhắm +4</b>: đổi màu và chọn <b>bất kỳ ai</b> phải rút 4 lá. Có luật cộng dồn thì người bị nhắm được chồng lá rút để đẩy tiếp.'],
         [C('R', 'nou'), '<b>No U</b>: đang bị dồn +2/+4 thì đánh lá này (màu nào cũng được) để <b>dội toàn bộ phạt ngược về</b> người vừa đánh. Không có phạt thì như Đảo chiều.'],
         [C('W', 'dq'), '<b>+?</b>: màu nào cũng đánh được. Người kế bốc 1 lá, <b>màu của lá đó thành màu mới</b>. Ra số mấy thì <b>bốc thêm bấy nhiêu</b> (ra 0 là thoát), ra lá chức năng thì được tha. Bốc xong mất lượt.'],
@@ -61,7 +61,8 @@ export function openGuide(openModal, cardHTML) {
       <li>Người kế còn ít bài? Tung <b>+2, Khoá mõm</b> vào mặt họ 😈</li>
       <li>Đổi sang màu bạn đang có nhiều nhất (bảng chọn màu có đếm số lá giúp bạn).</li>
       <li>Nhớ bấm <b>UNO!</b> trước khi đánh lá áp chót. Thấy ai còn 1 lá mà chưa hô thì bấm <b>🚨 Bắt lỗi</b> ngay!</li>
-      <li>Bấm 📜 để xem nhật ký, ⚡ để chỉnh tốc độ hiệu ứng.</li></ul>`],
+      <li>Bấm 📜 để xem nhật ký, ⚡ để chỉnh tốc độ hiệu ứng.</li>
+      <li>Mỗi lượt có <b>40 giây</b> (bốc phạt: 20 giây). Còn 15 giây sẽ hiện đồng hồ ⏳ trên cùng; hết giờ máy tự đánh thay để ván không bị treo.</li></ul>`],
   };
   const draw = k => {
     openModal(`<button class="close-x" onclick="__closeModal()">✕</button><h2>📖 Cách chơi UNO</h2><div class="guide"><div class="tabs">${Object.entries(tabs).map(([id, [t]]) => `<button class="chip ${id === k ? 'on' : ''}" data-tab="${id}">${t}</button>`).join('')}</div>${tabs[k][1]()}</div>`, 'wide');

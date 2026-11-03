@@ -5,7 +5,7 @@ import { netStatus } from '../../shared/ui/status.js';
 import { imgTag, avatarTag } from './images.js';
 import { S, SPEEDS, getSpeed, setSpeed, sfx, cardSfx, gunSfx, fly, shake, flash, floatText, banner, toggleMute, isMuted, shoot, arrows, explode, sparkle, confetti, stamp, screenShake } from './fx.js';
 import { THEMES, getTheme, setTheme, onThemeChange } from './themes.js';
-import { openGuide } from './guide.js';
+import { openGuide } from './guide.js?v=12';
 import { musicSetTheme, musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=9';
 
 const $ = s => document.querySelector(s);
@@ -135,7 +135,7 @@ function fitCenter() {
   }
   if (half < r2.width / 2) c.style.maxWidth = Math.max(120, Math.round(half * 2)) + 'px';
 }
-addEventListener('resize', () => requestAnimationFrame(fitCenter));
+let resizeT; addEventListener('resize', () => { requestAnimationFrame(fitCenter); clearTimeout(resizeT); resizeT = setTimeout(() => { if (view && $('#screen-game').classList.contains('active')) render(); }, 150); });
 function renderSpeedUI() {
   const k = getSpeed();
   $('#speed-pick').innerHTML = '<span class="pick-lbl">Tốc độ hiệu ứng:</span>' + Object.entries(SPEEDS).map(([key, v]) => `<button data-s="${key}" class="${key === k ? 'on' : ''}">${v.name}</button>`).join('');
@@ -292,7 +292,7 @@ function render() {
   if (selectedCard && !v.players.find(p => p.id === myId)?.hand?.some(c => c.id === selectedCard)) selectedCard = null;
   const cur = v.players[v.turn];
   const pr = v.prompt;
-  $('#turn-info').innerHTML = v.phase === 'ended' ? 'Ván đã kết thúc' : `Lượt ${v.turnCount} · <b>${esc(cur.name)}</b>${cur.id === myId ? ' (bạn)' : ''}`;
+  $('#turn-info').innerHTML = v.phase === 'ended' ? 'Ván đã kết thúc' : `<span class="hide-m">Lượt ${v.turnCount} · </span><b>${esc(cur.name)}</b>${cur.id === myId ? ' (bạn)' : ''}`;
 
   // ---- Ghế quanh bàn ----
   const table = $('#table'); table.querySelectorAll('.seat').forEach(s => s.remove());
@@ -323,6 +323,10 @@ function render() {
     else if (pr && pr.type === 'draw_option' && pr.player === myId && pr.character === 'jessejones' && p.alive && p.handCount) { seat.classList.add('targetable'); seat.onclick = () => send({ type: 'draw_from_player', target: p.id }); }
     else seat.onclick = () => showCharacter(p);
     table.appendChild(seat);
+    // giữ ghế nằm gọn trong bàn: không tràn mép màn hình, không chui xuống thanh trên
+    const TW = table.clientWidth, sw = seat.offsetWidth, sh = seat.offsetHeight;
+    if (sw && TW > sw) seat.style.left = Math.min(Math.max(x / 100 * TW, sw / 2 + 2), TW - sw / 2 - 2) + 'px';
+    if (sh && TH > sh) seat.style.top = Math.min(Math.max(top, sh / 2 + 6), TH - sh / 2 - 2) + 'px';
   });
   requestAnimationFrame(fitCenter);
 
@@ -345,7 +349,7 @@ function render() {
     <div class="me-cols">${R ? `<div class="me-role ${m.role}"><span class="lbl">Vai trò</span><b>${R.icon} ${R.name}</b><span class="goal">${roleGoal(m.role)}</span></div>` : ''}
     <div class="me-skill"><span class="lbl">Kỹ năng · ${ch.name}</span>${suitify(ch.desc)}</div></div>`;
   $('#me-info').onclick = () => showIntro();
-  const mt = $('#me-table'); mt.innerHTML = '';
+  const mt = $('#me-table'); mt.innerHTML = ''; mt.parentElement.classList.toggle('empty', !m.table.length);
   for (const c of m.table) { const tc = cardEl(c, 'sm'); attachTip(tc, c); mt.appendChild(tc); }
 
   // ---- Tay bài (xoè quạt) ----

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BGVN – Board game Việt chơi online</title>
-<meta name="description" content="Chơi board game tiếng Việt online cùng bạn bè: BANG!, UNO. Không cần cài đặt, có bot.">
+<meta name="description" content="Chơi board game tiếng Việt online cùng bạn bè: BANG!, UNO, Cờ Tỷ Phú, Scribble, Mèo Nổ, Tam Quốc Sát, Ma Sói. Không cần cài đặt, có bot.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;800&family=Bevan&display=swap" rel="stylesheet">
@@ -45,6 +45,15 @@ h1 span{background:linear-gradient(90deg,#ff4d5e,#ff9a3d,#2fc76f,#3d8bff);-webki
 .soon{border:3px dashed #d9cfe8;background:#fff8;color:var(--muted);display:grid;place-items:center;text-align:center;min-height:200px;box-shadow:none}
 .soon:hover{transform:none;box-shadow:none}
 footer{text-align:center;color:var(--muted);font-size:13px;margin-top:36px}
+/* chữ (info) xếp dưới phần hình, không bao giờ đè lên hình */
+.tile:not(.soon){display:flex;flex-direction:column;justify-content:flex-end;padding-top:178px}
+.tile .info{position:relative}
+.tile:not(.bang) .art{bottom:auto!important;height:178px}
+.uno .art{top:96px!important;height:0!important}
+.tile:not(.bang):not(.uno) .art{padding-top:44px;box-sizing:border-box}
+.masoi .art{padding-bottom:4px}
+.play{padding:6px 16px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 footer a{color:inherit}
 </style>
 </head>
@@ -57,7 +66,7 @@ footer a{color:inherit}
     <a class="tile bang" href="bang/">
       <div class="art"><img src="bang/img/sheriff.jpg" alt=""><img src="bang/img/bang.jpg" alt=""><img src="bang/img/calamityjanet.jpg" alt=""></div>
       <span class="play">Chơi ▶</span>
-      <div class="info"><h2>BANG!</h2><p>Đấu súng Viễn Tây: Cảnh sát trưởng, Phó, Kẻ cướp và Kẻ phản bội – ai sẽ trụ lại?</p>
+      <div class="info"><h2>BANG!</h2><p>Đấu súng Viễn Tây: Cảnh sát trưởng, Phó cảnh sát, Tội phạm và Kẻ hai mặt – ai sẽ trụ lại?</p>
         <div class="tags"><i>4–7 người</i><i>Vai trò ẩn</i><i>Có bot</i></div></div>
     </a>
     <a class="tile uno" href="uno/">
