@@ -4,7 +4,7 @@ import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat,
 import { cardHTML, catSVG, bombSVG, cardIcon, mascotSVG, tint } from './cards.js?v=7';
 import * as fx from './mfx.js?v=7';
 import { openGuide } from './guide.js?v=7';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=2';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=3';
 setSpeedFn(fx.S);
 
 const $ = s => document.querySelector(s);

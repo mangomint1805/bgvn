@@ -1,9 +1,12 @@
-import { Host, Client, MAX, MIN, loadSnapshot, session } from './net.js?v=2';
+import { Host, Client, MAX, MIN, loadSnapshot, session } from './net.js?v=3';
 import { netStatus } from '../../shared/ui/status.js';
-import { ROLES, ROLE_ORDER, STEP_TEXT, TEAM_NAME, roleList, presetRoles, isWolfRole, DEFAULT_OPTS } from './engine.js?v=2';
-import { roleCardSVG, cardBackSVG, roleChip, roleDot, bambooSVG, dinhSVG, hillsSVG, starsHTML, firefliesHTML, heroSVG } from './art.js?v=2';
-import * as fx from './fx.js?v=2';
-import { openGuide } from './guide.js?v=2';
+import { ROLES, ROLE_ORDER, STEP_TEXT, TEAM_NAME, roleList, presetRoles, isWolfRole, DEFAULT_OPTS } from './engine.js?v=3';
+import { openReplay, replayFollowUpdate } from './replay.js?v=3';
+import { coachCheck, coachHide, coachTipEnd } from './coach.js?v=3';
+import { roleCardSVG, cardBackSVG, roleChip, roleDot, bambooSVG, dinhSVG, hillsSVG, starsHTML, firefliesHTML, heroSVG } from './art.js?v=3';
+import * as fx from './fx.js?v=3';
+import { openGuide } from './guide.js?v=3';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=3';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -13,7 +16,7 @@ const GAME = 'masoi';
 
 let net = null, isHost = false, myId = null, lobby = null, view = null;
 let lastEv = 0, curPk = -1, sel = [], witch = { save: null, poison: null, mode: null }, clockEnd = 0, clockTotal = 1;
-let tab = 'all', seenChat = {}, lastChatN = 0, dockBig = false, theme = 'night', fresh = true, endShown = false;
+let tab = 'all', seenChat = {}, lastChatN = 0, dockBig = false, theme = 'night', fresh = true, endShown = false, clockPaused = 0, thiefPk = -1, revealPending = false;
 
 // ---------- cảnh ----------
 $('#hills').innerHTML = hillsSVG();
@@ -42,7 +45,10 @@ let toastT;
 function toast(m, ms = 2800) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms); }
 let modalKey = null;
 function openModal(html, cls = '', key = null) { $('#modal-box').className = 'modal-box ' + cls; $('#modal-box').innerHTML = html; $('#modal').classList.add('show'); modalKey = key; }
-function closeModal() { $('#modal').classList.remove('show'); modalKey = null; }
+function closeModal() { $('#modal').classList.remove('show'); const k = modalKey; modalKey = null; if (k === 'reveal' && view) setTimeout(() => coachCheck(ctx()), 200); }
+// cầu nối cho replay.js / coach.js (tránh vòng import)
+const CTX = { get view() { return view; }, get net() { return net; }, get isHost() { return isHost; }, get myId() { return myId; }, get revealPending() { return revealPending; }, openModal, closeModal: (...a) => closeModal(...a), modalKey: () => modalKey, revealModal: () => revealModal(), render: () => render(), esc, clean, pl: id => pl(id), pname: id => pname(id) };
+const ctx = () => CTX;
 window.__closeModal = closeModal;
 $('#modal').addEventListener('click', e => { if (e.target.id === 'modal' && modalKey !== 'reveal') closeModal(); });
 const send = a => { if (!net) return; if (isHost) net.act('host', a); else net.act(a); };
@@ -89,6 +95,7 @@ function startHost(offline) {
   show('screen-lobby');
 }
 $('#btn-offline').onclick = () => startHost(true);
+$('#btn-tutorial').onclick = () => { startHost(true); net.startTutorial(); };
 $('#btn-create').onclick = () => startHost(false);
 $('#btn-join').onclick = () => {
   const code = $('#join-code').value.trim(); if (code.length < 5) { toast('Nhập mã phòng 5 ký tự nhé.'); return; }
@@ -99,7 +106,7 @@ $('#btn-join').onclick = () => {
 $('#join-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
 $('#join-code').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase(); });
 const qcode = new URLSearchParams(location.search).get('room'); if (qcode) $('#join-code').value = qcode.toUpperCase();
-function leave() { if (net) (net.leave ? net.leave() : net.destroy()); net = null; view = null; lobby = null; closeModal(); show('screen-home'); setBody(null); setTheme('night'); moodFor(null); }
+function leave() { if (net) (net.leave ? net.leave() : net.destroy()); net = null; view = null; lobby = null; closeModal(); coachHide(); show('screen-home'); setBody(null); setTheme('night'); moodFor(null); }
 $('#btn-leave-lobby').onclick = leave;
 $('#btn-leave').onclick = () => openModal(`<h2>Rời làng?</h2><p class="ctr">${isHost ? 'Bạn là chủ phòng – rời đi sẽ kết thúc ván cho mọi người.' : 'Bạn có thể vào lại bằng mã phòng (máy làm giùm lúc bạn vắng).'}</p><div class="btns"><button class="btn" onclick="__closeModal()">Ở lại</button><button class="btn red" id="m-leave">Rời ván</button></div>`);
 document.addEventListener('click', e => { if (e.target.id === 'm-leave') leave(); });
@@ -118,7 +125,7 @@ function renderLobby() {
   if (!lobby) return;
   const ps = lobby.players, o = lobby.opts, n = ps.length, dis = isHost ? '' : 'disabled';
   $('#pcount').textContent = `${n}/${MAX}`;
-  $('#plist').innerHTML = ps.map(p => `<li>${avatar(p.name, p.isBot)}<span>${esc(clean(p.name))}${p.id === myId ? ' <small>(bạn)</small>' : ''}${p.id === 'host' ? ' 👑' : ''}${!p.connected ? ' 📴' : ''}</span>${isHost && p.id !== 'host' ? `<button class="x" data-rm="${p.id}" aria-label="Mời ra">✕</button>` : ''}</li>`).join('');
+  $('#plist').innerHTML = ps.map(p => `<li class="${p.id === myId ? 'me' : ''}">${avatar(p.name, p.isBot)}<span class="pn">${esc(clean(p.name))}</span>${p.id === myId || p.id === 'host' || !p.connected ? `<span class="tg">${p.id === myId ? '<small>(bạn)</small>' : ''}${p.id === 'host' ? '👑' : ''}${!p.connected ? '📴' : ''}</span>` : ''}${isHost && p.id !== 'host' ? `<button class="x" data-rm="${p.id}" aria-label="Mời ra">✕</button>` : ''}</li>`).join('');
   $$('#plist [data-rm]').forEach(b => b.onclick = () => net.removePlayer(b.dataset.rm));
   $('#btn-addbot').style.display = isHost && n < MAX ? '' : 'none';
   $('#btn-fill').style.display = isHost && n < 8 ? '' : 'none';
@@ -134,7 +141,8 @@ function renderLobby() {
   $$('#roles [data-rd]').forEach(b => b.onclick = () => { fx.sfx.click(); net.setRole(b.dataset.rd, (+lobby.opts.roles[b.dataset.rd] || 0) - 1); });
   $$('#roles [data-ri]').forEach(b => b.onclick = () => { fx.sfx.click(); net.setRole(b.dataset.ri, (+lobby.opts.roles[b.dataset.ri] || 0) + 1); });
   const wolves = rl.list.filter(isWolfRole).length;
-  $('#role-sum').textContent = rl.ok ? `🐺 ${wolves} Sói · 🧑‍🌾 ${n - wolves} người khác` : '';
+  $('#role-sum').textContent = rl.ok ? `🐺 ${wolves} Sói · 🧑‍🌾 ${n - wolves} người khác${rl.extra ? ' · 🃏 +2 lá thừa' : ''}` : '';
+  renderPresets();
   $('#role-err').textContent = rl.ok ? '' : '⚠️ ' + rl.reason;
   $('#opts').innerHTML = `<label class="opt"><input type="checkbox" data-opt="reveal" ${o.reveal ? 'checked' : ''} ${dis}><span><b>🪦 Lộ vai khi chết</b><small>Tắt: chỉ biết ai chết, không biết là ai.</small></span></label>` +
     Object.entries(OPT_SEL).map(([k, [t, sub, list]]) => `<label class="opt"><span><b>${t}</b>${sub ? `<small>${sub}</small>` : ''}</span><select data-opt="${k}" ${dis}>${list.map(([v, l]) => `<option value="${v}" ${String(o[k]) === String(v) ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`).join('');
@@ -144,6 +152,38 @@ function renderLobby() {
   $('#wait-msg').style.display = isHost ? 'none' : '';
 }
 $('#opt-auto').onchange = e => net && net.setOpt('auto', e.target.checked);
+// ---------- bộ vai đã lưu của hội (localStorage, chỉ chủ phòng) ----------
+const PRESET_KEY = 'bgvn-masoi-presets';
+const RULE_KEYS = ['reveal', 'voteMode', 'tie', 'doubleSave', 'dayTime', 'voteTime', 'nightTime'];
+const loadPresets = () => { try { const a = JSON.parse(ls.get(PRESET_KEY) || '[]'); return Array.isArray(a) ? a.filter(x => x && x.name && x.roles) : []; } catch (e) { return []; } };
+const savePresets = a => ls.set(PRESET_KEY, JSON.stringify(a.slice(0, 12)));
+function presetSummary(roles) { return ROLE_ORDER.filter(r => r !== 'villager' && roles[r]).map(r => ROLES[r].emoji + (roles[r] > 1 ? '×' + roles[r] : '')).join(''); }
+function renderPresets() {
+  const box = $('#presets'); if (!box) return;
+  if (!isHost || !lobby) { box.style.display = 'none'; return; }
+  box.style.display = '';
+  const list = loadPresets();
+  box.innerHTML = `<div class="ps-head"><b>💾 Bộ vai của hội</b><button class="chip sm" id="ps-save">＋ Lưu bộ đang chọn</button></div>` +
+    (list.length ? `<div class="ps-list">${list.map((x, i) => `<div class="ps"><button class="ps-use" data-ps="${i}" title="Dùng bộ này"><b>${esc(x.name)}</b><small>${presetSummary(x.roles)}${x.n ? ` · lưu lúc ${x.n} người` : ''}</small></button><button class="x" data-psx="${i}" aria-label="Xoá ${esc(x.name)}">✕</button></div>`).join('')}</div>` : '<p class="ps-empty">Chưa lưu bộ nào. Chỉnh vai + luật xong bấm “Lưu” để lần sau chọn lại 1 chạm.</p>');
+  $('#ps-save').onclick = savePresetModal;
+  $$('#presets [data-ps]').forEach(b => b.onclick = () => { const x = loadPresets()[+b.dataset.ps]; if (!x) return; fx.sfx.ok(); net.applyPreset(x.roles, x.opts); toast(`✅ Đã chọn bộ “${x.name}”`); });
+  $$('#presets [data-psx]').forEach(b => b.onclick = () => { const a = loadPresets(); const x = a[+b.dataset.psx]; if (!x) return; openModal(`<h2>Xoá bộ vai?</h2><p class="ctr">Xoá “<b>${esc(x.name)}</b>” khỏi máy này?</p><div class="btns"><button class="btn" onclick="__closeModal()">Thôi</button><button class="btn red" id="psx-ok">Xoá</button></div>`); $('#psx-ok').onclick = () => { a.splice(+b.dataset.psx, 1); savePresets(a); closeModal(); renderPresets(); }; });
+}
+function savePresetModal() {
+  if (!lobby) return;
+  const roles = { ...lobby.opts.roles };
+  openModal(`<h2>💾 Lưu bộ vai</h2><p class="ctr">${presetSummary(roles)} + luật chơi hiện tại. Lưu trên máy này để lần sau chọn lại nhanh.</p>
+    <label class="fld"><span>Tên bộ</span><input id="ps-name" maxlength="28" placeholder="VD: Bộ hội GET A JOB" value=""></label>
+    <div class="btns"><button class="btn" onclick="__closeModal()">Thôi</button><button class="btn pri" id="ps-ok">💾 Lưu</button></div>`);
+  const inp = $('#ps-name'); setTimeout(() => inp.focus(), 50);
+  const go = () => {
+    const name = inp.value.trim() || 'Bộ hội GET A JOB';
+    const a = loadPresets().filter(x => x.name.toLowerCase() !== name.toLowerCase());
+    a.unshift({ name, roles, opts: Object.fromEntries(RULE_KEYS.map(k => [k, lobby.opts[k]])), n: lobby.players.length });
+    savePresets(a); closeModal(); renderPresets(); toast(`💾 Đã lưu “${name}”`); fx.sfx.ok();
+  };
+  $('#ps-ok').onclick = go; inp.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+}
 $('#btn-addbot').onclick = () => { fx.sfx.click(); net && net.addBot(); };
 $('#btn-fill').onclick = () => { fx.sfx.click(); net && net.addBot(Math.max(0, 8 - lobby.players.length)); };
 $('#btn-start').onclick = () => { fx.actx(); net && net.start(); };
@@ -157,6 +197,7 @@ $('#btn-mute').onclick = () => { fx.toggleMute(); syncMute(); }; syncMute();
 const syncVoice = () => $('#btn-voice').classList.toggle('on', fx.voiceIsOn());
 $('#btn-voice').onclick = () => { const on = fx.voiceToggle(); syncVoice(); toast(on ? '🗣️ Quản trò sẽ đọc to (nếu máy có giọng tiếng Việt). Chơi chung phòng thì chỉ bật 1 máy thôi nha.' : '🗣️ Tắt giọng quản trò.', 3500); if (on) fx.say('Xin chào cả làng'); }; syncVoice();
 $('#btn-guide').onclick = $('#btn-guide-home').onclick = () => openGuide(openModal);
+for (const id of ['#btn-news', '#btn-news-home']) { const b = $(id); newsBadge(b, 'masoi'); b.onclick = () => { openNews('masoi'); $$('#btn-news,#btn-news-home').forEach(x => x.classList.toggle('bgvn-dot', false)); }; }
 document.addEventListener('pointerdown', () => { fx.actx(); if (!view && !$('#screen-game').classList.contains('active')) moodFor(null); }, { once: true });
 
 // ---------- giữ để xem vai ----------
@@ -167,6 +208,7 @@ function peekHTML() {
   if (m.lover) extra.push(`💘 Người yêu: <b>${esc(pname(m.lover))}</b>`);
   if (isWolfRole(m.role)) { const mates = view.players.filter(p => p.id !== m.id && p.role && isWolfRole(p.role)); if (mates.length) extra.push(`🐺 Đồng bọn: <b>${mates.map(p => esc(clean(p.name)) + (p.alive ? '' : ' 💀')).join(', ')}</b>`); }
   if (m.role === 'seer') { const s = Object.entries(m.seen || {}); if (s.length) extra.push('🔮 ' + s.map(([id, r]) => `${esc(pname(id))}: <b>${r === 'wolf' ? 'Sói' : 'Dân'}</b>`).join(' · ')); }
+  if (m.role === 'medium') { const s = Object.entries(m.seen || {}); if (s.length) extra.push('🕯️ ' + s.map(([id, r]) => `${esc(pname(id))}: <b>${r === 'wolf' ? 'phe Sói' : r === 'village' ? 'phe Dân' : 'phe riêng'}</b>`).join(' · ')); }
   if (m.role === 'witch' && view.potions) extra.push(`🧪 Bình cứu: <b>${view.potions.save ? 'còn' : 'hết'}</b> · ☠️ Bình độc: <b>${view.potions.poison ? 'còn' : 'hết'}</b>`);
   if (m.role === 'elder') extra.push(m.elderHit ? '👴 Đã mất mạng phụ' : '👴 Còn mạng phụ');
   if (m.idiotOut) extra.push('🤪 Đã lộ – không được bỏ phiếu');
@@ -187,6 +229,7 @@ $('#mycard-art').innerHTML = cardBackSVG();
 
 // màn nhận vai: giữ để lật
 function revealModal() {
+  revealPending = false;
   const m = me(); if (!m) return;
   openModal(`<h2>🌕 Vai của bạn</h2><p class="ctr">Cúi xuống, che màn hình, rồi <b>bấm giữ</b> lá bài để lật. Thả tay là úp lại.</p>
     <div class="reveal-card" id="rv"><div class="flip"><div class="face">${cardBackSVG()}</div><div class="face front">${roleCardSVG(m.role)}</div></div></div>
@@ -214,15 +257,16 @@ function onState(v) {
   if (!v) { view = null; endShown = false; return; }
   const prev = view; view = v;
   if (!$('#screen-game').classList.contains('active')) { show('screen-game'); if (modalKey !== 'reveal') closeModal(); }
-  if (v.pk !== curPk) { sel = []; witch = { save: null, poison: null, mode: null }; curPk = v.pk; if (modalKey === 'claim' && v.phase !== 'day') closeModal(); }
-  if (v.clock) { const end = Date.now() + v.clock.ms; if (Math.abs(end - clockEnd) > 900 || v.clock.total !== clockTotal) { clockEnd = end; clockTotal = v.clock.total; } } else clockEnd = 0;
+  if (v.pk !== curPk) { sel = []; witch = { save: null, poison: null, mode: null }; curPk = v.pk; if ((modalKey === 'claim' && v.phase !== 'day') || modalKey === 'thief') closeModal(); }
+  clockPaused = v.clock && v.clock.paused ? v.clock.ms : 0;
+  if (v.clock) { const end = Date.now() + v.clock.ms; if (clockPaused || Math.abs(end - clockEnd) > 900 || v.clock.total !== clockTotal) { clockEnd = end; clockTotal = v.clock.total; } } else clockEnd = 0;
   const t = phaseTheme(v); if (t !== theme) setTheme(t);
   moodFor(v); setBody(v);
   if (fresh) { // vừa vào/tải lại: không chiếu lại hoạt ảnh cũ
     fresh = false; lastEv = v.evN; lastChatN = v.chat.length ? v.chat[v.chat.length - 1].n : 0;
     for (const c of v.chat) seenChat[c.ch] = Math.max(seenChat[c.ch] || 0, c.n);
     tab = defaultTab(v);
-    if (v.phase === 'night' && v.day === 1 && v.pk <= 3) setTimeout(revealModal, 300);
+    if (v.phase === 'night' && v.day === 1 && v.pk <= 4 && !(v.opts.tutorial && isHost && net && net.tut && !net.tut.off && !net.tut.seen.includes('welcome'))) { revealPending = true; setTimeout(revealModal, 300); }
     if (v.phase === 'ended') setTimeout(endModal, 400);
   } else {
     const evs = v.ev.filter(e => e.n > lastEv); lastEv = v.evN;
@@ -230,6 +274,9 @@ function onState(v) {
     newChat(v);
   }
   render();
+  if (v.phase === 'night' && v.step === 'thief' && v.myTurn && v.extra && thiefPk !== v.pk) { thiefPk = v.pk; setTimeout(thiefModal, 500); }
+  replayFollowUpdate(ctx());
+  coachCheck(ctx());
 }
 function defaultTab(v) {
   if (v.me && !v.me.alive && v.phase !== 'ended') return 'ghost';
@@ -256,7 +303,7 @@ function renderPhase() {
     night: ['🌙', `Đêm ${v.day}`], dawn: ['🐓', `Sáng ngày ${v.day}`], day: ['☀️', `Ngày ${v.day} · Thảo luận`],
     vote: ['⚖️', v.vote && v.vote.round > 1 ? 'Bầu lại!' : 'Bỏ phiếu treo cổ'], last: ['🪢', 'Lời trăng trối'], hunter: ['🏹', 'Thợ Săn giương nỏ'], ended: ['🏁', 'Kết thúc'],
   }[v.phase];
-  $('#phase').innerHTML = `<span class="pi">${ic}</span><span class="pt">${title}<small>${aliveN}/${v.players.length} người còn sống${v.mixedLove && v.me && v.me.lover ? ' · 💘 phe Cặp Đôi' : ''}</small></span>`;
+  $('#phase').innerHTML = `<span class="pi">${ic}</span><span class="pt">${title}<small>${aliveN}/${v.players.length} còn sống${v.mixedLove && v.me && v.me.lover ? ' · 💘 phe Cặp Đôi' : ''}</small></span>`;
   // dòng dẫn truyện
   let ni = '📜', txt = '', hot = false;
   const m = v.me;
@@ -266,7 +313,7 @@ function renderPhase() {
     if (m && m.alive && v.myTurn) { hot = true; txt = myStepText(v); }
     else if (m && !m.alive) txt = st[1] + (v.stepFake ? ' (vai này đã chết – chỉ giả vờ gọi)' : '');
   } else if (v.phase === 'dawn') { ni = '🐓'; txt = v.deaths && v.deaths.length ? 'Ò ó o… Trời sáng. Làng mất người rồi!' : 'Ò ó o… Trời sáng. Đêm qua bình yên!'; }
-  else if (v.phase === 'day') { ni = '🗣️'; txt = m && m.alive ? 'Bàn tán đi cả làng! <b>Chạm vào ai đó để chỉ điểm 🫵</b>. Bấm “Sẵn sàng” khi muốn bỏ phiếu.' : 'Dân làng đang cãi nhau… Hồn ma chỉ được hóng 🍿'; }
+  else if (v.phase === 'day') { ni = '🗣️'; txt = m && m.alive ? 'Bàn tán đi cả làng! <b>Chạm vào ai đó để chỉ điểm 👉</b>. Bấm “Sẵn sàng” khi muốn bỏ phiếu.' : 'Dân làng đang cãi nhau… Hồn ma chỉ được hóng 🍿'; }
   else if (v.phase === 'vote') { ni = '⚖️'; txt = m && m.alive && !m.idiotOut ? '<b>Chạm vào người bạn muốn treo cổ</b> – hoặc Bỏ qua.' : 'Cả làng đang bỏ phiếu…'; hot = !!v.myTurn; }
   else if (v.phase === 'last') { ni = '🪢'; txt = v.condemned === myId ? '<b>Bạn bị treo cổ!</b> Gõ lời trăng trối ở khung chat rồi bấm Xong.' : `${esc(pname(v.condemned))} đang nói lời trăng trối…`; hot = v.condemned === myId; }
   else if (v.phase === 'hunter') { ni = '🏹'; txt = v.hunter === myId ? '<b>Bạn là Thợ Săn!</b> Chạm vào 1 người để kéo theo.' : `${esc(pname(v.hunter))} là Thợ Săn – đang nhắm bắn ai đó…`; hot = v.hunter === myId; }
@@ -281,6 +328,8 @@ function myStepText(v) {
     case 'seer': return '<b>Bạn là Tiên Tri 🔮</b> – chạm chọn người để soi.';
     case 'wolves': case 'wolves2': return `<b>Bầy Sói đi săn 🐺</b> – chạm vào con mồi. Cả bầy phải thống nhất${v.step === 'wolves2' ? ' (lượt cắn thêm!)' : ''}.`;
     case 'witch': return '<b>Bạn là Phù Thủy 🧪</b> – cứu, đầu độc, hay đi ngủ?';
+    case 'thief': return '<b>Bạn là Kẻ Trộm 🃏</b> – tráo lấy 1 trong 2 lá thừa, hoặc giữ nguyên.';
+    case 'medium': return '<b>Bạn là Bà Đồng 🕯️</b> – chạm vào 1 người <b>đã chết</b> để gọi hồn.';
   }
   return '';
 }
@@ -300,6 +349,7 @@ function pickMode() {
 }
 function canPick(mode, p) {
   const v = view;
+  if (mode === 'medium') return !p.alive && p.id !== myId && !(v.me.seen && p.id in v.me.seen);
   if (!p.alive) return false;
   switch (mode) {
     case 'cupid': return true;
@@ -349,19 +399,19 @@ function renderSeats() {
     const cls = ['seat', p.id === myId ? 'me' : '', p.alive ? '' : 'dead', can ? 'can' : (mode && p.alive && p.id !== myId ? 'no' : ''), isSel ? 'sel' : '', wolfmate ? 'wolfmate' : '', v.condemned === p.id && v.phase === 'last' ? 'condemned' : '', winners && winners.has(p.id) ? 'win' : ''].filter(Boolean).join(' ');
     const b = [];
     if (votes[p.id]) b.push(`<span class="badge b-votes">${votes[p.id]}</span>`);
-    if (acc[p.id] && (v.phase === 'day' || v.phase === 'vote')) b.push(`<span class="badge b-acc">🫵${acc[p.id]}</span>`);
+    if (acc[p.id] && (v.phase === 'day' || v.phase === 'vote')) b.push(`<span class="badge b-acc">👉${acc[p.id]}</span>`);
     if (v.phase === 'day' && v.dayInfo && v.dayInfo.ready[p.id] && p.alive) b.push('<span class="badge b-ready">✓ Sẵn</span>');
     if ((v.away || []).includes(p.id)) b.push('<span class="badge b-away">📴</span>');
     if (p.lover) b.push(`<span class="badge b-love ${ghost || v.phase === 'ended' ? '' : 'priv'}">💘</span>`);
     if (wolfv[p.id]) b.push(`<span class="badge b-wolfv priv">🐺×${wolfv[p.id]}</span>`);
     if (known) b.push(`<span class="${publicRole || ghost ? '' : 'priv'}">${roleDot(known)}</span>`.replace('<span class="">', '<span>'));
-    else if (m && m.seen && m.seen[p.id]) b.push(`<span class="rdot priv" style="--c:${m.seen[p.id] === 'wolf' ? '#c0392b' : '#3f8f4f'}" title="Kết quả soi">${m.seen[p.id] === 'wolf' ? '🐺' : '✓'}</span>`);
+    else if (m && m.seen && m.seen[p.id]) { const r = m.seen[p.id]; b.push(`<span class="rdot priv" style="--c:${r === 'wolf' ? '#c0392b' : r === 'village' ? '#3f8f4f' : '#6b7280'}" title="${m.role === 'medium' ? 'Kết quả gọi hồn' : 'Kết quả soi'}">${r === 'wolf' ? '🐺' : r === 'village' ? '✓' : '?'}</span>`); }
     let sub = '';
     if (!p.alive) sub = { wolf: 'bị cắn', poison: 'chết đêm', love: 'chết vì tình', shot: 'trúng tên', hang: 'bị treo' }[p.cause] || 'đã chết';
     else if (p.idiotOut) sub = '🤪 mất phiếu';
     else if (v.phase === 'vote' && v.vote && v.vote.votes && v.vote.votes[p.id]) sub = '→ ' + (v.vote.votes[p.id] === 'skip' ? 'bỏ qua' : pname(v.vote.votes[p.id]));
     else if (v.phase === 'vote' && v.vote && v.vote.voted.includes(p.id)) sub = '✓ đã bầu';
-    else if (v.phase === 'day' && v.dayInfo && v.dayInfo.accuse[p.id]) sub = '🫵 ' + pname(v.dayInfo.accuse[p.id]);
+    else if (v.phase === 'day' && v.dayInfo && v.dayInfo.accuse[p.id]) sub = '👉 ' + pname(v.dayInfo.accuse[p.id]);
     else if (p.id === myId) sub = '⭐ bạn';
     else if (p.isBot) sub = 'bot';
     const style = pos ? ` style="--x:${pos[i][0].toFixed(2)}%;--y:${pos[i][1].toFixed(2)}%"` : '';
@@ -375,7 +425,7 @@ function seatClick(pid) {
   fx.actx(); fx.sfx.pick();
   switch (mode) {
     case 'cupid': if (sel.includes(pid)) sel = sel.filter(x => x !== pid); else { sel.push(pid); if (sel.length > 2) sel.shift(); } break;
-    case 'guard': case 'seer': case 'hunter': sel = sel[0] === pid ? [] : [pid]; break;
+    case 'guard': case 'seer': case 'hunter': case 'medium': sel = sel[0] === pid ? [] : [pid]; break;
     case 'poison': witch.poison = witch.poison === pid ? null : pid; break;
     case 'wolves': send({ type: 'wolf', target: pid }); fx.sfx.claw(); break;
     case 'accuse': send({ type: 'accuse', target: pid }); break;
@@ -398,6 +448,13 @@ function renderAct() {
       mine = true;
       if (v.step === 'cupid') { hint = sel.length ? `💘 ${sel.map(pname).join(' ❤ ')}${sel.length < 2 ? ' + …' : ''}` : 'Chọn 2 người (được chọn chính mình).'; btns.push(B('a-cupid', '💘 Ghép đôi', 'pri', sel.length !== 2), B('a-skip', 'Bỏ qua')); }
       else if (v.step === 'guard') { hint = sel[0] ? `🛡️ Bảo vệ <b>${esc(pname(sel[0]))}</b>` : `Chọn người để bảo vệ${v.lastGuard ? ` (không được chọn lại ${esc(pname(v.lastGuard))})` : ''}.`; btns.push(B('a-guard', '🛡️ Bảo vệ', 'pri', !sel[0]), B('a-skip', 'Bỏ qua')); }
+      else if (v.step === 'thief') {
+        const ex = v.extra || [];
+        hint = `🃏 2 lá thừa: ${ex.map(r => `<b>${ROLES[r].emoji} ${ROLES[r].name}</b>`).join(' và ')}. Lấy 1 lá (thành vai đó) hoặc giữ nguyên.`;
+        ex.forEach((r, i) => btns.push(B('a-th-' + i, `${ROLES[r].emoji} Lấy ${ROLES[r].name}`, i ? 'purple' : 'pri')));
+        btns.push(B('a-th-keep', '🃏 Giữ nguyên'));
+      }
+      else if (v.step === 'medium') { hint = sel[0] ? `🕯️ Gọi hồn <b>${esc(pname(sel[0]))}</b>` : 'Chạm vào 1 người đã chết (ghế mờ) để hỏi họ thuộc phe nào.'; btns.push(B('a-medium', '🕯️ Gọi hồn', 'purple', !sel[0]), B('a-skip', 'Bỏ qua')); }
       else if (v.step === 'seer') { hint = sel[0] ? `🔮 Soi <b>${esc(pname(sel[0]))}</b>` : 'Chọn người để soi.'; btns.push(B('a-seer', '🔮 Soi', 'purple', !sel[0]), B('a-skip', 'Bỏ qua')); }
       else if (v.step === 'wolves' || v.step === 'wolves2') {
         const wv = v.wolfVotes || {}; const lines = Object.entries(wv).map(([w, t]) => `${esc(pname(w))}→${t ? esc(pname(t)) : '🙅'}`);
@@ -415,9 +472,10 @@ function renderAct() {
     case 'day':
       if (!m.alive) { hint = ghostTxt; break; }
       { const ready = v.dayInfo && v.dayInfo.ready[myId]; const alive = v.players.filter(p => p.alive).length, rn = v.dayInfo ? Object.values(v.dayInfo.ready).filter(Boolean).length : 0;
-        hint = `🫵 Chạm vào người để chỉ điểm (chạm lại để rút). ${rn}/${alive} người sẵn sàng bỏ phiếu.`;
-        btns.push(B('a-ready', ready ? '✋ Đã sẵn sàng (bấm để huỷ)' : '✋ Sẵn sàng bỏ phiếu', ready ? 'green' : 'pri'));
-        if (m.role === 'seer' && Object.keys(m.seen || {}).length) btns.push(B('a-claim', '📢 Khai kết quả soi', 'purple')); }
+        hint = `👉 Chạm vào người để chỉ điểm (chạm lại để rút). ${rn}/${alive} người sẵn sàng bỏ phiếu.`;
+        btns.push(B('a-ready', ready ? (isHost || m.role === 'seer' ? '✅ Đã sẵn sàng' : '✅ Đã sẵn sàng (bấm để huỷ)') : '✋ Sẵn sàng bầu', ready ? 'green' : 'pri'));
+        if (m.role === 'seer' && Object.keys(m.seen || {}).length) btns.push(B('a-claim', '📢 Khai soi', 'purple'));
+        if (isHost) btns.push(B('a-early', '⏩ Bầu sớm')); }
       break;
     case 'vote':
       if (!m.alive) { hint = ghostTxt; break; }
@@ -437,7 +495,7 @@ function renderAct() {
       break;
     case 'ended':
       hint = `🏁 <b>${v.winner.team === 'draw' ? 'Hoà!' : TEAM_NAME[v.winner.team] + ' thắng!'}</b>`;
-      btns.push(B('a-result', '📜 Xem kết quả', 'pri'));
+      btns.push(B('a-result', '📜 Kết quả', 'pri'), B('a-replay', '🎞️ Xem lại ván', 'purple'));
       if (isHost) btns.push(B('a-again', '🔁 Ván mới'));
       break;
   }
@@ -445,6 +503,12 @@ function renderAct() {
   el.classList.toggle('mine', mine);
   const on = (id, f) => { const b = document.getElementById(id); if (b) b.onclick = () => { fx.actx(); fx.sfx.click(); f(); }; };
   on('a-skip', () => send({ type: 'skip' }));
+  on('a-th-0', () => { send({ type: 'thief', take: 0 }); fx.sfx.magic(); });
+  on('a-th-1', () => { send({ type: 'thief', take: 1 }); fx.sfx.magic(); });
+  on('a-th-keep', () => send({ type: 'thief', take: null }));
+  on('a-medium', () => { send({ type: 'medium', target: sel[0] }); });
+  on('a-early', () => { send({ type: 'early' }); toast('⏩ Chủ phòng cho bỏ phiếu sớm!'); });
+  on('a-replay', () => openReplay(ctx(), 0));
   on('a-cupid', () => { send({ type: 'cupid', targets: sel.slice() }); fx.sfx.heart(); });
   on('a-guard', () => { send({ type: 'guard', target: sel[0] }); fx.sfx.shield(); });
   on('a-seer', () => { send({ type: 'seer', target: sel[0] }); });
@@ -462,11 +526,11 @@ function renderAct() {
   on('a-again', () => { closeModal(); net.restart(); });
 }
 // ban đêm chưa tới lượt: nói rõ cho người mới là mình có việc gì không, đã xong hay sắp tới lượt
-const NIGHT_ORDER = ['cupid', 'guard', 'seer', 'wolves', 'witch'];
+const NIGHT_ORDER = ['thief', 'cupid', 'guard', 'seer', 'medium', 'wolves', 'witch'];
 function nightWaitText(v, m) {
   const mine = isWolfRole(m.role) ? 'wolves' : NIGHT_ORDER.includes(m.role) ? m.role : null;
   // không ghi tên vai ra đây: chơi chung phòng, người ngồi cạnh liếc màn hình là lộ
-  if (!mine || (mine === 'cupid' && v.day !== 1)) return '😴 Nhắm mắt, ngủ ngoan… Cúi xuống điện thoại cho khỏi lộ nha.';
+  if (!mine || ((mine === 'cupid' || mine === 'thief') && v.day !== 1)) return '😴 Nhắm mắt, ngủ ngoan… Cúi xuống điện thoại cho khỏi lộ nha.';
   const cur = NIGHT_ORDER.indexOf(v.step === 'wolves2' ? 'wolves' : v.step);
   return NIGHT_ORDER.indexOf(mine) > cur ? '😴 Chưa tới lượt bạn – lát nữa máy sẽ gọi dậy (khung trên sáng vàng). Cúi xuống điện thoại nha.' : '😴 Bạn xong việc đêm nay rồi, ngủ ngoan… Cúi xuống điện thoại cho khỏi lộ nha.';
 }
@@ -535,10 +599,11 @@ function frame() {
   requestAnimationFrame(frame);
   const c = $('#clock');
   if (!view || !clockEnd || view.phase === 'ended') { c.className = 'clock'; const nt = $('#ntime'); if (nt) nt.textContent = ''; return; }
-  const left = Math.max(0, clockEnd - Date.now()), sec = Math.ceil(left / 1000);
+  const left = clockPaused ? clockPaused : Math.max(0, clockEnd - Date.now()), sec = Math.ceil(left / 1000);
   c.className = 'clock on' + (sec <= 10 ? ' low' : '');
   c.querySelector('i').style.width = (left / clockTotal * 100).toFixed(1) + '%';
-  const nt = $('#ntime'); if (nt) { nt.textContent = sec >= 60 ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}` : sec + 's'; nt.classList.toggle('low', sec <= 10); }
+  const nt = $('#ntime'); if (nt && clockPaused) { if (!nt.querySelector('.pz')) nt.innerHTML = '<i class="pz" aria-label="Tạm dừng"></i>'; nt.classList.remove('low'); return; }
+  if (nt) { nt.textContent = sec >= 60 ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}` : sec + 's'; nt.classList.toggle('low', sec <= 10); }
   if (view.myTurn && amAlive() && sec <= 5 && sec > 0 && sec !== lastTick) { lastTick = sec; fx.sfx.tick(); }
 }
 requestAnimationFrame(frame);
@@ -568,7 +633,7 @@ function playEvents(evs) {
         if (e.step === 'wolves' || e.step === 'wolves2') fx.sfx.howlOne();
         if (view.phase === 'night' && view.myTurn && view.me && view.me.alive && view.step === e.step) { fx.sfx.ok(); try { navigator.vibrate && navigator.vibrate([120, 80, 120]); } catch (x) {} fx.pop($('#act'), 'pop'); }
       }); break;
-      case 'seen': at(t + 200, () => { fx.sfx.magic(); const w = e.res === 'wolf'; fx.banner(`🔮 ${esc(pname(e.id))}<small>${w ? 'LÀ SÓI! 🐺' : 'không phải Sói 🙂'}</small>`, w ? 'blood' : 'gold', 2600); }); break;
+      case 'seen': at(t + 200, () => { fx.sfx.magic(); const w = e.res === 'wolf'; if (e.medium) fx.banner(`🕯️ Hồn ${esc(pname(e.id))}<small>${w ? 'là phe SÓI 🐺' : e.res === 'village' ? 'là phe Dân Làng 🧑‍🌾' : 'là phe riêng 🥀'}</small>`, w ? 'blood' : 'night', 2600); else fx.banner(`🔮 ${esc(pname(e.id))}<small>${w ? 'LÀ SÓI! 🐺' : 'không phải Sói 🙂'}</small>`, w ? 'blood' : 'gold', 2600); }); break;
       case 'dawn': at(t, () => {
         fx.sfx.rooster(); fx.say(e.deaths.length ? 'Trời sáng. Đêm qua có người chết.' : 'Trời sáng. Đêm qua bình yên.');
         const ds = e.deaths || [];
@@ -601,10 +666,20 @@ function playEvents(evs) {
         const w = view.winner, iWon = w && w.ids.includes(myId);
         if (w.team === 'wolf') { fx.sfx.wolfwin(); fx.claw(); } else { fx.sfx.win(); fx.confetti(); }
         if (!iWon && w.team !== 'wolf') setTimeout(() => fx.sfx.lose(), 1200);
-        endModal();
+        if (modalKey !== 'replay') endModal(); // đang xem lại thì không đè lên
       }); break;
     }
   }
+}
+// Kẻ Trộm: xem 2 lá thừa bằng hình
+function thiefModal() {
+  const v = view; if (!v || v.step !== 'thief' || !v.myTurn || !v.extra) return;
+  if (modalKey || revealPending) { setTimeout(thiefModal, 700); return; } // chờ lật xong lá vai
+  openModal(`<h2>🃏 Hai lá bài thừa</h2><p class="ctr">Chạm vào lá muốn lấy – bạn sẽ thành vai đó. Không thích thì giữ nguyên làm Kẻ Trộm (như Dân thường).</p>
+    <div class="thief-pick">${v.extra.map((r, i) => `<button class="tp" data-tk="${i}" aria-label="Lấy ${ROLES[r].name}">${roleCardSVG(r)}<span>${ROLES[r].emoji} ${ROLES[r].name}</span></button>`).join('')}</div>
+    <div class="btns"><button class="btn" id="tk-keep">🃏 Giữ nguyên</button><button class="btn" onclick="__closeModal()">Để sau</button></div>`, '', 'thief');
+  $$('[data-tk]').forEach(b => b.onclick = () => { send({ type: 'thief', take: +b.dataset.tk }); fx.sfx.magic(); closeModal(); });
+  $('#tk-keep').onclick = () => { send({ type: 'thief', take: null }); closeModal(); };
 }
 function endModal() {
   const v = view; if (!v || !v.winner) return;
@@ -612,10 +687,12 @@ function endModal() {
   const title = { wolf: '🐺 PHE SÓI THẮNG!', village: '🧑‍🌾 DÂN LÀNG THẮNG!', lovers: '💘 CẶP ĐÔI THẮNG!', tanner: '🥀 THẰNG CHÁN ĐỜI THẮNG!', draw: '🤝 HOÀ!' }[w.team];
   openModal(`<h2 class="win-title ${w.team}">${title}</h2><p class="ctr">${esc(w.reason)}</p><p class="ctr"><b>${iWon ? '🎉 Bạn thắng!' : v.me ? '😵 Bạn thua rồi…' : ''}</b></p>
     <div class="endgrid">${v.players.map(p => `<div class="ec ${ids.has(p.id) ? 'won' : 'lose'}">${roleCardSVG(p.role)}<div class="nm">${ids.has(p.id) ? '🏆 ' : ''}${esc(clean(p.name))}${p.alive ? '' : ' 💀'}${p.lover ? ' 💘' : ''}</div></div>`).join('')}</div>
-    <div class="btns">${isHost ? '<button class="btn pri" id="e-again">🔁 Chơi ván mới</button>' : ''}<button class="btn" onclick="__closeModal()">Xem lại bàn</button></div>`, 'wide', 'end');
+    ${coachTipEnd(ctx())}
+    <div class="btns"><button class="btn purple" id="e-replay">🎞️ Xem lại cả ván</button>${isHost ? '<button class="btn pri" id="e-again">🔁 Chơi ván mới</button>' : ''}<button class="btn" onclick="__closeModal()">Xem bàn</button></div>`, 'wide', 'end');
   const b = $('#e-again'); if (b) b.onclick = () => { closeModal(); net.restart(); };
+  $('#e-replay').onclick = () => openReplay(ctx(), 0);
 }
-if (location.hash === '#debug') window.__dbg = () => ({ net, view, sel, tab });
+if (location.hash === '#debug') window.__dbg = () => ({ net, view, sel, tab, modalKey });
 
 // ---------- Tải lại trang: tự khôi phục phòng / tự vào lại ----------
 (function resume() {

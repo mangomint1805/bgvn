@@ -5,6 +5,14 @@ export const GAMES = {
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
 };
 export const NOTES = [
+  { id: '20261103-7', date: '03/11/2026', game: 'masoi', title: 'Xem lại cả ván, ván tập & vai mới', items: [
+    '🎞️ Xem lại cả ván: hết ván lộ hết vai, xem từng đêm/ngày ai cắn ai, ai soi ai, ai bầu ai; chủ phòng chiếu cho cả hội cùng xem.',
+    '🎓 Ván tập cho người mới: chơi với 5 bot, máy giải thích từng bước bằng bong bóng; đồng hồ dừng lúc đọc.',
+    '⏩ Chủ phòng có nút Bầu sớm; bot tự bấm Sẵn sàng sau vài giây, ván với bot nhanh hơn hẳn.',
+    '3 vai vui mới: 🃏 Kẻ Trộm (đêm 1 tráo vai với 1 trong 2 lá thừa), 🕯️ Bà Đồng (gọi hồn người chết hỏi phe), 👓 Ông Già Lẩm Cẩm (tưởng mình là Tiên Tri, soi toàn bốc đại).',
+    '💾 Lưu bộ vai + luật của hội (vd. "Bộ hội GET A JOB"), lần sau chạm 1 cái là chọn lại.',
+    'Sửa: biểu tượng chỉ điểm hiện được trên máy cũ; tên ở sảnh không còn bị cắt mất 👑.',
+  ] },
   { id: '20261103-6', date: '03/11/2026', game: 'meono', title: 'Lá nào cũng có mèo 🐱', items: [
     'Vẽ lại cả 15 lá: mỗi lá là 1 chú mèo làm đúng việc của lá (ôm bom, cắt dây, chỉ tay đổ vỏ, đeo kính đen né gắt, bói cầu, vẫy đũa…).',
     'ĐÉO! đóng dấu mộc to giữa bàn kèm tiếng "cộp" và mèo rít; ĐÉO! chồng ĐÉO! thì dấu chồng lên nhau (đỏ = bị huỷ, xanh = được cứu lại).',

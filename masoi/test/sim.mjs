@@ -1,12 +1,12 @@
 // Mô phỏng bot vs bot: node masoi/test/sim.mjs 600
 // Kiểm tra: 0 ván kẹt, 0 lỗi, điều kiện thắng đúng, view không lỗi, luật được giữ (thuốc 1 lần, bảo vệ không 2 đêm liền…)
-import { createGame, applyAction, actors, timeout, viewFor, winnerOf, presetRoles, roleList, ROLES, isWolfRole, teamOf, P } from '../js/engine.js?v=2';
-import { botAction, botDayPlan, botLine, botWolfLine } from '../js/bot.js?v=2';
+import { createGame, applyAction, actors, timeout, viewFor, winnerOf, presetRoles, roleList, ROLES, isWolfRole, teamOf, P } from '../js/engine.js?v=3';
+import { botAction, botDayPlan, botLine, botWolfLine } from '../js/bot.js?v=3';
 
 const N = +process.argv[2] || 600;
-const ALL_SPECIAL = ['alpha', 'cub', 'seer', 'guard', 'witch', 'hunter', 'cupid', 'elder', 'idiot', 'tanner'];
+const ALL_SPECIAL = ['alpha', 'cub', 'seer', 'guard', 'witch', 'hunter', 'cupid', 'elder', 'idiot', 'tanner', 'medium', 'thief', 'lunatic'];
 let stuck = 0, errs = 0, games = 0, steps = 0, maxSteps = 0, maxDay = 0;
-const wins = {}, causes = {}, feats = { mixedLove: 0, idiot: 0, elderSaved: 0, hunterShot: 0, cubRevenge: 0, tannerWin: 0, revote: 0, poisonHunter: 0 };
+const wins = {}, causes = {}, feats = { mixedLove: 0, idiot: 0, elderSaved: 0, hunterShot: 0, cubRevenge: 0, tannerWin: 0, revote: 0, poisonHunter: 0, thiefTook: 0, mediumAsk: 0, lunaticSeen: 0 };
 const fail = (g, msg, s) => { errs++; if (errs <= 8) console.log('LỖI ván', g, msg, s && { phase: s.phase, step: s.step, day: s.day }); };
 
 function randomRoles(n) {
@@ -15,7 +15,7 @@ function randomRoles(n) {
   let wolves = r.wolf + (r.alpha || 0) + (r.cub || 0);
   while (wolves * 2 >= n) { if (r.cub) { delete r.cub; } else if (r.alpha) { delete r.alpha; } else r.wolf--; wolves = r.wolf + (r.alpha || 0) + (r.cub || 0); }
   let total = Object.values(r).reduce((a, b) => a + b, 0);
-  for (const k of ALL_SPECIAL) if (total > n && r[k]) { delete r[k]; total--; }
+  for (const k of ALL_SPECIAL) if (total > n + (r.thief ? 2 : 0) && r[k]) { delete r[k]; total--; }
   return r;
 }
 
@@ -29,6 +29,8 @@ for (let g = 0; g < N; g++) {
   if (!roleList(n, opts.roles).ok) { fail(g, 'bộ vai sai ' + JSON.stringify(opts.roles)); continue; }
   const s = createGame(Array.from({ length: n }, (_, i) => ({ id: 'b' + i, name: 'Bot' + i, isBot: true })), opts);
   games++;
+  if (s.extra && (s.extra.length !== 2 || s.extra.some(r => isWolfRole(r) || r === 'thief'))) fail(g, 'lá thừa sai ' + s.extra, s);
+  if (s.players.filter(p => isWolfRole(p.role)).length < 1) fail(g, 'không có sói', s);
   let k = 0, lastPk = -1, saveUsed = 0, poisonUsed = 0, lastGuardNight = {};
   const afk = g % 6 === 5; // ván "người thật bỏ máy": hay để hết giờ
   try {
@@ -57,7 +59,7 @@ for (let g = 0; g < N; g++) {
       if (!r.ok) { fail(g, r.reason + ' ' + JSON.stringify(a), s); break; }
       if (before.save && !s.potions.save) saveUsed++;
       if (before.poison && !s.potions.poison) poisonUsed++;
-      for (const q of s.players) viewFor(s, q.id);
+      for (const q of s.players) { const vv = viewFor(s, q.id); if (vv.rec && s.phase !== 'ended') { fail(g, 'lộ biên niên giữa ván', s); break; } if (q.alive && s.phase !== 'ended' && q.role === 'lunatic' && vv.me.role !== 'seer') { fail(g, 'lẩm cẩm biết mình lẩm cẩm', s); break; } }
     }
   } catch (e) { fail(g, 'EXCEPTION ' + e.stack, s); continue; }
   if (s.phase !== 'ended') { stuck++; console.log('KẸT ván', g, s.phase, s.step, s.day); continue; }
@@ -76,6 +78,14 @@ for (let g = 0; g < N; g++) {
   if (s.log.some(l => /Sói Con|cắn thêm/.test(l.txt)) || s.steps.includes('wolves2')) feats.cubRevenge++;
   if (w.team !== 'draw') { const ids = new Set(w.ids); for (const p of s.players) if (ids.has(p.id) !== (w.team === 'lovers' ? s.lovers.includes(p.id) : w.team === 'tanner' ? p.id === w.ids[0] : teamOf(s, p) === w.team)) { fail(g, 'danh sách người thắng sai', s); break; } }
   wins[w.team] = (wins[w.team] || 0) + 1;
+  // biên niên: có chia vai + kết thúc, mọi người cùng xem được
+  const rv = viewFor(s, s.players[0].id);
+  if (!rv.rec || rv.rec[0].k !== 'deal' || rv.rec[rv.rec.length - 1].k !== 'win') fail(g, 'biên niên thiếu', s);
+  if (JSON.stringify(rv).length > 200000) fail(g, 'view quá lớn ' + JSON.stringify(rv).length, s);
+  if (s.rec.some(r => r.k === 'thief' && r.took)) feats.thiefTook++;
+  if (s.rec.some(r => r.k === 'medium')) feats.mediumAsk++;
+  if (s.rec.some(r => r.k === 'seer' && r.lun)) feats.lunaticSeen++;
+  // lẩm cẩm: chưa chết thì chính mình (và người ngoài) vẫn thấy là Tiên Tri – kiểm tra ở giữa ván bên dưới
   steps += k; maxSteps = Math.max(maxSteps, k); maxDay = Math.max(maxDay, s.day);
 }
 console.log({ games, stuck, errs, avgSteps: Math.round(steps / games), maxSteps, maxDay });

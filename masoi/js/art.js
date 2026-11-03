@@ -1,5 +1,5 @@
 // Hình vẽ tay 100% bằng SVG: cảnh làng quê (đình, rặng tre, cây đa, nhà tranh), lá vai, mặt sau lá (hoa văn trống đồng).
-import { ROLES } from './engine.js?v=2';
+import { ROLES } from './engine.js?v=3';
 
 // ngẫu nhiên có hạt giống – để cảnh vẽ ra lần nào cũng giống nhau
 function seeded(seed) { let x = seed >>> 0; return () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; }
@@ -149,6 +149,37 @@ const ART = {
     <g fill="none" stroke="${ink}" stroke-width="2.4"><path d="M58 78a6 6 0 1 1 6 6a3 3 0 1 1 -3-3"/><path d="M90 78a6 6 0 1 0 6 6a3 3 0 1 0 -3-3"/></g>
     <path d="M58 96q22 26 44 0z" fill="${ink}"/><path d="M76 106q6 12 12 0" fill="#ff7b9c"/><rect x="66" y="96" width="28" height="5" fill="#fff"/>
     <g fill="#ffd23f">${[[30, 40], [128, 46], [136, 96]].map(([x, y]) => `<path d="M${x} ${y - 8}l2.5 5.5 6 1-4.5 4 1 6-5-3-5 3 1-6-4.5-4 6-1z"/>`).join('')}</g>`,
+  medium: () => `<circle cx="80" cy="74" r="54" fill="#2a1638" opacity=".55"/>
+    <g fill="#e9d8ff" opacity=".55"><path d="M30 40q8-14 18-4q-6 0-6 6q-6-6-12-2z"/><path d="M118 30q10-12 18-2q-6 0-6 6q-6-6-12-4z"/></g>
+    <path d="M98 34q-14 10-6 24q6 10-6 20" stroke="#cfc3ff" stroke-width="5" fill="none" opacity=".6" stroke-linecap="round"/>
+    <path d="M108 26q16 4 8 18" stroke="#cfc3ff" stroke-width="3" fill="none" opacity=".5"/>
+    <circle cx="104" cy="22" r="8" fill="#f4f1ff" opacity=".85"/><circle cx="101" cy="21" r="1.6" fill="${ink}"/><circle cx="107" cy="21" r="1.6" fill="${ink}"/><ellipse cx="104" cy="26" rx="2" ry="1.4" fill="${ink}"/>
+    <path d="M30 150q6-44 50-44t50 44z" fill="#5b2a6e"/><path d="M50 150q4-26 30-30q26 4 30 30" fill="#7b3f93"/>
+    <circle cx="80" cy="86" r="24" fill="${skin}"/>
+    <path d="M52 84q0-34 28-36q28 2 28 36q-4-18-28-20q-24 2-28 20z" fill="#7b3f93"/><path d="M56 70h48" stroke="#ffd23f" stroke-width="3" stroke-dasharray="3 4"/>
+    <path d="M70 86q4-3 8 0M82 86q4-3 8 0" stroke="${ink}" stroke-width="2.4" fill="none"/>
+    <path d="M73 98q7 4 14 0" stroke="${ink}" stroke-width="2" fill="none"/><circle cx="80" cy="76" r="2.5" fill="#e5383b"/>
+    <g transform="translate(36 110)"><rect x="-6" y="0" width="12" height="28" rx="2" fill="#f4ecd8"/><path d="M0-12q6 6 0 12q-6-6 0-12z" fill="#ffb347"/><path d="M0-7q3 3 0 6q-3-3 0-6z" fill="#fff1a8"/><circle r="16" cy="-6" fill="#ffd23f" opacity=".25"/></g>
+    <g transform="translate(124 110)"><rect x="-6" y="0" width="12" height="28" rx="2" fill="#f4ecd8"/><path d="M0-12q6 6 0 12q-6-6 0-12z" fill="#ffb347"/><path d="M0-7q3 3 0 6q-3-3 0-6z" fill="#fff1a8"/><circle r="16" cy="-6" fill="#ffd23f" opacity=".25"/></g>`,
+  thief: () => `<circle cx="80" cy="70" r="54" fill="#1d2433" opacity=".6"/>
+    <g transform="rotate(-14 46 112)"><rect x="24" y="84" width="40" height="56" rx="5" fill="#f5e6c8" stroke="#c9a94f" stroke-width="2"/><text x="44" y="120" text-anchor="middle" font-size="24" font-weight="800" fill="#c0392b">?</text></g>
+    <g transform="rotate(12 116 112)"><rect x="96" y="84" width="40" height="56" rx="5" fill="#f5e6c8" stroke="#c9a94f" stroke-width="2"/><text x="116" y="120" text-anchor="middle" font-size="24" font-weight="800" fill="#2a6fb5">?</text></g>
+    <path d="M40 150q4-40 40-40t40 40z" fill="#2d3748"/>
+    <circle cx="80" cy="76" r="26" fill="${skin}"/>
+    <path d="M52 70q28-14 56 0l-2 12q-26-8-52 0z" fill="#1a202c"/>
+    <ellipse cx="69" cy="76" rx="6" ry="4" fill="#fff"/><ellipse cx="91" cy="76" rx="6" ry="4" fill="#fff"/><circle cx="71" cy="76" r="2.4" fill="${ink}"/><circle cx="93" cy="76" r="2.4" fill="${ink}"/>
+    <path d="M70 92q10 6 20-2" stroke="${ink}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M54 60q26-30 52 0q-26-6-52 0z" fill="#4a5568"/><rect x="52" y="56" width="56" height="7" rx="3" fill="#2d3748"/>
+    <path d="M118 52l18-10M122 58l20-2" stroke="#ffd23f" stroke-width="3" stroke-linecap="round" opacity=".8"/>`,
+  lunatic: () => `<circle cx="80" cy="72" r="54" fill="#f6e7c8" opacity=".6"/>
+    <g fill="#9c7a54" font-weight="800" font-size="20"><text x="22" y="44">?</text><text x="128" y="36">?</text><text x="134" y="96" font-size="15">?</text></g>
+    <path d="M38 150q4-38 42-38t42 38z" fill="#8a6b4a"/>
+    <circle cx="80" cy="84" r="27" fill="${skin}"/>
+    <path d="M54 76q-8-18 4-24M106 76q8-18-4-24" stroke="#eee" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <circle cx="69" cy="84" r="9" fill="#fff" stroke="${ink}" stroke-width="2.5"/><circle cx="92" cy="84" r="9" fill="#fff" stroke="${ink}" stroke-width="2.5"/><path d="M78 84h5" stroke="${ink}" stroke-width="2.5"/>
+    <circle cx="72" cy="86" r="3" fill="${ink}"/><circle cx="89" cy="81" r="3" fill="${ink}"/>
+    <path d="M60 102q20-6 40 4q-20 14-40-4z" fill="#f4f1ea"/><path d="M72 100q8 3 14 0" stroke="${ink}" stroke-width="2" fill="none"/>
+    <g transform="translate(122 128) rotate(18)"><path d="M-14 12h28l-4-8h-20z" fill="#6b3f1f"/><circle cy="-6" r="14" fill="url(#gSeer)"/><path d="M-6-10l5 4M2-14l3 6" stroke="#fff" stroke-width="1.6" opacity=".8"/><path d="M-8-2l16-8" stroke="#2b2233" stroke-width="1.4"/></g>`,
   tanner: () => `<path d="M44 34q0-18 20-16q8-14 26-6q20-4 22 14q14 4 8 16H44q-10-2 0-8z" fill="#8b93a7"/>
     <path d="M56 58l-4 10M76 58l-4 10M96 58l-4 10M116 58l-4 10" stroke="#7fb1e8" stroke-width="3" stroke-linecap="round"/>
     <circle cx="80" cy="102" r="30" fill="#d9c7b0"/>
@@ -179,7 +210,7 @@ export function roleCardSVG(role, cls = '') {
     <g transform="translate(20 40)">${ART[role]()}</g>
     ${rice}
     <path d="M14 218h172l-10 14 10 14H14l10-14z" fill="${frame}" stroke="${gold}" stroke-width="1.5"/>
-    <text x="100" y="239" text-anchor="middle" class="rc-name" fill="#fff">${R.name}</text>
+    <text x="100" y="239" text-anchor="middle" class="rc-name" fill="#fff"${R.name.length > 13 ? ' style="font-size:17px"' : ''}>${R.name}</text>
     <text x="100" y="262" text-anchor="middle" class="rc-team" fill="${gold}">${R.emoji} ${TEAM_LABEL[team]}</text>
   </svg>`;
 }

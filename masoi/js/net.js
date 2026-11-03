@@ -1,6 +1,6 @@
 // Lớp mạng Ma Sói: chủ phòng giữ state + đồng hồ quản trò, người vào chỉ gửi action. Kết nối dùng chung shared/net/room.js
-import { createGame, applyAction, viewFor, actors, timeout, phaseMs, DEFAULT_OPTS, presetRoles, roleList, ROLES, MAX_PLAYERS, MIN_PLAYERS, P, isWolfRole } from './engine.js?v=2';
-import { botAction, botDayPlan, botWolfLine, botGhostLine, botLastWords } from './bot.js?v=2';
+import { createGame, applyAction, viewFor, actors, timeout, phaseMs, DEFAULT_OPTS, presetRoles, roleList, ROLES, MAX_PLAYERS, MIN_PLAYERS, P, isWolfRole } from './engine.js?v=3';
+import { botAction, botDayPlan, botWolfLine, botGhostLine, botLastWords } from './bot.js?v=3';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
 const NS = 'bgvn-masoi', PREFIX = 'bgvn-masoi-', GAME = 'masoi';
 const SNAP = 'bgvn-hostsnap-' + GAME;
@@ -17,9 +17,12 @@ export class Host {
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.timers = {}; this.botT = {}; this.curPk = null; this.deadline = 0; this.total = 1; this.lastChat = {};
     this.opts = JSON.parse(JSON.stringify(DEFAULT_OPTS));
+    this.tut = { seen: [], off: false }; this.paused = null; this.replayAt = null;
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));
       this.state = restore.state; this.code = restore.code; this.opts = restore.opts || this.opts;
+      if (restore.tut) this.tut = restore.tut;
+      if (restore.paused) this.paused = restore.paused; // tải lại lúc đang dừng (ván tập): vẫn dừng
     }
     if (offline) { this.code = 'OFFLINE'; setTimeout(() => { this.pushLobby(); if (this.state) { this.schedule(); this.broadcast(); } }, 0); return; }
     this.room = new RoomHost({ ns: NS, prefix: PREFIX, code: this.code, keepCode: !!restore, onConn: c => this.attach(c), onReady: code => { this.code = code; session.save(GAME, { role: 'host', code }); this.pushLobby(); }, onError: m => this.h.onError(m) });
@@ -28,7 +31,7 @@ export class Host {
   }
   saveSnap() {
     clearTimeout(this.snapT);
-    this.snapT = setTimeout(() => { try { localStorage.setItem(SNAP, JSON.stringify({ ts: Date.now(), code: this.code, offline: this.offline, opts: this.opts, players: this.players.map(({ conn, ...p }) => p), state: this.state })); } catch (e) {} }, 300);
+    this.snapT = setTimeout(() => { try { localStorage.setItem(SNAP, JSON.stringify({ ts: Date.now(), code: this.code, offline: this.offline, opts: this.opts, tut: this.tut, paused: this.paused, players: this.players.map(({ conn, ...p }) => p), state: this.state })); } catch (e) {} }, 300);
   }
   attach(conn) {
     conn.on('data', msg => this.onMsg(conn, msg));
@@ -75,6 +78,17 @@ export class Host {
     this.opts[k] = typeof d === 'boolean' ? !!v : typeof d === 'number' ? Math.max(10, Math.min(600, +v || d)) : String(v);
     this.pushLobby();
   }
+  // bộ vai đã lưu của hội: đặt lại vai + luật
+  applyPreset(roles, opts = {}) {
+    if (this.state || !roles) return;
+    const clean = {};
+    for (const [r, n] of Object.entries(roles)) if (ROLES[r] && r !== 'villager') { const v = Math.max(0, Math.min(r === 'wolf' ? 6 : 1, n | 0)); if (v) clean[r] = v; }
+    this.opts.auto = false; this.opts.roles = clean;
+    for (const [k, v] of Object.entries(opts || {})) if (k in DEFAULT_OPTS && !['roles', 'auto', 'tutorial'].includes(k)) {
+      const d = DEFAULT_OPTS[k]; this.opts[k] = typeof d === 'boolean' ? !!v : typeof d === 'number' ? Math.max(10, Math.min(600, +v || d)) : String(v);
+    }
+    this.pushLobby();
+  }
   setRole(r, n) {
     if (this.state || !ROLES[r] || r === 'villager') return;
     if (this.opts.auto) { this.opts.roles = presetRoles(this.players.length); this.opts.auto = false; }
@@ -98,19 +112,52 @@ export class Host {
     if (p.conn) try { p.conn.send({ t: 'kicked' }); p.conn.close(); } catch (e) {}
     this.players = this.players.filter(x => x !== p); this.pushLobby();
   }
-  start() {
+  start(extra = {}) {
     const rl = roleList(this.players.length, this.effRoles());
     if (!rl.ok) { this.h.onError(rl.reason); return; }
-    this.clearTimers();
+    this.clearTimers(); this.paused = null; this.replayAt = null;
     // vai được chia ngẫu nhiên trong createGame
-    this.state = createGame(this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot })), { ...this.opts, roles: this.effRoles() });
+    this.state = createGame(this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot })), { ...this.opts, roles: this.effRoles(), ...extra });
     this.curPk = null;
     this.pushLobby(); this.schedule(); this.broadcast();
   }
-  restart() { this.clearTimers(); this.state = null; this.curPk = null; this.pushLobby(); for (const p of this.players) if (p.conn) p.conn.send({ t: 'state', view: null }); this.h.onState(null); }
+  // 🎓 Ván tập: offline, 6 người (bạn + 5 bot), vai cơ bản, bạn luôn có vai có phép để học
+  startTutorial() {
+    if (!this.offline) return;
+    this.players = this.players.filter(p => p.id === 'host');
+    this.addBot(5);
+    this.opts = { ...JSON.parse(JSON.stringify(DEFAULT_OPTS)), auto: false, roles: { wolf: 1, seer: 1, guard: 1, witch: 1 }, reveal: true, dayTime: 180, voteTime: 60, nightTime: 45, tutorial: true };
+    this.tut = { seen: [], off: false };
+    const mine = ['seer', 'guard', 'witch', 'wolf'][Math.floor(Math.random() * 4)];
+    this.start({ forceRole: { host: mine } });
+  }
+  tutSeen(key) { if (!this.tut.seen.includes(key)) this.tut.seen.push(key); this.saveSnap(); }
+  tutOff() { this.tut.off = true; this.saveSnap(); }
+  // dừng đồng hồ (chỉ ván offline – lúc bong bóng hướng dẫn đang mở)
+  pause(on) {
+    const s = this.state; if (!this.offline || !s || s.phase === 'ended') { this.paused = null; return; }
+    if (on && !this.paused) {
+      this.paused = { pk: s.pk, left: Math.max(1500, this.deadline - Date.now()) };
+      this.clearTimers(); this.broadcast();
+    } else if (!on && this.paused) {
+      const pz = this.paused; this.paused = null;
+      if (s.pk === pz.pk && this.curPk === s.pk) {
+        const pk = s.pk; this.deadline = Date.now() + pz.left;
+        this.later('phase', pz.left, () => { if (this.state.pk === pk) { timeout(this.state); this.schedule(); this.broadcast(); } });
+        this.phaseExtras(s, this.humansAlive(s)); // bot nói chuyện / chỉ điểm lại (hẹn giờ cũ đã bị huỷ lúc dừng)
+      } else this.curPk = null;
+      this.schedule(); this.broadcast();
+    }
+  }
+  // chủ phòng bấm ⏩ Bỏ phiếu sớm
+  earlyVote() { const s = this.state; if (!s || s.phase !== 'day') return; timeout(s); this.schedule(); this.broadcast(); }
+  // xem lại cuối ván: chủ phòng chiếu trang nào thì cả hội theo trang đó
+  setReplay(i) { if (!this.state || this.state.phase !== 'ended') return; this.replayAt = i == null ? null : { i: i | 0, n: ((this.replayAt && this.replayAt.n) || 0) + 1 }; this.broadcast(); }
+  restart() { this.clearTimers(); this.state = null; this.curPk = null; this.paused = null; this.replayAt = null; this.opts.tutorial = false; this.pushLobby(); for (const p of this.players) if (p.conn) p.conn.send({ t: 'state', view: null }); this.h.onState(null); }
   tell(pid, m) { const p = this.players.find(x => x.id === pid); if (p && p.conn) p.conn.send({ t: 'error', msg: m }); else if (pid === 'host') this.h.onError(m); }
   act(pid, a) {
     const s = this.state; if (!s) return;
+    if (a && a.type === 'early') { if (pid === 'host') this.earlyVote(); else this.tell(pid, 'Chỉ chủ phòng mới cho bỏ phiếu sớm.'); return; }
     if (a && a.type === 'chat') { // chống spam
       const now = Date.now(); if (now - (this.lastChat[pid] || 0) < 600) { this.tell(pid, 'Từ từ thôi, gõ chậm lại chút 😅'); return; }
       this.lastChat[pid] = now;
@@ -127,7 +174,8 @@ export class Host {
   // quản trò: đồng hồ pha + hẹn giờ cho bot
   schedule() {
     const s = this.state; if (!s) return;
-    if (s.phase === 'ended') { this.clearTimers(); this.curPk = s.pk; return; }
+    if (s.phase === 'ended') { this.clearTimers(); this.curPk = s.pk; this.paused = null; return; }
+    if (this.paused) { if (s.pk !== this.paused.pk) { this.paused.pk = s.pk; this.paused.left = phaseMs(s); this.curPk = s.pk; this.clearTimers(); } return; } // đang dừng: không chạy giờ, bot cũng chờ
     const now = Date.now();
     if (s.pk !== this.curPk) { // pha mới
       this.clearTimers(); this.curPk = s.pk;
@@ -159,7 +207,7 @@ export class Host {
     const humans = this.humansAlive(s);
     switch (s.phase) {
       case 'night': return s.step === 'wolves' || s.step === 'wolves2' ? rnd(2500, 6000) : rnd(1800, 4500);
-      case 'day': return humans ? rnd(15000, Math.max(16000, s.opts.dayTime * 700)) : rnd(5000, 14000);
+      case 'day': return humans ? rnd(7000, 14000) : rnd(3500, 7000); // bot bấm "Sẵn sàng" sau vài giây
       case 'vote': return rnd(2500, 9000);
       case 'last': return rnd(5000, 8000);
       case 'hunter': return rnd(3000, 6000);
@@ -174,7 +222,7 @@ export class Host {
     if (s.phase === 'day') {
       bots.filter(p => p.alive).forEach((b, i) => {
         const plan = botDayPlan(s, b.id);
-        plan.forEach((a, j) => this.later(`plan${i}_${j}`, rnd(2500, humans ? Math.max(9000, s.opts.dayTime * 550) : 9000), () => {
+        plan.forEach((a, j) => this.later(`plan${i}_${j}`, rnd(1500, humans ? 11000 : 5500), () => {
           const st = this.state; if (st.pk !== pk) return;
           const r = applyAction(st, b.id, a); if (r.ok) { this.schedule(); this.broadcast(); }
         }));
@@ -194,10 +242,10 @@ export class Host {
     if (!this.state) return;
     this.saveSnap();
     const now = Date.now();
-    const clock = this.state.phase !== 'ended' ? { ms: Math.max(0, this.deadline - now), total: this.total, pk: this.state.pk } : null;
+    const clock = this.state.phase !== 'ended' ? (this.paused ? { ms: this.paused.left, total: this.total, pk: this.state.pk, paused: true } : { ms: Math.max(0, this.deadline - now), total: this.total, pk: this.state.pk }) : null;
     const away = this.players.filter(q => !q.isBot && !q.connected && q.id !== 'host').map(q => q.id);
     for (const p of this.players) {
-      const view = viewFor(this.state, p.id); view.clock = clock; view.away = away;
+      const view = viewFor(this.state, p.id); view.clock = clock; view.away = away; if (this.replayAt) view.replayAt = this.replayAt;
       if (p.id === 'host') this.h.onState(JSON.parse(JSON.stringify(view)));
       else if (p.conn) try { p.conn.send({ t: 'state', view }); } catch (e) {}
     }

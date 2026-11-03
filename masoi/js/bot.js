@@ -1,5 +1,5 @@
 // Bot Ma Sói: nghi ngờ đơn giản (ai bị chỉ điểm nhiều, bị khai là Sói, bị bầu nhiều), sói thì che giấu và cắn người nguy hiểm.
-import { P, alive, actors, isWolfRole, ROLES, wolfTargets, wolfLeader, voteCandidates, canVote } from './engine.js?v=2';
+import { P, alive, actors, isWolfRole, ROLES, wolfTargets, wolfLeader, voteCandidates, canVote, mediumTargets } from './engine.js?v=3';
 
 let rnd = Math.random;
 export function setBotRandom(f) { rnd = f; }
@@ -38,7 +38,7 @@ const ranked = (s, me, ids) => ids.map(id => [id, suspicion(s, me, P(s, id))]).s
 function danger(s, t) {
   let d = rnd() * 1.2;
   if (s.claims.some(c => c.by === t.id)) d += 5;
-  if (t.revealed && ['seer', 'witch', 'guard', 'hunter'].includes(t.role)) d += 4;
+  if (t.revealed && ['seer', 'witch', 'guard', 'hunter', 'medium'].includes(t.role)) d += 4;
   if (t.revealed && t.role === 'hunter') d -= 6; // cắn thợ săn là bị kéo theo
   const acc = s.dayInfo ? s.dayInfo.accuse : {};
   for (const [by, tg] of Object.entries(acc)) if (by === t.id && isWolf(P(s, tg))) d += 1.5;
@@ -52,6 +52,20 @@ export function botAction(s, pid) {
   switch (s.phase) {
     case 'night': {
       const st = s.step;
+      if (st === 'thief') { // tráo lấy lá "xịn" nhất (vai có phép), không thì giữ nguyên
+        const PRIO = ['seer', 'witch', 'guard', 'hunter', 'medium', 'cupid', 'elder', 'lunatic', 'idiot', 'tanner'];
+        const ex = s.extra || [];
+        const best = ex.map((r, i) => [i, PRIO.indexOf(r)]).filter(([, k]) => k >= 0).sort((a, b) => a[1] - b[1])[0];
+        if (best && rnd() < 0.85) return { type: 'thief', take: best[0] };
+        return rnd() < 0.5 ? { type: 'thief', take: null } : { type: 'thief', take: Math.floor(rnd() * 2) };
+      }
+      if (st === 'medium') {
+        const ts = mediumTargets(s, me);
+        if (!ts.length) return { type: 'skip' };
+        // ưu tiên hồn người bị treo (để kiểm tra làng treo đúng không)
+        const hanged = ts.filter(id => P(s, id).cause === 'hang');
+        return { type: 'medium', target: pick(hanged.length && rnd() < 0.7 ? hanged : ts) };
+      }
       if (st === 'cupid') {
         const pool = alive(s).map(p => p.id);
         const a = rnd() < 0.3 ? pid : pick(pool.filter(x => x !== pid));
@@ -141,7 +155,7 @@ export function botDayPlan(s, pid) {
   const others = alive(s).filter(p => p.id !== pid);
   if (!others.length) return plan;
   // Tiên Tri thật: khai khi thấy sói (hoặc khi đã soi được kha khá)
-  if (me.role === 'seer') {
+  if (me.role === 'seer' || me.role === 'lunatic') { // Ông Già Lẩm Cẩm tin sái cổ vào kết quả bốc đại của mình
     const wolves = Object.entries(me.seen).filter(([id, r]) => r === 'wolf' && P(s, id).alive && !s.claims.some(c => c.by === pid && c.target === id));
     if (wolves.length && rnd() < 0.9) plan.push({ type: 'claim', target: wolves[0][0], res: 'wolf' });
     else if (s.day >= 3 && rnd() < 0.3) { const g = Object.entries(me.seen).find(([id, r]) => r === 'village' && P(s, id).alive && !s.claims.some(c => c.by === pid && c.target === id)); if (g) plan.push({ type: 'claim', target: g[0], res: 'village' }); }

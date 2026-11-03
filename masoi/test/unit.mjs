@@ -1,5 +1,6 @@
 // Unit test các tương tác khó: node masoi/test/unit.mjs
-import { createGame, applyAction, actors, timeout, viewFor, P } from '../js/engine.js?v=2';
+import { createGame, applyAction, actors, timeout, viewFor, P, roleList, setRandom, isWolfRole } from '../js/engine.js?v=3';
+import { botAction } from '../js/bot.js?v=3';
 
 let pass = 0, failN = 0;
 const ok = (c, msg) => { if (c) pass++; else { failN++; console.log('  ✗', msg); } };
@@ -270,6 +271,108 @@ test('Vai chết vẫn được "gọi" ban đêm (giả vờ, không ai hành �
   until(s, 'day'); allReady(s); voteAll(s, 'skip'); until(s, 'night');
   eq(s.step, 'seer', 'vẫn có bước Tiên Tri'); ok(s.stepFake, 'bước giả'); eq(actors(s), [], 'không ai phải làm');
   ok(!viewFor(s, 'p2').stepFake, 'người sống không biết là giả');
+});
+
+// ---------------- vai mới ----------------
+test('Kẻ Trộm: bộ bài có thêm 2 lá thừa, không bao giờ là Sói', () => {
+  const rl = roleList(6, { wolf: 2, thief: 1, seer: 1 });
+  ok(rl.ok && rl.list.length === 8 && rl.extra === 2, 'có Kẻ Trộm → 8 lá cho 6 người');
+  ok(!roleList(6, { wolf: 1, thief: 1, seer: 1, guard: 1, witch: 1, hunter: 1, cupid: 1, elder: 1, idiot: 1 }).ok, 'quá 8 lá → lỗi');
+  for (let k = 0; k < 200; k++) {
+    const s = createGame(Array.from({ length: 6 }, (_, i) => ({ id: 'p' + i, name: 'N' + i })), { auto: false, roles: { wolf: 2, thief: 1, seer: 1 } });
+    if (s.extra.length !== 2 || s.extra.some(r => isWolfRole(r) || r === 'thief')) { ok(false, 'lá thừa sai: ' + s.extra); break; }
+    if (s.players.filter(p => isWolfRole(p.role)).length !== 2) { ok(false, 'phải đủ 2 Sói trong làng'); break; }
+  }
+  ok(true, '200 lần chia');
+});
+test('Kẻ Trộm: đêm 1 tráo lấy 1 lá thừa → thành vai đó, các bước vẫn gọi đủ', () => {
+  const s = mk(['thief', 'wolf', 'villager', 'villager', 'villager', 'villager']);
+  s.extra = ['seer', 'guard'];
+  s.steps = ['thief', 'guard', 'seer', 'wolves']; s.step = 'thief'; s.stepFake = false; // dựng lại như lúc tạo ván có 2 lá thừa này
+  eq(actors(s), ['p0'], 'Kẻ Trộm dậy đầu tiên');
+  ok(viewFor(s, 'p0').extra && viewFor(s, 'p0').extra.length === 2, 'Kẻ Trộm thấy 2 lá thừa');
+  ok(!viewFor(s, 'p2').extra, 'người khác không thấy lá thừa');
+  deny(s, 'p0', { type: 'thief', take: 5 }, 'lá không tồn tại');
+  act(s, 'p0', { type: 'thief', take: 0 });
+  eq(P(s, 'p0').role, 'seer', 'thành Tiên Tri'); eq(s.extra, ['thief', 'guard'], 'lá Kẻ Trộm nằm lại');
+  eq(s.step, 'guard', 'bước Bảo Vệ vẫn được gọi'); ok(s.stepFake, '…nhưng là bước giả (lá Bảo Vệ nằm ngoài)');
+  timeout(s); eq(s.step, 'seer', 'tới Tiên Tri'); eq(actors(s), ['p0'], 'Kẻ Trộm (giờ là Tiên Tri) được soi luôn đêm 1');
+  act(s, 'p0', { type: 'seer', target: 'p1' }); eq(P(s, 'p0').seen.p1, 'wolf', 'soi ra Sói');
+  ok(s.rec.some(r => r.k === 'thief' && r.took === 'seer'), 'ghi vào biên niên');
+});
+test('Kẻ Trộm giữ nguyên lá: là Dân thường, đêm sau không được gọi', () => {
+  const s = mk(['thief', 'wolf', 'villager', 'villager', 'villager', 'villager']);
+  s.extra = ['villager', 'villager']; s.steps = ['thief', 'wolves']; s.step = 'thief'; s.stepFake = false;
+  act(s, 'p0', { type: 'thief', take: null });
+  eq(P(s, 'p0').role, 'thief', 'vẫn là Kẻ Trộm');
+  act(s, 'p1', { type: 'wolf', target: 'p2' });
+  until(s, 'day'); allReady(s); voteAll(s, 'skip'); until(s, 'night');
+  ok(!s.steps.includes('thief'), 'đêm 2 không có bước Kẻ Trộm');
+  ok(createGame(Array.from({ length: 6 }, (_, i) => ({ id: 'p' + i, name: 'N' + i })), { auto: false, roles: { wolf: 1, thief: 1 } }).steps[0] === 'thief', 'ván có Kẻ Trộm: đêm 1 bắt đầu bằng Kẻ Trộm');
+});
+test('Bà Đồng: gọi hồn người chết biết phe; chưa ai chết thì bước giả', () => {
+  const s = mk(['medium', 'wolf', 'villager', 'villager', 'villager', 'villager', 'wolf']);
+  eq(s.step, 'medium', 'có bước Bà Đồng'); ok(s.stepFake, 'đêm 1 chưa ai chết → giả');
+  timeout(s);
+  act(s, 'p1', { type: 'wolf', target: 'p2' }); act(s, 'p6', { type: 'wolf', target: 'p2' });
+  until(s, 'day'); allReady(s); voteAll(s, 'p6', { p1: 'skip' }); until(s, 'night');
+  ok(!P(s, 'p6').alive, 'p6 (sói) bị treo');
+  eq(s.step, 'medium', 'đêm 2: Bà Đồng'); ok(!s.stepFake, 'có hồn để gọi');
+  deny(s, 'p0', { type: 'medium', target: 'p3' }, 'không gọi hồn người sống');
+  act(s, 'p0', { type: 'medium', target: 'p6' });
+  eq(P(s, 'p0').seen.p6, 'wolf', 'hồn p6 là phe Sói');
+  ok(P(s, 'p0').notes.some(n => /phe SÓI/.test(n.txt)), 'Bà Đồng được báo riêng');
+  ok(!viewFor(s, 'p3').ev.some(e => e.k === 'seen'), 'người khác không biết');
+  act(s, 'p1', { type: 'wolf', target: 'p3' });
+  until(s, 'day'); allReady(s); voteAll(s, 'skip'); until(s, 'night');
+  eq(s.step, 'medium', 'đêm 3'); deny(s, 'p0', { type: 'medium', target: 'p6' }, 'không gọi lại hồn đã hỏi');
+  act(s, 'p0', { type: 'medium', target: 'p2' }); eq(P(s, 'p0').seen.p2, 'village', 'p2 phe Dân');
+});
+test('Ông Già Lẩm Cẩm: tưởng mình là Tiên Tri, soi bốc đại; chết/hết ván mới lộ', () => {
+  const s = mk(['lunatic', 'wolf', 'villager', 'villager', 'villager', 'villager', 'seer']);
+  eq(viewFor(s, 'p0').me.role, 'seer', 'tự thấy mình là Tiên Tri');
+  eq(viewFor(s, 'p0').players[0].role, 'seer', 'ghế mình cũng hiện Tiên Tri');
+  const s0 = createGame(Array.from({ length: 6 }, (_, i) => ({ id: 'p' + i, name: 'N' + i })), { auto: false, roles: { wolf: 1, lunatic: 1 }, forceRole: { p0: 'lunatic' } });
+  ok(P(s0, 'p0').notes[0].txt.includes('Tiên Tri') && !/Lẩm/.test(JSON.stringify(viewFor(s0, 'p0').me)), 'sổ tay ghi là Tiên Tri, không lộ chữ Lẩm Cẩm');
+  eq(s.step, 'seer', 'bước Tiên Tri'); eq(actors(s).sort(), ['p0', 'p6'], 'Tiên Tri thật và Lẩm Cẩm cùng dậy');
+  let rnd = 0.1; setRandom(() => rnd);
+  act(s, 'p0', { type: 'seer', target: 'p2' }); eq(P(s, 'p0').seen.p2, 'wolf', 'bốc đại: dân hoá Sói');
+  setRandom(Math.random);
+  act(s, 'p6', { type: 'seer', target: 'p0' }); eq(P(s, 'p6').seen.p0, 'village', 'Tiên Tri thật soi Lẩm Cẩm = Dân');
+  ok(s.rec.some(r => r.k === 'seer' && r.lun && r.truth === 'village'), 'biên niên ghi rõ bốc đại');
+  act(s, 'p1', { type: 'wolf', target: 'p0' });
+  ok(!P(s, 'p0').alive, 'Lẩm Cẩm chết');
+  eq(viewFor(s, 'p0').me.role, 'lunatic', 'chết rồi mới biết mình lẩm cẩm');
+  ok(P(s, 'p0').notes.some(n => /LẨM CẨM/.test(n.txt)), 'có lời báo');
+  const s2 = mk(['lunatic', 'wolf', 'villager', 'villager', 'villager', 'villager']);
+  const b = botAction(s2, 'p0'); eq(b && b.type, 'seer', 'bot Lẩm Cẩm cũng đi soi');
+});
+test('Biên niên: chỉ gửi khi hết ván, đủ đêm/ngày, phiếu từng người', () => {
+  const s = mk(['wolf', 'guard', 'seer', 'witch', 'villager', 'villager']);
+  act(s, 'p1', { type: 'guard', target: 'p4' });
+  act(s, 'p2', { type: 'seer', target: 'p0' });
+  act(s, 'p0', { type: 'wolf', target: 'p4' });
+  act(s, 'p3', { type: 'skip' });
+  ok(!viewFor(s, 'p4').rec, 'giữa ván không ai có biên niên');
+  until(s, 'day'); allReady(s);
+  act(s, 'p2', { type: 'claim', target: 'p0', res: 'wolf' });
+  voteAll(s, 'p0', { p0: 'p5' }); timeout(s);
+  eq(s.phase, 'ended', 'treo sói → hết ván');
+  const r = viewFor(s, 'p5').rec;
+  ok(r && r.length > 5, 'người chơi thường cũng có biên niên khi hết ván');
+  const kinds = r.map(x => x.k);
+  for (const k of ['deal', 'guard', 'seer', 'bite', 'saved', 'skip', 'claim', 'vote', 'die', 'win']) ok(kinds.includes(k), 'có mục ' + k);
+  const v = r.find(x => x.k === 'vote'); eq(v.hanged, 'p0', 'ghi người bị treo'); eq(v.votes.p0, 'p5', 'ghi phiếu từng người');
+  eq(r.find(x => x.k === 'guard').ph, 'n', 'Bảo Vệ thuộc Đêm'); eq(v.ph, 'd', 'bỏ phiếu thuộc Ngày'); eq(v.d, 1, 'ngày 1');
+});
+test('Ván tập: ép vai cho người chơi', () => {
+  for (let k = 0; k < 30; k++) {
+    const want = ['seer', 'guard', 'witch', 'wolf'][k % 4];
+    const s = createGame(Array.from({ length: 6 }, (_, i) => ({ id: i ? 'b' + i : 'host', name: 'N' + i })), { auto: false, roles: { wolf: 1, seer: 1, guard: 1, witch: 1 }, forceRole: { host: want }, tutorial: true });
+    if (P(s, 'host').role !== want) { ok(false, 'vai ép sai ' + want); break; }
+    if (s.opts.forceRole) { ok(false, 'không lưu forceRole vào state'); break; }
+  }
+  ok(true, 'ép vai 30 lần');
 });
 console.log(`\n${pass} kiểm tra đạt, ${failN} lỗi`);
 if (failN) process.exit(1);
