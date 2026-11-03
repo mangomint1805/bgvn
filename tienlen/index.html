@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tiến Lên miền Nam – chặt heo cùng hội bạn</title>
+<meta name="description" content="Tiến Lên miền Nam online cùng bạn bè: chặt heo, tới trắng, thối heo, cóng. Có bot 3 cấp, chip ảo.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='14' y='14' width='52' height='74' rx='9' fill='%23fff' stroke='%231f1b2e' stroke-width='4' transform='rotate(-12 40 50)'/><rect x='36' y='10' width='52' height='74' rx='9' fill='%23fff' stroke='%23e0263c' stroke-width='4' transform='rotate(10 62 47)'/><text x='58' y='62' font-size='40' text-anchor='middle' fill='%23e0263c' transform='rotate(10 62 47)'>♥</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tienlen.css?v=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+</head>
+<body>
+<div class="bg-felt" aria-hidden="true"></div>
+
+<!-- TRANG CHỦ -->
+<section id="screen-home" class="screen active">
+  <a class="back-hub" href="../">← Bàn chơi BGVN</a>
+  <div class="home-card">
+    <div class="hero" id="hero" aria-hidden="true"></div>
+    <h1 class="logo">Tiến Lên<span>miền Nam</span></h1>
+    <p class="tag">Chặt heo cùng hội bạn – không cần cài đặt 🐷🔪</p>
+    <label class="fld"><span>Tên của bạn</span><input id="name" maxlength="16" placeholder="Nhập tên…" autocomplete="nickname"></label>
+    <div class="btn-col">
+      <button class="btn big pri" id="btn-create">✨ Tạo phòng online</button>
+      <div class="join-row"><input id="join-code" maxlength="5" placeholder="MÃ PHÒNG" autocomplete="off" aria-label="Mã phòng"><button class="btn" id="btn-join">Vào</button></div>
+      <button class="btn big" id="btn-offline">🤖 Chơi với bot</button>
+    </div>
+    <div class="home-tools">
+      <button class="chip" id="btn-guide-home">📖 Hướng dẫn</button>
+      <button class="chip" id="btn-music-home">🎵 Nhạc</button>
+      <button class="chip" id="btn-news-home" data-news="tienlen">📝 Có gì mới</button>
+    </div>
+    <p class="note">Bản fan-made phi thương mại · Chơi vui bằng chip ảo, không cá cược tiền thật.</p>
+  </div>
+</section>
+
+<!-- SẢNH -->
+<section id="screen-lobby" class="screen">
+  <div class="lobby">
+    <div class="lobby-head">
+      <button class="chip" id="btn-leave-lobby">← Thoát</button>
+      <div class="code-box" id="code-box">Mã phòng <b id="room-code">…</b> <button class="chip sm" id="btn-copy">Sao chép link</button></div>
+    </div>
+    <div class="lobby-grid">
+      <div class="panel">
+        <h3>Người chơi <small id="pcount"></small></h3>
+        <ul id="plist" class="plist"></ul>
+        <button class="btn" id="btn-addbot">＋ Thêm bot</button>
+        <button class="chip beg" id="btn-beg-lobby" style="display:none">🥺 Xin mẹ thêm chip</button>
+      </div>
+      <div class="panel">
+        <h3>Luật bàn</h3>
+        <div id="opts" class="opts"></div>
+      </div>
+    </div>
+    <button class="btn big pri" id="btn-start">▶ Chia bài</button>
+    <p class="wait" id="wait-msg">Đang chờ chủ phòng chia bài…</p>
+    <p class="note center-note">Chơi vui bằng chip ảo, không cá cược tiền thật · Bản fan-made phi thương mại.</p>
+  </div>
+</section>
+
+<!-- VÁN CHƠI -->
+<section id="screen-game" class="screen">
+  <header class="topbar">
+    <button class="chip ic" id="btn-leave" aria-label="Rời ván">←</button>
+    <div class="game-tag" id="game-tag"></div>
+    <div class="tools">
+      <button class="chip ic" id="btn-music" title="Nhạc nền" aria-label="Nhạc nền">🎵</button>
+      <button class="chip ic" id="btn-mute" title="Âm thanh" aria-label="Âm thanh">🔊</button>
+      <button class="chip ic" id="btn-guide" title="Hướng dẫn" aria-label="Hướng dẫn">📖</button>
+      <button class="chip ic" id="btn-news" title="Có gì mới" aria-label="Có gì mới" data-news="tienlen">📝</button>
+      <button class="chip ic" id="btn-log" title="Nhật ký" aria-label="Nhật ký">📜</button>
+    </div>
+  </header>
+  <div class="table" id="table">
+    <div id="opps"></div>
+    <div class="pile" id="pile">
+      <div class="pile-prev" id="pile-prev"></div>
+      <div class="pile-top" id="pile-top"></div>
+      <div class="pile-cap" id="pile-cap"></div>
+    </div>
+  </div>
+  <div class="me" id="me">
+    <div class="me-row">
+      <div class="me-info" id="me-info"></div>
+      <div class="react-slot"></div>
+    </div>
+    <div class="act-row">
+      <div class="suggest" id="suggest"></div>
+      <div class="actions" id="actions">
+        <button class="btn ic2" id="btn-sort" title="Đổi cách xếp bài" aria-label="Đổi cách xếp bài">🔃</button>
+        <button class="btn" id="btn-hint">💡 Gợi ý</button>
+        <button class="btn gray" id="btn-pass">Bỏ lượt</button>
+        <button class="btn pri" id="btn-play">Đánh</button>
+      </div>
+    </div>
+    <div class="hand" id="hand"></div>
+  </div>
+  <aside class="log" id="log"><h4>Nhật ký <button class="chip sm" id="btn-log-close">✕</button></h4><ol id="log-list"></ol></aside>
+</section>
+
+<div class="modal" id="modal"><div class="modal-box" id="modal-box"></div></div>
+<div class="toast" id="toast" role="status"></div>
+<div id="fx-layer"></div>
+<script type="module" src="js/main.js?v=1"></script>
+</body>
+</html>

@@ -3,9 +3,14 @@
 export const GAMES = {
   all: '🎲 BGVN', bang: '🤠 BANG!', uno: '🃏 UNO', typhu: '🏙️ Cờ Tỷ Phú', scribble: '🎨 Scribble it!',
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
-  xidach: '🃏 Xì dách', poker: '♠️ Poker',
+  xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên',
 };
 export const NOTES = [
+  { id: '20261104-07', date: '04/11/2026', game: 'tienlen', title: 'Game mới: Tiến Lên miền Nam!', items: [
+    '🐷 Tiến Lên miền Nam 2–4 người: lẻ, đôi, sám, sảnh, đôi thông, tứ quý – chặt heo, chặt chồng, tới trắng, thối heo, cóng.',
+    '💡 Chạm 1 lá là gợi ý bộ đánh được, có nút Gợi ý và nút 🔪 Chặt! sáng lên khi chặt được.',
+    '🤖 Bot 3 cấp: Gà mờ / Vừa / Cao thủ. Chip ảo, hết thì xin mẹ.',
+  ] },
   { id: '20261104-06', date: '04/11/2026', game: 'poker', title: 'Game mới: Poker!', items: [
     '♠️ Texas Hold\'em không giới hạn 2–9 người: mù, tố đúng luật, tất tay, pot phụ, chia pot khi hoà.',
     '💡 Gợi ý cho người mới: hiện tên bài đang có và tô 5 lá tạo bài. Lật bài đọc tên tiếng Việt (Cù lũ, Thùng, Sảnh…).',
