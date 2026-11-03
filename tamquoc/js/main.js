@@ -1,12 +1,12 @@
 // Giao diện Tam Quốc Sát + nối với lớp mạng (host-authoritative). Mọi hình vẽ tự làm bằng CSS/SVG/emoji.
-import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, SUIT_SYMBOL, SUIT_NAME, cardLabel, cardName, rankLabel, rolesFor, infoOf } from './cards.js?v=3';
-import { JUDGE_TEXT } from './engine.js?v=3';
-import { Host, Client, loadSnapshot, session, MAX, MIN } from './net.js?v=3';
+import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, SUIT_SYMBOL, SUIT_NAME, cardLabel, cardName, rankLabel, rolesFor, infoOf } from './cards.js?v=4';
+import { JUDGE_TEXT } from './engine.js?v=4';
+import { Host, Client, loadSnapshot, session, MAX, MIN } from './net.js?v=4';
 import { netStatus } from '../../shared/ui/status.js';
-import { portrait, blankPortrait, cardHTML, backHTML, generalCardHTML, kindTag, iconsFor, emoOf } from './art.js?v=3';
-import * as fx from './fx.js?v=3';
-import { musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=3';
-import { openGuide as guide } from './guide.js?v=3';
+import { portrait, blankPortrait, cardHTML, backHTML, generalCardHTML, kindTag, iconsFor, emoOf } from './art.js?v=4';
+import * as fx from './fx.js?v=4';
+import { musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=4';
+import { openGuide as guide } from './guide.js?v=4';
 
 const GAME = 'tamquoc';
 const $ = s => document.querySelector(s);

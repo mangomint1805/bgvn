@@ -1,7 +1,7 @@
 // Lớp mạng Tam Quốc Sát: host giữ state + chạy engine, client chỉ gửi action. Kết nối dùng chung ở shared/net/room.js
-import { createGame, applyAction, viewFor, top, getPlayer, NULL_TIME } from './engine.js?v=3';
-import { botAction } from './bot.js?v=3';
-import { S } from './fx.js?v=3';
+import { createGame, applyAction, viewFor, top, getPlayer, NULL_TIME } from './engine.js?v=4';
+import { botAction } from './bot.js?v=4';
+import { S } from './fx.js?v=4';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
 export const TURN_TIME = 60, PROMPT_TIME = 20, PICK_TIME = 30; // giây: hết giờ thì máy tự đánh thay (chống treo máy)
 const NS = 'bgvn-tamquoc', PREFIX = 'bgvn-tamquoc-', GAME = 'tamquoc';

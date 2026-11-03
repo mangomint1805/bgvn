@@ -1,7 +1,7 @@
 // Hướng dẫn luật Tam Quốc Sát (bản BGVN) – soạn lại bằng lời của hội, rút gọn hợp lý cho bản web.
-import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, buildDeck, rolesFor, DECK_SIZE_BASE, DECK_SIZE_EXP, HORSE_NAMES, artKey } from './cards.js?v=3';
-import { cardHTML, portrait } from './art.js?v=3';
-import { IMG } from './images.js?v=3';
+import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, buildDeck, rolesFor, DECK_SIZE_BASE, DECK_SIZE_EXP, HORSE_NAMES, artKey } from './cards.js?v=4';
+import { cardHTML, portrait } from './art.js?v=4';
+import { IMG } from './images.js?v=4';
 
 const deck = buildDeck(true);
 const red = t => String(t).replace(/([♥♦])/g, '<span class="red">$1</span>');
@@ -149,10 +149,10 @@ ${Object.keys(KINGDOMS).map(k => byK(k, true).length ? `<h4 class="g-kd" style="
 </ul></section>
 
 <section id="g-art"><h3>15. Nguồn tranh minh hoạ</h3>
-<p>Chân dung võ tướng là <b>tranh khắc gỗ minh hoạ Tam Quốc diễn nghĩa đời Thanh</b>; tranh trên lá bài là ukiyo-e (Utagawa Kuniyoshi, Katsushika Hokusai…) và tranh cổ Trung Hoa. Tất cả thuộc <b>phạm vi công cộng</b> (tác giả mất hơn 100 năm), lấy từ Wikimedia Commons, BGVN chỉ cắt khung và thu nhỏ. Tướng chưa có tranh cổ đúng người thì dùng chân dung SVG tự vẽ. Binh khí và trang bị là hình SVG BGVN tự vẽ.</p>
+<p>Chân dung võ tướng là <b>tranh khắc gỗ minh hoạ Tam Quốc diễn nghĩa đời Thanh</b>; tranh trên lá bài là ukiyo-e (Utagawa Kuniyoshi, Katsushika Hokusai…) và tranh cổ Trung Hoa. Tất cả thuộc <b>phạm vi công cộng</b> (tác giả mất hơn 100 năm), lấy từ Wikimedia Commons, The Met và Cleveland Museum of Art (Open Access), BGVN chỉ cắt khung và thu nhỏ. Tướng chưa có tranh cổ đúng người thì dùng chân dung SVG tự vẽ. Binh khí và trang bị là hình SVG BGVN tự vẽ.</p>
 <div class="g-credits">${Object.entries(IMG).filter(([, v]) => v.t).map(([k, v]) => `<p><b>${v.for || k}</b> – <a href="${v.u}" target="_blank" rel="noopener">${v.t}</a>${v.a ? ' · ' + v.a : ''}${v.d ? ' · ' + v.d : ''} · <i>${v.l}</i></p>`).join('')}</div>
 </section>
-<p class="g-foot">Bản fan-made phi thương mại của hội BGVN, luật rút gọn từ trò chơi bài Tam Quốc Sát; không liên kết với Yoka Games. Tranh minh hoạ là tranh khắc gỗ, tranh lụa cổ Trung Hoa (Minh, Thanh) và tranh ukiyo-e của Utagawa Kuniyoshi… thuộc phạm vi công cộng, lấy từ Wikimedia Commons (danh sách trong img/CREDITS.md). Khung bài, câu chữ và âm nhạc do BGVN tự làm.</p>
+<p class="g-foot">Bản fan-made phi thương mại của hội BGVN, luật rút gọn từ trò chơi bài Tam Quốc Sát; không liên kết với Yoka Games. Tranh minh hoạ là tranh khắc gỗ, tranh lụa cổ Trung Hoa (Minh, Thanh) và tranh ukiyo-e của Utagawa Kuniyoshi… thuộc phạm vi công cộng, lấy từ Wikimedia Commons, The Met và Cleveland Museum of Art (danh sách trong img/CREDITS.md). Khung bài, câu chữ và âm nhạc do BGVN tự làm.</p>
 </div>`;
 }
 export function openGuide(openModal, closeModal) {
