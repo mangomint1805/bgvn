@@ -1,10 +1,10 @@
-import { Host, Client, MAX, loadSnapshot, session, UNO_PHRASES } from './net.js?v=17';
+import { Host, Client, MAX, loadSnapshot, session, UNO_PHRASES } from './net.js?v=18';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=4';
-import { MODES, COLOR_NAME, cardText, DRAW_VALUE, CARD_NAME, MATCH_TARGETS } from './engine.js?v=17';
-import * as fx from './ufx.js?v=17';
-import { openGuide, CARD_HELP, NEW_TYPES } from './guide.js?v=17';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=5';
+import { MODES, COLOR_NAME, cardText, DRAW_VALUE, CARD_NAME, MATCH_TARGETS } from './engine.js?v=18';
+import * as fx from './ufx.js?v=18';
+import { openGuide, CARD_HELP, NEW_TYPES } from './guide.js?v=18';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -19,6 +19,10 @@ export const SYM = { skip: '⊘', rev: '⇄', d2: '+2', d4: '+4', skipall: '⊘�
 export const LBL = { skip: 'KHOÁ MÕM', rev: 'ĐẢO CHIỀU', d2: 'RÚT 2', d4: 'RÚT 4', skipall: 'KHOÁ BÀN', discall: 'XẢ MÀU', wild: 'ĐỔI MÀU', wd4: 'RÚT 4', wrd4: 'ĐẢO +4', wd6: 'RÚT 6', wd10: 'RÚT 10', roulette: 'QUAY MÀU', wtd4: 'NHẮM +4', wup: 'UP', tornado: 'BÃO TỐ', nou: 'NO U', shield: 'KHIÊN', dq: 'CỘNG ?', gift: 'TẶNG QUÀ', steal: 'MÓC TÚI', wswap: 'ĐỔI TAY' };
 export function cardHTML(c, cls = '', attrs = '') {
   if (!c) return `<div class="ucard back ${cls}" ${attrs}></div>`;
+  if (c.type === 'tornado') { // xoáy vẽ bằng nét cùng màu lá (emoji 🌀 luôn màu xanh)
+    const sw = k => `<svg viewBox="0 0 24 24" width="${k}em" height="${k}em" style="vertical-align:-.12em" aria-hidden="true"><path d="M12 12.2c.9-.5.6-1.9-.5-2-1.6-.2-2.6 1.6-2 3 .8 2 3.6 2.4 5.1 1 2.2-2 1.4-5.7-1.3-6.6C10.2 6.6 6.8 8.6 6.3 11.6c-.6 3.6 2.4 6.8 6 6.6 4.6-.2 7.5-4.9 6.1-9.2C17 4.9 12.1 2.9 8 4.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`;
+    return `<div class="ucard c-${c.color} t-${c.type} ${cls}" data-id="${c.id}" ${attrs}><span class="cor tl">${sw(1)}</span><div class="oval"><b>${sw(1.25)}</b></div><span class="cor br">${sw(1)}</span><div class="lbl"><span>${LBL[c.type]}</span></div></div>`;
+  }
   const sym = c.type === 'n' ? String(c.num) : SYM[c.type];
   const under = c.type === 'n' && (c.num === 6 || c.num === 9) ? ' style="text-decoration:underline;text-decoration-thickness:3px"' : '';
   const cor = c.type === 'n' ? c.num : (SYM[c.type] || '★');

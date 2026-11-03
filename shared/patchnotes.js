@@ -5,6 +5,10 @@ export const GAMES = {
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
 };
 export const NOTES = [
+  { id: '20261103-14', date: '03/11/2026', game: 'uno', title: 'Bão Tố đúng màu & nhạc không tắt', items: [
+    '🌀 Hình xoáy trên lá Bão Tố giờ cùng màu lá bài.',
+    '🎵 Chuyển tab/ra màn hình chính rồi quay lại, nhạc nền tự bật lại.',
+  ] },
   { id: '20261103-13', date: '03/11/2026', game: 'uno', title: 'Chuỗi cộng dồn & bốc thử', items: [
     '➕ Chuỗi cộng dồn giữ nguyên mũi tên "ai dồn cho ai" trên màn hình tới khi có người chịu phạt.',
     '🎲 Bị dồn mà không có lá chồng: bốc thử 1 lá – trúng lá cộng, Khiên hoặc No U là đánh chồng tiếp ngay (+? không tính).',

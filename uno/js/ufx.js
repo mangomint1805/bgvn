@@ -137,10 +137,19 @@ export async function musicStart() {
   const a = actx(); if (!a || mSrc) return;
   if (!mGain) { mGain = a.createGain(); mGain.connect(a.destination); } mGain.gain.value = vol * 0.3;
   mSrc = true; const buf = await renderMusic(a); if (mSrc !== true || !musicOn) { if (mSrc === true) mSrc = null; return; }
-  mSrc = a.createBufferSource(); mSrc.buffer = buf; mSrc.loop = true; mSrc.connect(mGain); mSrc.start();
+  mSrc = a.createBufferSource(); mSrc.buffer = buf; mSrc.loop = true; mSrc.connect(mGain); mSrc.start(); const me = mSrc; me.onended = () => { if (mSrc === me) mSrc = null; };
 }
 export function musicStop() { if (mSrc && mSrc !== true) try { mSrc.stop(); } catch (e) {} mSrc = null; }
-document.addEventListener('visibilitychange', () => { if (ac && !document.hidden && ac.state !== 'running') ac.resume(); });
+// Ra/vào tab hoặc khoá màn hình: trình duyệt hay tạm dừng âm thanh. Quay lại thì bật lại – nếu máy đòi chạm màn hình
+// mới cho phát (iOS/Android) thì chờ lần chạm kế tiếp; nếu vòng nhạc đã bị dừng hẳn thì phát lại từ đầu.
+function revive() {
+  if (document.hidden || !ac) return;
+  const go = () => { if (ac.state !== 'running') ac.resume().catch(() => {}); if (musicOn && !mSrc) musicStart(); };
+  go();
+  if (ac.state !== 'running') { const once = () => { go(); removeEventListener('pointerdown', once, true); removeEventListener('keydown', once, true); }; addEventListener('pointerdown', once, true); addEventListener('keydown', once, true); }
+}
+document.addEventListener('visibilitychange', revive); addEventListener('focus', revive); addEventListener('pageshow', revive);
+if (typeof window !== 'undefined') setInterval(() => { if (ac && !document.hidden && ac.state === 'running' && musicOn && !mSrc) musicStart(); }, 4000);
 export const musicIsOn = () => musicOn;
 export function musicToggle() { musicOn = !musicOn; ls.set('uno-music', musicOn ? '1' : '0'); musicOn ? musicStart() : musicStop(); return musicOn; }
 export function musicVolume(v) { if (v == null) return vol; vol = v; ls.set('uno-music-vol', String(v)); if (mGain) mGain.gain.value = vol * 0.3; }
