@@ -1,8 +1,8 @@
 // Lớp mạng Cờ Tỷ Phú: host giữ state (luật + xúc xắc do host quyết định), client chỉ gửi action.
 // Kết nối dùng chung shared/net/room.js (Firebase → PeerJS → MQTT), tự vào lại khi tải trang.
-import { createGame, applyAction, viewFor, actorOf, P } from './engine.js?v=44';
-import { botAction } from './bot.js?v=44';
-import { S } from './fx.js?v=44';
+import { createGame, applyAction, viewFor, actorOf, P } from './engine.js?v=45';
+import { botAction } from './bot.js?v=45';
+import { S } from './fx.js?v=45';
 import { OPTIONS, PRESETS } from '../../shared/js/avatar3d.js';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
@@ -49,7 +49,7 @@ export class Host {
     this.state = null; this.conns = new Map(); this.timer = null; this.afk = null;
     this.lim = hostLimiter(); this.botReactAt = 0;
     // freeBuild: true = không cần đủ bộ (mặc định) · false = phải đủ bộ màu · 'zing' = ZingPlay thật (chỉ xây ở ô vừa dừng)
-    this.opts = { startMoney: 1500, maxRounds: 0, monopolyWin: true, auction: true, buyback: true, freeBuild: true, turnTime: offline ? 0 : 60 };
+    this.opts = { startMoney: 1500, maxRounds: 0, monopolyWin: true, auction: true, buyback: true, freeBuild: true, travel: true, turnTime: offline ? 0 : 60 };
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.local || p.id === 'host' }));
       this.state = restore.state; this.code = restore.code; this.opts = { ...this.opts, ...(restore.opts || {}) };

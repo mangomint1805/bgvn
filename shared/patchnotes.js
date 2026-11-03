@@ -5,6 +5,10 @@ export const GAMES = {
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
 };
 export const NOTES = [
+  { id: '20261103-17', date: '03/11/2026', game: 'typhu', title: 'Bãi đậu xe = Du lịch, chữ ô góc gọn gàng', items: [
+    '✈️ Dừng ở Bãi đậu xe được chọn 1 ô bất kỳ (trừ Vào tù) để bay tới ngay – bấm ô sáng trên bàn hoặc nút 🗺️ Chọn ô. Bay ngược qua Bắt đầu vẫn nhận 200K. Tắt được trong sảnh.',
+    '🚔 Sửa chữ ô Nhà tù, Vào tù, Bắt đầu bị cắt/tràn ra ngoài.',
+  ] },
   { id: '20261103-16', date: '03/11/2026', game: 'typhu', title: 'Mua lại đất đang thế chấp', items: [
     '💥 Dừng ở đường của người khác đang thế chấp vẫn được mua lại (giá gấp đôi). Ngân hàng trừ khoản chuộc, chủ cũ nhận phần còn lại, mình nhận đất sạch nợ.',
   ] },

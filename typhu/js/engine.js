@@ -19,7 +19,7 @@ export function setRandom(f) { rand = f || Math.random; }
 const d6 = () => 1 + Math.floor(rand() * 6);
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-export const DEFAULTS = { startMoney: 1500, maxRounds: 0, monopolyWin: true, auction: true, buyback: true, freeBuild: true, turnTime: 0 };
+export const DEFAULTS = { startMoney: 1500, maxRounds: 0, monopolyWin: true, auction: true, buyback: true, freeBuild: true, travel: true, turnTime: 0 };
 export const SALARY = 200, JAIL_FINE = 50, MAX_TRADES = 3;
 export const houseCost = i => (GROUPS[TILES[i].group] || {}).house || 0;
 export const mortgageValue = i => Math.round(TILES[i].price / 2);
@@ -250,6 +250,13 @@ export function applyAction(s, pid, a) {
       bankrupt(s, p, creditors.length === 1 ? creditors[0].pid : null);
       return ok();
     }
+    case 'travel': case 'stay': { // ✈️ Bãi đậu xe = Du lịch: chọn 1 ô bất kỳ để bay tới ngay
+      if (s.stage !== 'travel') return no('Không phải lúc du lịch');
+      if (a.type === 'stay') { log(s, `🅿️ ${p.name} ở lại nghỉ ngơi.`); finishLanding(s); return ok(); }
+      const to = +a.tile;
+      if (!travelOk(to)) return no('Không bay tới ô đó được');
+      log(s, `✈️ ${p.name} du lịch tới ${TILES[to].name}!`); moveTo(s, p, to, 'fly'); land(s, p); return ok();
+    }
     case 'end': {
       if (s.stage !== 'end') return no('Chưa kết thúc lượt được');
       nextTurn(s); return ok();
@@ -310,9 +317,13 @@ function land(s, p) {
   }
   if (t.type === 'tax') { log(s, `🧾 ${p.name} đóng ${t.name} ${money(t.amount)}.`); charge(s, p, [{ pid: null, amt: t.amount }], 'finish', 'tax'); return; }
   if (t.type === 'gotojail') { goJail(s, p); return; }
+  if (t.type === 'parking' && s.noTravel) delete s.noTravel;
+  else if (t.type === 'parking' && s.opts.travel !== false && !p.inJail) { s.stage = 'travel'; log(s, `✈️ ${p.name} tới Bãi đậu xe – được chọn 1 ô để du lịch tới!`); return; }
   if (t.type === 'chance' || t.type === 'chest') { drawCard(s, p, t.type); return; }
   finishLanding(s);
 }
+// ô được bay tới khi du lịch: mọi ô trừ chính Bãi đậu xe và ô Vào tù
+export const travelOk = i => Number.isInteger(i) && i >= 0 && i < N && TILES[i].type !== 'parking' && TILES[i].type !== 'gotojail';
 function finishLanding(s) {
   const p = current(s);
   if (s.phase !== 'playing' || p.out) return;
@@ -412,7 +423,7 @@ function drawCard(s, p, deck) {
     case 'near_station': { moveTo(s, p, nearest('station')); return landMult(s, p); }
     case 'near_utility': { moveTo(s, p, nearest('utility')); return landMult(s, p); }
     case 'back3': { moveBy(s, p, -3); return; }
-    case 'flood': { const from = p.pos; p.pos = PARKING; ev(s, { t: 'move', pid: p.id, from, to: PARKING, steps: 0, kind: 'fly' }); return land(s, p); }
+    case 'flood': { const from = p.pos; p.pos = PARKING; ev(s, { t: 'move', pid: p.id, from, to: PARKING, steps: 0, kind: 'fly' }); s.noTravel = true; return land(s, p); }
     case 'jail': return goJail(s, p);
     case 'free_jail': p.cards.push(deck); return finishLanding(s);
     case 'dividend': return gain(100);

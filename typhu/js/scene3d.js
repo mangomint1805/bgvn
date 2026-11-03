@@ -2,7 +2,7 @@
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
 import { buildAvatar } from '../../shared/js/avatar3d.js';
-import { buildCity } from './city.js?v=44';
+import { buildCity } from './city.js?v=45';
 
 export const FONT = '"Be Vietnam Pro", system-ui, sans-serif', TITLE = '"Baloo 2", "Be Vietnam Pro", system-ui, sans-serif';
 const TW = 1, TD = 1.6, CW = 1.6, L = 2 * CW + 9 * TW, TILE_H = 0.12;
@@ -90,20 +90,23 @@ function tileCanvas(i, tile, st, S) {
     const t = tile.type;
     if (t === 'jail') {
       const s = W * 0.66; c.fillStyle = '#ff9a3d'; c.fillRect(0, 0, s, s); c.strokeStyle = '#24314d'; c.lineWidth = 7 * u / 1.6; for (let k = 1; k < 6; k++) { c.beginPath(); c.moveTo(k * s / 6, 4); c.lineTo(k * s / 6, s - 4); c.stroke(); }
-      c.save(); c.translate(s / 2, s / 2); c.rotate(-Math.PI / 4); c.fillStyle = '#fff'; c.strokeStyle = '#24314d'; c.lineWidth = 8 * u / 1.6; c.font = `800 ${34 * u}px ${TITLE}`; c.strokeText('Ở TÙ', 0, 2); c.fillText('Ở TÙ', 0, 2); c.restore();
-      c.fillStyle = ink; c.font = `800 ${16 * u}px ${FONT}`; c.fillText('CHỈ GHÉ THĂM', s / 2, s + (W - s) / 2);
-      c.save(); c.translate(s + (W - s) / 2, s / 2); c.rotate(-Math.PI / 2); c.fillText('THĂM TÙ', 0, 0); c.restore();
+      c.save(); c.translate(s / 2, s / 2); c.rotate(-Math.PI / 4); c.fillStyle = '#fff'; c.strokeStyle = '#24314d'; c.lineWidth = 8 * u / 1.6; c.font = `800 ${38 * u}px ${TITLE}`; c.strokeText('Ở TÙ', 0, 6 * u); c.fillText('Ở TÙ', 0, 6 * u); c.restore();
+      const fit = (txt, maxW, sz) => { c.font = `800 ${sz}px ${FONT}`; const w = c.measureText(txt).width; if (w > maxW) c.font = `800 ${sz * maxW / w}px ${FONT}`; };
+      const strip = W - s; c.fillStyle = ink;
+      fit('GHÉ THĂM', s * 0.9, strip * 0.42); c.fillText('GHÉ THĂM', s / 2, s + strip / 2);
+      c.save(); c.translate(s + strip / 2, s / 2); c.rotate(-Math.PI / 2); fit('GHÉ THĂM', s * 0.9, strip * 0.42); c.fillText('GHÉ THĂM', 0, 0); c.restore();
+      c.fillStyle = '#ff9a3d'; c.beginPath(); c.arc(s + strip / 2, s + strip / 2, strip * 0.3, 0, 7); c.fill(); c.fillStyle = '#fff'; c.font = `800 ${strip * 0.34}px ${FONT}`; c.fillText('👋', s + strip / 2, s + strip / 2 + 1);
     } else {
       c.save(); c.translate(W / 2, H / 2); c.rotate(-Math.PI / 4);
       if (t === 'start') {
         c.fillStyle = '#e53935'; c.font = `800 ${40 * u}px ${TITLE}`; c.fillText('BẮT ĐẦU', 0, -14 * u);
-        c.fillStyle = ink; c.font = `700 ${15 * u}px ${FONT}`; c.fillText('Qua đây nhận ' + fmt(200), 0, 18 * u);
+        c.fillStyle = ink; c.font = `800 ${17 * u}px ${FONT}`; c.fillText('Nhận ' + fmt(200), 0, 20 * u);
       } else if (t === 'parking') {
         c.fillStyle = '#1e6fd9'; rr(c, -28 * u, -62 * u, 56 * u, 56 * u, 10 * u); c.fill(); c.fillStyle = '#fff'; c.font = `800 ${46 * u}px ${TITLE}`; c.fillText('P', 0, -32 * u);
-        c.fillStyle = ink; c.font = `800 ${24 * u}px ${TITLE}`; c.fillText('BÃI ĐẬU XE', 0, 18 * u); c.fillStyle = '#2f9e44'; c.font = `800 ${14 * u}px ${FONT}`; c.fillText('MIỄN PHÍ', 0, 42 * u);
+        c.fillStyle = ink; c.font = `800 ${24 * u}px ${TITLE}`; c.fillText('BÃI ĐẬU XE', 0, 18 * u); c.fillStyle = '#2f9e44'; c.font = `800 ${15 * u}px ${FONT}`; c.fillText('✈️ DU LỊCH', 0, 44 * u);
       } else if (t === 'gotojail') {
         c.fillStyle = '#e53935'; rr(c, -32 * u, -60 * u, 30 * u, 22 * u, 8 * u); c.fill(); c.fillStyle = '#1e6fd9'; rr(c, 2 * u, -60 * u, 30 * u, 22 * u, 8 * u); c.fill(); c.fillStyle = '#24314d'; c.fillRect(-36 * u, -40 * u, 72 * u, 9 * u);
-        c.fillStyle = '#c62828'; c.font = `800 ${40 * u}px ${TITLE}`; c.fillText('VÀO TÙ', 0, 2 * u); c.fillStyle = ink; c.font = `700 ${13 * u}px ${FONT}`; c.fillText('Đi thẳng vào tù, không qua Bắt đầu', 0, 34 * u);
+        c.fillStyle = '#c62828'; c.font = `800 ${40 * u}px ${TITLE}`; c.fillText('VÀO TÙ', 0, 0); c.fillStyle = ink; c.font = `700 ${13 * u}px ${FONT}`; c.fillText('Đi thẳng vào tù,', 0, 28 * u); c.fillText('không qua Bắt đầu', 0, 44 * u);
       }
       c.restore();
       if (t === 'start') { // mũi tên chỉ hướng đi

@@ -1,7 +1,7 @@
 // Mô phỏng hàng trăm ván toàn bot: đếm ván kẹt / hành động lỗi / vi phạm bất biến. Chạy: node typhu/test/sim.mjs [số ván]
 import './load.mjs';
-import { createGame, applyAction, actorOf, setRandom, TILES, GROUPS } from '../js/engine.js?v=44';
-import { botAction } from '../js/bot.js?v=44';
+import { createGame, applyAction, actorOf, setRandom, TILES, GROUPS } from '../js/engine.js?v=45';
+import { botAction } from '../js/bot.js?v=45';
 const G = +process.argv[2] || 600;
 let seed = 12345; setRandom(() => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; });
 const st = { games: 0, stuck: 0, errs: 0, inv: 0, actions: 0, rounds: 0, maxRounds: 0, reasons: {}, trades: 0, auctions: 0, buybacks: 0, bankrupt: 0, landmarks: 0, zingBuilds: 0, zingBad: 0, byVariant: {} };
@@ -14,6 +14,7 @@ for (let g = 0; g < G; g++) {
     const pid = actorOf(s);
     const a = botAction(s, pid);
     if (!a) { st.stuck++; if (st.stuck < 4) console.log('KẸT', s.stage, pid); break; }
+    if (a.type === 'travel') st.travels = (st.travels || 0) + 1; if (a.type === 'stay') st.stays = (st.stays || 0) + 1;
     const r = applyAction(s, pid, a);
     if (!r.ok) { st.errs++; if (st.errs < 6) console.log('LỖI', r.reason, JSON.stringify(a), s.stage); break; }
     k++;

@@ -1,5 +1,5 @@
 // Hướng dẫn luật Cờ Tỷ Phú Sài Gòn (tiếng Việt)
-import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=44';
+import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=45';
 
 export function guideHTML() {
   const taxes = TILES.filter(t => t.type === 'tax').map(t => `${t.name} ${money(t.amount)}`).join(', ');
@@ -47,7 +47,11 @@ export function guideHTML() {
     <li>Ở tù tối đa 3 lượt: lượt thứ 3 vẫn không ra đôi thì nộp ${money(JAIL_FINE)} rồi đi.</li></ul>
   <h3>❓ Thẻ & thuế</h3><ul>
     <li><b>Cơ hội</b> (đỏ) và <b>Khí vận</b> (vàng): rút 1 thẻ, làm theo nội dung – có thẻ được tiền, có thẻ mất tiền, có thẻ bắt đi xa.</li>
-    <li>Thuế: ${taxes}. Bãi đậu xe miễn phí: nghỉ chân, không có gì xảy ra.</li></ul>
+    <li>Thuế: ${taxes}.</li></ul>
+  <h3>✈️ Bãi đậu xe = Du lịch</h3><ul>
+    <li>Dừng ở <b>Bãi đậu xe</b> (do đổ xúc xắc) thì được chọn <b>1 ô bất kỳ</b> để bay tới ngay: bấm ô đang sáng trên bàn cờ hoặc nút <b>🗺️ Chọn ô</b>. Tới nơi thì xử lý như dừng bình thường (mua đất, trả thuê, rút thẻ…).</li>
+    <li>Không bay tới ô <b>Vào tù</b> được. Bay ngược qua <b>Bắt đầu</b> vẫn nhận 200K. Muốn thì bấm <b>🅿️ Ở lại</b>.</li>
+    <li>Bị thẻ "Ngập đường" đẩy tới Bãi đậu xe thì không được du lịch. Tắt luật này trong sảnh (✈️ Bãi đậu xe → Chỉ nghỉ) thì ô này chỉ để nghỉ chân.</li></ul>
   <h3>😰 Hết tiền & phá sản</h3><ul>
     <li>Không đủ tiền trả thì bán nhà / thế chấp đất để gom tiền rồi bấm <b>Trả nợ</b>.</li>
     <li>Gom hết vẫn thiếu thì <b>phá sản</b>: toàn bộ tài sản về tay chủ nợ (hoặc trả về ngân hàng nếu nợ ngân hàng).</li></ul>

@@ -1,8 +1,8 @@
 // Bot "thông minh vừa phải": mua đất có tính toán, xây đều, đấu giá theo định giá, giao dịch để gom đủ nhóm màu.
 import {
   TILES, GROUPS, GROUP_LIST, P, current, actorOf, alive, tilesOf, ownerOf, ownsGroup, rentOf, canBuild, canSell, canMortgage, canUnmortgage,
-  houseCost, unmortgageCost, mortgageValue, tradable, tradeError, buybackPrice, isProp, JAIL_FINE, MAX_TRADES, zingBuild, tradeImpact,
-} from './engine.js?v=44';
+  houseCost, unmortgageCost, mortgageValue, tradable, tradeError, buybackPrice, isProp, JAIL_FINE, MAX_TRADES, zingBuild, tradeImpact, travelOk,
+} from './engine.js?v=45';
 
 // tiền nên giữ lại để trả tiền thuê bất ngờ
 function reserve(s, pid) {
@@ -48,6 +48,24 @@ export function botAction(s, pid) {
       const step = A.high < 100 ? 10 : A.high < 300 ? 20 : 50;
       const bid = Math.max(10, A.high + step);
       return bid <= cap ? { type: 'bid', amount: bid } : { type: 'pass' };
+    }
+    case 'travel': { // chọn ô du lịch: ưu tiên đất trống đáng mua, đất mình để xây; né đất người khác thu thuê cao
+      let best = null, bv = 0;
+      for (let i = 0; i < TILES.length; i++) {
+        if (!travelOk(i)) continue;
+        const t = TILES[i], pr = s.props[i];
+        let v = i < p.pos ? 60 : 0; // bay ngược qua Bắt đầu được +200K
+        if (isProp(i)) {
+          if (!pr) v += p.cash - t.price >= R ? tileWorth(s, pid, i) : -10;
+          else if (pr.owner === pid) v += t.type === 'city' && canBuild(s, pid, i) && p.cash - houseCost(i) >= R ? 40 + houseCost(i) * 0.3 : 5;
+          else if (pr.mort) v += 10;
+          else v -= rentOf(s, i, 7) * 1.5;
+        } else if (t.type === 'chance' || t.type === 'chest') v += 15;
+        else if (t.type === 'tax') v -= t.amount || 100;
+        else if (t.type === 'start') v += 30;
+        if (v > bv) { bv = v; best = i; }
+      }
+      return best == null ? { type: 'stay' } : { type: 'travel', tile: best };
     }
     case 'buyback': {
       const i = s.buyback.tile, price = buybackPrice(s, i), st = groupStat(s, pid, groupOf(i));

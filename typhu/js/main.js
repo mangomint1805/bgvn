@@ -1,19 +1,19 @@
 // Cờ Tỷ Phú Sài Gòn – giao diện: trang chủ, tạo nhân vật, sảnh, ván chơi 3D, hoạt ảnh sự kiện.
-import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=44';
+import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=45';
 import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.js?v=2';
 import {
   setData, TILES, GROUPS, GROUP_LIST, STATION_RENT, money, rentOf, canBuild, canSell, canMortgage, canUnmortgage, houseCost, mortgageValue,
-  unmortgageCost, buildBlock, tradable, tradeError, buybackPrice, netWorth, tilesOf, ownsGroup, JAIL_FINE, MAX_TRADES, isProp,
+  unmortgageCost, travelOk, buildBlock, tradable, tradeError, buybackPrice, netWorth, tilesOf, ownsGroup, JAIL_FINE, MAX_TRADES, isProp,
   tradeImpact, tradeSideValue,
-} from './engine.js?v=44';
-import { Board3D, THEMES } from './scene3d.js?v=44';
-import * as fx from './fx.js?v=44';
-import { guideHTML } from './guide.js?v=44';
+} from './engine.js?v=45';
+import { Board3D, THEMES } from './scene3d.js?v=45';
+import * as fx from './fx.js?v=45';
+import { guideHTML } from './guide.js?v=45';
 import { OPTIONS, PRESETS, buildAvatar, portrait } from '../../shared/js/avatar3d.js';
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=91';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=92';
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -22,7 +22,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const settings = fx.settings;
 
 // ---------- dữ liệu bàn cờ ----------
-const [tilesData, cardsData] = await Promise.all(['tiles.json?v=44', 'cards.json?v=44'].map(u => fetch(u).then(r => r.json())));
+const [tilesData, cardsData] = await Promise.all(['tiles.json?v=45', 'cards.json?v=45'].map(u => fetch(u).then(r => r.json())));
 setData(tilesData, cardsData);
 const VN = 'ẮẰẲẴẶẤẦẨẪẬĐđơưƯƠếềểễệ';
 const fontsReady = Promise.race([
@@ -47,7 +47,16 @@ function openModal(html, cls = '', key = null) {
   $('#modal-box').className = 'modal-box ' + cls; $('#modal-box').innerHTML = html; $('#modal').classList.add('open'); modalKey = key;
 }
 function setModal(html) { const b = $('#modal-box'), y = b.scrollTop; b.innerHTML = html; b.scrollTop = y; }
-function closeModal() { $('#modal').classList.remove('open'); modalKey = null; fns.modal = []; if (onModalClose) { const f = onModalClose; onModalClose = null; f(); } if (B) B.pick([]); }
+function closeModal() { $('#modal').classList.remove('open'); modalKey = null; fns.modal = []; if (onModalClose) { const f = onModalClose; onModalClose = null; f(); } if (B) B.pick(travelPicks()); }
+// đang tới lượt mình du lịch: làm sáng mọi ô bay tới được
+const myTravel = () => !!shown && shown.phase === 'playing' && shown.stage === 'travel' && isMine(shown.actor);
+const travelPicks = () => myTravel() ? TILES.map((t, i) => i).filter(travelOk) : [];
+function openTravel() {
+  const v = shown, me = v.actor;
+  const row = i => `<div class="row" style="border-left:6px solid ${gColor(i)};padding-left:8px"><span class="nm">${esc(tileName(i))} <small>${v.props[i] ? (v.props[i].owner === me ? '🙋 của mình ' : '👤 ' + esc(nm(v, v.props[i].owner)) + ' ') + statusOf(v, i) : isProp(i) ? '🏦 trống · ' + money(TILES[i].price) : ''}</small></span><button class="btn sm pri" ${fnAttr('modal', () => { closeModal(); send(me, { type: 'travel', tile: i }); })}>✈️ Bay</button></div>`;
+  openModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>✈️ Du lịch tới đâu?</h2><p class="note">Bay ngược qua <b>Bắt đầu</b> vẫn nhận 200K. Không bay tới Vào tù được.</p><div class="mg">${TILES.map((t, i) => i).filter(i => travelOk(i) && i !== v.players.find(p => p.id === me).pos).map(row).join('')}</div>`);
+  B && B.pick(travelPicks());
+}
 $('#modal').addEventListener('click', e => { if (e.target.id === 'modal' && modalKey !== 'lock') closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modal').classList.contains('open') && modalKey !== 'lock') closeModal(); });
 
@@ -184,6 +193,7 @@ const OPTS = [
   ['auction', '🔨 Đấu giá', [[true, 'Bật'], [false, 'Tắt']], 'Không mua thì đem ô đó ra đấu giá.'],
   ['freeBuild', '🏗️ Xây nhà', [[true, 'Không cần đủ bộ'], [false, 'Phải đủ bộ màu'], ['zing', 'ZingPlay thật']], 'Không cần đủ bộ: đất mình là xây được, lúc nào cũng được. Phải đủ bộ: luật cổ điển. ZingPlay thật: chỉ xây ở ô vừa dừng – đứng lên đất mình là hỏi luôn “Xây mấy nhà?”.'],
   ['buyback', '💥 Mua lại đất', [[true, 'Bật'], [false, 'Tắt']], 'Trả thuê xong (hoặc dừng ở đất đang thế chấp) được mua lại đường đó với giá gấp đôi.'],
+  ['travel', '✈️ Bãi đậu xe', [[true, 'Du lịch'], [false, 'Chỉ nghỉ']], 'Du lịch: dừng ở Bãi đậu xe được chọn 1 ô để bay tới ngay (kiểu ZingPlay).'],
   ['turnTime', '⏳ Thời gian suy nghĩ', [[0, 'Không'], [30, '30s'], [60, '60s'], [90, '90s']], 'Hết giờ máy đánh giúp (chơi online).', true],
 ];
 function renderLobby() {
@@ -516,6 +526,11 @@ function renderPanel() {
       }
       break;
     }
+    case 'travel': {
+      lines.push(head(actor, mine ? `✈️ <b>${who}</b> tới Bãi đậu xe – chọn 1 ô để <b>du lịch</b> tới ngay! <span class="sub">(bấm ô đang sáng trên bàn cờ)</span>` : `✈️ <b>${who}</b> đang chọn nơi du lịch…`));
+      if (mine) { btns.push(btn('panel', '🗺️ Chọn ô', () => openTravel(), 'pri main'), btn('panel', '🅿️ Ở lại', () => send(me, { type: 'stay' }), 'ghost')); if (B && !modalKey) B.pick(travelPicks()); }
+      break;
+    }
     case 'debt': {
       const D = v.debt;
       if (!mine) { lines.push(head(actor, `😰 <b>${who}</b> đang xoay ${money(D.amount)} để trả nợ…`)); break; }
@@ -577,7 +592,7 @@ function openTile(i, refresh = false) {
   } else if (t.type === 'utility') {
     body = `<table><tr><td>Chủ có 1 công ty</td><td>4 × xúc xắc</td></tr><tr><td>Chủ có cả Điện lực + Cấp nước</td><td>10 × xúc xắc</td></tr><tr><td>Thế chấp được</td><td>${money(mortgageValue(i))}</td></tr></table>`;
   } else {
-    const D = { start: 'Đi qua hoặc dừng ở đây nhận 200K.', jail: 'Đứng đây bình thường chỉ là ghé thăm. Người bị bắt vào tù ở ô này tối đa 3 lượt.', parking: 'Nghỉ chân miễn phí – không có gì xảy ra.', gotojail: 'Dừng ở đây là đi thẳng vào tù, không qua Bắt đầu, không nhận 200K.', chance: 'Rút 1 thẻ Cơ hội và làm theo.', chest: 'Rút 1 thẻ Khí vận và làm theo.', tax: `Dừng ở đây đóng ${money(t.amount || 0)} cho ngân hàng.` };
+    const D = { start: 'Đi qua hoặc dừng ở đây nhận 200K.', jail: 'Đứng đây bình thường chỉ là ghé thăm. Người bị bắt vào tù ở ô này tối đa 3 lượt.', parking: 'Dừng ở đây được DU LỊCH: chọn 1 ô bất kỳ (trừ Vào tù) để bay tới ngay; bay ngược qua Bắt đầu vẫn nhận 200K. Muốn thì ở lại nghỉ cũng được.', gotojail: 'Dừng ở đây là đi thẳng vào tù, không qua Bắt đầu, không nhận 200K.', chance: 'Rút 1 thẻ Cơ hội và làm theo.', chest: 'Rút 1 thẻ Khí vận và làm theo.', tax: `Dừng ở đây đóng ${money(t.amount || 0)} cho ngân hàng.` };
     body = `<p style="padding:12px 14px;margin:0;font-weight:600">${D[t.type] || ''}</p>`;
   }
   const here = v ? v.players.filter(p => !p.out && p.pos === i) : [];
@@ -586,7 +601,8 @@ function openTile(i, refresh = false) {
   const mb = v && actPid ? manageBtns(v, actPid, i) : '';
   const html = `<button class="close-x" data-close aria-label="Đóng">✕</button><div class="deed" style="--gc:${gColor(i)}"><div class="hd"><small>${t.type === 'city' ? 'Nhóm ' + GROUPS[t.group].name : t.type === 'station' ? 'Bến xe' : t.type === 'utility' ? 'Công ty' : 'Ô đặc biệt'}</small><b>${esc(t.name)}</b>${t.area ? `<small>${esc(t.area)}</small>` : ''}</div>${ownRow}${body}
     ${here.length ? `<div class="own">Đang đứng: ${here.map(p => `<img src="${pic(p.avatar, 60)}" alt="" title="${esc(p.name)}">`).join('')}</div>` : ''}</div>${mb ? `<div class="mbtns">${mb}</div>` : ''}`;
-  if (refresh) { setModal(html); } else openModal(html, '', 'tile:' + i);
+  const fly = myTravel() && travelOk(i) && i !== P(v, v.actor).pos ? `<div class="mbtns">${btn('modal', '✈️ Bay tới đây', () => { closeModal(); send(v.actor, { type: 'travel', tile: i }); }, 'pri main')}</div>` : '';
+  if (refresh) { setModal(html + fly); } else openModal(html + fly, '', 'tile:' + i);
   B && B.pick([i]);
 }
 function openPlayer(id) {
