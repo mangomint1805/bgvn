@@ -40,7 +40,7 @@
 //  Không phụ thuộc thư viện ngoài; CSS tự chèn (tiền tố .bgr-); tôn trọng prefers-reduced-motion.
 // =====================================================================================
 
-export const EMOJIS = ['😂', '😈', '🤡', '🙏', '😭', '🔥', '💀', '🫵'];
+export const EMOJIS = ['😂', '😈', '🤡', '🙏', '😭', '🔥', '💀', '👉'];
 export const PHRASES = ['Cứu tui', 'Gà quá!', 'Đỉnh nóc!', 'Từ từ thôi!', 'GG', 'Chờ xíu…'];
 export const COOLDOWN = 1500;
 
@@ -54,10 +54,10 @@ export function hostLimiter(ms = COOLDOWN - 300) {
   return from => { const now = Date.now(); if (now - (last[from] || 0) < ms) return false; last[from] = now; return true; };
 }
 const MOOD = {
-  attack: ['😈', '🫵', '😂', '🔥'],
+  attack: ['😈', '👉', '😂', '🔥'],
   hurt: ['😭', '💀', '🙏', 'Cứu tui'],
   win: ['🔥', '😂', 'GG', 'Đỉnh nóc!'],
-  reply: ['🤡', '😂', '🫵', '😈'],
+  reply: ['🤡', '😂', '👉', '😈'],
   uno: ['🔥', '😈', 'Từ từ thôi!'],
 };
 // pools: { attack: ['Ăn +4 đi cưng', …], … } – câu riêng của game, trộn thêm vào

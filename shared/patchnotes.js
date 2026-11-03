@@ -5,6 +5,13 @@ export const GAMES = {
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
 };
 export const NOTES = [
+  { id: '20261103-8', date: '03/11/2026', game: 'uno', title: 'Thấy rõ ai chơi ai, thả emoji, tính điểm', items: [
+    '🎯 Móc túi, tặng quà, nhắm +4, No U dội ngược… có mũi tên bay từ người làm tới người bị, kèm dòng chữ ngắn.',
+    '😂 Nút thả emoji và câu chọc ("Ăn +4 đi cưng", "Cứu tui"…), cả bàn đều thấy; bot cũng biết chọc lại.',
+    '🏆 Tuỳ chọn "Tính điểm tới 200/300/500": chơi nhiều ván, bảng điểm sau mỗi ván, ai cán mốc trước là vô địch.',
+    '💡 Lần đầu gặp lá mở rộng hiện gợi ý "Lá này làm gì?"; bấm giữ lá bất kỳ để xem mô tả.',
+    '📱 Điện thoại: chữ trên lá to hơn, bài to hơn trên máy màn cao, giữa bàn hiện dòng "vừa xảy ra".',
+  ] },
   { id: '20261103-7', date: '03/11/2026', game: 'masoi', title: 'Xem lại cả ván, ván tập & vai mới', items: [
     '🎞️ Xem lại cả ván: hết ván lộ hết vai, xem từng đêm/ngày ai cắn ai, ai soi ai, ai bầu ai; chủ phòng chiếu cho cả hội cùng xem.',
     '🎓 Ván tập cho người mới: chơi với 5 bot, máy giải thích từng bước bằng bong bóng; đồng hồ dừng lúc đọc.',

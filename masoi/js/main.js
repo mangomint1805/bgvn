@@ -6,7 +6,7 @@ import { coachCheck, coachHide, coachTipEnd } from './coach.js?v=3';
 import { roleCardSVG, cardBackSVG, roleChip, roleDot, bambooSVG, dinhSVG, hillsSVG, starsHTML, firefliesHTML, heroSVG } from './art.js?v=3';
 import * as fx from './fx.js?v=3';
 import { openGuide } from './guide.js?v=3';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=3';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=4';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];

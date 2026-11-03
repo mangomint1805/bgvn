@@ -250,3 +250,95 @@ input:focus{border-color:var(--acc)}
 #btn-start{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom));z-index:5}
 .afk{flex:0 0 auto;background:#ff4d5e;color:#fff;border-radius:999px;padding:3px 12px;font-weight:900;box-shadow:var(--shadow);white-space:nowrap;animation:pulse2 1s infinite}
 @media (max-width:420px){#btn-theme{display:none}.tools select{padding:6px 6px}}
+
+/* ===== Nâng cấp 11/2026 ===== */
+/* nhãn chữ trên lá: không nhỏ hơn 9px */
+.ucard .lbl{font-size:max(9px,calc(var(--cw)*.12));letter-spacing:0;white-space:nowrap}
+.ucard .lbl span{padding:1px 4px}
+.hand .ucard{-webkit-touch-callout:none;touch-action:pan-x}
+.discard{cursor:help}
+/* chừa 2 góc dưới của bàn cho nút 😂 */
+/* nút 😂 ở mép phải hàng nút hành động (không đè bài, không đè gợi ý) */
+.me .actions{padding-left:52px;padding-right:52px}
+.me .bgr-btn{z-index:4}
+/* dòng "vừa xảy ra" trong khoảng trống giữa hàng đối thủ và giữa bàn */
+.ticker{position:absolute;left:50%;transform:translate(-50%,-50%);width:min(92%,460px);text-align:center;pointer-events:none;font-size:12.5px;line-height:1.3;color:var(--muted);font-weight:800}
+.ticker div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ticker .now{color:var(--ink);font-size:13.5px;background:#ffffffb8;border-radius:999px;padding:2px 12px;display:inline-block;max-width:100%;box-shadow:0 2px 8px #4a2f8a14}
+.tk-in{animation:tkIn .35s ease-out}@keyframes tkIn{from{opacity:0;transform:translateY(6px)}}
+@media (max-width:420px){#btn-news{display:none}}
+/* điểm nhiều ván */
+.seat .pts{position:absolute;left:-10px;bottom:-8px;background:#fff;color:var(--ink);border-radius:999px;padding:0 6px;font:900 11.5px/18px Nunito;box-shadow:0 2px 6px #0002;border:2px solid var(--Y)}
+.mode-tag.btn-like{cursor:pointer;border:2px solid var(--Y)}
+.match-opt .targets{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:2px 4px;font-weight:800;color:var(--muted)}
+.match-opt .targets.off{opacity:.45}
+.match-opt .targets .chip{min-width:58px;min-height:40px}
+.lobby-score{background:#fffbea;border-radius:14px;padding:8px 10px;display:grid;gap:6px}
+table.score{width:100%;border-collapse:separate;border-spacing:0 4px;margin:4px 0}
+table.score td{padding:2px 4px;vertical-align:middle}
+table.score td:first-child{width:40px}
+table.score .nm{font-weight:900;text-align:left;width:100%}
+table.score .nm small{color:var(--muted)}
+table.score .bar{height:6px;border-radius:9px;background:#efe9f8;margin-top:3px;overflow:hidden}
+table.score .bar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--Y),var(--R))}
+table.score .sub{white-space:nowrap;text-align:right;color:var(--muted);font-weight:800}
+table.score .tot{font:800 22px/1 "Baloo 2";text-align:right;min-width:52px}
+table.score tr.w td{background:#fff6d6}table.score tr.w td:first-child{border-radius:12px 0 0 12px}table.score tr.w td:last-child{border-radius:0 12px 12px 0}
+table.score tr.me .nm{color:var(--acc)}
+table.score .gain{background:var(--G);color:#fff;border-radius:999px;padding:1px 8px;font-weight:900}
+.score-cap{text-align:center;color:var(--muted);margin:-4px 0 8px;font-weight:700}
+.mt-t{opacity:.75}
+@media (max-width:480px){.mode-tag .mt-name,.mode-tag .mt-t{display:none}}
+/* mũi tên "ai chơi ai" */
+.arc-wrap{position:fixed;inset:0;pointer-events:none;transition:opacity .45s}
+.arc-wrap.fade{opacity:0}
+svg.arc{position:fixed;left:0;top:0;overflow:visible}
+svg.arc .arc-bg{fill:none;stroke:#fff;stroke-width:11;stroke-linecap:round;opacity:.75}
+svg.arc .arc-ln{fill:none;stroke-width:5;stroke-linecap:round}
+.arc-ic{position:fixed;left:0;top:0;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:#fff;border:3px solid var(--ac);display:grid;place-items:center;font-size:22px;line-height:1;box-shadow:0 6px 16px -6px #0007}
+.arc-ic b{font:800 18px "Baloo 2";color:var(--ac)}
+.arc-ic.land{animation:arcLand .4s}
+@keyframes arcLand{50%{scale:1.25}}
+.arc-bub{position:fixed;transform:translate(-50%,-50%);background:#fff;border:3px solid;border-radius:16px;padding:4px 12px;font:900 14.5px/1.25 Nunito;color:var(--ink);white-space:nowrap;box-shadow:0 10px 24px -8px #0007;animation:arcBub .3s ease-out;max-width:calc(100vw - 16px);overflow:hidden;text-overflow:ellipsis}
+@keyframes arcBub{from{opacity:0;transform:translate(-50%,-30%) scale(.8)}}
+/* bong bóng "Lá này làm gì?" */
+.tip{position:fixed;left:50%;bottom:180px;transform:translate(-50%,12px);width:min(380px,calc(100vw - 20px));background:#fff;border-radius:20px;box-shadow:0 18px 40px -12px #2a2340aa,0 0 0 3px var(--Y);padding:10px 12px;display:flex;gap:10px;align-items:center;z-index:35;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+.tip.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.tip::after{content:"";position:absolute;left:50%;bottom:-9px;margin-left:-9px;border:9px solid transparent;border-bottom:0;border-top-color:#fff}
+.tip-card .ucard{--cw:52px;--ch:78px}
+.tip-body{flex:1;min-width:0;font-size:13.5px;line-height:1.35}
+.tip-body>small{display:block;color:var(--acc);font-weight:900;font-size:12px}
+.tip-body>b{font-family:"Baloo 2";font-size:18px;line-height:1.1;display:block}
+.tip-body p{margin:2px 0 6px;font-weight:700}
+.tip-btns{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tip-btns .chip{min-height:34px;padding:4px 12px;font-size:13px}
+.tip-note{color:var(--muted);font-weight:700;font-size:11.5px}
+/* điện thoại dọc cao (≥ 720px): lá to hơn, tận dụng khoảng trống */
+@media (max-width:640px) and (min-height:720px){
+  :root{--cw:70px;--ch:105px}
+  .discard{--cw:86px;--ch:129px}
+  .center{width:250px;height:200px}
+  .center .color-dot{left:calc(50% + 58px);width:38px;height:38px}
+  .seat{width:96px}.seat .plate{min-width:84px;padding:4px 8px 5px}.seat .av{width:40px;height:40px;font-size:19px;margin-top:-21px}
+  .seat .nm{font-size:13px;max-width:88px}.seat .fan{height:30px}.seat .fan .ucard{--cw:20px;--ch:30px;margin-left:-13px}
+  .hint{font-size:13.5px}
+}
+/* giảm chuyển động */
+@media (prefers-reduced-motion:reduce){
+  .dir svg,.deck.can .ucard:nth-child(3),.btn.uno,.stack-badge,.seat.danger .count,.hand .ucard.must,.bg-blobs i{animation:none!important}
+  .banner{animation-name:fadeOnly!important}.float-text{animation-name:fadeOnly!important}
+  @keyframes fadeOnly{0%,80%{opacity:1}100%{opacity:0}}
+}
+/* gợi ý lá: màn thấp (điện thoại ngang) → dải gọn dưới thanh trên cùng; màn vừa → gọn hơn */
+@media (max-height:700px){.tip{padding:8px 10px}.tip-card .ucard{--cw:42px;--ch:63px}.tip-body{font-size:12.5px}.tip-body>b{font-size:16px}.tip-body p{margin:1px 0 4px}}
+@media (max-height:560px){
+  .tip{top:50px;bottom:auto!important;left:10px;transform:translateY(-8px);width:min(400px,calc(100vw - 20px));padding:6px 10px}
+  .tip.show{transform:none}.tip::after{display:none}
+  .tip-card .ucard{--cw:34px;--ch:51px}
+  .tip-body{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px}.tip-body>small{width:100%}.tip-body p{margin:0 0 2px;width:100%}
+}
+/* trang chủ: link "← Bàn chơi BGVN" không bị thẻ chính che trên điện thoại thấp */
+.back-hub{z-index:3}
+#screen-home{padding-top:60px}
+/* nhãn dài: tự xuống 2 dòng thay vì bị cắt */
+.ucard .lbl span{display:inline-block;max-width:92%;white-space:normal;line-height:1.08;text-wrap:balance;vertical-align:bottom}

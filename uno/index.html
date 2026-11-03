@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='18' y='6' width='64' height='88' rx='12' fill='%23ff4d5e'/><ellipse cx='50' cy='50' rx='22' ry='34' fill='white' transform='rotate(25 50 50)'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/uno.css?v=14">
+<link rel="stylesheet" href="css/uno.css?v=16">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
 </head>
 <body>
@@ -31,6 +31,7 @@
       <button class="chip" id="btn-guide-home">📖 Hướng dẫn</button>
       <button class="chip" id="btn-music-home">🎵 Nhạc</button>
       <button class="chip" id="btn-theme-home">🎨 Chủ đề</button>
+      <button class="chip" id="btn-news-home">📝 Có gì mới</button>
     </div>
     <p class="note">Bản fan-made phi thương mại, không liên kết với Mattel.</p>
   </div>
@@ -54,6 +55,8 @@
         <div id="modes" class="modes"></div>
         <h4>Tuỳ chỉnh luật</h4>
         <div id="rules" class="rules"></div>
+        <h4>Chơi nhiều ván</h4>
+        <div id="match-opt" class="rules match-opt"></div>
       </div>
     </div>
     <button class="btn big pri" id="btn-start">▶ Bắt đầu</button>
@@ -74,6 +77,7 @@
       <input type="range" id="vol" min="0" max="1" step="0.05" title="Âm lượng nhạc">
       <button class="chip" id="btn-mute" title="Âm thanh">🔊</button>
       <button class="chip" id="btn-guide" title="Hướng dẫn">📖</button>
+      <button class="chip" id="btn-news" title="Có gì mới">📝</button>
       <button class="chip" id="btn-log" title="Nhật ký">📜</button>
     </div>
   </header>
@@ -86,6 +90,7 @@
       <div class="color-dot" id="color-dot"></div>
       <div class="stack-badge" id="stack-badge"></div>
     </div>
+    <div class="ticker" id="ticker" aria-live="polite"></div>
     <div class="hint" id="hint"></div>
   </div>
   <div class="me" id="me">
@@ -97,7 +102,8 @@
 
 <div class="modal" id="modal"><div class="modal-box" id="modal-box"></div></div>
 <div class="toast" id="toast"></div>
+<div class="tip" id="tip" role="status"></div>
 <div id="fx-layer"></div>
-<script type="module" src="js/main.js?v=15"></script>
+<script type="module" src="js/main.js?v=16"></script>
 </body>
 </html>

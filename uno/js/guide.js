@@ -1,4 +1,31 @@
 // Hướng dẫn chơi UNO
+// Mô tả ngắn từng loại lá – dùng cho bong bóng "Lá này làm gì?" (bấm giữ lá) và gợi ý lần đầu gặp lá mới
+export const CARD_HELP = {
+  n: 'Lá số 0–9: đánh lên lá <b>cùng màu</b> hoặc <b>cùng số</b>.',
+  skip: '<b>Khoá mõm</b>: người kế tiếp mất lượt. (Luật rừng: bị khoá thì đánh Khoá mõm để chuyền tiếp.)',
+  rev: '<b>Đảo chiều</b>: đổi chiều chơi. Còn 2 người thì như Khoá mõm.',
+  d2: '<b>+2</b>: người kế rút 2 lá. Có luật cộng dồn thì người đó được chồng lá rút để đẩy tiếp.',
+  wild: '<b>Đổi màu</b>: đánh lúc nào cũng được, bạn chọn màu tiếp theo.',
+  wd4: '<b>Đổi màu +4</b>: chọn màu, người kế rút 4 lá.',
+  d4: '<b>+4 có màu</b>: như +2 nhưng người kế rút 4.',
+  skipall: '<b>Khoá mõm cả bàn</b>: tất cả mất lượt, bạn được đi tiếp ngay.',
+  discall: '<b>Xả màu</b>: đánh lá này là bỏ luôn mọi lá cùng màu trên tay bạn.',
+  wrd4: '<b>Đảo chiều +4</b>: đảo chiều chơi, người kế (theo chiều mới) rút 4.',
+  wd6: '<b>Đổi màu +6</b>: chọn màu, người kế rút 6 lá.',
+  wd10: '<b>Đổi màu +10</b>: chọn màu, người kế rút 10 lá 😱',
+  roulette: '<b>Quay màu</b>: người kế chọn 1 màu rồi lật bài tới khi ra màu đó – lật bao nhiêu giữ bấy nhiêu!',
+  wtd4: '<b>Cộng nhắm +4</b>: đổi màu và chọn <b>bất kỳ ai</b> phải rút 4 lá (không cần là người kế).',
+  wup: '<b>Up</b>: từ người kế, mỗi người đánh 1 lá số (màu nào cũng được), số sau phải ≥ số trước. Ai không theo được thì rút.',
+  tornado: '<b>Bão tố</b>: chỉ đánh lên lá cùng màu. Người kế tự bốc từng lá tới khi ra màu đó, giữ hết và mất lượt.',
+  nou: '<b>No U</b>: đang bị dồn +2/+4 thì đánh lá này (màu nào cũng được) để <b>dội cả đống phạt</b> về người vừa đánh. Không có phạt thì như Đảo chiều.',
+  shield: '<b>Khiên</b>: như Đổi màu; đang bị dồn +2/+4 thì giơ Khiên để <b>chuyền nguyên phạt</b> sang người kế.',
+  dq: '<b>+?</b>: người kế bốc 1 lá – ra số mấy thì bốc thêm bấy nhiêu, ra lá chức năng thì được tha.',
+  gift: '<b>Tặng quà</b>: chọn 1 người và nhét cho họ 2 lá trên tay bạn (bạn tự chọn lá).',
+  steal: '<b>Móc túi</b>: lấy ngẫu nhiên 1 lá từ tay 1 người (người đó phải còn từ 2 lá).',
+  wswap: '<b>Đổi tay</b>: đổi màu rồi đổi nguyên bộ bài với 1 người bạn chọn.',
+};
+// lá không có trong bộ cổ điển → lần đầu gặp sẽ hiện gợi ý
+export const NEW_TYPES = ['skipall', 'discall', 'd4', 'wrd4', 'wd6', 'wd10', 'roulette', 'wtd4', 'wup', 'tornado', 'nou', 'shield', 'dq', 'gift', 'steal', 'wswap'];
 const C = (color, type, num = null) => ({ id: 'g' + color + type + num, color, type, num });
 const row = (cardHTML, items) => `<div class="cards-row">${items.map(([c, t]) => `<div>${cardHTML(c)}<span>${t}</span></div>`).join('')}</div>`;
 
@@ -55,17 +82,25 @@ export function openGuide(openModal, cardHTML) {
         <li>Không có lá hợp thì <b>rút tới khi ra lá đánh được</b> và phải đánh nó.</li>
         <li><b>Luật 7–0</b>: đánh 7 thì đổi bài với 1 người; đánh 0 thì cả bàn chuyền bài theo chiều chơi.</li>
         <li>Ai giữ <b>từ 25 lá trở lên bị loại</b>. Người cuối còn trụ lại cũng thắng.</li></ul>
-      <p>Chủ phòng có thể bật/tắt từng luật trong sảnh để chơi kiểu riêng của hội mình.</p>`],
+      <p>Chủ phòng có thể bật/tắt từng luật trong sảnh để chơi kiểu riêng của hội mình.</p>
+      <h3>🏆 Tính điểm tới 500 (chơi nhiều ván)</h3><ul>
+        <li>Chủ phòng bật trong sảnh, mục tiêu <b>200 / 300 / 500</b> điểm (mặc định tắt – mỗi ván tính riêng như cũ).</li>
+        <li>Hết mỗi ván, <b>người về nhất cộng điểm</b> theo bài còn trên tay những người khác: lá số = <b>mặt số</b>, lá chức năng màu (Khoá mõm, Đảo chiều, +2, Khoá cả bàn, Xả màu) = <b>20</b>, lá Đổi màu / +4 / lá mở rộng = <b>50</b>.</li>
+        <li>Sau mỗi ván hiện <b>bảng điểm</b>, chủ phòng bấm <b>▶ Ván tiếp</b>. Ai chạm mục tiêu trước là <b>vô địch chung cuộc</b> 🎆.</li>
+        <li>Trong ván: ⭐ cạnh mỗi người là điểm hiện có; bấm nhãn <b>Ván N</b> trên cùng để xem bảng điểm. Tải lại trang không mất điểm.</li></ul>`],
     tips: ['💡 Mẹo', () => `<ul>
       <li>Giữ lá <b>Đổi màu</b> cho lúc bí, đừng xài sớm.</li>
       <li>Người kế còn ít bài? Tung <b>+2, Khoá mõm</b> vào mặt họ 😈</li>
       <li>Đổi sang màu bạn đang có nhiều nhất (bảng chọn màu có đếm số lá giúp bạn).</li>
       <li>Nhớ bấm <b>UNO!</b> trước khi đánh lá áp chót. Thấy ai còn 1 lá mà chưa hô thì bấm <b>🚨 Bắt lỗi</b> ngay!</li>
       <li>Bấm 📜 để xem nhật ký, ⚡ để chỉnh tốc độ hiệu ứng.</li>
+      <li><b>Bấm giữ</b> lá bất kỳ trên tay (máy tính: chuột phải) hoặc bấm vào lá trên chồng bỏ để xem <b>“Lá này làm gì?”</b>. Lần đầu gặp lá mở rộng sẽ tự hiện gợi ý (có nút Tắt gợi ý).</li>
+      <li>Ai móc túi, tặng quà, nhắm +4, dội No U… sẽ có <b>mũi tên cong</b> bay từ người làm tới người bị kèm dòng chữ ngắn – nhìn là biết ai chơi ai 😈</li>
+      <li>Nút <b>😂</b> góc dưới bên trái bàn: thả emoji hoặc câu chọc (“Ăn +4 đi cưng”, “Cứu tui”…) – cả bàn đều thấy bay lên từ ghế bạn. Mỗi lần cách nhau 1,5 giây. Bot cũng biết chọc lại đấy!</li>
       <li>Mỗi lượt có <b>40 giây</b> (bốc phạt: 20 giây). Còn 15 giây sẽ hiện đồng hồ ⏳ trên cùng; hết giờ máy tự đánh thay để ván không bị treo.</li></ul>`],
   };
   const draw = k => {
-    openModal(`<button class="close-x" onclick="__closeModal()">✕</button><h2>📖 Cách chơi UNO</h2><div class="guide"><div class="tabs">${Object.entries(tabs).map(([id, [t]]) => `<button class="chip ${id === k ? 'on' : ''}" data-tab="${id}">${t}</button>`).join('')}</div>${tabs[k][1]()}</div>`, 'wide');
+    openModal(`<button class="close-x" onclick="__closeModal()">✕</button><h2>📖 Cách chơi UNO</h2><div class="guide"><div class="tabs">${Object.entries(tabs).map(([id, [t]]) => `<button class="chip ${id === k ? 'on' : ''}" data-tab="${id}">${t}</button>`).join('')}<button class="chip news-chip" onclick="window.__news && window.__news()">📝 Có gì mới</button></div>${tabs[k][1]()}</div>`, 'wide');
     document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => draw(b.dataset.tab));
   };
   draw('basic');

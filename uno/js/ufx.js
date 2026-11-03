@@ -145,3 +145,67 @@ export const musicIsOn = () => musicOn;
 export function musicToggle() { musicOn = !musicOn; ls.set('uno-music', musicOn ? '1' : '0'); musicOn ? musicStart() : musicStop(); return musicOn; }
 export function musicVolume(v) { if (v == null) return vol; vol = v; ls.set('uno-music-vol', String(v)); if (mGain) mGain.gain.value = vol * 0.3; }
 export function musicResumeIfOn() { if (musicOn) musicStart(); }
+
+// ---------- "ai chơi ai": đường bay cong có icon giữa 2 ghế + bong bóng chữ ----------
+// a, b: điểm {x,y} trên màn hình; opts: { icon, text, color, both (2 chiều), maxY (bong bóng không xuống thấp hơn), delayText }
+const reduced = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
+const arcs = [];
+let arcN = 0;
+export function arc(a, b, { icon = '➜', text = '', color = '#7a5cff', both = false, maxY = innerHeight, delayText = 0, avoid = null } = {}) {
+  if (!a || !b) return;
+  while (arcs.length >= 2) { const o = arcs.shift(); o.remove(); }
+  const NS = 'http://www.w3.org/2000/svg', id = 'arcm' + (++arcN);
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+  // điểm điều khiển lệch vuông góc → đường cong; cong về phía giữa màn hình cho dễ nhìn
+  let nx = -dy / len, ny = dx / len;
+  const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  if ((innerWidth / 2 - mx) * nx + (innerHeight / 2 - my) * ny < 0) { nx = -nx; ny = -ny; }
+  const bend = Math.min(140, len * 0.32);
+  const cx = mx + nx * bend, cy = my + ny * bend;
+  const g = document.createElement('div'); g.className = 'arc-wrap';
+  g.innerHTML = `<svg class="arc" viewBox="0 0 ${innerWidth} ${innerHeight}" width="${innerWidth}" height="${innerHeight}"><defs><marker id="${id}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${color}"/></marker></defs>` +
+    `<path class="arc-bg" d="M${a.x} ${a.y} Q${cx} ${cy} ${b.x} ${b.y}"/><path class="arc-ln" d="M${a.x} ${a.y} Q${cx} ${cy} ${b.x} ${b.y}" stroke="${color}" marker-end="url(#${id})" ${both ? `marker-start="url(#${id})"` : ''}/></svg>` +
+    `<div class="arc-ic" style="--ac:${color}">${icon}</div>`;
+  layer().appendChild(g); arcs.push(g);
+  const ln = g.querySelector('.arc-ln'), ic = g.querySelector('.arc-ic');
+  const L = ln.getTotalLength();
+  const k = S(), drawMs = 520 * k, life = 2700 * k;
+  const pt = t => { const u = 1 - t; return { x: u * u * a.x + 2 * u * t * cx + t * t * b.x, y: u * u * a.y + 2 * u * t * cy + t * t * b.y }; };
+  if (reduced()) { const p = pt(0.5); ic.style.transform = `translate(${p.x}px,${p.y}px)`; }
+  else {
+    ln.style.strokeDasharray = L; ln.style.strokeDashoffset = L;
+    const t0 = performance.now();
+    const step = now => {
+      if (!g.isConnected) return;
+      const t = Math.min(1, (now - t0) / drawMs), e = 1 - Math.pow(1 - t, 3);
+      ln.style.strokeDashoffset = L * (1 - e);
+      const p = pt(e); ic.style.transform = `translate(${p.x}px,${p.y}px) scale(${0.7 + 0.5 * Math.sin(Math.PI * e) + 0.3 * e})`;
+      if (t < 1) requestAnimationFrame(step); else ic.classList.add('land');
+    };
+    requestAnimationFrame(step);
+  }
+  if (text) setTimeout(() => {
+    if (!g.isConnected) return;
+    const bub = document.createElement('div'); bub.className = 'arc-bub'; bub.textContent = text; bub.style.borderColor = color; g.appendChild(bub);
+    const w = bub.offsetWidth, h = bub.offsetHeight;
+    // thử vài vị trí dọc đường bay, ưu tiên chỗ không đè lên chồng bài giữa bàn
+    const place = t => { const p = pt(t); const x = Math.max(8 + w / 2, Math.min(innerWidth - 8 - w / 2, p.x)); const y = Math.max(8 + h / 2, Math.min(maxY - h / 2 - 4, p.y + (Math.abs(dx) > Math.abs(dy) ? -28 : 0))); return { x, y }; };
+    const hit = q => avoid && q.x + w / 2 > avoid.left && q.x - w / 2 < avoid.right && q.y + h / 2 > avoid.top && q.y - h / 2 < avoid.bottom;
+    let q = place(0.5); for (const t of [0.5, 0.32, 0.68, 0.2, 0.8]) { const c = place(t); if (!hit(c)) { q = c; break; } }
+    bub.style.left = q.x + 'px'; bub.style.top = q.y + 'px';
+  }, Math.max(drawMs * 0.6, delayText * k));
+  setTimeout(() => g.classList.add('fade'), life - 500 * k);
+  setTimeout(() => { g.remove(); const i = arcs.indexOf(g); if (i >= 0) arcs.splice(i, 1); }, life);
+}
+
+// ---------- pháo hoa vô địch ----------
+export function fireworks(n = 7) {
+  const cols = Object.keys(HEX);
+  for (let i = 0; i < n; i++) setTimeout(() => {
+    const x = innerWidth * (0.15 + Math.random() * 0.7), y = innerHeight * (0.12 + Math.random() * 0.4);
+    const pt = { getBoundingClientRect: () => ({ left: x, top: y, width: 0, height: 0 }) };
+    burst(pt, cols[i % cols.length], reduced() ? 8 : 34); ring(pt, cols[(i + 2) % cols.length]);
+    tone(600 + Math.random() * 500, 0.25, 'triangle', 0.05, -300); noise(0.3, 800, 0.3, 0.05, 'lowpass');
+  }, i * 380);
+}
+export function pip() { tone(1200, 0.06, 'sine', 0.05, 300); }
