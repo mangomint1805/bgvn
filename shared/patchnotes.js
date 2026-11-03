@@ -5,13 +5,16 @@ export const GAMES = {
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
 };
 export const NOTES = [
-  { id: '20261104-02', date: '04/11/2026', game: 'bang', title: 'Né một chạm, xem lại lượt, mẹo người mới, thả emoji', items: [
+  { id: '20261104-03', date: '04/11/2026', game: 'bang', title: 'Né một chạm, xem lại lượt, mẹo người mới, thả emoji', items: [
     '🛡️ Bị bắn mà có Missed! (hoặc BANG! khi bị Indians/Duel): hiện sẵn nút xanh "Dùng Missed!" – bấm một phát là né, hoặc "Chịu đòn".',
     '⏪ Nút "Lượt vừa rồi": tóm tắt ai bắn ai, né hay trúng, ai Panic! ai… kèm bảng "Ai tấn công ai" cả ván để đoán vai.',
     '🎨 Mỗi người một màu, nhật ký và dòng tin giữa bàn tô tên theo màu cho dễ theo dõi.',
     '🐣 Chế độ Người mới: mẹo theo vai và tình huống ngay trên bàn, hỏi lại nếu Phó định bắn sếp. Tắt được ở phòng chờ hoặc ⚙️.',
     '😂 Thả emoji, chọc nhau ("Né đi cưng!", "Uống Beer đi"…), bot cũng biết chọc lại.',
     '🤖 Bot khôn hơn: nhớ ai đã bắn ai, Phó không bắn sếp, tỉ lệ thắng các phe cân hơn.',
+  ] },
+  { id: '20261104-03', date: '04/11/2026', game: 'tamquoc', title: 'Lá nhỏ hiện đủ hình', items: [
+    '🖼️ Lá bài nhỏ trong bảng xem người chơi (trang bị & phán định) giờ hiện đủ hình, không còn bị tên dài che mất.',
   ] },
   { id: '20261104-02', date: '04/11/2026', game: 'all', title: 'Nút chính là vào phòng online', items: [
     '🌐 Màn hình đầu của UNO, Cờ tỷ phú, Mèo Nổ, Tam Quốc Sát, Ma Sói: "Tạo phòng online" và ô nhập mã phòng lên đầu, "Chơi với bot" xuống dưới.',

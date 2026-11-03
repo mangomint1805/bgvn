@@ -841,3 +841,7 @@ input#name,.join-row input{background:#fbf5e6;border-color:#b89a62;border-radius
 .bgr-panel .ph button{background:linear-gradient(180deg,#c4442b,#7a1b10)!important;color:#ffe9b8!important;border-radius:4px!important;font-family:'Noto Serif',serif!important}
 #btn-guide2{display:none}
 @media (max-width:400px){.topbar{gap:4px;padding:5px 5px}.turn-info{font-size:12px;min-width:0}.topbar .chip.ic,.react-slot .bgr-btn{width:35px;height:35px;font-size:16px}#btn-guide{display:none}#btn-guide2{display:inline-grid}.tb-right{gap:4px}.timer{padding:2px 6px}}
+/* lá xs (bảng xem người chơi): tên đã ghi bên cạnh → bỏ khung tên để hình hiện đủ */
+.qcard.xs{--cw:48px}
+.qcard.xs .cname{display:none}
+.qcard.xs .art{margin:calc(var(--cw)*.06)}
