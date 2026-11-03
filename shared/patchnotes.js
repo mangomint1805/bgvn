@@ -3,9 +3,14 @@
 export const GAMES = {
   all: '🎲 BGVN', bang: '🤠 BANG!', uno: '🃏 UNO', typhu: '🏙️ Cờ Tỷ Phú', scribble: '🎨 Scribble it!',
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
-  xidach: '🃏 Xì dách',
+  xidach: '🃏 Xì dách', poker: '♠️ Poker',
 };
 export const NOTES = [
+  { id: '20261104-06', date: '04/11/2026', game: 'poker', title: 'Game mới: Poker!', items: [
+    '♠️ Texas Hold\'em không giới hạn 2–9 người: mù, tố đúng luật, tất tay, pot phụ, chia pot khi hoà.',
+    '💡 Gợi ý cho người mới: hiện tên bài đang có và tô 5 lá tạo bài. Lật bài đọc tên tiếng Việt (Cù lũ, Thùng, Sảnh…).',
+    '🤖 Bot biết đoán bài và thỉnh thoảng bịp. Chế độ Chơi vui (xin mẹ thêm chip) hoặc Giải đấu (hết chip là loại).',
+  ] },
   { id: '20261104-05', date: '04/11/2026', game: 'xidach', title: 'Game mới: Xì dách!', items: [
     '🃏 Xì dách kiểu Việt 2–8 người: đặt chip, rút/dằn, xì bàn, xì dách, ngũ linh, quắc – nhà cái tự chọn xét bài từng người.',
     '👑 Cái xoay vòng, cố định, bot làm cái hoặc ai xì dách thì làm cái. Hệ số, điểm dằn, lá A chỉnh được trong sảnh.',

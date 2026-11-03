@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Poker Hold'em – chơi vui cùng hội bạn</title>
+<meta name="description" content="Poker Texas Hold'em không giới hạn tiếng Việt, chơi online cùng bạn bè hoặc với bot. Chip ảo, không cá cược tiền thật.">
+<meta name="theme-color" content="#fff4e4">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff5a7a'/><circle cx='50' cy='50' r='34' fill='none' stroke='white' stroke-width='8' stroke-dasharray='12 10'/><path d='M50 30 C45 39 32 45 32 56 C32 63 38 67 44 66 C42 71 40 74 37 76 L63 76 C60 74 58 71 56 66 C62 67 68 63 68 56 C68 45 55 39 50 30Z' fill='white'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/poker.css?v=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+</head>
+<body>
+<!-- chất bài vẽ bằng SVG (không phụ thuộc font emoji) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="su-h" viewBox="0 0 100 100"><path d="M50 90C22 68 5 52 5 31 5 15 17 5 30 5c9 0 16 5 20 13 4-8 11-13 20-13 13 0 25 10 25 26 0 21-17 37-45 59z"/></symbol>
+  <symbol id="su-d" viewBox="0 0 100 100"><path d="M50 3 89 50 50 97 11 50z"/></symbol>
+  <symbol id="su-s" viewBox="0 0 100 100"><path d="M50 3C40 22 6 39 6 62c0 14 11 24 24 24 7 0 13-3 17-8-1 8-5 13-13 18h32c-8-5-12-10-13-18 4 5 10 8 17 8 13 0 24-10 24-24C94 39 60 22 50 3z"/></symbol>
+  <symbol id="su-c" viewBox="0 0 100 100"><circle cx="50" cy="27" r="21"/><circle cx="26" cy="58" r="21"/><circle cx="74" cy="58" r="21"/><circle cx="50" cy="52" r="12"/><path d="M45 55c0 20-5 32-14 41h38c-9-9-14-21-14-41z"/></symbol>
+</svg>
+<div class="bg-deco" aria-hidden="true"></div>
+
+<!-- TRANG CHỦ -->
+<section id="screen-home" class="screen active">
+  <a class="back-hub" href="../">← Bàn chơi BGVN</a>
+  <div class="home-card">
+    <div class="hero" id="hero" aria-hidden="true"></div>
+    <h1 class="logo">Poker <span>Hold'em</span></h1>
+    <p class="tagline">Texas Hold'em không giới hạn – tố, bịp, tất tay cùng hội bạn bằng chip ảo 🃏</p>
+    <label class="fld"><span>Tên của bạn</span><input id="name" maxlength="16" placeholder="Nhập tên…" autocomplete="nickname"></label>
+    <div class="btn-col">
+      <button class="btn big pri" id="btn-create">✨ Tạo phòng online</button>
+      <div class="join-row"><input id="join-code" maxlength="5" placeholder="MÃ PHÒNG" autocapitalize="characters" aria-label="Mã phòng"><button class="btn" id="btn-join">Vào</button></div>
+      <button class="btn big" id="btn-offline">🤖 Chơi với bot</button>
+    </div>
+    <div class="home-tools">
+      <button class="chip" id="btn-guide-home">📖 Hướng dẫn</button>
+      <button class="chip" id="btn-news-home" data-news="poker">📝 Có gì mới</button>
+      <button class="chip" id="btn-music-home">🎵 Nhạc</button>
+    </div>
+    <p class="note"><b>Chơi vui bằng chip ảo, không cá cược tiền thật.</b><br>Bản fan-made phi thương mại cho hội bạn. Lá bài, hình vẽ tự thiết kế.</p>
+  </div>
+</section>
+
+<!-- SẢNH -->
+<section id="screen-lobby" class="screen">
+  <div class="lobby">
+    <div class="lobby-head">
+      <button class="chip" id="btn-leave-lobby">← Thoát</button>
+      <div class="code-box" id="code-box">Mã phòng <b id="room-code">…</b> <button class="chip sm" id="btn-copy">Sao chép link</button></div>
+    </div>
+    <div class="lobby-grid">
+      <div class="panel">
+        <h3>Người chơi <small id="pcount"></small></h3>
+        <ul id="plist" class="plist"></ul>
+        <button class="btn" id="btn-addbot">＋ Thêm bot</button>
+      </div>
+      <div class="panel">
+        <h3>Luật bàn</h3>
+        <div id="opts" class="opts"></div>
+      </div>
+    </div>
+    <button class="btn big pri" id="btn-start">▶ Chia bài!</button>
+    <p class="wait" id="wait-msg">Đang chờ chủ phòng chia bài…</p>
+    <p class="note">Chơi vui bằng chip ảo, không cá cược tiền thật.</p>
+  </div>
+</section>
+
+<!-- VÁN CHƠI -->
+<section id="screen-game" class="screen">
+  <header class="topbar">
+    <button class="chip ic" id="btn-leave" aria-label="Rời bàn">←</button>
+    <div class="info" id="info"></div>
+    <button class="chip ic" id="btn-hint" title="Gợi ý bài cho người mới" aria-label="Gợi ý bài">💡</button>
+    <button class="chip ic" id="btn-board" title="Bảng chip" aria-label="Bảng chip">🏆</button>
+    <button class="chip ic" id="btn-log" title="Nhật ký" aria-label="Nhật ký">📜</button>
+    <button class="chip ic" id="btn-menu" title="Cài đặt" aria-label="Cài đặt" data-news="poker">☰</button>
+  </header>
+  <div class="stage" id="stage">
+    <div class="table" id="table">
+      <div class="felt" id="felt"><div class="felt-logo">BGVN · HOLD'EM</div></div>
+      <div class="center" id="center">
+        <div class="pot" id="pot"></div>
+        <div class="board" id="board"></div>
+        <div class="result" id="result"></div>
+      </div>
+      <div id="pills"></div>
+      <div id="seats"></div>
+    </div>
+    <div id="me">
+      <div class="me-top">
+        <div class="my-cards" id="mycards"></div>
+        <div class="me-info"><div class="status" id="status"></div><div class="hint" id="hint"></div></div>
+      </div>
+      <div class="raise" id="raise" hidden></div>
+      <div class="actions" id="actions"></div>
+      <div class="clockbar" id="clockbar"><i></i></div>
+    </div>
+  </div>
+  <aside class="log" id="log"><h4>Nhật ký <button class="chip sm" id="btn-log-close" aria-label="Đóng">✕</button></h4><ol id="log-list"></ol></aside>
+</section>
+
+<div class="modal" id="modal"><div class="modal-box" id="modal-box"></div></div>
+<div class="toast" id="toast" role="status"></div>
+<div id="fx-layer"></div>
+<script type="module" src="js/main.js?v=1"></script>
+</body>
+</html>
