@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Xì Dách – chơi vui cùng hội bạn</title>
+<meta name="description" content="Xì dách (blackjack kiểu Việt) chơi online cùng bạn bè bằng chip ảo, có bot. Chơi vui, không cá cược tiền thật.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='14' width='50' height='72' rx='8' fill='white' stroke='%23222' stroke-width='4' transform='rotate(-12 35 50)'/><rect x='40' y='14' width='50' height='72' rx='8' fill='white' stroke='%23e63946' stroke-width='4' transform='rotate(10 65 50)'/><text x='66' y='62' font-size='34' text-anchor='middle' fill='%23e63946' font-family='sans-serif' font-weight='bold' transform='rotate(10 65 50)'>A</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/xidach.css?v=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+</head>
+<body>
+<div class="bg-suits" aria-hidden="true"></div>
+
+<!-- TRANG CHỦ -->
+<section id="screen-home" class="screen active">
+  <a class="back-hub" href="../">← Bàn chơi BGVN</a>
+  <div class="home-card">
+    <div class="hero" id="hero"></div>
+    <h1 class="logo">Xì Dách<span>21</span></h1>
+    <p class="tag">Rút hay dằn? Đủ tuổi chưa? Lật bài coi nè 👀</p>
+    <label class="fld"><span>Tên của bạn</span><input id="name" maxlength="16" placeholder="Nhập tên…" autocomplete="nickname"></label>
+    <div class="btn-col">
+      <button class="btn big pri" id="btn-create">✨ Tạo phòng online</button>
+      <div class="join-row"><input id="join-code" maxlength="5" placeholder="MÃ PHÒNG" autocomplete="off"><button class="btn" id="btn-join">Vào</button></div>
+      <button class="btn big" id="btn-offline">🤖 Chơi với bot</button>
+    </div>
+    <div class="home-tools">
+      <button class="chip" id="btn-guide-home">📖 Hướng dẫn</button>
+      <button class="chip" id="btn-music-home">🎵 Nhạc</button>
+      <button class="chip" id="btn-news-home" data-news="xidach">📝 Có gì mới</button>
+    </div>
+    <p class="note">🪙 Chơi vui bằng chip ảo, không cá cược tiền thật.<br>Bản fan-made phi thương mại.</p>
+  </div>
+</section>
+
+<!-- SẢNH -->
+<section id="screen-lobby" class="screen">
+  <div class="lobby">
+    <div class="lobby-head">
+      <button class="chip" id="btn-leave-lobby">← Thoát</button>
+      <div class="code-box" id="code-box">Mã phòng <b id="room-code">…</b> <button class="chip sm" id="btn-copy">Sao chép link</button></div>
+    </div>
+    <div class="lobby-grid">
+      <div class="panel">
+        <h3>Người chơi <small id="pcount"></small></h3>
+        <ul id="plist" class="plist"></ul>
+        <div class="row-btns"><button class="btn" id="btn-addbot">＋ Thêm bot</button><button class="chip sm" id="btn-reset-chips">🧹 Chia lại vốn</button></div>
+      </div>
+      <div class="panel">
+        <h3>Luật bàn</h3>
+        <div id="opts" class="opts"></div>
+      </div>
+    </div>
+    <button class="btn big pri" id="btn-start">🃏 Vào bàn</button>
+    <p class="wait" id="wait-msg">Đang chờ chủ phòng bắt đầu…</p>
+    <p class="note">🪙 Chơi vui bằng chip ảo, không cá cược tiền thật · Bản fan-made phi thương mại</p>
+  </div>
+</section>
+
+<!-- VÁN CHƠI -->
+<section id="screen-game" class="screen">
+  <header class="topbar">
+    <button class="chip ic" id="btn-leave" title="Rời bàn" aria-label="Rời bàn">←</button>
+    <button class="round-tag" id="round-tag" title="Bảng chip"></button>
+    <div class="tools">
+      <button class="chip ic" id="btn-music" title="Nhạc nền" aria-label="Nhạc nền">🎵</button>
+      <button class="chip ic" id="btn-mute" title="Âm thanh" aria-label="Âm thanh">🔊</button>
+      <button class="chip ic" id="btn-guide" title="Hướng dẫn" aria-label="Hướng dẫn">📖</button>
+      <button class="chip ic" id="btn-news" title="Có gì mới" aria-label="Có gì mới" data-news="xidach">📝</button>
+      <button class="chip ic" id="btn-log" title="Nhật ký" aria-label="Nhật ký">📜</button>
+    </div>
+  </header>
+  <div class="table" id="table">
+    <div class="dealer" id="dealer"></div>
+    <div class="hint" id="hint" aria-live="polite"></div>
+    <div class="seats" id="seats"></div>
+  </div>
+  <div class="me" id="me">
+    <div class="me-top" id="me-top"></div>
+    <div class="me-hand"><div class="hand" id="hand"></div><div class="pts" id="pts"></div></div>
+    <div class="actions" id="actions"></div>
+  </div>
+  <aside class="log" id="log"><h4>Nhật ký <button class="chip sm" id="btn-log-close" aria-label="Đóng">✕</button></h4><ol id="log-list"></ol></aside>
+</section>
+
+<div class="modal" id="modal"><div class="modal-box" id="modal-box"></div></div>
+<div class="toast" id="toast"></div>
+<div id="fx-layer"></div>
+<script type="module" src="js/main.js?v=1"></script>
+</body>
+</html>

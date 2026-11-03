@@ -52,6 +52,9 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:36px}
 .uno .art{top:96px!important;height:0!important}
 .tile:not(.bang):not(.uno) .art{padding-top:44px;box-sizing:border-box}
 .masoi .art{padding-bottom:4px}
+.xidach{background:radial-gradient(circle at 50% 30%,#2fb36b,#0f6b3e 70%)}.xidach h2{font-family:'Baloo 2';font-size:44px;color:#fff;text-shadow:3px 3px 0 #0005}.xidach .art{position:absolute;inset:0 0 40% 0;display:flex;align-items:center;justify-content:center;gap:6px;font-size:58px}
+.xidach .art span{display:grid;place-items:center;width:74px;height:104px;background:#fff;border-radius:10px;box-shadow:0 6px 14px #0004;font:800 34px 'Baloo 2',sans-serif;color:#d32f2f}.xidach .art span:nth-child(1){transform:rotate(-12deg)}.xidach .art span:nth-child(2){color:#222;transform:translateY(-8px)}.xidach .art span:nth-child(3){transform:rotate(12deg);background:#ffe14d;font-size:40px}
+
 .play{padding:6px 16px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 footer a{color:inherit}
@@ -143,13 +146,20 @@ footer a{color:inherit}
       <div class="info"><h2>Ma Sói</h2><p>Làng quê đêm trăng: Sói, Tiên tri, Bảo vệ, Phù thủy, Thợ săn, Cupid… máy làm quản trò, ai cũng dùng điện thoại riêng 🌕</p>
         <div class="tags"><i>5–16 người</i><i>12 vai</i><i>Có bot</i></div></div>
     </a>
+    <a class="tile xidach" href="xidach/" data-game="xidach" data-min="2" data-max="8">
+      <span class="newtag" data-news="xidach">MỚI</span>
+      <div class="art"><span>A♥</span><span>K♠</span><span>21</span></div>
+      <span class="play">Chơi ▶</span>
+      <div class="info"><h2>Xì dách</h2><p>Xì dách kiểu Việt: rút hay dằn, xì bàn, ngũ linh, nhà cái xét bài – chip ảo chơi vui 🃏</p>
+        <div class="tags"><i>2–8 người</i><i>Nhà cái</i><i>Chip ảo</i></div></div>
+    </a>
     <p class="empty-filter" id="empty-filter">Không có game nào hợp số người này.</p>
     <div class="tile soon"><div><b style="font-size:22px">Sắp có thêm…</b><br>Góp ý game tiếp theo nhé 💌</div></div>
   </div>
-  <footer>Dự án fan-made phi thương mại · Ảnh minh hoạ BANG! là tranh thuộc phạm vi công cộng (Wikimedia Commons) · Không liên kết với dV Giochi, Mattel, VNG/ZingPlay, Yoka Games hay Exploding Kittens · <a href="https://github.com/mangomint1805/bgvn">Mã nguồn</a></footer>
+  <footer>Dự án fan-made phi thương mại · Ảnh minh hoạ BANG! là tranh thuộc phạm vi công cộng (Wikimedia Commons) · Game bài chỉ chơi bằng chip ảo, không cá cược tiền thật · Không liên kết với dV Giochi, Mattel, VNG/ZingPlay, Yoka Games hay Exploding Kittens · <a href="https://github.com/mangomint1805/bgvn">Mã nguồn</a></footer>
 </main>
 <script type="module">
-import { openNews, newsBadge } from './shared/ui/news.js?v=94';
+import { openNews, newsBadge } from './shared/ui/news.js?v=95';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 const json = k => { try { return JSON.parse(ls.get(k)); } catch (e) { return null; } };
 // 📝 Có gì mới

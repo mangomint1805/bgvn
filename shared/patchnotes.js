@@ -3,8 +3,14 @@
 export const GAMES = {
   all: '🎲 BGVN', bang: '🤠 BANG!', uno: '🃏 UNO', typhu: '🏙️ Cờ Tỷ Phú', scribble: '🎨 Scribble it!',
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
+  xidach: '🃏 Xì dách',
 };
 export const NOTES = [
+  { id: '20261104-05', date: '04/11/2026', game: 'xidach', title: 'Game mới: Xì dách!', items: [
+    '🃏 Xì dách kiểu Việt 2–8 người: đặt chip, rút/dằn, xì bàn, xì dách, ngũ linh, quắc – nhà cái tự chọn xét bài từng người.',
+    '👑 Cái xoay vòng, cố định, bot làm cái hoặc ai xì dách thì làm cái. Hệ số, điểm dằn, lá A chỉnh được trong sảnh.',
+    '🥺 Hết chip thì "Xin mẹ thêm chip". Chỉ chơi vui bằng chip ảo.',
+  ] },
   { id: '20261104-04', date: '04/11/2026', game: 'bang', title: 'Né một chạm, xem lại lượt, mẹo người mới, thả emoji', items: [
     '🛡️ Bị bắn mà có Missed! (hoặc BANG! khi bị Indians/Duel): hiện sẵn nút xanh "Dùng Missed!" – bấm một phát là né, hoặc "Chịu đòn".',
     '⏪ Nút "Lượt vừa rồi": tóm tắt ai bắn ai, né hay trúng, ai Panic! ai… kèm bảng "Ai tấn công ai" cả ván để đoán vai.',
