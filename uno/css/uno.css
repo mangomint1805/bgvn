@@ -342,3 +342,9 @@ svg.arc .arc-ln{fill:none;stroke-width:5;stroke-linecap:round}
 #screen-home{padding-top:60px}
 /* nhãn dài: tự xuống 2 dòng thay vì bị cắt */
 .ucard .lbl span{display:inline-block;max-width:92%;white-space:normal;line-height:1.08;text-wrap:balance;vertical-align:bottom}
+
+/* chuỗi cộng dồn giữ trên màn hình */
+#chain-layer{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:5}
+#chain-layer .chain-live{animation:chainPulse 1.2s ease-in-out infinite}
+@keyframes chainPulse{50%{stroke-width:6}}
+@media (prefers-reduced-motion: reduce){#chain-layer .chain-live{animation:none}}

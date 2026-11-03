@@ -73,6 +73,7 @@ export function openGuide(openModal, cardHTML) {
       <h3>🔥 Luật rừng</h3><ul>
         <li><b>Cộng dồn</b>: bị +2 thì đánh +2 hoặc +4 đẩy sang người kế, tổng phạt cộng dồn. <b>+2 và +4 chồng lẫn nhau thoải mái</b> (+2 lên +4 cũng được).</li>
         <li><b>Khoá mõm chồng Khoá mõm</b>: bị khoá mõm mà có lá Khoá mõm thì đánh để chuyền cho người kế.</li>
+        <li><b>Bốc thử khi bị dồn</b>: bị dồn +2/+4 mà không có lá chồng thì được bốc thử 1 lá – trúng lá cộng, Khiên hoặc No U thì đánh chồng tiếp ngay (+? không tính), không trúng thì chịu phạt.</li>
         <li><b>Tự bốc phạt</b>: bị cộng bao nhiêu lá thì tự bấm bốc từng lá, mỗi lá cách nhau 1 giây. Cho thấm 😈</li>
         <li><b>Không về bằng lá chức năng</b>: lá cuối cùng phải là lá số. Còn mỗi lá Khoá mõm/Đảo/+2/Đổi màu… thì phải rút bài.</li>
         <li>Không có lá thì rút 1 lá, hợp thì đánh luôn. <b>Không có chặn ngang</b>.</li></ul>

@@ -1,10 +1,10 @@
-import { Host, Client, MAX, loadSnapshot, session, UNO_PHRASES } from './net.js?v=16';
+import { Host, Client, MAX, loadSnapshot, session, UNO_PHRASES } from './net.js?v=17';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=4';
-import { MODES, COLOR_NAME, cardText, DRAW_VALUE, CARD_NAME, MATCH_TARGETS } from './engine.js?v=16';
-import * as fx from './ufx.js?v=16';
-import { openGuide, CARD_HELP, NEW_TYPES } from './guide.js?v=16';
+import { MODES, COLOR_NAME, cardText, DRAW_VALUE, CARD_NAME, MATCH_TARGETS } from './engine.js?v=17';
+import * as fx from './ufx.js?v=17';
+import { openGuide, CARD_HELP, NEW_TYPES } from './guide.js?v=17';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -252,6 +252,7 @@ function render() {
   fitHand();
   $$('#hand .ucard').forEach(el => el.onclick = () => { if (Date.now() < noClickUntil) return; onCardClick(el.dataset.id); });
   renderActions(v, meP);
+  requestAnimationFrame(() => drawChain(view));
   renderTicker(v);
   // nhật ký
   $('#log-list').innerHTML = v.log.map(l => `<li>${esc(l)}</li>`).join('');
@@ -305,7 +306,7 @@ function renderHint(v, meP) {
   const cur = v.players[v.turn];
   if (cur.id !== myId) { h.innerHTML = `Lượt của <b>${esc(cur.name)}</b> · màu ${dot}`; return; }
   h.classList.add('mine');
-  if (v.stack) h.innerHTML = v.playable.length ? `🔥 Bị dồn <b>+${v.stack.total}</b>! Chồng ${v.rules.stackAny ? 'lá +2/+4 bất kỳ' : `lá rút ≥ +${v.stack.last}`}${v.rules.extras ? ', giơ <b>Khiên</b> để chuyền tiếp, hoặc <b>No U</b> để dội ngược' : ''}, hoặc chịu phạt.` : `😵 Không có lá để chồng – bấm <b>Chịu phạt +${v.stack.total}</b>.`;
+  if (v.stack) h.innerHTML = v.playable.length ? `🔥 Bị dồn <b>+${v.stack.total}</b>! Chồng ${v.rules.stackAny ? 'lá +2/+4 bất kỳ' : `lá rút ≥ +${v.stack.last}`}${v.rules.extras ? ', giơ <b>Khiên</b> để chuyền tiếp, hoặc <b>No U</b> để dội ngược' : ''}, hoặc chịu phạt.` : v.stackDrew === myId ? `😵 Bốc thử không trúng – bấm <b>Chịu phạt +${v.stack.total}</b>.` : `😵 Không có lá để chồng – <b>🎲 Bốc thử 1 lá</b> (trúng lá cộng / Khiên / No U là chồng tiếp được) hoặc <b>Chịu phạt +${v.stack.total}</b>.`;
   else if (v.skipStack) h.innerHTML = '🤐 Bạn bị khoá mõm! Đánh Khoá mõm để chuyền, hoặc chịu mất lượt.';
   else if (v.up) h.innerHTML = v.up.first ? '⬆️ Up! Đánh 1 lá số bất kỳ (màu nào cũng được), không có thì chịu rút 2.' : `⬆️ Up! Đánh lá số <b>≥ ${v.up.n}</b> (màu nào cũng được), không có thì rút ${Math.max(1, v.up.n)} lá.`;
   else if (v.mustPlay) h.innerHTML = '✨ Lá vừa rút đánh được – bấm vào nó để đánh' + (v.canPass ? ', hoặc Giữ lại.' : '!');
@@ -317,7 +318,7 @@ function renderActions(v, meP) {
   const a = []; const my = isMyTurn();
   if (v.phase === 'playing' && meP && !meP.out) {
     if (iOwe()) { const wait = Date.now() < pullReadyAt; a.push(`<button class="btn red pull ${wait ? 'cd' : ''}" data-act="pull" ${wait ? 'disabled' : ''}>🃏 Bốc! ${v.owe.until ? `(tìm ${COLOR_NAME[v.owe.until]})` : v.owe.kind === 'mystery' && !v.owe.got ? '(xem số mấy ❓)' : `(còn ${v.owe.left})`}</button>`); }
-    else if (my && v.stack) a.push(`<button class="btn red" data-act="take">😵 Chịu phạt +${v.stack.total}</button>`);
+    else if (my && v.stack) { if (v.stackDrew !== myId && v.deckCount > 0) a.push(`<button class="btn blue" data-act="stackdraw" title="Bốc 1 lá: trúng lá cộng, Khiên hoặc No U thì đánh chồng tiếp ngay (+? không tính)">🎲 Bốc thử</button>`); a.push(`<button class="btn red" data-act="take">😵 Chịu phạt +${v.stack.total}</button>`); }
     else if (my && v.skipStack) a.push(`<button class="btn red" data-act="take">🤐 Chịu khoá mõm</button>`);
     else if (my && v.up) a.push(`<button class="btn red" data-act="take">⬆️ Chịu rút ${v.up.first ? 2 : Math.max(1, v.up.n)}</button>`);
     else if (my && v.canPass) a.push(`<button class="btn" data-act="pass">✋ Giữ lại, qua lượt</button>`);
@@ -523,6 +524,22 @@ const ARC = {
   catch: ['🚨', '#ff4d5e', (A, B) => `🚨 ${A} bắt lỗi ${B}: +2`],
   roulette: ['🎡', '#7a5cff', (A, B) => `🎡 ${A} bắt ${B} quay màu`],
 };
+// Chuỗi cộng dồn: giữ mũi tên "ai dồn cho ai" trên màn hình tới khi có người chịu phạt
+function drawChain(v) {
+  let svg = document.getElementById('chain-layer');
+  const ch = v && v.phase === 'playing' && v.stack && v.stack.chain;
+  if (!ch || !ch.length) { if (svg) svg.innerHTML = ''; return; }
+  if (!svg) { svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.id = 'chain-layer'; document.body.appendChild(svg); }
+  svg.setAttribute('viewBox', `0 0 ${innerWidth} ${innerHeight}`);
+  const rec = ch.slice(-6), icon = { plus: '➕', aim: '🎯', nou: '🔄', shield: '🛡️' };
+  svg.innerHTML = '<defs><marker id="chain-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ff2d55"/></marker></defs>' + rec.map((e, i) => {
+    const a = arcPoint(e.from), b = arcPoint(e.to); if (!a || !b) return '';
+    const last = i === rec.length - 1, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2 - Math.min(90, Math.hypot(b.x - a.x, b.y - a.y) * .28) - i * 6;
+    const lx = (a.x + 2 * mx + b.x) / 4, ly = (a.y + 2 * my + b.y) / 4;
+    return `<g opacity="${last ? 1 : .45 + i * .08}"><path d="M${a.x} ${a.y} Q${mx} ${my} ${b.x} ${b.y}" fill="none" stroke="#ff2d55" stroke-width="${last ? 4 : 2.5}" stroke-dasharray="${last ? '0' : '7 6'}" stroke-linecap="round" marker-end="url(#chain-ah)"${last ? ' class="chain-live"' : ''}/><g transform="translate(${lx} ${ly})"><circle r="15" fill="#fff" stroke="#ff2d55" stroke-width="2.5"/><text text-anchor="middle" dy="5" font-size="13" font-weight="800" fill="#ff2d55" font-family="Baloo 2,sans-serif">${e.k === 'plus' ? '+' + e.n : icon[e.k]}</text></g></g>`;
+  }).join('');
+}
+addEventListener('resize', () => requestAnimationFrame(() => drawChain(view)));
 function arcPoint(id) {
   if (id === myId) { const r = $('#hand').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top - 6 }; }
   const el = $(`.seat[data-pid="${id}"] .plate`); if (!el) return null;

@@ -69,6 +69,8 @@ function ev(s, k, from, to, n = 0) {
   if (!s.fx) s.fx = [];
   s.fxN = (s.fxN || 0) + 1; s.fx.push({ id: s.fxN, k, from, to, n });
   if (s.fx.length > 12) s.fx.shift();
+  // chuỗi cộng dồn: giữ lại mọi mũi tên tới khi có người chịu phạt
+  if (s.stack && ['plus', 'aim', 'nou', 'shield'].includes(k)) { (s.stack.chain = s.stack.chain || []).push({ k, from, to, n }); if (s.stack.chain.length > 16) s.stack.chain.shift(); }
 }
 export const top = s => s.discard[s.discard.length - 1];
 export const getPlayer = (s, id) => s.players.find(p => p.id === id);
@@ -251,6 +253,16 @@ export function applyAction(s, pid, a) {
       if (!s.lastDraw || s.lastDraw.player !== p.id) return { ok: false, reason: 'Phải rút bài trước.' };
       s.lastDraw = null; endTurn(s, 1); return { ok: true };
     }
+    case 'stackdraw': { // đang bị dồn phạt: được bốc thử 1 lá; trúng lá cộng / Khiên / No U thì đánh chồng tiếp ngay (+? thì không)
+      if (!s.stack) return { ok: false, reason: 'Không bị dồn phạt.' };
+      if (s.stackDrew === p.id) return { ok: false, reason: 'Đã bốc thử rồi.' };
+      const c = drawOne(s); if (!c) return { ok: false, reason: 'Hết bài để bốc.' };
+      p.hand.push(c); p.saidUno = false; s.stackDrew = p.id;
+      const ok = canPlay(s, p, c);
+      if (ok) { s.mustPlay = c.id; s.drewPlayable = c.id; }
+      log(s, ok ? `🎲 ${p.name} bốc thử trúng ${cardText(c)} – chồng tiếp được!` : `🎲 ${p.name} bốc thử ra ${cardText(c)}… không cứu được.`);
+      checkMercy(s, p); return { ok: true };
+    }
     case 'take': {
       if (s.stack) { const n = s.stack.total; s.stack = null; log(s, `😵 ${p.name} chịu phạt: tự bốc ${n} lá!`); startOwe(s, p, { kind: 'stack', left: n }, s.turn, 1); return { ok: true }; }
       if (s.skipStack) { s.skipStack = 0; log(s, `🤐 ${p.name} bị khoá mõm.`); endTurn(s, 1); return { ok: true }; }
@@ -268,7 +280,7 @@ function finishEffect(s, c, p) {
     const t = getPlayer(s, s._target); s._target = null;
     if (!t || t.out || t === p) { s.pending = { type: 'target', player: p.id, card: c }; return; }
     if (s.rules.stackDraw) { // cộng dồn như lá rút thường, nhưng phạt bay thẳng tới người bị nhắm
-      s.stack = { total: (s.stack ? s.stack.total : 0) + 4, last: 4, from: p.id };
+      s.stack = { total: (s.stack ? s.stack.total : 0) + 4, last: 4, from: p.id, chain: s.stack ? s.stack.chain : [] };
       log(s, `🎯 ${p.name} nhắm ${t.name}: dồn phạt ${s.stack.total} lá!`); ev(s, 'aim', p.id, t.id, s.stack.total);
       s.turn = s.players.indexOf(t); return endTurn(s, 0);
     }
@@ -326,7 +338,7 @@ function finishEffect(s, c, p) {
     if (c.type === 'rev' && n === 2) { log(s, `${nameAt(s, 1)} bị mất lượt.`); return endTurn(s, 2); }
   }
   if (v) {
-    if (s.rules.stackDraw) { s.stack = { total: (s.stack ? s.stack.total : 0) + v, last: v, from: p.id }; log(s, `➕ Dồn phạt: ${s.stack.total} lá cho ${nameAt(s, 1)}!`); endTurn(s, 1); ev(s, 'plus', p.id, current(s).id, s.stack.total); return; }
+    if (s.rules.stackDraw) { s.stack = { total: (s.stack ? s.stack.total : 0) + v, last: v, from: p.id, chain: s.stack ? s.stack.chain : [] }; log(s, `➕ Dồn phạt: ${s.stack.total} lá cho ${nameAt(s, 1)}!`); endTurn(s, 1); ev(s, 'plus', p.id, current(s).id, s.stack.total); return; }
     const t = s.players[nextIdx(s)]; log(s, `😵 ${t.name} phải tự bốc ${v} lá và mất lượt!`); ev(s, 'plus', p.id, t.id, v);
     return startOwe(s, t, { kind: 'stack', left: v }, s.turn, 2);
   }
@@ -349,7 +361,7 @@ function finishEffect(s, c, p) {
 function nameAt(s, k) { return s.players[nextIdx(s, s.turn, k)].name; }
 function endTurn(s, steps) {
   if (s.phase !== 'playing') return;
-  s.lastDraw = null; s.drewPlayable = null; s.mustPlay = null;
+  s.lastDraw = null; s.drewPlayable = null; s.mustPlay = null; s.stackDrew = null;
   if (steps > 0) s.turn = nextIdx(s, s.turn, steps);
   else if (current(s).out) s.turn = nextIdx(s);
   s.turnCount++;
@@ -364,7 +376,7 @@ export function viewFor(s, pid) {
   const me = getPlayer(s, pid);
   return {
     phase: s.phase, mode: s.mode, rules: s.rules, winner: s.winner, turn: s.turn, dir: s.dir, color: s.color, top: top(s),
-    deckCount: s.deck.length, stack: s.stack, skipStack: s.skipStack, up: s.up, mustPlay: s.mustPlay, turnCount: s.turnCount,
+    deckCount: s.deck.length, stack: s.stack, stackDrew: s.stackDrew || null, skipStack: s.skipStack, up: s.up, mustPlay: s.mustPlay, turnCount: s.turnCount,
     canPass: !!(s.lastDraw && s.lastDraw.player === pid), unoWatch: s.unoWatch,
     pending: s.pending ? { type: s.pending.type, player: s.pending.player, card: s.pending.card ? s.pending.card.type : null } : null,
     owe: s.owe ? { player: s.owe.player, got: s.owe.got, left: s.owe.left, until: s.owe.until, kind: s.owe.kind, reveal: s.owe.reveal } : null,

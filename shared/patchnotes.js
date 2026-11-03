@@ -5,6 +5,10 @@ export const GAMES = {
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
 };
 export const NOTES = [
+  { id: '20261103-13', date: '03/11/2026', game: 'uno', title: 'Chuỗi cộng dồn & bốc thử', items: [
+    '➕ Chuỗi cộng dồn giữ nguyên mũi tên "ai dồn cho ai" trên màn hình tới khi có người chịu phạt.',
+    '🎲 Bị dồn mà không có lá chồng: bốc thử 1 lá – trúng lá cộng, Khiên hoặc No U là đánh chồng tiếp ngay (+? không tính).',
+  ] },
   { id: '20261103-12', date: '03/11/2026', game: 'typhu', title: 'Chỉ dẫn, ZingPlay thật, giao dịch thông minh', items: [
     '🧭 Lần đầu vào ván có chỉ dẫn từng bước (xem lại trong ⚙️).',
     '🏗️ Luật mới "ZingPlay thật": đứng lên đất mình là hỏi luôn "Xây mấy nhà?".',

@@ -1,5 +1,5 @@
 // Bot UNO đơn giản mà khôn vừa phải.
-import { getPlayer, current, playableIds, COLORS, DRAW_VALUE, isWild } from './engine.js?v=16';
+import { getPlayer, current, playableIds, COLORS, DRAW_VALUE, isWild } from './engine.js?v=17';
 
 function bestColor(hand) {
   const cnt = { R: 0, Y: 0, G: 0, B: 0 };
@@ -25,6 +25,7 @@ export function botAction(s, pid) {
   const ids = playableIds(s, pid);
   if (p.hand.length <= 2 && !p.saidUno && ids.length && Math.random() < 0.85) return { type: 'uno' };
   if (!ids.length) {
+    if (s.stack && s.stackDrew !== pid && s.deck.length) return { type: 'stackdraw' };
     if (s.stack || s.skipStack || s.up) return { type: 'take' };
     if (s.lastDraw && s.lastDraw.player === pid) return { type: 'pass' };
     return { type: 'draw' };
