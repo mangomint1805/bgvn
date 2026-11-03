@@ -1,5 +1,5 @@
 // Bot Ma Sói: nghi ngờ đơn giản (ai bị chỉ điểm nhiều, bị khai là Sói, bị bầu nhiều), sói thì che giấu và cắn người nguy hiểm.
-import { P, alive, actors, isWolfRole, ROLES, wolfTargets, wolfLeader, voteCandidates, canVote } from './engine.js?v=1';
+import { P, alive, actors, isWolfRole, ROLES, wolfTargets, wolfLeader, voteCandidates, canVote } from './engine.js?v=2';
 
 let rnd = Math.random;
 export function setBotRandom(f) { rnd = f; }

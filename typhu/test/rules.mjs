@@ -1,7 +1,7 @@
 // Unit test luật Cờ Tỷ Phú. Chạy: node typhu/test/rules.mjs
 import './load.mjs';
 import assert from 'assert/strict';
-import { createGame, applyAction, setRandom, TILES, CARDS, actorOf, rentOf, buybackPrice, netWorth } from '../js/engine.js?v=40';
+import { createGame, applyAction, setRandom, TILES, CARDS, actorOf, rentOf, buybackPrice, netWorth } from '../js/engine.js?v=42';
 
 let pass = 0, fail = 0;
 function test(name, fn) { try { fn(); pass++; console.log('  ✓ ' + name); } catch (e) { fail++; console.log('  ✗ ' + name + '\n    ' + (e.stack || e).toString().split('\n').slice(0, 3).join('\n    ')); } }
@@ -163,6 +163,14 @@ test('thẻ tới bến xe gần nhất trả gấp đôi', () => {
 });
 test('thẻ vào tù', () => { const s = game(); cardTop(s, 'chance', 'jail'); dice(3, 4); act(s, 'p0', { type: 'roll' }); assert.equal(P(s, 'p0').inJail, true); assert.equal(P(s, 'p0').pos, 10); });
 test('tài sản ròng', () => { const s = game(); own(s, 'p0', 1, 2); own(s, 'p0', 39, 0, true); assert.equal(netWorth(s, 'p0'), 1500 + 60 + 100 + 200); });
+
+test('xây tự do: bán nhà ở ô lẻ (nhóm chưa đủ) không lỗi; nhà người khác cùng màu không cản thế chấp/giao dịch', () => {
+  const s = game(); own(s, 'p0', 1, 2);
+  act(s, 'p0', { type: 'sell', tile: 1 }); assert.equal(s.props[1].h, 1);
+  own(s, 'p1', 3); assert.equal(s.stage, 'roll');
+  dice(1, 2); act(s, 'p0', { type: 'roll' }); act(s, 'p0', { type: 'skipBuyback' }); act(s, 'p0', { type: 'end' });
+  act(s, 'p1', { type: 'mortgage', tile: 3 }); assert.equal(s.props[3].mort, true);
+});
 
 console.log(`\n${pass} đạt, ${fail} lỗi`);
 if (fail) process.exit(1);

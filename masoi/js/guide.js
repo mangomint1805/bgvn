@@ -1,6 +1,6 @@
 // Hướng dẫn luật Ma Sói (tiếng Việt)
-import { ROLES, ROLE_ORDER } from './engine.js?v=1';
-import { roleCardSVG } from './art.js?v=1';
+import { ROLES, ROLE_ORDER } from './engine.js?v=2';
+import { roleCardSVG } from './art.js?v=2';
 
 const LONG = {
   wolf: 'Mỗi đêm cả bầy thức dậy, bàn nhau trong <b>kênh chat Sói</b> rồi cùng chọn 1 nạn nhân. Thống nhất thì chốt ngay; hết giờ mà còn lệch thì lấy <b>đa số</b> (hoà thì bốc thăm). Sói biết mặt nhau. Ban ngày giả làm dân lành.',

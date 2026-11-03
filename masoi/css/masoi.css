@@ -404,3 +404,18 @@ body.peeking .peek{display:flex}
   .cloud,.fog,.fireflies i,.stars i,.b-leaf,.lantern,.fl{animation:none!important}
   .announce{animation:none!important}
 }
+/* rà soát: mô tả vai trong sảnh không bị cắt, chữ "Giữ để xem vai" dễ đọc hơn */
+.rrow .rn small{white-space:normal;font-size:12px;line-height:1.25}
+.mycard .mc-txt{font-size:12px}
+/* điện thoại xoay ngang: chat sang phải, chừa chỗ cho ghế ngồi (trước đây ghế bị ép còn ~10px) */
+@media (orientation:landscape) and (max-height:560px) and (max-width:899px){
+  .gwrap{flex-direction:row}
+  .dock{width:min(330px,40vw);height:auto!important;min-height:0;border-top:0;border-left:1px solid var(--line)}
+  #btn-dock{display:none}
+  .topbar{padding:3px 8px}
+  .narr{margin:4px 6px 0;min-height:30px;padding:4px 8px;font-size:13px}
+  .seats-wrap{padding:6px}
+  .seats{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:5px}
+  .seat{min-height:62px;padding:4px 3px}.seat .av{width:32px;height:32px;font-size:14px}
+  .act{min-height:0;padding:4px 6px}.mycard{width:64px}
+}

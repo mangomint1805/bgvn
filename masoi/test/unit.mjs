@@ -1,5 +1,5 @@
 // Unit test các tương tác khó: node masoi/test/unit.mjs
-import { createGame, applyAction, actors, timeout, viewFor, P } from '../js/engine.js?v=1';
+import { createGame, applyAction, actors, timeout, viewFor, P } from '../js/engine.js?v=2';
 
 let pass = 0, failN = 0;
 const ok = (c, msg) => { if (c) pass++; else { failN++; console.log('  ✗', msg); } };

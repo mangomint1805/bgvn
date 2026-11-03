@@ -101,9 +101,11 @@ export function buildBlock(s, pid, i) {
 export const canBuild = (s, pid, i) => !buildBlock(s, pid, i);
 export function canSell(s, pid, i) {
   const pr = s.props[i]; if (!pr || pr.owner !== pid || !pr.h) return false;
-  const g = GROUPS[TILES[i].group].tiles; return pr.h >= Math.max(...g.map(j => s.props[j].h)); // bán đều tay
+  if (!ownsGroup(s, pid, TILES[i].group)) return true; // chưa đủ bộ (luật xây tự do): bán ô nào cũng được
+  const g = GROUPS[TILES[i].group].tiles; return pr.h >= Math.max(...g.map(j => s.props[j].h)); // đủ bộ: bán đều tay
 }
-const groupHasHouses = (s, i) => TILES[i].type === 'city' && GROUPS[TILES[i].group].tiles.some(j => s.props[j] && s.props[j].h > 0);
+// nhóm màu có nhà của CHÍNH chủ ô này (nhà của người khác cùng màu không cản mình thế chấp / giao dịch)
+const groupHasHouses = (s, i) => { const pr = s.props[i]; return TILES[i].type === 'city' && !!pr && GROUPS[TILES[i].group].tiles.some(j => s.props[j] && s.props[j].owner === pr.owner && s.props[j].h > 0); };
 export function canMortgage(s, pid, i) { const pr = s.props[i]; return !!pr && pr.owner === pid && !pr.mort && !groupHasHouses(s, i); }
 export function canUnmortgage(s, pid, i) { const pr = s.props[i]; return !!pr && pr.owner === pid && pr.mort && P(s, pid).cash >= unmortgageCost(i); }
 export const tradable = (s, pid, i) => !!s.props[i] && s.props[i].owner === pid && !groupHasHouses(s, i);

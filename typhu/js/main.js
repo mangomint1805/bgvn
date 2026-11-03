@@ -1,12 +1,12 @@
 // Cờ Tỷ Phú Sài Gòn – giao diện: trang chủ, tạo nhân vật, sảnh, ván chơi 3D, hoạt ảnh sự kiện.
-import { Host, Client, MAX, loadSnapshot, session, cleanAvatar } from './net.js?v=41';
+import { Host, Client, MAX, loadSnapshot, session, cleanAvatar } from './net.js?v=42';
 import {
   setData, TILES, GROUPS, GROUP_LIST, STATION_RENT, money, rentOf, canBuild, canSell, canMortgage, canUnmortgage, houseCost, mortgageValue,
   unmortgageCost, buildBlock, tradable, tradeError, buybackPrice, netWorth, tilesOf, ownsGroup, JAIL_FINE, MAX_TRADES, isProp,
-} from './engine.js?v=41';
-import { Board3D, THEMES } from './scene3d.js?v=41';
-import * as fx from './fx.js?v=41';
-import { guideHTML } from './guide.js?v=41';
+} from './engine.js?v=42';
+import { Board3D, THEMES } from './scene3d.js?v=42';
+import * as fx from './fx.js?v=42';
+import { guideHTML } from './guide.js?v=42';
 import { OPTIONS, PRESETS, buildAvatar, portrait } from '../../shared/js/avatar3d.js';
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
@@ -19,7 +19,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const settings = fx.settings;
 
 // ---------- dữ liệu bàn cờ ----------
-const [tilesData, cardsData] = await Promise.all(['tiles.json?v=41', 'cards.json?v=41'].map(u => fetch(u).then(r => r.json())));
+const [tilesData, cardsData] = await Promise.all(['tiles.json?v=42', 'cards.json?v=42'].map(u => fetch(u).then(r => r.json())));
 setData(tilesData, cardsData);
 const VN = 'ẮẰẲẴẶẤẦẨẪẬĐđơưƯƠếềểễệ';
 const fontsReady = Promise.race([
@@ -441,7 +441,12 @@ function renderPanel() {
     el.innerHTML = lines.join('') + `<div class="btns">${btns.join('')}</div>`; return;
   }
   const actor = v.actor, A = P(v, actor), mine = isMine(actor), who = youOr(v, actor), me = mine ? actor : null;
-  const tools = pid => [btn('panel', '🏗️ Tài sản', () => openManage(pid), 'ghost sm'), btn('panel', '🤝 Giao dịch', () => openTrade(pid), 'ghost sm', v.trades >= MAX_TRADES)];
+  // nút xây nhà phải dễ thấy: có ô xây được thì nút sáng màu + số ô; đứng trên đất của mình thì có nút xây ngay tại chỗ
+  const buildable = pid => pid ? tilesOf(v, pid).filter(i => canBuild(v, pid, i)) : [];
+  const tools = pid => { const n = buildable(pid).length;
+    return [btn('panel', n ? `🏠 Xây nhà (${n})` : '🏗️ Tài sản', () => openManage(pid), n ? 'green sm' : 'ghost sm', false, 'Xây nhà, bán nhà, thế chấp, chuộc đất'), btn('panel', '🤝 Giao dịch', () => openTrade(pid), 'ghost sm', v.trades >= MAX_TRADES)]; };
+  const buildHere = pid => { const i = A.pos; if (!pid || TILES[i].type !== 'city' || !canBuild(v, pid, i)) return null; const pr = v.props[i];
+    return btn('panel', `${pr.h === 4 ? '🏛️ Landmark' : '🏠 Xây'} tại đây −${money(houseCost(i))}`, () => send(pid, { type: 'build', tile: i }), 'gold', false, 'Xây ở ' + TILES[i].name); };
   switch (v.stage) {
     case 'roll': {
       if (!mine) { lines.push(head(actor, `⏳ <b>${who}</b> ${A.inJail ? 'đang ở tù, tính cách ra…' : 'chuẩn bị đổ xúc xắc…'}`)); break; }
@@ -500,15 +505,18 @@ function renderPanel() {
       if (!mine) { lines.push(head(actor, `😰 <b>${who}</b> đang xoay ${money(D.amount)} để trả nợ…`)); break; }
       lines.push(head(actor, `😰 <b>${who}</b> phải trả <b>${money(D.amount)}</b> – đang có ${money(A.cash)}`));
       lines.push(`<div class="sub">Bán nhà hoặc thế chấp đất để gom đủ tiền. Hết cách thì đành phá sản.</div>`);
-      btns.push(btn('panel', '💳 Trả nợ', () => send(me, { type: 'payDebt' }), 'green main', A.cash < D.amount));
-      btns.push(btn('panel', '🏗️ Bán / Thế chấp', () => openManage(me), 'gold'));
-      btns.push(btn('panel', '💀 Phá sản', () => confirmBankrupt(me), 'red sm'));
+      const canPay = A.cash >= D.amount;
+      btns.push(btn('panel', '💳 Trả nợ', () => send(me, { type: 'payDebt' }), canPay ? 'green main' : 'green', !canPay));
+      btns.push(btn('panel', '🏗️ Bán / Thế chấp', () => openManage(me), canPay ? 'gold' : 'gold main'));
+      btns.push(btn('panel', '💀 Phá sản', () => confirmBankrupt(me), 'red sm tiny'));
       break;
     }
     case 'end': {
       if (!mine) { lines.push(head(actor, `⏳ <b>${who}</b> đang tính toán…`)); break; }
-      lines.push(head(actor, `✅ ${who === 'Bạn' ? 'Bạn' : '<b>' + who + '</b>'} có thể xây nhà, giao dịch rồi kết thúc lượt.`));
+      const nb = buildable(me).length, bh = buildHere(me);
+      lines.push(head(actor, nb ? `🏠 ${who === 'Bạn' ? 'Bạn' : '<b>' + who + '</b>'} xây được nhà trên <b>${nb} ô</b> – bấm <b>${bh ? 'Xây tại đây' : 'Xây nhà'}</b>. Xong thì Kết thúc lượt.` : `✅ ${who === 'Bạn' ? 'Bạn' : '<b>' + who + '</b>'} có thể giao dịch, thế chấp… rồi Kết thúc lượt.`));
       btns.push(btn('panel', '✅ Kết thúc lượt', () => send(me, { type: 'end' }), 'pri main'));
+      if (bh) btns.push(bh);
       btns.push(...tools(me)); break;
     }
     default: lines.push(head(actor, `⏳ ${who}…`));
@@ -586,12 +594,12 @@ function renderManage() {
     { name: 'Công ty', color: '#1e88e5', tiles: TILES.map((t, i) => t.type === 'utility' ? i : -1).filter(i => i >= 0) }]
     .map(g => ({ ...g, mine: g.tiles.filter(i => own.includes(i)) })).filter(g => g.mine.length);
   const debt = v.stage === 'debt' && v.actor === pid ? `<p class="sub" style="text-align:center">Cần trả <b>${money(v.debt.amount)}</b> · đang có <b>${money(p.cash)}</b></p>` : '';
-  setModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>🏗️ Tài sản của ${esc(p.name)}</h2>
+  setModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>🏗️ Tài sản của ${esc(p.name)}</h2><p class="sub" style="text-align:center;margin:-4px 0 4px">Xây nhà · bán nhà · thế chấp · chuộc đất</p>
     <p style="text-align:center;margin:0">💵 <b>${money(p.cash)}</b> tiền mặt</p>${debt}
     ${groups.length ? `<div class="mg">${groups.map(g => `<div class="grp"><h5 style="--gc:${g.color}"><i></i>${g.name}${g.full ? ' ✅ đủ nhóm' : ` (${g.mine.length}/${g.tiles.length})`}</h5>
       ${g.mine.map(i => `<div class="row"><span class="nm" ${fnAttr('modal', () => openTile(i))}>${esc(tileName(i))} <small>${statusOf(v, i) || money(TILES[i].price)}</small></span>${manageBtns(v, pid, i)}</div>`).join('')}</div>`).join('')}</div>`
       : '<p class="note" style="text-align:center">Bạn chưa có miếng đất nào.</p>'}
-    <p class="note">Xây nhà cần đủ nhóm màu, xây đều tay; 4 nhà rồi mới lên Landmark. Bán nhà được nửa giá. Thế chấp nhận nửa giá, chuộc lại +10%.</p>`);
+    <p class="note">${v.opts.freeBuild === false ? 'Xây nhà cần đủ nhóm màu' : 'Đất của mình là xây được, không cần đủ nhóm màu'}; đủ nhóm thì phải xây đều tay. 4 nhà rồi mới lên Landmark. Bán nhà được nửa giá. Thế chấp nhận nửa giá, chuộc lại +10%. Chỉ thao tác được trong lượt của mình.</p>`);
 }
 
 // ---------- giao dịch ----------
@@ -620,7 +628,7 @@ function openTrade(pid) {
           ${them.cards.length ? `<label>🗝️ Thẻ ra tù <input class="inp" type="number" min="0" max="${them.cards.length}" value="${st.get.cards || ''}" data-cards="get" placeholder="0"></label>` : ''}</div>
       </div>
       <p class="sub" id="tr-err" style="text-align:center;color:#c62828;min-height:20px;margin:8px 0 0">${err && err !== 'Giao dịch trống' ? esc(err) : ''}</p>
-      <div class="mbtns"><button class="btn ghost" data-close>Huỷ</button>${btn('modal', `📨 Gửi đề nghị (${MAX_TRADES - v.trades} lần)`, () => { closeModal(); send(pid, { type: 'trade', ...t }); }, 'pri', !!err || v.trades >= MAX_TRADES)}</div>`);
+      <div class="mbtns"><button class="btn ghost" data-close>Huỷ</button>${btn('modal', `📨 Gửi đề nghị · còn ${MAX_TRADES - v.trades} lần`, () => { closeModal(); send(pid, { type: 'trade', ...t }); }, 'pri', !!err || v.trades >= MAX_TRADES)}</div>`);
     $$('#modal-box [data-tile]').forEach(c => c.onchange = () => { const s = st[c.dataset.side], i = +c.dataset.tile; s.tiles = c.checked ? [...s.tiles, i] : s.tiles.filter(x => x !== i); draw(); });
     $$('#modal-box [data-cash]').forEach(c => c.onchange = () => { st[c.dataset.cash].cash = Math.max(0, Math.floor(+c.value || 0)); draw(); });
     $$('#modal-box [data-cards]').forEach(c => c.onchange = () => { st[c.dataset.cards].cards = Math.max(0, Math.floor(+c.value || 0)); draw(); });

@@ -1,9 +1,9 @@
-import { Host, Client, MAX, MIN, loadSnapshot, session } from './net.js?v=1';
+import { Host, Client, MAX, MIN, loadSnapshot, session } from './net.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
-import { ROLES, ROLE_ORDER, STEP_TEXT, TEAM_NAME, roleList, presetRoles, isWolfRole, DEFAULT_OPTS } from './engine.js?v=1';
-import { roleCardSVG, cardBackSVG, roleChip, roleDot, bambooSVG, dinhSVG, hillsSVG, starsHTML, firefliesHTML, heroSVG } from './art.js?v=1';
-import * as fx from './fx.js?v=1';
-import { openGuide } from './guide.js?v=1';
+import { ROLES, ROLE_ORDER, STEP_TEXT, TEAM_NAME, roleList, presetRoles, isWolfRole, DEFAULT_OPTS } from './engine.js?v=2';
+import { roleCardSVG, cardBackSVG, roleChip, roleDot, bambooSVG, dinhSVG, hillsSVG, starsHTML, firefliesHTML, heroSVG } from './art.js?v=2';
+import * as fx from './fx.js?v=2';
+import { openGuide } from './guide.js?v=2';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -214,7 +214,7 @@ function onState(v) {
   if (!v) { view = null; endShown = false; return; }
   const prev = view; view = v;
   if (!$('#screen-game').classList.contains('active')) { show('screen-game'); if (modalKey !== 'reveal') closeModal(); }
-  if (v.pk !== curPk) { sel = []; witch = { save: null, poison: null, mode: null }; curPk = v.pk; }
+  if (v.pk !== curPk) { sel = []; witch = { save: null, poison: null, mode: null }; curPk = v.pk; if (modalKey === 'claim' && v.phase !== 'day') closeModal(); }
   if (v.clock) { const end = Date.now() + v.clock.ms; if (Math.abs(end - clockEnd) > 900 || v.clock.total !== clockTotal) { clockEnd = end; clockTotal = v.clock.total; } } else clockEnd = 0;
   const t = phaseTheme(v); if (t !== theme) setTheme(t);
   moodFor(v); setBody(v);
@@ -394,7 +394,7 @@ function renderAct() {
   switch (v.phase) {
     case 'night':
       if (!m.alive) { hint = ghostTxt; break; }
-      if (!v.myTurn) { hint = isWolfRole(m.role) && (v.step === 'wolves' || v.step === 'wolves2') ? '🐺 Đã chọn – chờ cả bầy thống nhất… (giữ ý = bấm lại cùng người)' : '😴 Nhắm mắt, ngủ ngoan… Cúi xuống điện thoại cho khỏi lộ nha.'; if (isWolfRole(m.role) && (v.step === 'wolves' || v.step === 'wolves2')) { btns.push(B('a-nobite', '🙅 Không cắn ai')); } break; }
+      if (!v.myTurn) { hint = isWolfRole(m.role) && (v.step === 'wolves' || v.step === 'wolves2') ? '🐺 Đã chọn – chờ cả bầy thống nhất… (giữ ý = bấm lại cùng người)' : nightWaitText(v, m); if (isWolfRole(m.role) && (v.step === 'wolves' || v.step === 'wolves2')) { btns.push(B('a-nobite', '🙅 Không cắn ai')); } break; }
       mine = true;
       if (v.step === 'cupid') { hint = sel.length ? `💘 ${sel.map(pname).join(' ❤ ')}${sel.length < 2 ? ' + …' : ''}` : 'Chọn 2 người (được chọn chính mình).'; btns.push(B('a-cupid', '💘 Ghép đôi', 'pri', sel.length !== 2), B('a-skip', 'Bỏ qua')); }
       else if (v.step === 'guard') { hint = sel[0] ? `🛡️ Bảo vệ <b>${esc(pname(sel[0]))}</b>` : `Chọn người để bảo vệ${v.lastGuard ? ` (không được chọn lại ${esc(pname(v.lastGuard))})` : ''}.`; btns.push(B('a-guard', '🛡️ Bảo vệ', 'pri', !sel[0]), B('a-skip', 'Bỏ qua')); }
@@ -461,11 +461,20 @@ function renderAct() {
   on('a-result', endModal);
   on('a-again', () => { closeModal(); net.restart(); });
 }
+// ban đêm chưa tới lượt: nói rõ cho người mới là mình có việc gì không, đã xong hay sắp tới lượt
+const NIGHT_ORDER = ['cupid', 'guard', 'seer', 'wolves', 'witch'];
+function nightWaitText(v, m) {
+  const mine = isWolfRole(m.role) ? 'wolves' : NIGHT_ORDER.includes(m.role) ? m.role : null;
+  // không ghi tên vai ra đây: chơi chung phòng, người ngồi cạnh liếc màn hình là lộ
+  if (!mine || (mine === 'cupid' && v.day !== 1)) return '😴 Nhắm mắt, ngủ ngoan… Cúi xuống điện thoại cho khỏi lộ nha.';
+  const cur = NIGHT_ORDER.indexOf(v.step === 'wolves2' ? 'wolves' : v.step);
+  return NIGHT_ORDER.indexOf(mine) > cur ? '😴 Chưa tới lượt bạn – lát nữa máy sẽ gọi dậy (khung trên sáng vàng). Cúi xuống điện thoại nha.' : '😴 Bạn xong việc đêm nay rồi, ngủ ngoan… Cúi xuống điện thoại cho khỏi lộ nha.';
+}
 function claimModal() {
   const m = me(); const list = Object.entries(m.seen || {});
   openModal(`<h2>📢 Khai kết quả soi</h2><p class="ctr">Cả làng sẽ biết bạn là Tiên Tri – Sói cũng biết luôn đó! Chọn kết quả muốn công bố:</p>
     <div class="targets">${list.map(([id, r]) => `<button class="btn ${r === 'wolf' ? 'red' : 'green'}" data-cl="${id}" data-res="${r}">${esc(pname(id))}: ${r === 'wolf' ? '🐺 Sói' : '🙂 Dân'}</button>`).join('')}</div>
-    <div class="btns"><button class="btn" onclick="__closeModal()">Thôi, giấu nghề</button></div>`);
+    <div class="btns"><button class="btn" onclick="__closeModal()">Thôi, giấu nghề</button></div>`, '', 'claim');
   $$('[data-cl]').forEach(b => b.onclick = () => { send({ type: 'claim', target: b.dataset.cl, res: b.dataset.res }); closeModal(); fx.sfx.magic(); });
 }
 

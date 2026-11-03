@@ -245,9 +245,17 @@ export function say(text) {
 
 // ---------- hiệu ứng DOM ----------
 const layer = () => document.getElementById('fx-layer');
+// banner xếp hàng: cái sau chờ cái trước tắt (tránh 2 dòng chữ to đè lên nhau, vd. "Thợ Săn" + "Bạn đã chết")
+let bannerUntil = 0;
 export function banner(html, cls = '', ms = 2200) {
-  const n = document.createElement('div'); n.className = 'banner ' + cls; n.innerHTML = html;
-  layer().appendChild(n); setTimeout(() => n.remove(), ms);
+  const now = Date.now(), wait = Math.max(0, bannerUntil - now);
+  if (wait > 6000) return; // dồn quá nhiều thì bỏ bớt, đừng chiếu chữ cũ
+  const dur = wait ? Math.min(ms, 1900) : ms;
+  bannerUntil = now + wait + dur;
+  setTimeout(() => {
+    const n = document.createElement('div'); n.className = 'banner ' + cls; n.innerHTML = html; n.style.setProperty('--bd', Math.min(dur, 2200) + 'ms');
+    layer().appendChild(n); setTimeout(() => n.remove(), dur);
+  }, wait);
 }
 export function floatText(el, txt, cls = '') {
   if (!el) return; const r = el.getBoundingClientRect();

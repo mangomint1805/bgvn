@@ -1,7 +1,7 @@
 // Mô phỏng bot vs bot: node masoi/test/sim.mjs 600
 // Kiểm tra: 0 ván kẹt, 0 lỗi, điều kiện thắng đúng, view không lỗi, luật được giữ (thuốc 1 lần, bảo vệ không 2 đêm liền…)
-import { createGame, applyAction, actors, timeout, viewFor, winnerOf, presetRoles, roleList, ROLES, isWolfRole, teamOf, P } from '../js/engine.js?v=1';
-import { botAction, botDayPlan, botLine, botWolfLine } from '../js/bot.js?v=1';
+import { createGame, applyAction, actors, timeout, viewFor, winnerOf, presetRoles, roleList, ROLES, isWolfRole, teamOf, P } from '../js/engine.js?v=2';
+import { botAction, botDayPlan, botLine, botWolfLine } from '../js/bot.js?v=2';
 
 const N = +process.argv[2] || 600;
 const ALL_SPECIAL = ['alpha', 'cub', 'seer', 'guard', 'witch', 'hunter', 'cupid', 'elder', 'idiot', 'tanner'];

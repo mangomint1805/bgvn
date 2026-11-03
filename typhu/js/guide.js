@@ -1,5 +1,5 @@
 // Hướng dẫn luật Cờ Tỷ Phú Sài Gòn (tiếng Việt)
-import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=41';
+import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=42';
 
 export function guideHTML() {
   const taxes = TILES.filter(t => t.type === 'tax').map(t => `${t.name} ${money(t.amount)}`).join(', ');
@@ -25,7 +25,7 @@ export function guideHTML() {
     <li><b>Điện lực, Cấp nước</b>: có 1 công ty thu <b>4 ×</b> tổng xúc xắc, có cả 2 thu <b>10 ×</b>.</li>
     <li>Ô đang <b>thế chấp</b> không thu tiền thuê. Ở tù vẫn thu tiền thuê bình thường.</li></ul>
   <h3>🏠 Xây nhà & Landmark</h3><ul>
-    <li>Mặc định (kiểu ZingPlay): <b>đường của mình là xây được</b>, không cần đủ nhóm màu. Bấm vào ô hoặc mở <b>🏗️ Tài sản</b> trong lượt của mình để xây.</li>
+    <li>Mặc định (kiểu ZingPlay): <b>đường của mình là xây được</b>, không cần đủ nhóm màu. Trong lượt của mình: bấm nút <b>🏠 Xây nhà</b> (nút xanh ở bảng dưới, hiện số ô xây được; không có ô nào thì nút tên <b>🏗️ Tài sản</b>), hoặc bấm thẳng vào ô trên bàn. Đứng trên đất của mình thì có nút <b>Xây tại đây</b>.</li>
     <li>Chủ phòng có thể chọn luật cổ điển "Phải đủ bộ màu" trong sảnh.</li>
     <li>Khi đã <b>đủ nhóm màu</b> thì phải <b>xây đều tay</b> (ô ít nhà nhất trong nhóm xây trước) và không ô nào trong nhóm đang thế chấp. Tối đa 4 nhà, sau đó nâng lên <b>🏛️ Landmark</b> (thuê cực đắt).</li>
     <li>Bán nhà lại cho ngân hàng được <b>nửa giá</b>, cũng phải bán đều tay.</li></ul>
@@ -33,11 +33,11 @@ export function guideHTML() {
     <li>Trả tiền thuê ở <b>đường</b> của người khác xong, bạn được quyền <b>mua lại</b> ô đó với giá <b>gấp đôi giá trị</b> (giá đất + nhà). Nhà trên đất giữ nguyên.</li>
     <li>Không mua lại được ô có <b>Landmark</b>, ô đang thế chấp, bến xe và công ty.</li></ul>
   <h3>🏦 Thế chấp</h3><ul>
-    <li>Thế chấp một ô nhận ngay <b>nửa giá</b> đất. Muốn thế chấp đường thì nhóm màu đó phải bán hết nhà trước.</li>
+    <li>Thế chấp một ô nhận ngay <b>nửa giá</b> đất. Muốn thế chấp đường thì phải bán hết nhà <b>của mình</b> trong nhóm màu đó trước.</li>
     <li>Chuộc lại: trả nửa giá <b>+ 10%</b>.</li></ul>
   <h3>🤝 Giao dịch</h3><ul>
     <li>Trong lượt của mình, đề nghị đổi đất + tiền + thẻ ra tù với 1 người. Người kia bấm <b>Đồng ý</b> mới thành.</li>
-    <li>Không giao được đất thuộc nhóm màu đang có nhà. Mỗi lượt tối đa 3 lời đề nghị.</li></ul>
+    <li>Không giao được đất khi chủ ô còn nhà trong nhóm màu đó (bán nhà trước). Mỗi lượt tối đa 3 lời đề nghị.</li></ul>
   <h3>🚔 Tù</h3><ul>
     <li>Vào tù khi: dừng ở ô <b>Vào tù</b>, rút thẻ “Tù ngay”, hoặc đổ đôi 3 lần liền. Đứng ở ô Thăm tù bình thường thì chỉ là ghé thăm.</li>
     <li>Ra tù: nộp ${money(JAIL_FINE)} trước khi đổ, dùng <b>thẻ ra tù</b>, hoặc đổ ra <b>đôi</b> (đi luôn nhưng không đổ thêm).</li>

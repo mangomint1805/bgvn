@@ -1,11 +1,11 @@
 // Mô phỏng hàng trăm ván toàn bot: đếm ván kẹt / hành động lỗi / vi phạm bất biến. Chạy: node typhu/test/sim.mjs [số ván]
 import './load.mjs';
-import { createGame, applyAction, actorOf, setRandom, TILES, GROUPS } from '../js/engine.js?v=40';
-import { botAction } from '../js/bot.js?v=40';
+import { createGame, applyAction, actorOf, setRandom, TILES, GROUPS } from '../js/engine.js?v=42';
+import { botAction } from '../js/bot.js?v=42';
 const G = +process.argv[2] || 600;
 let seed = 12345; setRandom(() => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; });
 const st = { games: 0, stuck: 0, errs: 0, inv: 0, actions: 0, rounds: 0, maxRounds: 0, reasons: {}, trades: 0, auctions: 0, buybacks: 0, bankrupt: 0, landmarks: 0, byVariant: {} };
-const variants = [{}, { maxRounds: 30 }, { monopolyWin: false, maxRounds: 60 }, { auction: false, buyback: false }, { startMoney: 2500 }];
+const variants = [{}, { maxRounds: 30 }, { monopolyWin: false, maxRounds: 60 }, { auction: false, buyback: false }, { startMoney: 2500 }, { freeBuild: false }, { freeBuild: false, buyback: false }];
 for (let g = 0; g < G; g++) {
   const np = 2 + (g % 5), opts = variants[g % variants.length];
   const s = createGame(Array.from({ length: np }, (_, i) => ({ id: 'b' + i, name: 'Bot' + i, isBot: true })), opts);
@@ -22,8 +22,8 @@ for (let g = 0; g < G; g++) {
     // bất biến
     const bad = s.players.some(p => !p.out && p.cash < 0 && s.stage !== 'debt') ||
       Object.entries(s.props).some(([i, pr]) => { const p = s.players.find(x => x.id === pr.owner); if (!p || p.out) return true; if (pr.h && TILES[i].type !== 'city') return true; if (pr.h && pr.mort) return true;
-        if (TILES[i].type === 'city') { const hs = GROUPS[TILES[i].group].tiles.map(j => s.props[j] ? s.props[j].h : 0); if (Math.max(...hs) - Math.min(...hs) > 1) return true; } return false; });
-    if (bad) { st.inv++; if (st.inv < 4) console.log('BẤT BIẾN SAI', s.stage, s.players.map(p => p.cash)); break; }
+        if (TILES[i].type === 'city' && s.opts.freeBuild === false && !s.opts.buyback) { /* xây đều tay chỉ bắt buộc ở luật cổ điển; mua lại đất có thể tách nhóm đang có nhà */ const hs = GROUPS[TILES[i].group].tiles.map(j => s.props[j] ? s.props[j].h : 0); if (Math.max(...hs) - Math.min(...hs) > 1) return true; } return false; });
+    if (bad) { st.inv++; if (st.inv < 4) console.log('BẤT BIẾN SAI', s.stage, JSON.stringify(s.opts), s.players.map(p => p.cash + (p.out ? 'x' : '')), JSON.stringify(s.props), JSON.stringify(a)); break; }
   }
   if (s.phase === 'playing' && k >= 30000) { st.stuck++; if (st.stuck < 4) console.log('QUÁ DÀI', s.round, JSON.stringify(opts)); }
   st.games++; st.actions += k; st.rounds += s.round; st.maxRounds = Math.max(st.maxRounds, s.round);

@@ -205,3 +205,9 @@ input:focus{border-color:var(--acc)}
 @media (max-width:420px){.timer .tn{display:none}}
 .modal-box h2{padding:0 38px}
 .why{display:block;width:100%;font-size:12px;color:#b3261e;margin-top:2px}
+
+/* rà soát: nút chính không bẻ chữ, nút phụ (Phá sản) không chiếm cả hàng, nút Bắt đầu luôn thấy, ô tiền giao dịch */
+.act .btns .btn.main{white-space:nowrap;min-width:max-content}
+.act .btns .btn.tiny{flex:0 0 auto}
+#btn-start{position:sticky;bottom:10px;z-index:3}
+.tr-col label:has(.inp){white-space:nowrap}.tr-col label .inp{flex:1;width:auto;min-width:0}

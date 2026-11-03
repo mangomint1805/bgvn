@@ -1,5 +1,5 @@
 // Hình vẽ tay 100% bằng SVG: cảnh làng quê (đình, rặng tre, cây đa, nhà tranh), lá vai, mặt sau lá (hoa văn trống đồng).
-import { ROLES } from './engine.js?v=1';
+import { ROLES } from './engine.js?v=2';
 
 // ngẫu nhiên có hạt giống – để cảnh vẽ ra lần nào cũng giống nhau
 function seeded(seed) { let x = seed >>> 0; return () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; }
@@ -198,7 +198,7 @@ export function cardBackSVG(cls = '') {
     </g>
     <circle cx="100" cy="128" r="18" fill="#f5e6c8" opacity=".95"/>
     <path d="M90 136l3-10 4 4 3-8 3 8 4-4 3 10z" fill="#141a33"/>
-    <text x="100" y="250" text-anchor="middle" class="rc-name" fill="#c9a94f">MA SÓI</text>
+    <text x="100" y="250" text-anchor="middle" class="rc-name" fill="#c9a94f">VAI BÍ MẬT</text>
   </svg>`;
 }
 export const roleChip = r => ROLES[r] ? `<span class="rchip" style="--c:${ROLES[r].color}">${ROLES[r].emoji} ${ROLES[r].name}</span>` : '';
