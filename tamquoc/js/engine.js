@@ -2,7 +2,7 @@
 // Mô hình: "ngăn xếp tác vụ" (s.stack). Mỗi tác vụ {k, stage, ...} được xử lý ở đỉnh ngăn xếp;
 // tác vụ cần người chơi quyết định thì gắn t.ask = {type, players:[...], ...} rồi chờ applyAction.
 // Tác vụ con trả kết quả qua s.ret cho tác vụ cha (cha đọc ngay khi được chạy lại).
-import { buildDeck, deckSize, CARD_INFO, GENERALS, LORD_IDS, SKILLS, ROLES, rolesFor, cardLabel, cardName, isRed, isBlack, SUIT_SYMBOL, SUIT_NAME, rankLabel, DECK_SIZE } from './cards.js?v=5';
+import { buildDeck, deckSize, CARD_INFO, GENERALS, LORD_IDS, SKILLS, ROLES, rolesFor, cardLabel, cardName, isRed, isBlack, SUIT_SYMBOL, SUIT_NAME, rankLabel, DECK_SIZE } from './cards.js?v=6';
 
 let rand = Math.random;
 export function setRandom(fn) { rand = fn; }

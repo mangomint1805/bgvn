@@ -2,9 +2,9 @@
 //   createGame(players, opts, now) · applyAction(state, pid, action, now) -> {ok, reason}
 //   viewFor(state, pid, now) · tick(state, now) -> true nếu state đổi
 // Hai chế độ: 'guess' (đoán hình kiểu skribbl) và 'gartic' (Tam sao thất bản – chuyền câu ↔ hình).
-import { isMatch, isNear, leaks, maskWord, letterIdx, wordLens } from './match.js?v=3';
-import { buildPool, parseCustom, randomPrompt, DEFAULT_CATS, CATS } from './words.js?v=3';
-import { cleanOps, pushOp, opsBytes, simplifyOps } from './ops.js?v=3';
+import { isMatch, isNear, leaks, maskWord, letterIdx, wordLens } from './match.js?v=4';
+import { buildPool, parseCustom, randomPrompt, DEFAULT_CATS, CATS } from './words.js?v=4';
+import { cleanOps, pushOp, opsBytes, simplifyOps } from './ops.js?v=4';
 
 let R = Math.random;
 export function setRandom(f) { R = f || Math.random; }
@@ -15,13 +15,38 @@ const rid = () => Math.floor(R() * 36 ** 6).toString(36);
 
 export const CHOOSE_MS = 15000, TURN_END_MS = 6000, GRACE_MS = 2000, OFF_SKIP_MS = 8000, OFF_GARTIC_MS = 10000, CHAT_MAX = 60;
 export const REACTS = ['😂', '🔥', '💀', '😍', '👏'];
-export const DEFAULT_OPTS = { mode: 'guess', rounds: 3, drawTime: 80, textTime: 40, cats: DEFAULT_CATS.slice(), custom: [], onlyCustom: false };
+export const DEFAULT_OPTS = { mode: 'guess', gmode: 'normal', rounds: 3, drawTime: 80, textTime: 40, cats: DEFAULT_CATS.slice(), custom: [], onlyCustom: false, cSteps: 6, cTime: 60, cKinds: ['text', 'draw', 'text', 'draw', 'text', 'draw'] };
+// Các chế độ Tam sao thất bản (kiểu Gartic Phone). max: số người tối đa của chế độ.
+export const GMODES = {
+  normal: { icon: '📞', name: 'Bình thường', desc: 'Viết câu → vẽ lại → đoán lại… chuyền vòng tròn, cuối ván chiếu lại cười xỉu.' },
+  speed: { icon: '⚡', name: 'Tốc chiến', desc: 'Y như Bình thường nhưng đồng hồ mỗi bước ngắn hơn hẳn – vẽ nhanh như chớp!' },
+  knockoff: { icon: '👀', name: 'Nhìn trộm', desc: 'Sau câu đầu chỉ có vẽ: mỗi người được nhìn hình trước vài giây rồi bị che, vẽ lại theo trí nhớ, càng về sau càng ít giờ.' },
+  sandwich: { icon: '🥪', name: 'Bánh mì kẹp', desc: 'Chỉ viết ở đầu và cuối, khúc giữa toàn chép lại hình người trước (xem thoáng qua) – xem câu cuối lệch câu gốc bao xa.' },
+  secret: { icon: '🙈', name: 'Vẽ mù', desc: 'Đề bị che dần sau vài giây và khung vẽ giấu luôn nét của bạn khi đang vẽ – vẽ mù, đồng hồ nhanh.' },
+  complement: { icon: '🖍️', name: 'Vẽ tiếp', desc: 'Bước đầu ai cũng vẽ vài nét bậy thật nhanh, người sau vẽ tiếp lên đó (nét cũ giữ làm nền, không xoá được), cuối ván mở cả tác phẩm.' },
+  icebreaker: { icon: '🧊', name: 'Phá băng', desc: 'Mỗi người viết 1 câu hỏi, rồi cả bọn lần lượt vẽ câu trả lời cho các câu hỏi đó – giấu tới cuối mới chiếu ra để bàn tán.' },
+  animation: { icon: '🎞️', name: 'Hoạt hình', desc: 'Mỗi bước vẽ 1 khung hình, thấy mờ khung trước để vẽ tiếp; cuối ván chiếu thành ảnh động, tải về GIF.' },
+  background: { icon: '🏞️', name: 'Phông nền', desc: 'Như Hoạt hình nhưng khung đầu là phông nền cố định, mọi khung sau vẽ đè lên phông đó.' },
+  solo: { icon: '🧑‍🎨', name: 'Một mình', desc: 'Tự vẽ một đoạn hoạt hình 5 khung (thấy mờ khung trước) – chơi một mình cũng được, không cần mạng.' },
+  score: { icon: '🏆', name: 'Chấm điểm', desc: 'Như Bình thường, lúc chiếu lại cả bọn bấm 👍/👎 xem từng bước có khớp bước trước không; chuỗi giữ được ý gốc ăn thêm điểm.' },
+  crowd: { icon: '🎉', name: 'Đông vui', desc: 'Cho phòng đông tới 30 người: mỗi chuỗi chỉ đi qua vài người, ít bước hơn, đồng hồ nhanh hơn.', max: 30 },
+  custom: { icon: '🛠️', name: 'Tuỳ chỉnh', desc: 'Chủ phòng tự chọn số bước, thời gian mỗi bước và kiểu từng bước (viết / vẽ / khung hoạt hình).' },
+};
+export const GMODE_KEYS = Object.keys(GMODES);
+export const MAX_NORMAL = 12, MAX_CROWD = 30;
+export const maxPlayers = o => o && o.mode === 'gartic' && o.gmode === 'crowd' ? MAX_CROWD : MAX_NORMAL;
+const CKINDS = ['text', 'draw', 'frame'];
 const clamp = (v, lo, hi, d) => { v = Math.round(+v); return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; };
 export function cleanOpts(o = {}) {
   const custom = parseCustom(o.custom || []);
   const cats = Array.isArray(o.cats) ? o.cats.filter(k => CATS[k]) : DEFAULT_CATS.slice();
+  const cSteps = clamp(o.cSteps, 2, 20, 6);
+  const ck = Array.isArray(o.cKinds) ? o.cKinds : [];
+  const cKinds = Array.from({ length: cSteps }, (_, i) => CKINDS.includes(ck[i]) ? ck[i] : i % 2 ? 'draw' : 'text');
   return {
     mode: o.mode === 'gartic' ? 'gartic' : 'guess',
+    gmode: GMODES[o.gmode] ? o.gmode : 'normal',
+    cSteps, cKinds, cTime: Math.round(clamp(o.cTime, 10, 180, 60) / 5) * 5,
     rounds: clamp(o.rounds, 1, 10, 3),
     drawTime: Math.round(clamp(o.drawTime, 30, 180, 80) / 5) * 5,
     textTime: clamp(o.textTime, 20, 90, 40),
@@ -149,32 +174,86 @@ function tickGuess(s, now) {
 }
 
 // ======================= TAM SAO THẤT BẢN =======================
-export const stepKind = k => k === 0 ? 'write' : k % 2 ? 'draw' : 'guess';
+// Mỗi ván có một "kế hoạch" s.plan: mỗi bước 1 mô tả
+//   t: 'text' | 'draw' (người chơi nộp chữ hay hình) · role: kiểu bước (để giao diện hiện lời nhắc)
+//   src: 'prev' (đề là kết quả bước trước) | 'first' (đề là câu hỏi ở bước 0) | null (tự do)
+//   peek: ms được nhìn đề rồi bị che · mask: ms rồi che chữ đề (1 = che một phần, 2 = che hết qua maskKind)
+//   onion: thấy mờ khung trước · layer: nền khoá (bước trước, hoặc bg: phông ở bước 0) · blind: không thấy nét của mình · ms
+export const stepKind = k => k === 0 ? 'write' : k % 2 ? 'draw' : 'guess'; // (Bình thường – giữ cho tương thích)
+const sec = x => Math.round(x / 1000) * 1000;
+export function buildPlan(o, n) {
+  const D = o.drawTime * 1000, T = o.textTime * 1000, g = o.gmode;
+  const N = Math.max(n, 4);
+  const W = (ms = T) => ({ t: 'text', role: 'write', src: null, ms });
+  const DR = (ms = D, x = {}) => ({ t: 'draw', role: 'draw', src: 'prev', ms, ...x });
+  const GU = (ms = T) => ({ t: 'text', role: 'guess', src: 'prev', ms });
+  const alt = (len, d, t, x = {}) => Array.from({ length: len }, (_, k) => k === 0 ? W(t) : k % 2 ? DR(d, x.draw ? x.draw(k) : {}) : GU(t));
+  if (g === 'speed') return alt(N, Math.max(15000, sec(D * 0.4)), Math.max(10000, sec(T * 0.4)));
+  if (g === 'knockoff') return Array.from({ length: N }, (_, k) => k === 0 ? W() : k === 1 ? DR() : { t: 'draw', role: 'copy', src: 'prev', peek: 5000, ms: Math.max(15000, sec(D * Math.pow(0.82, k - 1))) });
+  if (g === 'sandwich') return Array.from({ length: N }, (_, k) => k === 0 ? W() : k === 1 ? DR() : k === N - 1 ? GU() : { t: 'draw', role: 'copy', src: 'prev', peek: 5000, ms: D });
+  if (g === 'secret') return alt(N, Math.max(20000, sec(D * 0.6)), Math.max(12000, sec(T * 0.7)), { draw: k => ({ blind: true, mask: 5000, maskAll: k % 4 === 3 }) });
+  if (g === 'complement') return Array.from({ length: N }, (_, k) => k === 0 ? { t: 'draw', role: 'doodle', src: null, ms: 10000 } : { t: 'draw', role: 'extend', src: 'prev', layer: true, ms: D });
+  if (g === 'icebreaker') return Array.from({ length: N }, (_, k) => k === 0 ? { t: 'text', role: 'question', src: null, ms: T } : { t: 'draw', role: 'answer', src: 'first', ms: D });
+  if (g === 'animation' || g === 'background') {
+    const F = Math.max(n, 6), fm = Math.max(20000, sec(D * 0.5));
+    return Array.from({ length: F }, (_, k) => k === 0 ? (g === 'background' ? { t: 'draw', role: 'bg', src: null, ms: D } : { t: 'draw', role: 'frame', src: null, ms: Math.max(fm, sec(D * 0.75)) })
+      : { t: 'draw', role: 'frame', src: 'prev', onion: !(g === 'background' && k === 1), layer: g === 'background', bg: g === 'background', ms: fm });
+  }
+  if (g === 'solo') return Array.from({ length: 5 }, (_, k) => ({ t: 'draw', role: 'frame', src: k ? 'prev' : null, onion: k > 0, ms: Math.max(30000, sec(D * 0.75)) }));
+  if (g === 'crowd') return alt(Math.max(4, Math.min(6, Math.ceil(n / 2))), Math.max(20000, sec(D * 0.7)), Math.max(12000, sec(T * 0.7)));
+  if (g === 'custom') {
+    const ms = o.cTime * 1000, out = [];
+    o.cKinds.forEach((kk, k) => {
+      const pv = out[k - 1];
+      if (kk === 'text') out.push(!pv ? W(ms) : pv.t === 'draw' ? GU(ms) : { t: 'text', role: 'retell', src: 'prev', ms });
+      else if (kk === 'draw') out.push(!pv ? { t: 'draw', role: 'free', src: null, ms } : pv.t === 'text' ? DR(ms) : { t: 'draw', role: 'copy', src: 'prev', ms });
+      else out.push({ t: 'draw', role: 'frame', src: pv ? 'prev' : null, onion: !!pv && pv.role === 'frame', ms });
+    });
+    return out;
+  }
+  return alt(N, D, T); // normal, score
+}
 function initGartic(s, now) {
   s.order = shuffle(s.players.map(p => p.id));
   const n = s.order.length;
-  s.steps = n >= 4 ? n : 4; s.step = 0;
+  s.gmode = s.opts.gmode; s.rot = s.gmode !== 'solo';
+  s.plan = buildPlan(s.opts, n); s.steps = s.plan.length; s.step = 0;
   s.book = s.order.map(() => Array(s.steps).fill(null));
-  s.reveal = null; s.reacts = {};
+  s.sugg = s.order.map(() => randomPrompt(rand));
+  s.reveal = null; s.reacts = {}; s.votes = {};
   s.phase = 'play'; s.deadline = now + stepMs(s, 0);
 }
-const stepMs = (s, k) => (stepKind(k) === 'draw' ? s.opts.drawTime : s.opts.textTime) * 1000;
-// Chuỗi c ở bước k do order[(c + k) % n] làm -> người i làm chuỗi (i - k) mod n
-export function chainFor(s, pid, k = s.step) { const i = s.order.indexOf(pid), n = s.order.length; return i < 0 ? -1 : ((i - k) % n + n) % n; }
+const stepMs = (s, k) => s.plan ? s.plan[k].ms : (stepKind(k) === 'draw' ? s.opts.drawTime : s.opts.textTime) * 1000;
+const descOf = (s, k) => s.plan ? s.plan[k] : stepKind(k) === 'draw' ? { t: 'draw', role: 'draw', src: 'prev' } : { t: 'text', role: stepKind(k), src: k ? 'prev' : null };
+// Chuỗi c ở bước k do order[(c + k) % n] làm -> người i làm chuỗi (i - k) mod n (chế độ Một mình: ai cũng làm chuỗi của mình)
+export function chainFor(s, pid, k = s.step) { const i = s.order.indexOf(pid), n = s.order.length; return i < 0 ? -1 : s.rot === false ? i : ((i - k) % n + n) % n; }
+// Hình "hiện ra" của ô (c,k): bước có nền khoá = nền + nét mới
+export function itemOps(s, c, k) {
+  const it = s.book[c][k]; if (!it || !it.d) return null;
+  const d = descOf(s, k); if (!d.layer) return it.d;
+  const base = d.bg ? (s.book[c][0] && s.book[c][0].d) || [] : itemOps(s, c, k - 1) || [];
+  return base.concat(it.d);
+}
+function baseFor(s, c, k) { const d = descOf(s, k); if (!d.layer || k === 0) return null; return d.bg ? (s.book[c][0] && s.book[c][0].d) || [] : itemOps(s, c, k - 1) || []; }
 function gDone(s, now) {
   return s.order.every(id => {
     const p = pl(s, id); return s.book[chainFor(s, id)][s.step] != null || (!p.on && now - p.offAt >= OFF_GARTIC_MS);
   });
 }
 function cleanText(t) { return String(t == null ? '' : t).replace(/\s+/g, ' ').trim().slice(0, 120); }
+// nét của riêng bước có nền khoá: bỏ phần trước lần "xoá hết" cuối (xoá hết chỉ xoá nét của mình)
+function ownOps(ops) { const list = []; for (const op of ops) pushOp(list, op); let i = -1; list.forEach((o, j) => { if (o.k === 'c') i = j; }); return list.slice(i + 1).filter(o => o.k !== 'c'); }
 function submit(s, pid, a, now) {
   if (s.phase !== 'play') return { ok: false, reason: 'Chưa tới lúc nộp' };
   if (a.step !== s.step) return { ok: false, reason: 'Bước này đã qua rồi' };
   const c = chainFor(s, pid); if (c < 0) return { ok: false, reason: 'Bạn không có trong ván' };
-  if (stepKind(s.step) === 'draw') {
+  const d = descOf(s, s.step);
+  if (d.t === 'draw') {
     let ops = cleanOps(a.ops);
-    if (opsBytes(ops) > 150000) ops = simplifyOps(ops, 140000);
-    if (opsBytes(ops) > 160000) return { ok: false, reason: 'Bức vẽ nặng quá, bớt nét chút nha' };
+    let lim = 150000;
+    if (d.layer) { ops = ownOps(ops); lim = Math.max(20000, 160000 - opsBytes(baseFor(s, c, s.step) || [])); }
+    if (opsBytes(ops) > lim) ops = simplifyOps(ops, lim - 8000);
+    if (opsBytes(ops) > lim + 10000) return { ok: false, reason: 'Bức vẽ nặng quá, bớt nét chút nha' };
     s.book[c][s.step] = { by: pid, d: ops };
   } else {
     const t = cleanText(a.text); if (!t) return { ok: false, reason: 'Viết gì đó đi nè ✍️' };
@@ -183,11 +262,12 @@ function submit(s, pid, a, now) {
   if (gDone(s, now)) advance(s, now);
   return { ok: true };
 }
+const QUESTIONS = ['Món ăn nào hợp với ngày mưa nhất?', 'Nếu được nghỉ 1 tháng bạn sẽ làm gì?', 'Siêu năng lực bạn muốn có?', 'Con vật giống bạn nhất?', 'Đi đâu chơi cuối tuần này?', 'Nghề nghiệp trong mơ hồi bé?', 'Thứ không thể thiếu khi đi du lịch?', 'Món quà sinh nhật tệ nhất có thể?'];
 function fillMissing(s) {
-  const k = s.step, kind = stepKind(k);
+  const k = s.step, d = descOf(s, k);
   s.order.forEach(id => {
     const c = chainFor(s, id, k); if (s.book[c][k]) return;
-    s.book[c][k] = kind === 'draw' ? { by: id, d: [], miss: 1 } : kind === 'write' ? { by: id, t: randomPrompt(rand), miss: 1 } : { by: id, t: '🤷 (không kịp đoán)', miss: 1 };
+    s.book[c][k] = d.t === 'draw' ? { by: id, d: [], miss: 1 } : d.role === 'write' ? { by: id, t: randomPrompt(rand), miss: 1 } : d.role === 'question' ? { by: id, t: QUESTIONS[ri(QUESTIONS.length)], miss: 1 } : { by: id, t: '🤷 (không kịp đoán)', miss: 1 };
   });
 }
 function advance(s, now) {
@@ -208,20 +288,50 @@ function nextReveal(s) {
   else if (r.c < s.order.length - 1) { r.c++; r.u = 0; }
   else s.phase = 'end';
 }
+function parseKey(s, key) { const m = /^(\d+):(\d+)$/.exec(String(key || '')); if (!m) return null; const c = +m[1], k = +m[2]; return c < s.order.length && k < s.steps ? [c, k] : null; }
 function react(s, pid, a) {
-  const m = /^(\d+):(\d+)$/.exec(String(a.key || '')); if (!m || !REACTS.includes(a.e)) return { ok: false, reason: 'Cảm xúc lạ quá' };
-  const c = +m[1], k = +m[2];
-  if (c >= s.order.length || k >= s.steps || !revealed(s, c, k)) return { ok: false, reason: 'Chưa lật tới đó' };
+  const ck = parseKey(s, a.key); if (!ck || !REACTS.includes(a.e)) return { ok: false, reason: 'Cảm xúc lạ quá' };
+  if (!revealed(s, ck[0], ck[1])) return { ok: false, reason: 'Chưa lật tới đó' };
   const box = s.reacts[a.key] = s.reacts[a.key] || {};
   const arr = box[a.e] = box[a.e] || [];
   const i = arr.indexOf(pid); if (i >= 0) arr.splice(i, 1); else arr.push(pid);
   return { ok: true, added: i < 0 };
 }
+// Chấm điểm: 👍 (khớp bước trước) / 👎 (lệch) cho từng bước từ bước 2 trở đi
+function vote(s, pid, a) {
+  if (s.gmode !== 'score') return { ok: false, reason: 'Chế độ này không chấm điểm' };
+  const ck = parseKey(s, a.key); if (!ck || ck[1] < 1) return { ok: false, reason: 'Không chấm ô này được' };
+  if (!revealed(s, ck[0], ck[1])) return { ok: false, reason: 'Chưa lật tới đó' };
+  const it = s.book[ck[0]][ck[1]]; if (!it || it.by === pid) return { ok: false, reason: 'Không tự chấm mình được 😜' };
+  const v = a.v === 1 ? 1 : a.v === -1 ? -1 : 0;
+  const box = s.votes[a.key] = s.votes[a.key] || {};
+  if (!v || box[pid] === v) delete box[pid]; else box[pid] = v;
+  return { ok: true };
+}
+export const VOTE_PTS = 100, CHAIN_BONUS = 200;
+// Bảng điểm chế độ Chấm điểm: +100 mỗi 👍 vào bước của mình; chuỗi giữ được ý gốc (câu cuối khớp câu đầu, hoặc mọi bước đều được 👍 nhiều hơn 👎) thì mọi người góp mặt +200
+export function garticScores(s) {
+  const pts = Object.fromEntries(s.players.map(p => [p.id, 0])), kept = [];
+  s.book.forEach((chain, c) => {
+    let allUp = true, anyVote = false;
+    for (let k = 1; k < s.steps; k++) {
+      const box = s.votes[c + ':' + k] || {}, vs = Object.values(box); const up = vs.filter(x => x > 0).length, dn = vs.length - up;
+      if (vs.length) anyVote = true; if (up <= dn) allUp = false;
+      const it = chain[k]; if (it && pts[it.by] != null) pts[it.by] += up * VOTE_PTS;
+    }
+    const first = chain[0], last = chain[s.steps - 1];
+    const same = first && last && first.t && last.t && !last.miss && (isMatch(last.t, first.t) || isNear(last.t, first.t));
+    const ok = same || (anyVote && allUp);
+    kept.push(!!ok);
+    if (ok) for (const id of new Set(chain.filter(Boolean).map(it => it.by))) if (pts[id] != null) pts[id] += CHAIN_BONUS;
+  });
+  return { pts, kept };
+}
 // Toàn bộ album (gửi riêng cho máy khách khi bắt đầu chiếu lại)
 export function bookItems(s) {
   if (s.mode !== 'gartic') return [];
   const out = [];
-  s.book.forEach((chain, c) => chain.forEach((it, k) => { if (it) out.push({ key: c + ':' + k, by: it.by, ...(it.d ? { d: it.d } : { t: it.t }), ...(it.miss ? { miss: 1 } : {}) }); }));
+  s.book.forEach((chain, c) => chain.forEach((it, k) => { if (it) out.push({ key: c + ':' + k, by: it.by, ...(it.d ? { d: itemOps(s, c, k) } : { t: it.t }), ...(it.miss ? { miss: 1 } : {}) }); }));
   return out;
 }
 
@@ -243,6 +353,7 @@ export function applyAction(s, pid, a, now = Date.now()) {
   } else {
     if (a.type === 'submit') return submit(s, pid, a, now);
     if (a.type === 'react') return react(s, pid, a);
+    if (a.type === 'vote') return vote(s, pid, a);
     if (a.type === 'next') {
       if (pid !== s.host) return { ok: false, reason: 'Chỉ chủ phòng bấm tiếp được' };
       if (s.phase !== 'reveal') return { ok: false, reason: 'Chưa tới lúc chiếu' };
@@ -304,15 +415,29 @@ export function viewFor(s, pid, now = Date.now()) {
   } else {
     const n = s.order.length;
     Object.assign(v, {
-      step: s.step, steps: s.steps, kind: s.phase === 'play' ? stepKind(s.step) : null,
+      gmode: s.gmode || 'normal', plan: Array.from({ length: s.steps }, (_, k) => descOf(s, k).role), rot: s.rot !== false,
+      step: s.step, steps: s.steps, kind: s.phase === 'play' ? descOf(s, s.step).role : null,
       total: s.phase === 'play' ? stepMs(s, s.step) : 0,
       chains: s.order.slice(),
       players: s.players.map(p => ({ id: p.id, name: p.name, on: p.on, done: s.phase !== 'play' || (s.order.includes(p.id) && s.book[chainFor(s, p.id)][s.step] != null) })),
       reveal: s.reveal ? { ...s.reveal } : null,
     });
     if (s.phase === 'play' && s.order.includes(pid)) {
-      const c = chainFor(s, pid), prev = s.step > 0 ? s.book[c][s.step - 1] : null;
-      v.task = { c, kind: stepKind(s.step), done: s.book[c][s.step] != null, prompt: prev ? (prev.d ? { d: prev.d } : { t: prev.t }) : null };
+      const k = s.step, c = chainFor(s, pid), d = descOf(s, k);
+      const src = d.src === 'first' ? s.book[c][0] : d.src === 'prev' && k > 0 ? s.book[c][k - 1] : null;
+      const desc = { t: d.t, role: d.role }; for (const f of ['peek', 'mask', 'maskAll', 'onion', 'layer', 'blind']) if (d[f]) desc[f] = d[f];
+      v.task = { c, kind: d.t === 'text' && d.role !== 'write' && d.role !== 'question' && d.role !== 'retell' ? 'guess' : d.t === 'text' ? 'write' : 'draw', role: d.role, desc, done: s.book[c][k] != null,
+        prompt: src ? (src.d ? { d: d.src === 'first' ? src.d : itemOps(s, c, k - 1) } : { t: src.t }) : null };
+      if (d.layer) v.task.base = baseFor(s, c, k);
+      if (d.onion && k > 0 && s.book[c][k - 1] && s.book[c][k - 1].d) v.task.onion = s.book[c][k - 1].d;
+      if (d.layer || d.onion) delete v.task.prompt; // khung trước đã hiện qua nền / lớp mờ
+      if (!d.src && d.t === 'draw') v.task.sugg = s.sugg[c];
+      if (s.rot === false) v.task.frame = k + 1;
+    }
+    if (s.gmode === 'score' && (s.phase === 'reveal' || s.phase === 'end')) {
+      v.votes = {};
+      for (const [key, box] of Object.entries(s.votes)) { const [c, k] = key.split(':').map(Number); if (!revealed(s, c, k)) continue; const vs = Object.values(box); v.votes[key] = { up: vs.filter(x => x > 0).length, down: vs.filter(x => x < 0).length, mine: box[pid] || 0 }; }
+      const sc = garticScores(s); v.scores = sc.pts; v.kept = sc.kept.map((x, c) => s.phase === 'end' || c < s.reveal.c ? x : null);
     }
     if (s.phase === 'reveal' || s.phase === 'end') {
       v.reacts = {};

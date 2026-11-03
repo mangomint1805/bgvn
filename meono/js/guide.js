@@ -1,7 +1,7 @@
 // Hướng dẫn luật Mèo Nổ (tiếng Việt)
-import { cardHTML } from './cards.js?v=5';
-import { CARD } from './engine.js?v=5';
-const row = items => `<div class="cards-row">${items.map(([t, txt]) => `<div>${cardHTML({ t }, 'sm')}<span><b>${CARD[t].name}</b>: ${txt}</span></div>`).join('')}</div>`;
+import { cardHTML } from './cards.js?v=6';
+import { CARD } from './engine.js?v=6';
+const row = items => `<div class="cards-row">${items.map(([t, txt]) => `<div>${cardHTML({ t }, 'sm')}<span><b>${CARD[t].name}</b> <i class="en">(${CARD[t].en})</i>: ${txt}</span></div>`).join('')}</div>`;
 
 export function openGuide(openModal) {
   const tabs = {
@@ -30,6 +30,8 @@ export function openGuide(openModal) {
         ['nope', 'huỷ hành động vừa đánh (xem tab ĐÉO!).'],
       ])}
       <h3>Mèo thường (5 loại)</h3>${row([['cat1', 'không có tác dụng riêng.'], ['cat2', 'đánh đôi / bộ ba.'], ['cat3', 'đánh đôi / bộ ba.'], ['cat4', 'đánh đôi / bộ ba.'], ['cat5', 'đánh đôi / bộ ba.']])}
+      <p>🐾 Mèo thường có dấu <b>🐾×2</b> ở góc phải: chỉ có tác dụng khi <b>đánh theo cặp</b> (đôi / bộ ba cùng loại). Tên tiếng Anh trong ngoặc là tên lá tương ứng ở game gốc <i>Exploding Kittens</i> (chỉ để tham chiếu).</p>
+      <p>💡 <b>Bấm giữ</b> (điện thoại) hoặc <b>chuột phải</b> vào lá trên tay để xem lá to và tác dụng; bấm chồng bỏ để xem lá vừa đánh.</p>
       <p>Chủ phòng có thể tắt <b>Cải Mệnh</b> và <b>Móc Đáy</b> trong sảnh để chơi bản cơ bản.</p>`],
     combo: ['🙅 Combo & ĐÉO!', () => `
       <h3>Combo mèo</h3><ul>

@@ -1,5 +1,5 @@
 // Bot Mèo Nổ: chỉ dùng thông tin hợp lệ (bài mình, lá đã soi, số bom/số lá công khai).
-import { getPlayer, current, alive, validPeek, bombsLeft, isCat, CATS, validTargets } from './engine.js?v=5';
+import { getPlayer, current, alive, validPeek, bombsLeft, isCat, CATS, validTargets } from './engine.js?v=6';
 
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const VALUE = { defuse: 100, nope: 40, attack: 35, skip: 30, alter: 28, future: 25, bottom: 22, shuffle: 18, favor: 15 };

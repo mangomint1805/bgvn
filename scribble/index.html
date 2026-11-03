@@ -9,7 +9,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='8' y='8' width='84' height='84' rx='20' fill='%23fff8e8' stroke='%231f2340' stroke-width='7'/><path d='M22 68c10-24 22-38 30-30s-10 26 4 26 18-30 24-40' fill='none' stroke='%23ef2b3a' stroke-width='9' stroke-linecap='round'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@500;600;700;800&family=Patrick+Hand&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/scribble.css?v=3">
+<link rel="stylesheet" href="css/scribble.css?v=4">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
 </head>
 <body>
@@ -39,7 +39,7 @@
     <div class="btn-col">
       <button class="btn big pri" id="btn-create">✨ Tạo phòng online</button>
       <div class="join-row"><input id="join-code" maxlength="5" placeholder="MÃ PHÒNG" autocomplete="off" aria-label="Mã phòng"><button class="btn" id="btn-join">Vào</button></div>
-      <button class="btn big ghost" id="btn-practice">✏️ Vẽ thử một mình</button>
+      <div class="solo-row"><button class="btn ghost" id="btn-practice">✏️ Vẽ thử</button><button class="btn ghost" id="btn-solo" title="Tự vẽ 5 khung hoạt hình, không cần mạng">🧑‍🎨 Hoạt hình 1 mình</button></div>
     </div>
     <div class="home-tools">
       <button class="chip" id="btn-guide-home">📖 Hướng dẫn</button>
@@ -138,6 +138,6 @@
 <div class="snd-pop" id="snd-pop" hidden><button class="chip" id="sp-sfx">🔊 Hiệu ứng</button><button class="chip" id="sp-music">🎵 Nhạc nền</button></div>
 <div class="toast" id="toast" role="status"></div>
 <div id="fx-layer"></div>
-<script type="module" src="js/main.js?v=3"></script>
+<script type="module" src="js/main.js?v=4"></script>
 </body>
 </html>

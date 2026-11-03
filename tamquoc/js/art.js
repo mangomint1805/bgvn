@@ -1,11 +1,11 @@
 // Hình lá bài & chân dung: tranh cổ thuộc phạm vi công cộng (Wikimedia Commons, xem img/CREDITS.md) trong img/,
 // đè lên lớp SVG tự vẽ (khung màu theo nước, chữ Hán thư pháp, vật biểu tượng) – ảnh lỗi thì tự rơi về SVG.
-import { GENERALS, KINGDOMS, CARD_INFO, SUIT_SYMBOL, rankLabel, cardName, isRed, infoOf, artKey } from './cards.js?v=5';
-import { IMG } from './images.js?v=5';
-import { weaponSVG } from './weapons.js?v=5';
+import { GENERALS, KINGDOMS, CARD_INFO, SUIT_SYMBOL, rankLabel, cardName, isRed, infoOf, artKey } from './cards.js?v=6';
+import { IMG } from './images.js?v=6';
+import { weaponSVG } from './weapons.js?v=6';
 // biểu tượng nhỏ: binh khí/trang bị vẽ SVG đúng hình, còn lại emoji
 export function emoOf(type) { const w = weaponSVG(type, 'wi'); return w || (CARD_INFO[type] ? CARD_INFO[type].emo : ''); }
-const imgTag = (key, cls) => IMG[key] ? `<img class="${cls}" src="img/${key}.jpg?v=5" alt="" draggable="false" loading="lazy" style="object-position:${IMG[key].pos || '50% 30%'}" onerror="this.remove()">` : '';
+const imgTag = (key, cls) => IMG[key] ? `<img class="${cls}" src="img/${key}.jpg?v=6" alt="" draggable="false" loading="lazy" style="object-position:${IMG[key].pos || '50% 30%'}" onerror="this.remove()">` : '';
 
 let uid = 0;
 // mây cát tường (tường vân) – nét cuộn đơn giản
@@ -56,6 +56,11 @@ const ICONS = {
   bagua: '<i class="ic red">♥♦</i><i class="ic">=💨</i>', renwang: '<i class="ic">♠♣🚫</i>', plus: '<i class="ic">🐎+1</i>', minus: '<i class="ic">🏇−1</i>',
 };
 export function iconsFor(type) { const i = CARD_INFO[type]; if (ICONS[type]) return ICONS[type]; if (i.kind === 'weapon') return RNG(i.range); return ''; }
+// tên gọi tắt quen miệng (hiện trên tay bài điện thoại – lá nhỏ); bấm giữ lá vẫn xem tên đầy đủ
+const SHORT = { wuzhong: 'Vô trung', guohe: 'Quá hà', shunshou: 'Thuận thủ', nanman: 'Nam man', wanjian: 'Vạn tiễn', taoyuan: 'Đào viên', wugu: 'Ngũ cốc',
+  jiedao: 'Tá đao', wuxie: 'Vô giải', tiesuo: 'Liên hoàn', lebu: 'Lạc bất', bingliang: 'Binh lương', zhuge: 'Liên nỏ', cixiong: 'Song kiếm', qinggang: 'Thanh cương',
+  hanbing: 'Băng phách', qinglong: 'Thanh long', zhangba: 'Xà mâu', guanshi: 'Quán thạch', fangtian: 'Hoạ kích', qilin: 'Kỳ lân', zhuque: 'Vũ phiến', guding: 'Cổ đĩnh',
+  bagua: 'Bát quái', renwang: 'Nhân vương', baiyin: 'Sư tử' };
 export function cardHTML(c, size = '', extra = '') {
   if (!c) return backHTML(size);
   const info = infoOf(c); const red = isRed(c); const key = artKey(c);
@@ -63,7 +68,7 @@ export function cardHTML(c, size = '', extra = '') {
     <div class="ctop"><span class="idx${red ? ' red' : ''}">${rankLabel(c.rank)}${SUIT_SYMBOL[c.suit]}</span><span class="ktag">${info.kind === 'weapon' ? 'Tầm ' + info.range : KIND_TAG[info.kind]}</span></div>
     <div class="art">${weaponSVG(key, 'wart') || imgTag('c-' + key, 'cimg')}<span class="han">${info.han}</span><span class="emo">${info.emo}</span></div>
     <div class="cicons">${iconsFor(key)}</div>
-    <div class="cname">${cardName(c)}</div></div>`;
+    <div class="cname${SHORT[c.type] && !c.v ? ' hs' : ''}"><span class="cn-full">${cardName(c)}</span>${SHORT[c.type] && !c.v ? `<span class="cn-short">${SHORT[c.type]}</span>` : ''}</div></div>`;
 }
 export function backHTML(size = '') { return `<div class="qcard back ${size}"><div class="back-in"><span>殺</span></div></div>`; }
 // chip nhỏ cho trang bị / phán định

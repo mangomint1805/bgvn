@@ -656,3 +656,36 @@ input#name,.join-row input{background:#fbf5e6;border-color:#b89a62;border-radius
 .center.tight2 .phases{display:none}.center.tight2 .prompt .ps{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .hero-g{--x:calc(var(--i,0) * 36px)}
 @media (max-width:400px){.hero-g{--x:calc(var(--i,0) * 27px)}.hero-c{left:0}.hero-c.r{right:0}}
+/* ---- rà soát 11/2026: tay bài điện thoại đọc được (tên tắt, chữ ≥10px), màn ngang điện thoại ---- */
+.qcard .cn-short{display:none}
+@media (max-width:760px),(max-height:500px){
+  .hand .qcard .ktag,.hand .qcard .cicons{display:none}
+  .hand .qcard .ctop{padding:calc(var(--cw)*.05) calc(var(--cw)*.06) 0}
+  .hand .qcard .idx{font-size:max(12px,calc(var(--cw)*.2))}
+  .hand .qcard .cname{font-size:max(10.5px,calc(var(--cw)*.16));line-height:1.08;letter-spacing:-.1px;padding:3px 1px 4px;min-height:0}
+  .hand .qcard .cname.hs .cn-full{display:none}
+  .hand .qcard .cn-short{display:block}
+  .hand .qcard .art .cimg~.han,.hand .qcard .art .wart~.han{font-size:max(12px,calc(var(--cw)*.22))}
+  .hand.ovl .qcard .cname{justify-items:start;text-align:left;padding-left:3px}
+  .hand.ovl .qcard:last-child .cname{justify-items:center;text-align:center;padding-left:1px}
+}
+/* điện thoại xoay ngang: khu "của tôi" nằm 1 hàng, nhường chỗ cho bàn */
+@media (max-height:500px) and (min-width:600px){
+  .topbar{min-height:40px;padding:3px 8px;gap:6px}
+  .topbar .chip.ic{width:34px;height:34px;font-size:15px}
+  .tb-logo{display:none}
+  .table-wrap{padding:2px 4px 0}
+  .me{grid-template-columns:minmax(190px,26%) 1fr;gap:6px;padding:2px 6px 4px;align-items:end}
+  .me-info{grid-template-columns:40px 1fr;grid-template-areas:'ava id' 'sk sk' 'zone zone';padding:4px 6px;gap:3px 6px}
+  .me-ava{width:40px;height:40px}
+  .me-id .pname{font-size:13px}.me-id .gname{font-size:11.5px}
+  .me-skills{flex-direction:row;align-items:center}
+  .me-zone .muted{display:none}
+  .me-main{flex-direction:row;align-items:flex-end;gap:6px}
+  .me-main .actions{flex-direction:column;flex-wrap:nowrap;min-height:0;order:2;flex:none;max-width:150px}
+  .me-main .actions .btn{font-size:13px;padding:6px 9px;min-height:40px;width:100%}
+  .me-main .hand{flex:1;min-width:0;padding:10px 2px 0;min-height:0}
+  .felt{inset:6% 7% 3%}
+  .seat .gname{display:none}
+  .prompt .pt{font-size:12.5px}.prompt .ps{font-size:11px}
+}

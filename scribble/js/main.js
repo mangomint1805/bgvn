@@ -1,11 +1,12 @@
-import { Host, Client, MAX, loadSnapshot, session } from './net.js?v=3';
+import { Host, Client, MAX, maxPlayers, loadSnapshot, session } from './net.js?v=4';
 import { netStatus } from '../../shared/ui/status.js';
-import { Board, buildToolbar, opsToCanvas, W, H } from './draw.js?v=3';
-import { CATS, CAT_KEYS, DEFAULT_CATS, buildPool, randomPrompt, parseCustom } from './words.js?v=3';
-import { REACTS } from './engine.js?v=3';
-import { opsBytes, simplifyOps } from './ops.js?v=3';
-import * as fx from './fx.js?v=3';
-import { guideHTML } from './guide.js?v=3';
+import { Board, buildToolbar, opsToCanvas, W, H } from './draw.js?v=4';
+import { CATS, CAT_KEYS, DEFAULT_CATS, buildPool, randomPrompt, parseCustom } from './words.js?v=4';
+import { REACTS, GMODES, GMODE_KEYS } from './engine.js?v=4';
+import { encodeGif } from './gif.js?v=4';
+import { opsBytes, simplifyOps } from './ops.js?v=4';
+import * as fx from './fx.js?v=4';
+import { guideHTML } from './guide.js?v=4';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -88,6 +89,13 @@ function startHost() {
   show('screen-lobby');
 }
 $('#btn-create').onclick = startHost;
+// Hoạt hình một mình: chủ phòng không mạng, bắt đầu luôn
+$('#btn-solo').onclick = () => {
+  fx.actx(); fx.musicResumeIfOn();
+  if (net) net.leave();
+  net = new Host(myName(), handlers, null, true); isHost = true; myId = 'host';
+  net.setOpts({ mode: 'gartic', gmode: 'solo' }); net.start();
+};
 $('#btn-join').onclick = () => {
   const code = $('#join-code').value.trim().toUpperCase(); if (code.length < 5) { toast('Nhập mã phòng 5 ký tự nhé.'); return; }
   fx.actx(); fx.musicResumeIfOn();
@@ -120,17 +128,20 @@ let settingsKey = '', settingsPending = false;
 function renderLobby() {
   if (!lobby) return;
   const ps = lobby.players, o = lobby.opts;
-  $('#pcount').textContent = `${ps.length}/${MAX}`;
+  const mx = maxPlayers(o);
+  $('#pcount').textContent = `${ps.length}/${mx}`;
+  $('#code-box').style.display = net && net.offline ? 'none' : '';
   $('#plist').innerHTML = ps.map(p => `<li>${avatar(p.name)}<span class="nm">${esc(p.name)}${p.id === myId ? ' <small>(bạn)</small>' : ''}${p.id === 'host' ? ' 👑' : ''}${!p.connected ? ' <small>📴</small>' : ''}</span>${isHost && p.id !== 'host' ? `<button class="x" data-rm="${p.id}" aria-label="Mời ra">✕</button>` : ''}</li>`).join('');
   $$('#plist [data-rm]').forEach(b => b.onclick = () => net.removePlayer(b.dataset.rm));
   const online = ps.filter(p => p.connected).length;
-  $('#lobby-tip').innerHTML = online < 2 ? '👋 Cần ít nhất <b>2 người</b>. Gửi mã phòng hoặc bấm <b>Chép link mời</b> cho hội bạn nhé!' : `Đủ người rồi, quẩy thôi! (tối đa ${MAX} người)`;
+  const solo = o.mode === 'gartic' && o.gmode === 'solo', need = solo ? 1 : 2;
+  $('#lobby-tip').innerHTML = online < need ? '👋 Cần ít nhất <b>2 người</b>. Gửi mã phòng hoặc bấm <b>Chép link mời</b> cho hội bạn nhé! (Chỉ có mình bạn? Chọn Tam sao thất bản › <b>Một mình</b>.)' : online > mx ? `⚠️ Chế độ này tối đa <b>${mx} người</b> – chọn <b>🎉 Đông vui</b> để chơi tới ${MAX} người.` : `Đủ người rồi, quẩy thôi! (tối đa ${mx} người)`;
   $('#modes').innerHTML = Object.entries(MODE_INFO).map(([k, [t, d]]) => `<button class="mode ${o.mode === k ? 'on' : ''}" data-mode="${k}" ${isHost ? '' : 'disabled'}><b>${t}</b><small>${d}</small></button>`).join('');
   $$('#modes [data-mode]').forEach(b => b.onclick = () => net.setOpts({ mode: b.dataset.mode }));
   renderSettings();
   $('#btn-start').style.display = isHost ? '' : 'none';
-  $('#btn-start').textContent = online < 2 ? '▶ Bắt đầu (cần ≥ 2 người)' : `▶ Bắt đầu ${MODE_INFO[o.mode][0].slice(2)}`;
-  $('#btn-start').classList.toggle('dim', online < 2);
+  $('#btn-start').textContent = online < need ? '▶ Bắt đầu (cần ≥ 2 người)' : `▶ Bắt đầu ${o.mode === 'gartic' ? GMODES[o.gmode].icon + ' ' + GMODES[o.gmode].name : MODE_INFO[o.mode][0].slice(2)}`;
+  $('#btn-start').classList.toggle('dim', online < need || online > mx);
   $('#wait-msg').style.display = isHost ? 'none' : '';
 }
 function renderSettings() {
@@ -150,15 +161,30 @@ function renderSettings() {
     h += isHost ? `<textarea id="s-custom" rows="4" placeholder="Mỗi dòng 1 từ, ví dụ:&#10;Minto ngủ gật&#10;cà phê muối&#10;xe buýt số 19">${esc(o.custom.join('\n'))}</textarea>` : `<p class="hint-txt">${o.custom.length ? esc(o.custom.length + ' từ bí mật do chủ phòng thêm 🤫') : 'Chủ phòng chưa thêm từ riêng.'}</p>`;
     h += `<label class="check"><input type="checkbox" id="s-only" ${o.onlyCustom ? 'checked' : ''} ${isHost && o.custom.length >= 3 ? '' : 'disabled'}><span>Chỉ dùng từ riêng <small>(cần ≥ 3 từ)</small></span></label>`;
   } else {
-    h += slider('s-draw', 'Thời gian vẽ', o.drawTime, 30, 180, 10);
-    h += slider('s-text', 'Thời gian viết / đoán', o.textTime, 20, 90, 5);
-    h += `<p class="hint-txt">Mỗi người viết 1 câu, chuyền tay xen kẽ <b>vẽ ↔ đoán</b>. Có ${Math.max(4, lobby.players.length)} bước, ai cũng được góp mặt vào mọi chuỗi.</p>`;
+    const g = GMODES[o.gmode] || GMODES.normal;
+    h += `<h4>Kiểu chơi</h4><div class="gmodes">${GMODE_KEYS.map(k => `<button class="gm ${o.gmode === k ? 'on' : ''}" data-gm="${k}" ${dis} title="${esc(GMODES[k].desc)}"><i>${GMODES[k].icon}</i><span>${GMODES[k].name}</span></button>`).join('')}</div>
+      <p class="gm-desc"><b>${g.icon} ${g.name}:</b> ${esc(g.desc)}</p>`;
+    if (o.gmode === 'custom') {
+      const KN = { text: '✍️ Viết', draw: '🎨 Vẽ', frame: '🎞️ Khung' };
+      h += `<div class="set row"><span>Số bước</span><div class="stepper"><button class="tb" data-cs="-1" ${dis} aria-label="Bớt bước">−</button><b>${o.cSteps}</b><button class="tb" data-cs="1" ${dis} aria-label="Thêm bước">+</button></div></div>`;
+      h += slider('s-ctime', 'Thời gian mỗi bước', o.cTime, 10, 180, 5);
+      h += `<div class="ckinds">${o.cKinds.map((kk, i) => `<button class="ck k-${kk}" data-ck="${i}" ${dis} title="Bấm để đổi kiểu bước ${i + 1}"><small>${i + 1}</small>${KN[kk]}</button>`).join('')}</div><p class="hint-txt">Bấm từng ô để đổi: Viết → Vẽ → Khung hoạt hình. Viết sau hình = đoán hình, vẽ sau hình = chép lại, khung sau khung = thấy mờ khung trước.</p>`;
+    } else {
+      h += slider('s-draw', o.gmode === 'complement' ? 'Thời gian vẽ tiếp' : ['animation', 'background', 'solo'].includes(o.gmode) ? 'Thời gian vẽ (khung sau ngắn hơn)' : 'Thời gian vẽ', o.drawTime, 30, 180, 10);
+      if (!['complement', 'animation', 'background', 'solo'].includes(o.gmode)) h += slider('s-text', o.gmode === 'icebreaker' ? 'Thời gian viết câu hỏi' : 'Thời gian viết / đoán', o.textTime, 20, 90, 5);
+      if (['speed', 'secret', 'crowd', 'knockoff'].includes(o.gmode)) h += `<p class="hint-txt">⏱ Chế độ này tự rút ngắn đồng hồ so với số giây ở trên.</p>`;
+    }
+    const n = lobby.players.length;
+    h += `<p class="hint-txt">${o.gmode === 'solo' ? 'Mỗi người tự vẽ 5 khung hoạt hình của riêng mình.' : o.gmode === 'crowd' ? `Phòng ${n} người: mỗi chuỗi đi qua ${Math.max(4, Math.min(6, Math.ceil(n / 2)))} người.` : o.gmode === 'custom' ? `${o.cSteps} bước, mỗi bước ${o.cTime} giây.` : `Có ${['animation', 'background'].includes(o.gmode) ? Math.max(6, n) : Math.max(4, n)} bước, ai cũng được góp mặt vào mọi chuỗi.`}</p>`;
   }
   box.innerHTML = h;
   if (!isHost) return;
   $$('#settings [data-r]').forEach(b => b.onclick = () => net.setOpts({ rounds: o.rounds + +b.dataset.r }));
+  $$('#settings [data-gm]').forEach(b => b.onclick = () => { net.setOpts({ gmode: b.dataset.gm }); fx.sfx.pop(); });
+  $$('#settings [data-cs]').forEach(b => b.onclick = () => { const n = Math.max(2, Math.min(20, o.cSteps + +b.dataset.cs)); const ks = o.cKinds.slice(0, n); while (ks.length < n) ks.push(ks.length % 2 ? 'draw' : 'text'); net.setOpts({ cSteps: n, cKinds: ks }); });
+  $$('#settings [data-ck]').forEach(b => b.onclick = () => { const ks = o.cKinds.slice(), i = +b.dataset.ck, L = ['text', 'draw', 'frame']; ks[i] = L[(L.indexOf(ks[i]) + 1) % 3]; net.setOpts({ cKinds: ks }); });
   $$('#settings [data-cat]').forEach(b => b.onclick = () => { const k = b.dataset.cat; const cats = o.cats.includes(k) ? o.cats.filter(x => x !== k) : [...o.cats, k]; if (!cats.length && !o.custom.length) { toast('Chọn ít nhất 1 chủ đề nha'); return; } net.setOpts({ cats }); });
-  for (const [id, k] of [['s-draw', 'drawTime'], ['s-text', 'textTime']]) {
+  for (const [id, k] of [['s-draw', 'drawTime'], ['s-text', 'textTime'], ['s-ctime', 'cTime']]) {
     const el = $('#' + id); if (!el) continue;
     el.oninput = () => { $('#' + id + '-v').textContent = el.value + ' giây'; };
     el.onchange = () => net.setOpts({ [k]: +el.value });
@@ -190,7 +216,7 @@ setInterval(() => {
     if (urgent && secs > 0 && secs <= (g ? 10 : 5)) fx.sfx.tick();
     lastSec = secs;
   }
-  if (t) autoSubmit(left);
+  if (t) { autoSubmit(left); garticTick(); }
 }, 200);
 
 // ======================= ĐOÁN HÌNH =======================
@@ -319,9 +345,16 @@ $('#g-form').addEventListener('submit', e => {
 });
 
 // ======================= TAM SAO THẤT BẢN =======================
-let tBoard = null, tTools = null, tStepKey = null, tEditing = false, tKind = null, autoSent = {}, draftT;
+let tBoard = null, tTools = null, tStepKey = null, tEditing = false, tKind = null, autoSent = {}, draftT, tTask = null, tPeekShown = null, tMaskShown = null;
 const book = new Map(); let bookGid = null, bookAsked = 0;
-const KIND = { write: ['✍️', 'Viết câu'], draw: ['🎨', 'Vẽ'], guess: ['🤔', 'Đoán'] };
+// kiểu bước: [biểu tượng, nhãn, động từ trong album]
+const ROLE = {
+  write: ['✍️', 'Viết câu', 'viết'], guess: ['🤔', 'Đoán', 'đoán'], draw: ['🎨', 'Vẽ', 'vẽ'], copy: ['👀', 'Vẽ lại', 'vẽ lại'], question: ['❓', 'Đặt câu hỏi', 'hỏi'],
+  answer: ['💬', 'Vẽ câu trả lời', 'trả lời'], doodle: ['〰️', 'Vẽ bậy', 'vẽ bậy'], extend: ['🖍️', 'Vẽ tiếp', 'vẽ tiếp'], frame: ['🎞️', 'Khung hình', 'vẽ khung'],
+  bg: ['🏞️', 'Phông nền', 'vẽ phông'], retell: ['🔁', 'Viết lại', 'viết lại'], free: ['🎨', 'Vẽ tự do', 'vẽ'],
+};
+const roleOf = (v, k) => (v.plan && v.plan[k]) || (k === 0 ? 'write' : k % 2 ? 'draw' : 'guess');
+const QS = ['Món ăn tủ của bạn là gì?', 'Nếu trúng số 1 tỷ bạn làm gì đầu tiên?', 'Siêu năng lực bạn muốn có?', 'Con vật nào giống bạn nhất?', 'Cuối tuần này đi đâu chơi?', 'Hồi bé bạn mơ làm nghề gì?', 'Thứ không thể thiếu khi đi du lịch?', 'Món quà sinh nhật tệ nhất có thể?', 'Bạn sợ nhất con gì?', 'Nếu được đổi thân xác với ai 1 ngày?'];
 const DKEY = 'scribble-draft';
 function ensureTBoard() {
   if (tBoard) return;
@@ -335,18 +368,20 @@ function saveDraft() {
 }
 function loadDraft(k) { try { const d = JSON.parse(localStorage.getItem(DKEY)); return d && d.k === k ? d : null; } catch (e) { return null; } }
 $('#t-input').addEventListener('input', () => { clearTimeout(draftT); draftT = setTimeout(saveDraft, 400); });
-$('#t-dice').onclick = () => { $('#t-input').value = randomPrompt(); saveDraft(); fx.sfx.pop(); };
+$('#t-dice').onclick = () => { $('#t-input').value = tTask && tTask.role === 'question' ? QS[Math.floor(Math.random() * QS.length)] : randomPrompt(); saveDraft(); fx.sfx.pop(); };
+const stepElapsed = () => clock.total ? clock.total - Math.max(0, clock.end - Date.now()) : 0;
 function renderGartic(v, p) {
   if (!active('screen-gartic')) { closeModal(); show('screen-gartic'); }
   ensureTBoard();
   if (v.gid !== bookGid) { book.clear(); bookGid = v.gid; bookAsked = 0; revealDom = null; }
   setClock(v);
-  $('#t-cap').textContent = v.phase === 'play' ? `Bước ${v.step + 1}/${v.steps} · ${KIND[v.kind][1]}` : v.phase === 'reveal' ? '🎬 Chiếu lại' : '📚 Album cả ván';
-  $('#t-steps').innerHTML = Array.from({ length: v.steps }, (_, i) => { const k = i === 0 ? 'write' : i % 2 ? 'draw' : 'guess'; return `<i class="${v.phase !== 'play' || i < v.step ? 'done' : i === v.step ? 'cur' : ''}" title="${KIND[k][1]}">${KIND[k][0]}</i>`; }).join('');
+  const gm = GMODES[v.gmode] || GMODES.normal, R0 = ROLE[v.kind] || ROLE.write;
+  $('#t-cap').textContent = v.phase === 'play' ? `${gm.icon} Bước ${v.step + 1}/${v.steps} · ${R0[1]}` : v.phase === 'reveal' ? `${gm.icon} Chiếu lại` : `📚 Album · ${gm.name}`;
+  $('#t-steps').innerHTML = Array.from({ length: v.steps }, (_, i) => { const r = ROLE[roleOf(v, i)] || ROLE.write; return `<i class="${v.phase !== 'play' || i < v.step ? 'done' : i === v.step ? 'cur' : ''}" title="${r[1]}">${r[0]}</i>`; }).join('');
   const play = $('#t-play'), wait = $('#t-wait'), rev = $('#t-reveal');
   if (v.phase === 'play') {
-    rev.hidden = true;
-    const t = v.task;
+    rev.hidden = true; stopAnims();
+    const t = v.task; tTask = t;
     if (!t) { play.hidden = true; wait.hidden = false; wait.innerHTML = waitHTML(v, false); return; }
     const key = v.gid + ':' + v.step;
     if (key !== tStepKey) setupStep(v, t, key);
@@ -355,10 +390,11 @@ function renderGartic(v, p) {
     $('#screen-gartic').classList.toggle('is-drawer', !showWait && t.kind === 'draw');
     if (showWait) { wait.innerHTML = waitHTML(v, true); $('#t-edit').onclick = () => { tEditing = true; renderGartic(view, null); }; }
     $('#t-done').textContent = t.done ? 'Nộp lại ✓' : 'Xong ✓';
-    if (t.kind === 'draw') tBoard.setEditable(!showWait);
+    if (t.kind === 'draw') tBoard.setEditable(!showWait && !peeking());
     if (p && p.step === v.step) { const n = v.players.filter(x => x.done).length, n0 = p.players.filter(x => x.done).length; if (n > n0 && showWait) fx.sfx.pop(); }
+    garticTick();
   } else {
-    play.hidden = true; wait.hidden = true; rev.hidden = false; tBoard.setEditable(false); tStepKey = null;
+    play.hidden = true; wait.hidden = true; rev.hidden = false; tBoard.setEditable(false); tStepKey = null; tTask = null; hidePeek();
     $('#screen-gartic').classList.remove('is-drawer');
     if (!v.chains.every((_, c) => book.has(c + ':0')) && Date.now() - bookAsked > 4000) { bookAsked = Date.now(); net.needBook(); }
     renderReveal(v, p);
@@ -366,27 +402,67 @@ function renderGartic(v, p) {
 }
 function waitHTML(v, mine) {
   const done = v.players.filter(x => x.done).length;
+  const extra = v.task && v.task.desc && v.task.desc.blind ? '<p class="muted">🙈 Tranh vẽ mù của bạn sẽ được mở ra lúc chiếu lại.</p>' : '';
   return `<div class="wait-card"><div class="big-emo">${mine ? '✅' : '👀'}</div><h3>${mine ? 'Đã nộp! Ngồi chờ hội bạn nha' : 'Đang xem ván…'}</h3>
-    <p class="muted">${done}/${v.players.length} người xong</p>
+    <p class="muted">${done}/${v.players.length} người xong</p>${extra}
     <ul class="who">${v.players.map(x => `<li class="${x.done ? 'done' : ''} ${x.on ? '' : 'off'}">${avatar(x.name)}<span>${esc(x.name)}</span><b>${x.done ? '✓' : x.on ? '…' : '📴'}</b></li>`).join('')}</ul>
     ${mine ? '<button class="btn" id="t-edit">✏️ Sửa lại</button>' : ''}</div>`;
 }
+// che đề (Vẽ mù): giữ chữ cái đầu mỗi từ, hoặc che hết
+const maskText = (t, all) => all ? '❓❓❓' : String(t).split(' ').map(w => [...w][0] + '•'.repeat(Math.max(0, [...w].length - 1))).join(' ');
 function setupStep(v, t, key) {
-  tStepKey = key; tEditing = false; tKind = t.kind;
-  const d = loadDraft(key), pr = $('#t-prompt'), inp = $('#t-input');
-  const sg = $('#screen-gartic'); sg.dataset.kind = t.kind;
-  if (t.kind === 'write') {
-    pr.innerHTML = `<span class="emo">✍️</span><div><b>Viết một câu thật bá đạo</b><small>Người kế tiếp sẽ phải vẽ lại câu này 😈</small></div>`;
-    inp.value = d && d.text || ''; inp.placeholder = 'VD: Con mèo đang hát karaoke ở chợ Bến Thành';
-  } else if (t.kind === 'draw') {
-    pr.innerHTML = `<span class="emo">🎨</span><div><small>Vẽ lại câu này:</small><b class="q">“${esc(t.prompt ? t.prompt.t : '')}”</b></div>`;
-    tBoard.setOps(d && d.ops || []); tBoard.setEditable(true);
+  tStepKey = key; tEditing = false; tKind = t.kind; tPeekShown = null; tMaskShown = null; hidePeek();
+  const d = loadDraft(key), pr = $('#t-prompt'), inp = $('#t-input'), role = t.role || t.kind, ds = t.desc || {};
+  const sg = $('#screen-gartic'); sg.dataset.kind = t.kind; sg.dataset.role = role;
+  const q = x => `<b class="q">“${esc(x)}”</b>`, sugg = t.sugg ? `<small>💡 Bí ý tưởng? Thử: <i>${esc(t.sugg)}</i></small>` : '';
+  const H = {
+    write: `<span class="emo">✍️</span><div><b>Viết một câu thật bá đạo</b><small>Người kế tiếp sẽ phải vẽ lại câu này 😈</small></div>`,
+    question: `<span class="emo">❓</span><div><b>Đặt 1 câu hỏi cho cả bọn</b><small>Mọi người sẽ <b>vẽ</b> câu trả lời – giấu tới cuối ván mới chiếu 🤫</small></div>`,
+    retell: `<span class="emo">🔁</span><div><small>Viết lại câu này theo kiểu của bạn:</small>${q(t.prompt ? t.prompt.t : '')}</div>`,
+    guess: `<span class="emo">🤔</span><div><b>Người trước vẽ cái gì đây?</b><small>Đoán thành 1 câu nhé</small></div>`,
+    draw: `<span class="emo">🎨</span><div><small>Vẽ lại câu này:</small><span id="t-q">${q(t.prompt ? t.prompt.t : '')}</span>${ds.mask ? `<small id="t-qn">🙈 Đề sẽ bị che sau ${Math.round(ds.mask / 1000)} giây – nhìn nhanh!</small>` : ''}</div>`,
+    answer: `<span class="emo">💬</span><div><small>Vẽ câu trả lời của bạn cho câu hỏi:</small>${q(t.prompt ? t.prompt.t : '')}</div>`,
+    copy: `<span class="emo">👀</span><div><b>${ds.peek ? 'Nhìn kỹ rồi vẽ lại y chang!' : 'Chép lại hình này'}</b><small id="t-qn">${ds.peek ? `Chỉ được nhìn ${Math.round(ds.peek / 1000)} giây rồi bị che – vẽ theo trí nhớ` : 'Hình mẫu ở bên cạnh 👉'}</small></div>${!ds.peek && t.prompt && t.prompt.d ? '<div class="ref" id="t-ref"></div>' : ''}`,
+    doodle: `<span class="emo">〰️</span><div><b>Vẽ vài nét bậy thật nhanh!</b><small>Người sau sẽ vẽ tiếp lên đó 😈</small></div>`,
+    extend: `<span class="emo">🖍️</span><div><b>Vẽ tiếp lên tranh này</b><small>Nét cũ không xoá được – biến nó thành thứ gì đó hay ho!</small></div>`,
+    frame: t.onion ? `<span class="emo">🎞️</span><div><b>${t.frame ? `Khung ${t.frame}/5 – ` : ''}Vẽ khung kế tiếp</b><small>Khung trước hiện mờ – nhích từng chút cho thành chuyển động</small></div>`
+      : `<span class="emo">🎞️</span><div><b>${t.frame ? 'Khung 1/5 – ' : ''}${t.prompt && t.prompt.t ? 'Vẽ khung đầu cho câu này:' : 'Vẽ khung đầu tiên của đoạn hoạt hình'}</b>${t.prompt && t.prompt.t ? q(t.prompt.t) : sugg}</div>`,
+    bg: `<span class="emo">🏞️</span><div><b>Vẽ phông nền</b><small>Phông này giữ nguyên, mọi khung sau vẽ đè lên</small>${sugg}</div>`,
+    free: `<span class="emo">🎨</span><div><b>Vẽ gì cũng được!</b>${sugg}</div>`,
+  };
+  pr.innerHTML = H[role] || H.draw;
+  if (role === 'frame' && ds.layer && t.onion) pr.querySelector('small').textContent = 'Phông nền giữ nguyên, khung trước hiện mờ – vẽ nhân vật nhích dần';
+  const ref = $('#t-ref'); if (ref) ref.appendChild(opsToCanvas(t.prompt.d));
+  if (t.kind === 'draw') {
+    tBoard.setOnion(t.onion || null); tBoard.setBlind(!!ds.blind); tBoard.setBase(t.base || []);
+    $('#t-board').classList.toggle('blindwrap', !!ds.blind);
+    tBoard.setOps(d && d.ops || []); tBoard.setEditable(true); tTools.refresh();
   } else {
-    pr.innerHTML = `<span class="emo">🤔</span><div><b>Người trước vẽ cái gì đây?</b><small>Đoán thành 1 câu nhé</small></div>`;
-    tBoard.setOps(t.prompt && t.prompt.d || []); tBoard.setEditable(false);
-    inp.value = d && d.text || ''; inp.placeholder = 'Mình đoán là…';
+    tBoard.setOnion(null); tBoard.setBlind(false); tBoard.setBase([]); $('#t-board').classList.remove('blindwrap');
+    if (t.kind === 'guess') { tBoard.setOps(t.prompt && t.prompt.d || []); tBoard.setEditable(false); }
+    inp.value = d && d.text || '';
+    inp.placeholder = role === 'question' ? 'VD: Món ăn tủ của bạn là gì?' : role === 'write' ? 'VD: Con mèo đang hát karaoke ở chợ Bến Thành' : role === 'retell' ? 'Viết lại theo ý bạn…' : 'Mình đoán là…';
   }
-  if (v.step > 0) { fx.sfx.turn(); fx.banner(`${KIND[t.kind][0]} ${KIND[t.kind][1]}!`, 'blue'); }
+  if (v.step > 0) { fx.sfx.turn(); fx.banner(`${(ROLE[role] || ROLE.draw)[0]} ${(ROLE[role] || ROLE.draw)[1]}!`, 'blue'); }
+}
+// Nhìn trộm / Bánh mì kẹp: hiện hình mẫu che lên bảng vẽ trong vài giây đầu (tính theo đồng hồ của chủ phòng nên tải lại trang không được xem lại)
+const peeking = () => { const t = tTask; return !!(t && t.desc && t.desc.peek && t.prompt && t.prompt.d && stepElapsed() < t.desc.peek && !t.done); };
+function hidePeek() { const o = $('#t-peek'); if (o) o.remove(); }
+function garticTick() {
+  const t = tTask, v = view; if (!t || !v || v.phase !== 'play' || !tStepKey) return;
+  const ds = t.desc || {};
+  if (ds.peek && t.prompt && t.prompt.d) {
+    const left = ds.peek - stepElapsed();
+    if (left > 0 && !t.done) {
+      let o = $('#t-peek');
+      if (!o) { o = document.createElement('div'); o.id = 't-peek'; o.className = 'peek'; o.innerHTML = '<b class="cd"></b><small>Nhớ kỹ nhé! 👀</small>'; o.prepend(opsToCanvas(t.prompt.d)); $('#t-board').appendChild(o); tBoard.setEditable(false); tPeekShown = tStepKey; }
+      o.querySelector('.cd').textContent = Math.ceil(left / 1000);
+    } else if ($('#t-peek')) { hidePeek(); if (!t.done || tEditing) tBoard.setEditable(true); if (tPeekShown === tStepKey) { fx.sfx.pop(); toast('🙈 Hết giờ nhìn – vẽ theo trí nhớ!'); } $('#t-qn') && ($('#t-qn').textContent = 'Hình đã bị che – vẽ theo trí nhớ nhé 🧠'); }
+  }
+  if (ds.mask && t.prompt && t.prompt.t && stepElapsed() >= ds.mask && tMaskShown !== tStepKey) {
+    tMaskShown = tStepKey; const qe = $('#t-q');
+    if (qe) { qe.innerHTML = `<b class="q masked">“${esc(maskText(t.prompt.t, ds.maskAll))}”</b>`; const n = $('#t-qn'); if (n) n.textContent = ds.maskAll ? '🙈 Đề đã bị che hết – nhớ được bao nhiêu vẽ bấy nhiêu!' : '🙈 Đề đã bị che bớt – chỉ còn chữ cái đầu!'; }
+  }
 }
 function submitTask(auto = false) {
   const v = view; if (!v || v.mode !== 'gartic' || v.phase !== 'play' || !v.task) return;
@@ -396,7 +472,7 @@ function submitTask(auto = false) {
     net.act({ type: 'submit', step: v.step, ops });
   } else {
     let text = $('#t-input').value.trim();
-    if (!text) { if (!auto) { toast('Viết gì đó đi nè ✍️'); fx.pop($('#t-form'), 'shake'); return; } text = t.kind === 'write' ? randomPrompt() : '🤷 (bí quá)'; }
+    if (!text) { if (!auto) { toast('Viết gì đó đi nè ✍️'); fx.pop($('#t-form'), 'shake'); return; } text = t.role === 'question' ? QS[Math.floor(Math.random() * QS.length)] : t.kind === 'write' ? randomPrompt() : '🤷 (bí quá)'; }
     net.act({ type: 'submit', step: v.step, text });
   }
   tEditing = false; autoSent[tStepKey] = true;
@@ -408,7 +484,7 @@ function autoSubmit(left) {
   if (v.task.done && !tEditing) return;
   submitTask(true); toast('Hết giờ – đã tự nộp ⏰');
 }
-$('#t-done').onclick = () => submitTask(false);
+$('#t-done').onclick = () => { if (peeking()) { toast('Đợi hết giờ nhìn đã nha 👀'); return; } submitTask(false); };
 $('#t-form').addEventListener('submit', e => { e.preventDefault(); submitTask(false); });
 
 // ---------- chiếu lại & album ----------
@@ -423,13 +499,57 @@ function onBook(m) {
   for (const it of m.items) book.set(it.key, it);
   if (view && view.mode === 'gartic' && (view.phase === 'reveal' || view.phase === 'end')) { revealDom = null; renderReveal(view, null); }
 }
+const isFrameRole = r => r === 'frame' || r === 'bg';
 function itemHTML(v, c, k) {
-  const it = book.get(c + ':' + k), kind = k === 0 ? 'write' : k % 2 ? 'draw' : 'guess';
-  const verb = { write: 'viết', draw: 'vẽ', guess: 'đoán' }[kind];
+  const it = book.get(c + ':' + k), role = roleOf(v, k), kind = it && it.d ? 'draw' : k === 0 ? 'write' : 'guess';
+  const verb = (ROLE[role] || ROLE.draw)[2];
   const who = it ? pname(it.by) : '…';
-  return `<div class="item ${kind}" data-key="${c}:${k}"><div class="by">${avatar(who)}<span><b>${esc(who)}</b> ${verb}${it && it.miss ? ' <small>(hết giờ)</small>' : ''}</span></div>
+  const vote = v.gmode === 'score' && k > 0 ? `<div class="votes"><button class="vt" data-v="1" ${it && it.by === myId ? 'disabled title="Không tự chấm mình"' : 'title="Khớp với bước trước"'}>👍 <small></small></button><button class="vt" data-v="-1" ${it && it.by === myId ? 'disabled' : 'title="Lệch khỏi bước trước"'}>👎 <small></small></button></div>` : '';
+  return `<div class="item ${kind} r-${role}" data-key="${c}:${k}"><div class="by">${avatar(who)}<span><b>${esc(who)}</b> ${verb}${isFrameRole(role) && v.gmode !== 'background' ? ` <small>· khung ${k + 1}</small>` : ''}${it && it.miss ? ' <small>(hết giờ)</small>' : ''}</span></div>
     <div class="content">${!it ? '<div class="bubble muted">Đang tải…</div>' : it.d ? '<div class="pic"></div>' : `<div class="bubble">${esc(it.t)}</div>`}</div>
-    <div class="reacts">${REACTS.map(e => `<button class="re" data-e="${e}">${e}<small></small></button>`).join('')}</div></div>`;
+    ${vote}<div class="reacts">${REACTS.map(e => `<button class="re" data-e="${e}">${e}<small></small></button>`).join('')}</div></div>`;
+}
+// ---- hoạt hình: chiếu lặp các khung của 1 chuỗi, chỉnh tốc độ, tải GIF / ảnh ghép ----
+let anims = [];
+function stopAnims() { anims.forEach(a => clearInterval(a.t)); anims = []; }
+function framesOf(v, c) {
+  const out = [];
+  for (let k = 0; k < v.steps; k++) {
+    const r = roleOf(v, k); if (r !== 'frame' && !(r === 'bg' && v.gmode !== 'background')) continue;
+    const it = book.get(c + ':' + k); if (it && it.d) out.push(drawingImg(c + ':' + k, it.d));
+  }
+  return out;
+}
+function animHTML() { return `<div class="anim"><div class="anim-head">🎬 <b>Thành phim!</b> <small>Chiếu lặp các khung</small></div><canvas width="400" height="300"></canvas>
+  <label class="set"><span>Tốc độ <b class="fps">4 khung/giây</b></span><input type="range" class="anim-fps" min="1" max="12" step="1" value="4"></label>
+  <div class="dl-row"><button class="btn sm anim-gif">⬇ GIF</button><button class="btn sm anim-strip">⬇ Ảnh ghép</button></div></div>`; }
+function mountAnim(el, v, c) {
+  const frames = framesOf(v, c); if (frames.length < 2) { el.remove(); return; }
+  const cv = el.querySelector('canvas'), ctx = cv.getContext('2d'); let i = 0, fps = +(ls.get('scribble-fps') || 4);
+  el.querySelector('.anim-fps').value = fps;
+  const show = () => { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 400, 300); ctx.drawImage(frames[i % frames.length], 0, 0, 400, 300); i++; };
+  const a = { t: 0 }; const run = () => { clearInterval(a.t); a.t = setInterval(show, 1000 / fps); el.querySelector('.fps').textContent = fps + ' khung/giây'; };
+  show(); run(); anims.push(a);
+  el.querySelector('.anim-fps').oninput = e => { fps = +e.target.value; ls.set('scribble-fps', fps); run(); };
+  const nm = fname(pname(v.chains[c]));
+  el.querySelector('.anim-gif').onclick = () => {
+    const off = document.createElement('canvas'); off.width = 400; off.height = 300; const o = off.getContext('2d', { willReadFrequently: true });
+    const imgs = frames.map(f => { o.fillStyle = '#fff'; o.fillRect(0, 0, 400, 300); o.drawImage(f, 0, 0, 400, 300); return o.getImageData(0, 0, 400, 300); });
+    const bytes = encodeGif(imgs, { delay: Math.max(2, Math.round(100 / fps)) });
+    const u = URL.createObjectURL(new Blob([bytes], { type: 'image/gif' })); const l = document.createElement('a'); l.href = u; l.download = `scribble-hoathinh-${nm}.gif`; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); toast('Đã lưu GIF 🎞️');
+  };
+  el.querySelector('.anim-strip').onclick = () => {
+    const cols = Math.min(5, frames.length), rows = Math.ceil(frames.length / cols), cw = 400, ch = 300, g = 12;
+    const out = document.createElement('canvas'); out.width = cols * cw + (cols + 1) * g; out.height = rows * ch + (rows + 1) * g + 40; const o = out.getContext('2d');
+    o.fillStyle = '#fff8e8'; o.fillRect(0, 0, out.width, out.height); o.fillStyle = '#1f2340'; o.font = '700 22px "Be Vietnam Pro", sans-serif'; o.fillText(`Hoạt hình của ${pname(v.chains[c])} · Scribble it!`, g, 28);
+    frames.forEach((f, j) => { const x = g + (j % cols) * (cw + g), y = 40 + g + Math.floor(j / cols) * (ch + g); o.drawImage(f, x, y, cw, ch); o.strokeStyle = '#1f2340'; o.lineWidth = 2; o.strokeRect(x, y, cw, ch); o.fillText(String(j + 1), x + 8, y + 26); });
+    download(out, `scribble-hoathinh-${nm}.png`);
+  };
+}
+function leaderHTML(v) {
+  if (!v.scores) return '';
+  const rows = Object.entries(v.scores).sort((a, b) => b[1] - a[1]);
+  return `<div class="lb"><h4>🏆 Bảng điểm</h4><ol>${rows.map(([id, pt], i) => `<li class="${id === myId ? 'me' : ''}"><span>${i === 0 && pt > 0 ? '👑' : i + 1 + '.'}</span>${avatar(pname(id))}<b>${esc(pname(id))}</b><i>${pt}</i></li>`).join('')}</ol><small class="muted">+100 mỗi 👍 · chuỗi giữ được ý gốc: mọi người góp mặt +200</small></div>`;
 }
 function renderReveal(v, p) {
   const box = $('#t-reveal'), n = v.chains.length;
@@ -437,10 +557,12 @@ function renderReveal(v, p) {
   const c = end ? Math.min(albumSel, n - 1) : v.reveal.c, upto = end ? v.steps - 1 : v.reveal.u;
   const dk = v.gid + '|' + c + '|' + end;
   if (!revealDom || revealDom.key !== dk) {
+    stopAnims();
+    const kept = v.kept && v.kept[c] != null ? (v.kept[c] ? ' <span class="kept ok">✅ giữ được ý gốc</span>' : ' <span class="kept">💥 lạc đề</span>') : '';
     box.innerHTML = `<div class="rv-head">${end ? `<div class="tabs">${v.chains.map((id, i) => `<button class="chip ${i === c ? 'on' : ''}" data-tab="${i}">${esc(pname(id))}</button>`).join('')}</div>` : ''}
-      <h3>${avatar(pname(v.chains[c]))} Chuỗi của ${esc(pname(v.chains[c]))} <small>${c + 1}/${n}</small></h3></div>
+      <h3>${avatar(pname(v.chains[c]))} ${v.gmode === 'icebreaker' ? 'Câu hỏi của' : v.rot === false ? 'Hoạt hình của' : 'Chuỗi của'} ${esc(pname(v.chains[c]))} <small>${c + 1}/${n}</small>${kept}</h3></div>
       <div class="feed" id="t-feed"></div><div class="rv-bar" id="t-bar"></div>`;
-    revealDom = { key: dk, shown: -1 };
+    revealDom = { key: dk, shown: -1, anim: false };
     $$('#t-reveal [data-tab]').forEach(b => b.onclick = () => { albumSel = +b.dataset.tab; revealDom = null; renderReveal(view, null); });
   }
   const feed = $('#t-feed');
@@ -450,9 +572,15 @@ function renderReveal(v, p) {
     if (it && it.d) el.querySelector('.pic').appendChild(drawingImg(c + ':' + k, it.d));
     if (!end && revealDom.shown >= 0) { el.classList.add('pop-in'); fx.sfx.reveal(); }
     el.querySelectorAll('.re').forEach(b => b.onclick = () => { fx.sfx.react(); net.act({ type: 'react', key: el.dataset.key, e: b.dataset.e }); });
+    el.querySelectorAll('.vt').forEach(b => b.onclick = () => { fx.sfx.pop(); net.act({ type: 'vote', key: el.dataset.key, v: +b.dataset.v }); });
   }
   if (upto > revealDom.shown) { revealDom.shown = upto; const last = feed.lastElementChild; if (last) setTimeout(() => last.scrollIntoView({ behavior: fx.reduced() ? 'auto' : 'smooth', block: 'nearest' }), 60); }
-  // cảm xúc
+  // chuỗi đã lật hết: có từ 2 khung hình trở lên thì chiếu thành phim
+  if (upto >= v.steps - 1 && !revealDom.anim && v.plan && v.plan.some(isFrameRole)) {
+    revealDom.anim = true; feed.insertAdjacentHTML('beforeend', animHTML()); mountAnim(feed.lastElementChild, v, c);
+    if (!end) setTimeout(() => { const a = feed.querySelector('.anim'); a && a.scrollIntoView({ behavior: fx.reduced() ? 'auto' : 'smooth', block: 'nearest' }); }, 120);
+  }
+  // cảm xúc + chấm điểm
   for (const el of feed.querySelectorAll('.item')) {
     const r = (v.reacts || {})[el.dataset.key] || { n: {}, mine: [] }, pr = p && p.reacts && p.reacts[el.dataset.key];
     el.querySelectorAll('.re').forEach(b => {
@@ -460,6 +588,8 @@ function renderReveal(v, p) {
       b.querySelector('small').textContent = cnt || ''; b.classList.toggle('on', r.mine.includes(e));
       if (pr && cnt > (pr.n[e] || 0)) { fx.floatUp(e, b, 'emo'); if (!r.mine.includes(e)) fx.sfx.react(); }
     });
+    const vt = (v.votes || {})[el.dataset.key] || { up: 0, down: 0, mine: 0 };
+    el.querySelectorAll('.vt').forEach(b => { const up = b.dataset.v === '1'; b.querySelector('small').textContent = (up ? vt.up : vt.down) || ''; b.classList.toggle('on', vt.mine === (up ? 1 : -1)); });
   }
   // thanh điều khiển
   const bar = $('#t-bar');
@@ -467,14 +597,14 @@ function renderReveal(v, p) {
     const r = v.reveal, last = r.u >= v.steps - 1, lastChain = r.c >= n - 1;
     bar.innerHTML = isHost
       ? `<button class="btn big pri" id="t-next">${!last ? 'Tiếp ▶' : !lastChain ? 'Chuỗi tiếp theo ▶' : 'Xem album 🏁'}</button><button class="link" id="t-skip">Bỏ qua, xem album luôn</button>`
-      : `<p class="muted center">Chủ phòng đang bấm tiếp… thả cảm xúc đi nào 😂🔥💀</p>`;
+      : `<p class="muted center">Chủ phòng đang bấm tiếp… ${v.gmode === 'score' ? 'chấm 👍/👎 từng bước nào!' : 'thả cảm xúc đi nào 😂🔥💀'}</p>`;
     const nx = $('#t-next'); if (nx) nx.onclick = () => net.act({ type: 'next' });
     const sk = $('#t-skip'); if (sk) sk.onclick = () => net.act({ type: 'skipReveal' });
   } else {
-    bar.innerHTML = `<div class="dl-row"><button class="btn" id="t-dl1">⬇ Tải chuỗi này</button><button class="btn pri" id="t-dlall">⬇ Tải cả album</button></div>${isHost ? '<button class="btn big blue" id="t-again">🔁 Về sảnh chơi tiếp</button>' : '<p class="muted center">Đợi chủ phòng mở ván mới…</p>'}`;
+    bar.innerHTML = `${leaderHTML(v)}<div class="dl-row"><button class="btn" id="t-dl1">⬇ Tải chuỗi này</button><button class="btn pri" id="t-dlall">⬇ Tải cả album</button></div>${isHost ? `<button class="btn big blue" id="t-again">🔁 ${net && net.offline ? 'Vẽ đoạn mới' : 'Về sảnh chơi tiếp'}</button>` : '<p class="muted center">Đợi chủ phòng mở ván mới…</p>'}`;
     $('#t-dl1').onclick = () => download(albumCanvas(view, [c]), `scribble-${fname(pname(view.chains[c]))}.png`);
     $('#t-dlall').onclick = () => download(albumCanvas(view, view.chains.map((_, i) => i)), 'scribble-album.png');
-    const ag = $('#t-again'); if (ag) ag.onclick = () => net.restart();
+    const ag = $('#t-again'); if (ag) ag.onclick = () => { if (net.offline) { net.restart(); net.start(); } else net.restart(); };
     if (endShownT !== v.gid) { endShownT = v.gid; fx.sfx.win(); fx.fireworks(3500); }
   }
 }
@@ -493,20 +623,20 @@ function albumCanvas(v, chains) {
   ctx.fillStyle = '#fff8e8'; ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = '#e7e2f5'; ctx.lineWidth = 1;
   for (let y = 0; y < h; y += 28) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+  const gm = GMODES[v.gmode] || GMODES.normal;
   ctx.fillStyle = '#1f2340'; ctx.font = '800 44px "Shantell Sans", sans-serif'; ctx.textBaseline = 'top';
   ctx.fillText('Scribble it! – Tam sao thất bản', PAD, 26);
   ctx.font = '600 18px "Be Vietnam Pro", sans-serif'; ctx.fillStyle = '#6b6f8a';
-  ctx.fillText(new Date().toLocaleDateString('vi-VN') + ' · BGVN', PAD, 80);
+  ctx.fillText(`${gm.name} · ${new Date().toLocaleDateString('vi-VN')} · BGVN`, PAD, 80);
   const rr = (x, y, ww, hh, r) => { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + ww, y, x + ww, y + hh, r); ctx.arcTo(x + ww, y + hh, x, y + hh, r); ctx.arcTo(x, y + hh, x, y, r); ctx.arcTo(x, y, x + ww, y, r); ctx.closePath(); };
   chains.forEach((c, ci) => {
     const x = PAD + ci * (CW + GAP);
     ctx.fillStyle = avColor(pname(v.chains[c])); rr(x, HEAD, CW, 36, 18); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.font = '700 20px "Shantell Sans", sans-serif'; ctx.fillText('Chuỗi của ' + pname(v.chains[c]), x + 16, HEAD + 7);
+    ctx.fillStyle = '#fff'; ctx.font = '700 20px "Shantell Sans", sans-serif'; ctx.fillText((v.gmode === 'icebreaker' ? 'Câu hỏi của ' : 'Chuỗi của ') + pname(v.chains[c]), x + 16, HEAD + 7);
     for (let k = 0; k < v.steps; k++) {
-      const it = book.get(c + ':' + k), y = HEAD + COLH + k * ROW;
-      const verb = k === 0 ? '✍️ viết' : k % 2 ? '🎨 vẽ' : '🤔 đoán';
+      const it = book.get(c + ':' + k), y = HEAD + COLH + k * ROW, r = ROLE[roleOf(v, k)] || ROLE.draw;
       ctx.fillStyle = '#1f2340'; ctx.font = '700 17px "Be Vietnam Pro", sans-serif';
-      ctx.fillText(`${it ? pname(it.by) : '?'} ${verb}`, x + 4, y + 4);
+      ctx.fillText(`${it ? pname(it.by) : '?'} ${r[0]} ${r[2]}`, x + 4, y + 4);
       const by = y + 30;
       ctx.save(); ctx.fillStyle = '#1f2340'; rr(x + 4, by + 4, CW, CH, 16); ctx.fill(); ctx.restore();
       ctx.fillStyle = '#fff'; rr(x, by, CW, CH, 16); ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#1f2340'; ctx.stroke();
@@ -556,7 +686,7 @@ if (location.hash === '#debug') window.__dbg = () => ({ net, view, cv, myId, gBo
   if (snap && ses && ses.role === 'host') {
     fx.musicResumeIfOn();
     net = new Host((snap.players.find(p => p.id === 'host') || {}).name || myName(), handlers, snap); isHost = true; myId = 'host';
-    show('screen-lobby'); netStatus('Đã khôi phục phòng ' + snap.code, 'ok'); return;
+    show('screen-lobby'); if (!snap.offline) netStatus('Đã khôi phục phòng ' + snap.code, 'ok'); return;
   }
   if (ses && ses.role === 'client' && ses.code) {
     net = new Client(ses.code, ses.name || myName(), handlers); isHost = false;

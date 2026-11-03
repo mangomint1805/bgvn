@@ -1,5 +1,5 @@
 // Vẽ lá bài Mèo Nổ: SVG mèo tự vẽ + emoji. Không dùng hình của game gốc.
-import { CARD } from './engine.js?v=5';
+import { CARD } from './engine.js?v=6';
 
 let uid = 0;
 // thông số từng giống mèo
@@ -8,7 +8,7 @@ const BREED = {
   cat2: { fur: '#a9b0bb', ear: '#8c94a1', inner: '#f6b9c5', eyes: 'round', tabby: '#5e6672', eyeCol: '#6cc04a' },
   cat3: { fur: '#fffaf2', ear: '#2d2a32', inner: '#ffc1cf', eyes: 'round', patches: true, eyeCol: '#d9a31b' },
   cat4: { fur: '#f3e3c7', ear: '#5b3d2e', inner: '#c9907a', eyes: 'round', mask: '#6b4a3a', eyeCol: '#3d8bff' },
-  cat5: { fur: '#ffffff', ear: '#ffe0ec', inner: '#ff9ec4', eyes: 'sparkle', fluffy: true, cheek: '#ffb3cf', eyeCol: '#a06cd5' },
+  cat5: { fur: '#fbeaff', ear: '#e9c7ff', inner: '#ff9ec4', eyes: 'sparkle', fluffy: true, cheek: '#ffb3cf', eyeCol: '#a06cd5' },
 };
 export function catSVG(kind, extra = '') {
   const b = BREED[kind] || BREED.cat1; const id = 'cl' + (uid++);
@@ -47,27 +47,45 @@ const SHORT = {
   bottom: 'Bốc lá dưới đáy, hết lượt', nope: 'Huỷ 1 hành động', cat1: 'Đôi: cướp bừa · Ba: gọi tên', cat2: 'Đôi: cướp bừa · Ba: gọi tên',
   cat3: 'Đôi: cướp bừa · Ba: gọi tên', cat4: 'Đôi: cướp bừa · Ba: gọi tên', cat5: 'Đôi: cướp bừa · Ba: gọi tên',
 };
-// tên ngắn 2 dòng – dùng khi tay bài chật (lá chồng lên nhau)
-const TWO = {
-  bomb: ['MÈO', 'NỔ'], defuse: ['GỠ', 'BOM'], attack: ['ĐỔ', 'VỎ'], skip: ['NÉ', 'GẮT'], shuffle: ['XÀO', 'BÀI'], future: ['SOI', 'KÈO'],
-  alter: ['CẢI', 'MỆNH'], favor: ['XIN', 'VÍA'], bottom: ['MÓC', 'ĐÁY'], nope: ['ĐÉO!', ''], cat1: ['MÈO', 'Ú'], cat2: ['MÈO', 'MƯỚP'],
-  cat3: ['TAM', 'THỂ'], cat4: ['MÈO', 'XIÊM'], cat5: ['MÈO', 'BÔNG'],
-};
-const PAW_COL = { cat1: '#e67a12', cat2: '#5e6672', cat3: '#ff9a3c', cat4: '#6b4a3a', cat5: '#a06cd5' };
+// chữ viết tắt ở góc trên trái – lá xếp chồng chỉ lộ mép trái vẫn đọc được
+const ABBR = { bomb: 'NỔ', defuse: 'GỠ', attack: 'ĐỔ', skip: 'NÉ', shuffle: 'XÀO', future: 'SOI', alter: 'CẢI', favor: 'XIN', bottom: 'MÓC', nope: 'ĐÉO', cat1: 'Ú', cat2: 'MƯỚP', cat3: 'TAM', cat4: 'XIÊM', cat5: 'BÔNG' };
+const PAW_COL = { cat1: '#b45309', cat2: '#334155', cat3: '#c2410c', cat4: '#4a2c1d', cat5: '#7e22ce' };
 const paw = (c, cls = '') => `<svg viewBox="0 0 24 24" class="${cls}" aria-hidden="true"><g fill="${c}"><ellipse cx="12" cy="15.5" rx="5.6" ry="4.6"/><circle cx="5.4" cy="9.6" r="2.3"/><circle cx="9.4" cy="5.8" r="2.3"/><circle cx="14.6" cy="5.8" r="2.3"/><circle cx="18.6" cy="9.6" r="2.3"/></g></svg>`;
+// hình minh hoạ lớn cho từng lá chức năng: nét mực dày, mỗi lá một hình riêng (tự vẽ)
+const K = '#2d2a32';
+const ART = {
+  defuse: `<circle cx="30" cy="76" r="12" fill="#fff" stroke="${K}" stroke-width="5"/><circle cx="70" cy="76" r="12" fill="#fff" stroke="${K}" stroke-width="5"/>
+    <path d="M37 66 L66 18 L72 22 L45 70 Z" fill="#e5e7eb" stroke="${K}" stroke-width="4" stroke-linejoin="round"/><path d="M63 66 L34 18 L28 22 L55 70 Z" fill="#f8fafc" stroke="${K}" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="50" cy="52" r="4" fill="${K}"/><path d="M4 36 q14 -10 30 0" stroke="#ff3d2e" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M66 36 q14 10 30 0" stroke="#ff3d2e" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="7 5"/>`,
+  attack: `<path d="M8 40 h42 v-18 l40 28 l-40 28 v-18 h-42 z" fill="#fff" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><circle cx="74" cy="78" r="17" fill="#ffd23f" stroke="${K}" stroke-width="4.5"/><text x="74" y="86" text-anchor="middle" font-family="Baloo 2,sans-serif" font-weight="800" font-size="24" fill="${K}">×2</text>`,
+  skip: `<path d="M10 22 L46 50 L10 78 Z" fill="#fff" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><path d="M46 22 L82 50 L46 78 Z" fill="#fff" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><rect x="82" y="22" width="9" height="56" rx="3" fill="#fff" stroke="${K}" stroke-width="5"/>`,
+  shuffle: `<path d="M8 30 h20 q14 0 22 20 q8 20 22 20 h8" stroke="${K}" stroke-width="13" fill="none" stroke-linecap="round"/><path d="M8 70 h20 q14 0 22 -20 q8 -20 22 -20 h8" stroke="${K}" stroke-width="13" fill="none" stroke-linecap="round"/>
+    <path d="M8 30 h20 q14 0 22 20 q8 20 22 20 h8" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M8 70 h20 q14 0 22 -20 q8 -20 22 -20 h8" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M78 16 l16 14 l-16 14 z M78 56 l16 14 l-16 14 z" fill="#fff" stroke="${K}" stroke-width="4" stroke-linejoin="round"/>`,
+  future: `<path d="M26 84 h48 l-6 -12 h-36 z" fill="#c084fc" stroke="${K}" stroke-width="4.5" stroke-linejoin="round"/><circle cx="50" cy="44" r="32" fill="#e0e7ff" stroke="${K}" stroke-width="5"/>
+    <path d="M28 44 q22 -20 44 0 q-22 20 -44 0 z" fill="#fff" stroke="${K}" stroke-width="4"/><circle cx="50" cy="44" r="8" fill="${K}"/><circle cx="53" cy="41" r="2.6" fill="#fff"/><path d="M30 22 l3 6 M70 22 l-3 6 M50 14 v6" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>`,
+  alter: `<g stroke="${K}" stroke-width="4" stroke-linejoin="round"><rect x="10" y="30" width="28" height="40" rx="5" fill="#fff" transform="rotate(-16 24 50)"/><rect x="36" y="24" width="28" height="40" rx="5" fill="#fff"/><rect x="62" y="30" width="28" height="40" rx="5" fill="#fff" transform="rotate(16 76 50)"/></g>
+    <text x="50" y="52" text-anchor="middle" font-family="Baloo 2,sans-serif" font-weight="800" font-size="20" fill="${K}">?</text><path d="M18 92 L60 70" stroke="${K}" stroke-width="7" stroke-linecap="round"/><path d="M18 92 L60 70" stroke="#ffd23f" stroke-width="3" stroke-linecap="round"/><path d="M64 60 l3 7 l7 1 l-5 5 l1 7 l-6 -3 l-6 3 l1 -7 l-5 -5 l7 -1 z" fill="#ffd23f" stroke="${K}" stroke-width="2.5" stroke-linejoin="round"/>`,
+  favor: `<rect x="16" y="42" width="68" height="46" rx="5" fill="#fff" stroke="${K}" stroke-width="5"/><rect x="10" y="30" width="80" height="16" rx="4" fill="#fde68a" stroke="${K}" stroke-width="5"/><rect x="44" y="30" width="12" height="58" fill="#f43f5e" stroke="${K}" stroke-width="4"/>
+    <path d="M50 30 q-26 -22 -24 -4 q2 6 24 4 q22 2 24 -4 q2 -18 -24 4 z" fill="#f43f5e" stroke="${K}" stroke-width="4" stroke-linejoin="round"/>`,
+  bottom: `<g stroke="${K}" stroke-width="4" stroke-linejoin="round"><rect x="14" y="14" width="56" height="16" rx="4" fill="#fde7c7"/><rect x="14" y="32" width="56" height="16" rx="4" fill="#fde7c7"/><rect x="14" y="50" width="56" height="16" rx="4" fill="#fde7c7"/><rect x="26" y="72" width="56" height="16" rx="4" fill="#fff"/></g>
+    <path d="M84 10 v58 q0 18 -14 18 q-10 0 -12 -10" stroke="${K}" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M84 10 v58 q0 18 -14 18 q-10 0 -12 -10" stroke="#e5e7eb" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M50 80 l8 -6 l2 10 z" fill="${K}"/>`,
+  nope: `<path d="M32 6 h36 l26 26 v36 l-26 26 h-36 l-26 -26 v-36 z" fill="#fff" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><path d="M34 12 h32 l22 22 v32 l-22 22 h-32 l-22 -22 v-32 z" fill="#be123c"/>
+    <text x="50" y="61" text-anchor="middle" font-family="Baloo 2,sans-serif" font-weight="800" font-size="29" fill="#fff" stroke="${K}" stroke-width="1.5" paint-order="stroke">ĐÉO!</text>`,
+};
 function artFor(t) {
   if (t === 'bomb') return bombSVG();
   if (t.startsWith('cat')) return catSVG(t);
-  if (t === 'defuse') return `<div class="emo">${ICON[t]}</div><div class="emo2">🐟</div>`;
-  return `<div class="emo">${ICON[t] || '❓'}</div>`;
+  return ART[t] ? `<svg viewBox="0 0 100 100" class="art" aria-hidden="true">${ART[t]}</svg>` : `<div class="emo">${ICON[t] || '❓'}</div>`;
 }
-const badge = t => t === 'bomb' ? '💣' : t.startsWith('cat') ? paw(PAW_COL[t]) : ICON[t];
+const cornerIcon = t => t === 'bomb' ? '💣' : t.startsWith('cat') ? paw(PAW_COL[t]) : ICON[t];
+// lá bài: góc trên trái (biểu tượng + chữ tắt), hình lớn ở giữa, tên chữ to đậm; mèo thường có dấu "đánh theo cặp"
 export function cardHTML(c, cls = '', attrs = '') {
   if (!c) return `<div class="mcard back ${cls}" ${attrs}><i class="tape"></i><div class="back-art">🐾</div></div>`;
-  const t = c.t || c; const two = TWO[t] || [CARD[t].name, ''];
-  return `<div class="mcard t-${t} ${t.startsWith('cat') ? 'is-cat' : 'is-act'} ${cls}" ${c.id ? `data-id="${c.id}"` : ''} data-t="${t}" ${attrs}>
-    <i class="mc-pat"></i><span class="mc-badge">${badge(t)}</span><div class="mc-art">${artFor(t)}</div>
-    <div class="mc-name"><span class="full">${CARD[t].name}</span><span class="two">${two[0]}${two[1] ? '<br>' + two[1] : ''}</span></div><div class="mc-desc">${SHORT[t]}</div></div>`;
+  const t = c.t || c; const cat = t.startsWith('cat');
+  return `<div class="mcard t-${t} ${cat ? 'is-cat' : 'is-act'} ${cls}" ${c.id ? `data-id="${c.id}"` : ''} data-t="${t}" title="${CARD[t].name} (${CARD[t].en}): ${CARD[t].desc}" ${attrs}>
+    <i class="mc-pat"></i><span class="mc-corner"><span class="mc-ci">${cornerIcon(t)}</span><b class="mc-ab">${ABBR[t]}</b></span>${cat ? '<span class="mc-pair" title="Đánh theo cặp">🐾×2</span>' : ''}<div class="mc-art">${artFor(t)}</div>
+    <div class="mc-name">${CARD[t].name}</div><div class="mc-en">${CARD[t].en}</div><div class="mc-desc">${SHORT[t]}</div></div>`;
 }
 export const cardIcon = t => t === 'bomb' ? '💣' : t.startsWith('cat') ? '🐱' : ICON[t] || '🃏';
 

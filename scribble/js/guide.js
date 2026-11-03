@@ -1,3 +1,4 @@
+import { GMODES, GMODE_KEYS } from './engine.js?v=4';
 // Hướng dẫn luật Scribble it!
 export function guideHTML() {
   return `
@@ -31,6 +32,14 @@ export function guideHTML() {
         <li>Cuối ván chủ phòng bấm <b>Tiếp ▶</b> để chiếu lại từng chuỗi – xem câu chuyện “tam sao thất bản” tới đâu, thả 😂🔥💀 thoải mái.</li>
         <li>Bấm <b>⬇ Tải album</b> để lưu ảnh ghép cả ván về máy.</li>
       </ol>
+      <h4>Các kiểu chơi (chủ phòng chọn trong sảnh)</h4>
+      <ul class="gm-list">${GMODE_KEYS.map(k => `<li><b>${GMODES[k].icon} ${GMODES[k].name}:</b> ${GMODES[k].desc}</li>`).join('')}</ul>
+      <ul>
+        <li>🎞️ Kiểu <b>Hoạt hình / Phông nền / Một mình</b>: chiếu lại xong mỗi chuỗi thành phim lặp – kéo thanh <b>Tốc độ</b>, bấm <b>⬇ GIF</b> hoặc <b>⬇ Ảnh ghép</b> để lưu.</li>
+        <li>🏆 Kiểu <b>Chấm điểm</b>: +100 cho mỗi 👍 vào bước của bạn; chuỗi mà câu cuối khớp câu đầu (hoặc bước nào cũng được 👍 nhiều hơn 👎) thì ai góp mặt cũng +200. Không tự chấm mình được.</li>
+        <li>🖍️ Kiểu <b>Vẽ tiếp</b>: nét của người trước là nền – tẩy bị khoá, nút 🗑️ chỉ xoá nét của bạn.</li>
+        <li>🎉 Phòng thường tối đa <b>12 người</b>; muốn đông tới <b>30 người</b> thì chọn <b>Đông vui</b>. <b>Một mình</b> thì bấm “🧑‍🎨 Hoạt hình 1 mình” ở trang chủ, không cần mạng.</li>
+      </ul>
     </section>
     <section>
       <h3>🖌️ Bảng vẽ</h3>
@@ -46,7 +55,7 @@ export function guideHTML() {
         <li>Cần ít nhất <b>2 người</b>. Một người tạo phòng, gửi mã 5 ký tự (hoặc link mời) cho hội bạn.</li>
         <li>Chế độ Đoán hình cho phép vào giữa ván – vào là thấy lại toàn bộ tranh đang vẽ.</li>
         <li>Lỡ tải lại trang? Cứ mở lại, máy tự vào lại đúng phòng. Hoạ sĩ rớt mạng quá 8 giây thì bị bỏ lượt.</li>
-        <li>Chỉ có một mình? Bấm <b>“Vẽ thử một mình”</b> để luyện tay.</li>
+        <li>Chỉ có một mình? Bấm <b>“✏️ Vẽ thử”</b> để luyện tay, hoặc <b>“🧑‍🎨 Hoạt hình 1 mình”</b> để vẽ một đoạn phim 5 khung (không cần mạng).</li>
       </ul>
     </section>
   </div>`;

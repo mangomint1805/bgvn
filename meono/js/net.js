@@ -1,6 +1,6 @@
 // Lớp mạng Mèo Nổ: chủ phòng giữ state, người vào chỉ gửi action. Kết nối dùng chung shared/net/room.js
-import { createGame, applyAction, viewFor, resolveWindow, waitingOn, getPlayer, DEFAULT_OPTS } from './engine.js?v=5';
-import { botAction, botNope } from './bot.js?v=5';
+import { createGame, applyAction, viewFor, resolveWindow, waitingOn, getPlayer, DEFAULT_OPTS } from './engine.js?v=6';
+import { botAction, botNope } from './bot.js?v=6';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
 const NS = 'bgvn-meono', PREFIX = 'bgvn-meono-', GAME = 'meono';
 const SNAP = 'bgvn-hostsnap-' + GAME;

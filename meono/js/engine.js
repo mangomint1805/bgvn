@@ -6,21 +6,21 @@ const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.f
 export const CATS = ['cat1', 'cat2', 'cat3', 'cat4', 'cat5'];
 // tên + mô tả ngắn của từng loại lá
 export const CARD = {
-  bomb: { name: 'Mèo Nổ', desc: 'Bốc trúng mà không có Gỡ Bom là BÙM – bị loại!' },
-  defuse: { name: 'Gỡ Bom', desc: 'Cứu bạn khỏi Mèo Nổ, rồi lén nhét bom lại chồng bài.' },
-  attack: { name: 'Đổ Vỏ', desc: 'Hết lượt, khỏi bốc. Người sau gánh 2 lượt (dồn được).' },
-  skip: { name: 'Né Gắt', desc: 'Hết 1 lượt mà khỏi bốc.' },
-  shuffle: { name: 'Xào Bài', desc: 'Xáo trộn chồng bài.' },
-  future: { name: 'Soi Kèo', desc: 'Lén xem 3 lá trên cùng.' },
-  alter: { name: 'Cải Mệnh', desc: 'Xem 3 lá trên cùng và xếp lại tuỳ ý.' },
-  favor: { name: 'Xin Vía', desc: 'Chọn 1 người, họ phải cho bạn 1 lá (họ tự chọn).' },
-  bottom: { name: 'Móc Đáy', desc: 'Bốc lá DƯỚI CÙNG thay vì lá trên cùng (hết lượt).' },
-  nope: { name: 'ĐÉO!', desc: 'Huỷ 1 hành động bất kỳ (trừ Mèo Nổ, Gỡ Bom). ĐÉO! chồng ĐÉO! được.' },
-  cat1: { name: 'Mèo Ú', desc: 'Mèo thường. Đôi: rút bừa 1 lá. Bộ ba: gọi tên lá.' },
-  cat2: { name: 'Mèo Mướp', desc: 'Mèo thường. Đôi: rút bừa 1 lá. Bộ ba: gọi tên lá.' },
-  cat3: { name: 'Mèo Tam Thể', desc: 'Mèo thường. Đôi: rút bừa 1 lá. Bộ ba: gọi tên lá.' },
-  cat4: { name: 'Mèo Xiêm', desc: 'Mèo thường. Đôi: rút bừa 1 lá. Bộ ba: gọi tên lá.' },
-  cat5: { name: 'Mèo Bông', desc: 'Mèo thường. Đôi: rút bừa 1 lá. Bộ ba: gọi tên lá.' },
+  bomb: { name: 'Mèo Nổ', en: 'Exploding Kitten', desc: 'Bốc trúng mà không có Gỡ Bom là BÙM – bị loại!' },
+  defuse: { name: 'Gỡ Bom', en: 'Defuse', desc: 'Cứu bạn khỏi Mèo Nổ, rồi lén nhét bom lại chồng bài.' },
+  attack: { name: 'Đổ Vỏ', en: 'Attack', desc: 'Hết lượt, khỏi bốc. Người sau gánh 2 lượt (dồn được).' },
+  skip: { name: 'Né Gắt', en: 'Skip', desc: 'Hết 1 lượt mà khỏi bốc.' },
+  shuffle: { name: 'Xào Bài', en: 'Shuffle', desc: 'Xáo trộn chồng bài.' },
+  future: { name: 'Soi Kèo', en: 'See the Future', desc: 'Lén xem 3 lá trên cùng.' },
+  alter: { name: 'Cải Mệnh', en: 'Alter the Future', desc: 'Xem 3 lá trên cùng và xếp lại tuỳ ý.' },
+  favor: { name: 'Xin Vía', en: 'Favor', desc: 'Chọn 1 người, họ phải cho bạn 1 lá (họ tự chọn).' },
+  bottom: { name: 'Móc Đáy', en: 'Draw from the Bottom', desc: 'Bốc lá DƯỚI CÙNG thay vì lá trên cùng (hết lượt).' },
+  nope: { name: 'ĐÉO!', en: 'Nope', desc: 'Huỷ 1 hành động bất kỳ (trừ Mèo Nổ, Gỡ Bom). ĐÉO! chồng ĐÉO! được.' },
+  cat1: { name: 'Mèo Ú', en: 'Tacocat', desc: 'Mèo thường. Đôi: rút bừa 1 lá. Bộ ba: gọi tên lá.' },
+  cat2: { name: 'Mèo Mướp', en: 'Cattermelon', desc: 'Mèo thường. Đôi: rút bừa 1 lá. Bộ ba: gọi tên lá.' },
+  cat3: { name: 'Mèo Tam Thể', en: 'Hairy Potato Cat', desc: 'Mèo thường. Đôi: rút bừa 1 lá. Bộ ba: gọi tên lá.' },
+  cat4: { name: 'Mèo Xiêm', en: 'Beard Cat', desc: 'Mèo thường. Đôi: rút bừa 1 lá. Bộ ba: gọi tên lá.' },
+  cat5: { name: 'Mèo Bông', en: 'Rainbow-Ralphing Cat', desc: 'Mèo thường. Đôi: rút bừa 1 lá. Bộ ba: gọi tên lá.' },
 };
 export const ACTIONS = ['attack', 'skip', 'shuffle', 'future', 'alter', 'favor', 'bottom'];
 // lá có thể gọi tên khi đánh bộ ba
@@ -52,6 +52,8 @@ const nm = (s, id) => (P(s, id) || {}).name || '?';
 function log(s, t) { s.log.push(t); if (s.log.length > 80) s.log.shift(); s.logN++; }
 function ev(s, e) { s.ev.push({ n: ++s.evN, ...e }); if (s.ev.length > 40) s.ev.shift(); }
 export const cardName = t => (CARD[t] || {}).name || t;
+// tên gốc tiếng Anh (Exploding Kittens) để tham chiếu – chỉ dùng chữ
+export const cardEn = t => (CARD[t] || {}).en || '';
 
 export function createGame(playerList, opts = {}) {
   const o = { ...DEFAULT_OPTS, ...opts };

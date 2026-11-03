@@ -1,12 +1,12 @@
 // Giao diện Tam Quốc Sát + nối với lớp mạng (host-authoritative). Mọi hình vẽ tự làm bằng CSS/SVG/emoji.
-import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, SUIT_SYMBOL, SUIT_NAME, cardLabel, cardName, rankLabel, rolesFor, infoOf } from './cards.js?v=5';
-import { JUDGE_TEXT } from './engine.js?v=5';
-import { Host, Client, loadSnapshot, session, MAX, MIN } from './net.js?v=5';
+import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, SUIT_SYMBOL, SUIT_NAME, cardLabel, cardName, rankLabel, rolesFor, infoOf } from './cards.js?v=6';
+import { JUDGE_TEXT } from './engine.js?v=6';
+import { Host, Client, loadSnapshot, session, MAX, MIN } from './net.js?v=6';
 import { netStatus } from '../../shared/ui/status.js';
-import { portrait, blankPortrait, cardHTML, backHTML, generalCardHTML, kindTag, iconsFor, emoOf } from './art.js?v=5';
-import * as fx from './fx.js?v=5';
-import { musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=5';
-import { openGuide as guide } from './guide.js?v=5';
+import { portrait, blankPortrait, cardHTML, backHTML, generalCardHTML, kindTag, iconsFor, emoOf } from './art.js?v=6';
+import * as fx from './fx.js?v=6';
+import { musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=6';
+import { openGuide as guide } from './guide.js?v=6';
 
 const GAME = 'tamquoc';
 const $ = s => document.querySelector(s);
@@ -413,11 +413,14 @@ function renderHand() {
   if (!m || !m.hand) return;
   const a = v.ask, mine = a && a.mine && !pending;
   const cnt = m.hand.length;
-  const mob = innerWidth <= 760; const max = mob ? 78 : 112, min = mob ? 56 : 80;
+  // điện thoại: lá tối thiểu 66px (chữ ≥10px), đông bài thì xếp chồng (vẫn lộ số/chất + đầu tên); màn ngang thấp: lá nhỏ hơn cho bàn còn chỗ
+  const short = innerHeight <= 500, mob = innerWidth <= 760 || short;
+  const max = short ? 70 : mob ? 84 : 112, min = short ? 60 : mob ? 66 : 80;
   const avail = Math.max(220, hand.clientWidth - 16);
   const w = Math.max(min, Math.min(max, (avail - (cnt - 1) * 5) / Math.max(1, cnt)));
   const ov = cnt > 1 ? Math.min(4, ((avail - w) / (cnt - 1) - w) / 2) : 4;
   hand.style.setProperty('--cw', w + 'px'); hand.style.setProperty('--ov', Math.max(-w * .36, ov) + 'px');
+  hand.classList.toggle('ovl', ov < -3);
   const respIds = mine && (a.type === 'card' || a.type === 'nullify') && a.options ? a.options.filter(o => o.ids).map(o => o.ids[0]) : [];
   const hn = m.general && GENERALS[m.general].skills.includes('hongnhan');
   const okSel = c => { if (!ui) return true; if (ui.k === 'liuli' && a.purpose === 'thienhuong') return c.suit === 'H' || (hn && c.suit === 'S'); if (ui.k === 'discard' && a.suit) return (c.suit === 'S' && hn ? 'H' : c.suit) === a.suit; if (ui.k === 'skill' && ui.opt.sameSuit && ui.ids.length) { const f = m.hand.find(x => x.id === ui.ids[0]); return !f || f.suit === c.suit || ui.ids.includes(c.id); } return true; };
@@ -609,7 +612,10 @@ function renderActions() {
   }
 }
 function autoPassCheck() {
-  const a = view.ask; if (!a || !a.mine || a.type !== 'nullify' || !autoPass) return;
+  const a = view.ask; if (!a || !a.mine || a.type !== 'nullify') return;
+  // cẩm nang của chính mình đang có hiệu lực: khỏi hỏi "Vô giải lá của bạn?" – tự bỏ qua cho ván chạy nhanh
+  if (a.src === myId && !(a.count % 2)) { setTimeout(() => { const b = view.ask; if (b && b.type === 'nullify' && b.mine && b.src === myId && !(b.count % 2) && !pending) send({ type: 'pass' }); }, 250); return; }
+  if (!autoPass) return;
   if (autoPass === `${a.trick}|${a.src}|${view.turnCount}`) setTimeout(() => { if (view.ask && view.ask.type === 'nullify' && view.ask.mine) send({ type: 'pass' }); }, 150);
   else if (!/^(nanman|wanjian|taoyuan|wugu)$/.test(a.trick)) autoPass = null;
 }

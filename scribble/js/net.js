@@ -1,10 +1,11 @@
 // Lớp mạng Scribble it!: chủ phòng giữ state + đồng hồ, máy khách gửi hành động & nét vẽ.
 // Nét vẽ đi riêng (tin 'draw' theo lô ~100ms, chủ phòng chuyển tiếp), người vào muộn nhận lại cả lịch sử ('canvas').
-import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, bookItems, shiftTime, cleanOpts, DEFAULT_OPTS } from './engine.js?v=3';
+import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, bookItems, shiftTime, cleanOpts, DEFAULT_OPTS, maxPlayers, MAX_CROWD, MAX_NORMAL } from './engine.js?v=4';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
 const NS = 'bgvn-scribble', PREFIX = 'bgvn-scribble-', GAME = 'scribble';
 const SNAP = 'bgvn-hostsnap-' + GAME;
-export const MAX = 12;
+export const MAX = MAX_CROWD; // chế độ Đông vui tới 30 người, các chế độ khác tối đa 12
+export { maxPlayers };
 export { session };
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
 // chia mảng thành các gói ≤ max byte JSON (tin nhắn qua Firebase tối đa 200KB)
@@ -17,8 +18,8 @@ export function chunk(items, max = 110000) {
 const clone = o => JSON.parse(JSON.stringify(o));
 
 export class Host {
-  constructor(name, handlers, restore = null) {
-    this.h = handlers; this.isHost = true;
+  constructor(name, handlers, restore = null, offline = false) {
+    this.h = handlers; this.isHost = true; this.offline = !!(offline || (restore && restore.offline));
     this.players = [{ id: 'host', name, token: token(), conn: null, connected: true }];
     this.opts = { ...DEFAULT_OPTS }; this.state = null; this.conns = new Map(); this.lastGuess = {};
     if (restore) {
@@ -30,15 +31,18 @@ export class Host {
         for (const p of this.state.players) if (p.id !== 'host') setOnline(this.state, p.id, false, now);
       } else this.players = this.players.filter(p => p.id === 'host');
     }
-    this.room = new RoomHost({ ns: NS, prefix: PREFIX, code: this.code, keepCode: !!restore, onConn: c => this.attach(c), onReady: code => { this.code = code; session.save(GAME, { role: 'host', code }); this.pushLobby(); }, onError: m => this.h.onError(m) });
-    this.code = this.room.code;
+    if (this.offline) { this.room = null; this.code = 'SOLO'; session.save(GAME, { role: 'host', code: 'SOLO' }); } // Một mình: không cần mạng
+    else {
+      this.room = new RoomHost({ ns: NS, prefix: PREFIX, code: this.code, keepCode: !!restore, onConn: c => this.attach(c), onReady: code => { this.code = code; session.save(GAME, { role: 'host', code }); this.pushLobby(); }, onError: m => this.h.onError(m) });
+      this.code = this.room.code;
+    }
     setTimeout(() => { this.pushLobby(); if (this.state) this.broadcast(true); }, 0);
     this.tk = setInterval(() => this.tick(), 250);
   }
   saveSnap(delay = 600) {
     clearTimeout(this.snapT);
     this.snapT = setTimeout(() => {
-      const data = { ts: Date.now(), code: this.code, opts: this.opts, players: this.players.map(({ conn, lastKey, ...p }) => p), state: this.state };
+      const data = { ts: Date.now(), code: this.code, offline: this.offline, opts: this.opts, players: this.players.map(({ conn, lastKey, ...p }) => p), state: this.state };
       try { localStorage.setItem(SNAP, JSON.stringify(data)); }
       catch (e) { try { localStorage.setItem(SNAP, JSON.stringify({ ...data, state: null })); } catch (x) {} }
     }, delay);
@@ -57,7 +61,8 @@ export class Host {
       if (p) { if (p.conn && p.conn !== conn) try { p.conn.close(); } catch (e) {} p.conn = conn; p.connected = true; p.name = String(msg.name || p.name).slice(0, 16); }
       else {
         if (s && s.mode === 'gartic' && s.phase !== 'end') { conn.send({ t: 'error', msg: 'Ván Tam sao thất bản đang chạy – đợi ván sau nhé!' }); return; }
-        if (this.players.length >= MAX) { conn.send({ t: 'error', msg: `Phòng đã đủ ${MAX} người.` }); return; }
+        const mx = maxPlayers(this.opts);
+        if (this.players.length >= mx) { conn.send({ t: 'error', msg: `Phòng đã đủ ${mx} người${mx < MAX_CROWD ? ' (chủ phòng chọn Tam sao thất bản › Đông vui để chơi tới 30 người)' : ''}.` }); return; }
         p = { id: 'p' + Math.random().toString(36).slice(2, 8), name: String(msg.name || 'Khách').slice(0, 16), token: msg.token, conn, connected: true };
         this.players.push(p);
       }
@@ -101,8 +106,10 @@ export class Host {
     this.players = this.players.filter(x => x !== p); this.pushLobby();
   }
   start() {
-    const ps = this.players.filter(p => p.connected);
-    if (ps.length < 2) { this.h.onError('Cần ít nhất 2 người online – gửi mã phòng cho hội bạn nhé!'); return; }
+    const ps = this.players.filter(p => p.connected), o = this.opts;
+    const solo = o.mode === 'gartic' && o.gmode === 'solo';
+    if (ps.length < (solo ? 1 : 2)) { this.h.onError('Cần ít nhất 2 người online – gửi mã phòng cho hội bạn nhé! (hoặc chọn Tam sao thất bản › Một mình)'); return; }
+    if (ps.length > maxPlayers(o)) { this.h.onError(`Chế độ này tối đa ${MAX_NORMAL} người – chọn Tam sao thất bản › Đông vui để chơi tới ${MAX_CROWD} người.`); return; }
     this.players = ps;
     this.state = createGame(ps.map(p => ({ id: p.id, name: p.name })), { ...this.opts, host: 'host' }, Date.now());
     this.bookSent = null; this.players.forEach(p => p.lastKey = null);

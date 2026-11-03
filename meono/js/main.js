@@ -1,9 +1,9 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn } from './net.js?v=5';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn } from './net.js?v=6';
 import { netStatus } from '../../shared/ui/status.js';
-import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat } from './engine.js?v=5';
-import { cardHTML, catSVG, bombSVG, cardIcon, mascotSVG } from './cards.js?v=5';
-import * as fx from './mfx.js?v=5';
-import { openGuide } from './guide.js?v=5';
+import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat } from './engine.js?v=6';
+import { cardHTML, catSVG, bombSVG, cardIcon, mascotSVG } from './cards.js?v=6';
+import * as fx from './mfx.js?v=6';
+import { openGuide } from './guide.js?v=6';
 setSpeedFn(fx.S);
 
 const $ = s => document.querySelector(s);
@@ -176,6 +176,7 @@ function render() {
   $('#deck').classList.toggle('can', isMyTurn());
   $('#deck').classList.toggle('low', v.deckCount <= 3);
   $('#deck').onclick = () => { if (isMyTurn()) doDraw(); };
+  $('#discard').onclick = () => { const top = (view.discardTop || []).slice(-1)[0]; if (top) cardDetail(top.t); };
   if (!landing || Date.now() - landingAt > 2500) { landing = 0; renderDiscard(); }
   renderMeter(v);
   updateMascot();
@@ -264,7 +265,19 @@ function renderHand(v, meP) {
   hEl.classList.toggle('myturn', my);
   hEl.innerHTML = hand.length ? hand.map(c => cardHTML(c, `${sel.has(c.id) ? 'sel' : ''} ${nopeNow && c.t === 'nope' ? 'glow' : ''} ${freshIds.has(c.id) ? 'fresh' : ''}`)).join('') : `<div class="empty-hand">${meP && meP.out ? '💀' : 'Hết bài rồi 🫥'}</div>`;
   fitHand();
-  $$('#hand .mcard').forEach(el => el.onclick = () => onCardClick(el.dataset.id));
+  $$('#hand .mcard').forEach(el => { el.onclick = () => { if (el._lp === 'done') { el._lp = null; return; } onCardClick(el.dataset.id); }; bindDetail(el); });
+}
+// bấm giữ (điện thoại) / chuột phải (máy tính): xem lá to + tên gốc + tác dụng
+function bindDetail(el) {
+  const t = el.dataset.t; if (!t) return;
+  el.addEventListener('touchstart', () => { clearTimeout(el._lpT); el._lp = null; el._lpT = setTimeout(() => { el._lp = 'done'; cardDetail(t); }, 450); }, { passive: true });
+  el.addEventListener('touchend', () => clearTimeout(el._lpT));
+  el.addEventListener('touchmove', () => clearTimeout(el._lpT), { passive: true });
+  el.addEventListener('contextmenu', e => { e.preventDefault(); clearTimeout(el._lpT); cardDetail(t); });
+}
+function cardDetail(t) {
+  if (modalKey && modalKey !== 'detail') return; // không đè lên hộp thoại bắt buộc (gỡ bom, cho lá…)
+  openModal(`<div class="card-detail">${cardHTML({ t }, 'lg')}<div class="cd-txt"><h2>${CARD[t].name}</h2><p class="cd-en">${CARD[t].en}</p><p>${CARD[t].desc}</p>${isCat(t) ? '<p class="muted">🐾 Đánh theo cặp: <b>đôi</b> rút bừa 1 lá, <b>bộ ba</b> gọi tên lá muốn đòi.</p>' : ''}<p class="muted small">Mẹo: bấm giữ / chuột phải vào lá để xem lại.</p></div></div><div class="btns"><button class="btn" onclick="__closeModal()">Đóng</button></div>`, '', 'detail');
 }
 function fitHand() {
   // tay bài chật: lá chồng lên nhau, tên rút gọn 2 dòng; quá chật trên điện thoại thì thu nhỏ lá, vẫn chật nữa mới cho vuốt ngang

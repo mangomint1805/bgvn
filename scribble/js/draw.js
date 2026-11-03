@@ -1,6 +1,6 @@
 // Bảng vẽ: canvas logic 800×600 co giãn theo khung, vẽ bằng chuột/cảm ứng (pointer events),
 // gom điểm thành lô ~100ms để gửi qua mạng, hoàn tác/xoá/đổ màu đều là "thao tác" phát lại được.
-import { W, H, PALETTE, SIZES, COLOR_NAMES, pushOp, decodePts, encodePts } from './ops.js?v=3';
+import { W, H, PALETTE, SIZES, COLOR_NAMES, pushOp, decodePts, encodePts } from './ops.js?v=4';
 export { W, H, PALETTE, SIZES };
 
 const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
@@ -62,7 +62,9 @@ export class Board {
     this.cv = document.createElement('canvas'); this.cv.width = W; this.cv.height = H;
     this.el.appendChild(this.cv); host.appendChild(this.el);
     this.ctx = this.cv.getContext('2d', { willReadFrequently: true });
-    this.ops = []; this.color = 1; this.size = 1; this.tool = 'pen'; this.g = 1; this.cur = null;
+    this.ops = []; this.base = []; this.color = 1; this.size = 1; this.tool = 'pen'; this.g = 1; this.cur = null; this.noErase = false;
+    // lớp mờ (onion skin): khung trước hiện mờ đè lên, không bấm được, không tính vào tranh
+    this.oc = document.createElement('canvas'); this.oc.width = W; this.oc.height = H; this.oc.className = 'onion'; this.oc.hidden = true; this.el.appendChild(this.oc);
     renderAll(this.ctx, []);
     this.ro = new ResizeObserver(() => this.fit()); this.ro.observe(host); this.fit();
     const c = this.cv;
@@ -82,7 +84,12 @@ export class Board {
     this.el.style.width = Math.floor(w) + 'px'; this.el.style.height = Math.floor(h) + 'px';
   }
   setEditable(b) { this.editable = !!b; this.el.classList.toggle('editable', this.editable); this.el.dataset.tool = this.tool; if (!b) this.finish(); }
-  setTool(t) { this.tool = t; this.el.dataset.tool = t; }
+  setTool(t) { if (t === 'eraser' && this.noErase) t = 'pen'; this.tool = t; this.el.dataset.tool = t; }
+  // vẽ lại toàn bộ: nền khoá (nếu có) rồi tới nét của mình; "xoá hết" chỉ xoá nét của mình
+  redraw() { const ctx = this.ctx; renderAll(ctx, this.base); for (const op of this.ops) { if (op.k === 'c') renderAll(ctx, this.base); else renderOp(ctx, op); } }
+  setBase(ops) { this.base = ops || []; this.noErase = !!this.base.length; if (this.noErase && this.tool === 'eraser') this.setTool('pen'); this.el.classList.toggle('has-base', this.noErase); this.redraw(); }
+  setOnion(ops) { if (!ops || !ops.length) { this.oc.hidden = true; return; } renderAll(this.oc.getContext('2d'), ops); this.oc.hidden = false; }
+  setBlind(b) { this.el.classList.toggle('blind', !!b); }
   pt(e) {
     const r = this.cv.getBoundingClientRect();
     return [Math.max(0, Math.min(W - 1, Math.round((e.clientX - r.left) / r.width * W))), Math.max(0, Math.min(H - 1, Math.round((e.clientY - r.top) / r.height * H)))];
@@ -124,7 +131,7 @@ export class Board {
   finish() { if (!this.cur) return; this.flush(); clearInterval(this.flushT); this.cur = null; }
   commit(op) {
     this.finish();
-    if (pushOp(this.ops, op)) renderAll(this.ctx, this.ops); else renderOp(this.ctx, op);
+    if (pushOp(this.ops, op) || (op.k === 'c' && this.base.length)) this.redraw(); else renderOp(this.ctx, op);
     this.emit([op]);
   }
   emit(ops) { this.onOps && this.onOps(ops); this.onChange && this.onChange(); }
@@ -134,13 +141,13 @@ export class Board {
   apply(ops) {
     let redraw = false;
     for (const op of ops) { if (pushOp(this.ops, op)) redraw = true; else if (!redraw) renderOp(this.ctx, op); }
-    if (redraw) renderAll(this.ctx, this.ops);
+    if (redraw) this.redraw();
   }
   setOps(ops) {
     this.cur = null; clearInterval(this.flushT); this.ops = [];
     for (const op of ops || []) pushOp(this.ops, op);
     this.g = this.ops.reduce((m, o) => Math.max(m, (o.g || 0) + 1), 1);
-    renderAll(this.ctx, this.ops);
+    this.redraw();
   }
   getOps() { this.flush(); return this.ops.slice(); }
   isEmpty() { return !this.ops.length; }
@@ -179,6 +186,7 @@ export function buildToolbar(container, board) {
     el.querySelector('.tb-color .cur').style.background = PALETTE[board.color];
     const d = Math.min(26, 4 + SIZES[board.size] * 0.6); const si = el.querySelector('.tb-size i'); si.style.width = si.style.height = d + 'px';
     el.style.setProperty('--cur', PALETTE[board.color]);
+    const er = el.querySelector('[data-t="eraser"]'); er.disabled = !!board.noErase; er.title = board.noErase ? 'Vẽ tiếp: không được tẩy nét cũ (dùng ↶ để bỏ nét của mình)' : 'Tẩy (E)';
   };
   const closePop = () => { pop.hidden = true; pop.dataset.kind = ''; };
   el.addEventListener('click', e => {
