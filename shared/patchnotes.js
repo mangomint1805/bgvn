@@ -6,6 +6,10 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa',
 };
 export const NOTES = [
+  { id: '20261104-11', date: '04/11/2026', game: 'typhu', title: 'Đất thế chấp thành đất trống', items: [
+    '🏦 Đất đang thế chấp giờ coi như ô trống: ai dừng ở đó cũng mua được với giá gốc, chủ cũ mất đất. Muốn giữ thì nhớ chuộc sớm!',
+    '↩️ Bỏ luật cũ "mua lại đất thế chấp giá gấp đôi".',
+  ] },
   { id: '20261104-10', date: '04/11/2026', game: 'cangua', title: 'Game mới: Cờ cá ngựa 3D!', items: [
     '🐴 Cờ cá ngựa 3D 2–4 người: 2 xúc xắc, đổ đôi hoặc 1+6 mới xuất chuồng và được đổ tiếp.',
     '💥 Đứng đúng ô ngựa bạn là đá bay về chuồng. Không nhảy qua đầu, lên đích bậc 3-4-5-6 là thắng.',

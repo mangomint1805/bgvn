@@ -1,19 +1,19 @@
 // Cờ Tỷ Phú Sài Gòn – giao diện: trang chủ, tạo nhân vật, sảnh, ván chơi 3D, hoạt ảnh sự kiện.
-import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=47';
+import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=48';
 import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.js?v=2';
 import {
   setData, TILES, GROUPS, GROUP_LIST, STATION_RENT, money, rentOf, canBuild, canSell, canMortgage, canUnmortgage, houseCost, mortgageValue,
   unmortgageCost, travelOk, buildBlock, tradable, tradeError, buybackPrice, netWorth, tilesOf, ownsGroup, JAIL_FINE, MAX_TRADES, isProp,
   tradeImpact, tradeSideValue,
-} from './engine.js?v=47';
-import { Board3D, THEMES } from './scene3d.js?v=47';
-import * as fx from './fx.js?v=47';
-import { guideHTML } from './guide.js?v=47';
+} from './engine.js?v=48';
+import { Board3D, THEMES } from './scene3d.js?v=48';
+import * as fx from './fx.js?v=48';
+import { guideHTML } from './guide.js?v=48';
 import { OPTIONS, PRESETS, buildAvatar, portrait } from '../../shared/js/avatar3d.js';
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=93';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=100';
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -22,7 +22,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const settings = fx.settings;
 
 // ---------- dữ liệu bàn cờ ----------
-const [tilesData, cardsData] = await Promise.all(['tiles.json?v=47', 'cards.json?v=47'].map(u => fetch(u).then(r => r.json())));
+const [tilesData, cardsData] = await Promise.all(['tiles.json?v=48', 'cards.json?v=48'].map(u => fetch(u).then(r => r.json())));
 setData(tilesData, cardsData);
 const VN = 'ẮẰẲẴẶẤẦẨẪẬĐđơưƯƠếềểễệ';
 const fontsReady = Promise.race([
@@ -192,7 +192,7 @@ const OPTS = [
   ['monopolyWin', '🏆 Thắng độc quyền', [[true, 'Bật'], [false, 'Tắt']], 'Trọn 3 nhóm màu hoặc cả 4 bến xe là thắng luôn.'],
   ['auction', '🔨 Đấu giá', [[true, 'Bật'], [false, 'Tắt']], 'Không mua thì đem ô đó ra đấu giá.'],
   ['freeBuild', '🏗️ Xây nhà', [[true, 'Không cần đủ bộ'], [false, 'Phải đủ bộ màu'], ['zing', 'ZingPlay thật']], 'Không cần đủ bộ: đất mình là xây được, lúc nào cũng được. Phải đủ bộ: luật cổ điển. ZingPlay thật: chỉ xây ở ô vừa dừng – đứng lên đất mình là hỏi luôn “Xây mấy nhà?”.'],
-  ['buyback', '💥 Mua lại đất', [[true, 'Bật'], [false, 'Tắt']], 'Trả thuê xong (hoặc dừng ở đất đang thế chấp) được mua lại đường đó với giá gấp đôi.'],
+  ['buyback', '💥 Mua lại đất', [[true, 'Bật'], [false, 'Tắt']], 'Trả thuê xong được mua lại đường đó với giá gấp đôi.'],
   ['travel', '✈️ Bãi đậu xe', [[true, 'Du lịch'], [false, 'Chỉ nghỉ']], 'Du lịch: dừng ở Bãi đậu xe được chọn 1 ô để bay tới ngay (kiểu ZingPlay).'],
   ['turnTime', '⏳ Thời gian suy nghĩ', [[0, 'Không'], [30, '30s'], [60, '60s'], [90, '90s']], 'Hết giờ máy đánh giúp (chơi online).', true],
 ];
@@ -541,7 +541,8 @@ function renderPanel() {
     }
     case 'buy': {
       const i = v.buyTile, t = TILES[i];
-      lines.push(head(actor, mine ? `🏷️ <b>${who}</b> dừng ở ô trống – mua không?` : `🤔 <b>${who}</b> đang cân nhắc mua…`), mini(i));
+      const mo = v.props[i] && v.props[i].mort ? v.props[i].owner : null;
+      lines.push(head(actor, mine ? (mo ? `🏦 Đất của ${esc(nm(v, mo))} đang thế chấp – <b>${who}</b> mua luôn không?` : `🏷️ <b>${who}</b> dừng ở ô trống – mua không?`) : `🤔 <b>${who}</b> đang cân nhắc mua…`), mini(i));
       if (mine) {
         btns.push(btn('panel', A.cash >= t.price ? `🏷️ Mua ${money(t.price)}` : '💸 Không đủ tiền', () => send(me, { type: 'buy' }), 'pri main', A.cash < t.price));
         btns.push(btn('panel', v.opts.auction && v.players.filter(p => !p.out).length > 1 ? '🔨 Không mua (đấu giá)' : '🙅 Không mua', () => send(me, { type: 'decline' }), 'ghost'));
@@ -638,7 +639,7 @@ function openTile(i, refresh = false) {
     const rows = [['Đất trống', t.rent[0], pr && h === 0 && !full], ['Đủ nhóm màu (×2)', t.rent[0] * 2, pr && h === 0 && full], ...[1, 2, 3, 4].map(n => [`${n} nhà`, t.rent[n], h === n]), ['🏛️ Landmark', t.rent[5], h === 5]];
     body = `<table>${rows.map(([a, b, c]) => `<tr class="${c ? 'cur' : ''}"><td>${a}</td><td>${money(b)}</td></tr>`).join('')}
       <tr><td>Giá mỗi nhà / Landmark</td><td>${money(houseCost(i))}</td></tr><tr><td>Thế chấp được</td><td>${money(mortgageValue(i))}</td></tr><tr><td>Chuộc lại</td><td>${money(unmortgageCost(i))}</td></tr>
-      ${pr && pr.h < 5 && v.opts.buyback ? `<tr><td>💥 Giá mua lại</td><td>${money(buybackPrice(v, i))}</td></tr>` : ''}</table>`;
+      ${pr && pr.mort ? `<tr><td>🏦 Đang thế chấp – ai dừng cũng mua được</td><td>${money(t.price)}</td></tr>` : pr && pr.h < 5 && v.opts.buyback ? `<tr><td>💥 Giá mua lại</td><td>${money(buybackPrice(v, i))}</td></tr>` : ''}</table>`;
   } else if (t.type === 'station') {
     const n = pr ? Object.keys(v.props).filter(j => TILES[j].type === 'station' && v.props[j].owner === pr.owner).length : 0;
     body = `<table>${STATION_RENT.map((r, k) => `<tr class="${n === k + 1 ? 'cur' : ''}"><td>Chủ có ${k + 1} bến xe</td><td>${money(r)}</td></tr>`).join('')}<tr><td>Thế chấp được</td><td>${money(mortgageValue(i))}</td></tr></table>`;

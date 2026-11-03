@@ -147,7 +147,9 @@ export function applyAction(s, pid, a) {
     case 'buy': {
       if (s.stage !== 'buy') return no('Không có ô để mua');
       const i = s.buyTile; if (p.cash < TILES[i].price) return no('Không đủ tiền');
+      const prev = s.props[i] && s.props[i].mort ? P(s, s.props[i].owner) : null;
       p.cash -= TILES[i].price; s.props[i] = { owner: pid, h: 0, mort: false };
+      if (prev) log(s, `🏦 ${prev.name} mất ${TILES[i].name} vì để thế chấp.`);
       ev(s, { t: 'buy', pid, tile: i, amt: TILES[i].price }); log(s, `🏷️ ${p.name} mua ${TILES[i].name} giá ${money(TILES[i].price)}.`);
       s.buyTile = null; if (checkWin(s)) return ok(); finishLanding(s); return ok();
     }
@@ -309,7 +311,8 @@ function land(s, p) {
     const pr = s.props[i];
     if (!pr) { s.stage = 'buy'; s.buyTile = i; return; }
     if (pr.owner === p.id) { finishLanding(s); return; }
-    if (pr.mort) { log(s, `😌 ${t.name} đang thế chấp – không phải trả tiền thuê.`); if (t.type === 'city') { cont(s, 'buyback:' + i); return; } finishLanding(s); return; }
+    // đất đang thế chấp coi như ô trống của ngân hàng: không thu thuê, ai dừng cũng mua được giá gốc (chủ cũ mất đất, đã nhận tiền thế chấp)
+    if (pr.mort) { log(s, `🏦 ${t.name} của ${P(s, pr.owner).name} đang thế chấp – thành đất trống, ai dừng cũng mua được!`); s.stage = 'buy'; s.buyTile = i; return; }
     const rent = rentOf(s, i, s.dice[0] + s.dice[1]), owner = P(s, pr.owner);
     log(s, `💸 ${p.name} trả ${money(rent)} tiền thuê ${t.name} cho ${owner.name}.`);
     charge(s, p, [{ pid: owner.id, amt: rent }], t.type === 'city' ? 'buyback' : 'finish', 'rent', i);
