@@ -266,16 +266,18 @@ export function applyAction(s, pid, a) {
     case 'take': {
       if (s.stack) { const n = s.stack.total; s.stack = null; log(s, `😵 ${p.name} chịu phạt: tự bốc ${n} lá!`); startOwe(s, p, { kind: 'stack', left: n }, s.turn, 1); return { ok: true }; }
       if (s.skipStack) { s.skipStack = 0; log(s, `🤐 ${p.name} bị khoá mõm.`); endTurn(s, 1); return { ok: true }; }
-      if (s.up) { const n = s.up.first ? 2 : Math.max(1, s.up.n); s.up = null; startOwe(s, p, { kind: 'up', left: n }, s.turn, -1); return { ok: true }; }
+      if (s.up) { const n = upPen(s.up); s.up = null; startOwe(s, p, { kind: 'up', left: n }, s.turn, -1); return { ok: true }; }
       return { ok: false, reason: 'Không có gì để chịu.' };
     }
   }
   return { ok: false, reason: 'Hành động không hợp lệ.' };
 }
 
+// Up: ai gãy chuỗi thì rút đúng số lá số đã được đánh từ lúc lá Up ra (ít nhất 1)
+export const upPen = up => Math.max(1, (up && up.count) || 0);
 function finishEffect(s, c, p) {
   const n = alive(s).length; s.lastDraw = null; s.drewPlayable = null;
-  if (s.up && c.type === 'n') { s.up.first = false; s.up.n = c.num; log(s, `⬆️ Up! Người kế phải đánh lá số ≥ ${c.num}.`); return endTurn(s, 1); }
+  if (s.up && c.type === 'n') { s.up.first = false; s.up.n = c.num; s.up.count = (s.up.count || 0) + 1; log(s, `⬆️ Up! Người kế phải đánh lá số ≥ ${c.num} (đang dồn ${s.up.count} lá).`); return endTurn(s, 1); }
   if (c.type === 'wtd4') {
     const t = getPlayer(s, s._target); s._target = null;
     if (!t || t.out || t === p) { s.pending = { type: 'target', player: p.id, card: c }; return; }
@@ -331,7 +333,7 @@ function finishEffect(s, c, p) {
     log(s, `🌪️ Bão tố! ${t.name} phải tự bốc tới khi ra màu ${COLOR_NAME[c.color]}!`); ev(s, 'tornado', p.id, t.id);
     return startOwe(s, t, { kind: 'tornado', until: c.color }, s.turn, 2);
   }
-  if (c.type === 'wup') { s.up = { color: s.color, n: 0, first: true }; log(s, `⬆️ Up! Từ ${nameAt(s, 1)}: mỗi người đánh 1 lá số, số sau phải bằng hoặc lớn hơn số trước.`); return endTurn(s, 1); }
+  if (c.type === 'wup') { s.up = { color: s.color, n: 0, first: true, count: 0 }; log(s, `⬆️ Up! Từ ${nameAt(s, 1)}: mỗi người đánh 1 lá số, số sau phải bằng hoặc lớn hơn số trước.`); return endTurn(s, 1); }
   const v = DRAW_VALUE[c.type];
   if (c.type === 'wrd4' || c.type === 'rev') {
     s.dir *= -1; log(s, `🔁 Đảo chiều!`);

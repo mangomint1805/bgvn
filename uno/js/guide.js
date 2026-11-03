@@ -15,7 +15,7 @@ export const CARD_HELP = {
   wd10: '<b>Đổi màu +10</b>: chọn màu, người kế rút 10 lá 😱',
   roulette: '<b>Quay màu</b>: người kế chọn 1 màu rồi lật bài tới khi ra màu đó – lật bao nhiêu giữ bấy nhiêu!',
   wtd4: '<b>Cộng nhắm +4</b>: đổi màu và chọn <b>bất kỳ ai</b> phải rút 4 lá (không cần là người kế).',
-  wup: '<b>Up</b>: từ người kế, mỗi người đánh 1 lá số (màu nào cũng được), số sau phải ≥ số trước. Ai không theo được thì rút.',
+  wup: '<b>Up</b>: từ người kế, mỗi người đánh 1 lá số (màu nào cũng được), số sau phải ≥ số trước. Ai không theo được thì rút số lá bằng số lá số đã đánh trong chuỗi (ít nhất 1).',
   tornado: '<b>Bão tố</b>: chỉ đánh lên lá cùng màu. Người kế tự bốc từng lá tới khi ra màu đó, giữ hết và mất lượt.',
   nou: '<b>No U</b>: đang bị dồn +2/+4 thì đánh lá này (màu nào cũng được) để <b>dội cả đống phạt</b> về người vừa đánh. Không có phạt thì như Đảo chiều.',
   shield: '<b>Khiên</b>: như Đổi màu; đang bị dồn +2/+4 thì giơ Khiên để <b>chuyền nguyên phạt</b> sang người kế.',
@@ -66,7 +66,7 @@ export function openGuide(openModal, cardHTML) {
         [C('W', 'wswap'), '<b>Đổi tay</b>: đổi màu, rồi đổi nguyên bộ bài với 1 người.'],
         [C('B', 'tornado'), '<b>Bão tố</b>: chỉ đánh lên lá <b>cùng màu</b>. Người kế phải <b>tự bốc từng lá</b> (mỗi lá cách nhau 1 giây 😈) tới khi ra lá cùng màu Bão tố (hoặc lá Đổi màu), giữ hết và mất lượt.'],
         [C('Y', 'discall'), '<b>Xả màu</b>: xả luôn mọi lá cùng màu trên tay.'],
-        [C('W', 'wup'), '<b>Up</b>: đổi màu, rồi từ người kế mỗi người đánh 1 lá số (màu nào cũng được), số sau phải <b>bằng hoặc lớn hơn</b> số trước. Ai không theo được rút số lá bằng con số đang thách.'],
+        [C('W', 'wup'), '<b>Up</b>: đổi màu, rồi từ người kế mỗi người đánh 1 lá số (màu nào cũng được), số sau phải <b>bằng hoặc lớn hơn</b> số trước. Ai không theo được rút số lá bằng <b>số lá số đã được đánh</b> từ lúc lá Up ra (ít nhất 1) – chuỗi càng dài càng đau.'],
       ])}`],
     modes: ['⚙️ Chế độ', () => `
       <h3>🎴 Cổ điển</h3><p>Luật chuẩn. Bị +2/+4 thì rút luôn, không được chồng.</p>

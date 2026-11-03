@@ -1,10 +1,10 @@
-import { Host, Client, MAX, loadSnapshot, session, UNO_PHRASES } from './net.js?v=18';
+import { Host, Client, MAX, loadSnapshot, session, UNO_PHRASES } from './net.js?v=19';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=5';
-import { MODES, COLOR_NAME, cardText, DRAW_VALUE, CARD_NAME, MATCH_TARGETS } from './engine.js?v=18';
-import * as fx from './ufx.js?v=18';
-import { openGuide, CARD_HELP, NEW_TYPES } from './guide.js?v=18';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=6';
+import { MODES, COLOR_NAME, cardText, DRAW_VALUE, CARD_NAME, MATCH_TARGETS } from './engine.js?v=19';
+import * as fx from './ufx.js?v=19';
+import { openGuide, CARD_HELP, NEW_TYPES } from './guide.js?v=19';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -237,7 +237,7 @@ function render() {
   $('#dir').classList.toggle('ccw', v.dir < 0);
   $('#dir').style.color = (COL_HEX[v.color] || '#7a5cff') + '66';
   const sb = $('#stack-badge');
-  sb.textContent = v.stack ? `+${v.stack.total} lá!` : v.skipStack ? '🤐 Khoá mõm' : v.up ? (v.up.first ? '⬆ UP: đánh lá số' : `⬆ UP ≥ ${v.up.n}`) : '';
+  sb.textContent = v.stack ? `+${v.stack.total} lá!` : v.skipStack ? '🤐 Khoá mõm' : v.up ? (v.up.first ? '⬆ UP: đánh lá số' : `⬆ UP ≥ ${v.up.n} · dồn ${v.up.count || 0}`) : '';
   if (v.owe) sb.textContent = v.owe.until ? `🌪️ Bốc tới ${COLOR_NAME[v.owe.until]}` : v.owe.kind === 'mystery' && !v.owe.got ? '❓ +? bốc thử 1 lá' : `🃏 Còn ${v.owe.left} lá`;
   sb.classList.toggle('show', !!(v.stack || v.skipStack || v.up || v.owe));
   // gợi ý
@@ -312,7 +312,7 @@ function renderHint(v, meP) {
   h.classList.add('mine');
   if (v.stack) h.innerHTML = v.playable.length ? `🔥 Bị dồn <b>+${v.stack.total}</b>! Chồng ${v.rules.stackAny ? 'lá +2/+4 bất kỳ' : `lá rút ≥ +${v.stack.last}`}${v.rules.extras ? ', giơ <b>Khiên</b> để chuyền tiếp, hoặc <b>No U</b> để dội ngược' : ''}, hoặc chịu phạt.` : v.stackDrew === myId ? `😵 Bốc thử không trúng – bấm <b>Chịu phạt +${v.stack.total}</b>.` : `😵 Không có lá để chồng – <b>🎲 Bốc thử 1 lá</b> (trúng lá cộng / Khiên / No U là chồng tiếp được) hoặc <b>Chịu phạt +${v.stack.total}</b>.`;
   else if (v.skipStack) h.innerHTML = '🤐 Bạn bị khoá mõm! Đánh Khoá mõm để chuyền, hoặc chịu mất lượt.';
-  else if (v.up) h.innerHTML = v.up.first ? '⬆️ Up! Đánh 1 lá số bất kỳ (màu nào cũng được), không có thì chịu rút 2.' : `⬆️ Up! Đánh lá số <b>≥ ${v.up.n}</b> (màu nào cũng được), không có thì rút ${Math.max(1, v.up.n)} lá.`;
+  else if (v.up) h.innerHTML = v.up.first ? '⬆️ Up! Đánh 1 lá số bất kỳ (màu nào cũng được), không có thì chịu rút 1.' : `⬆️ Up! Đánh lá số <b>≥ ${v.up.n}</b> (màu nào cũng được), không có thì rút <b>${Math.max(1, v.up.count || 0)}</b> lá (= số lá số đã đánh trong chuỗi).`;
   else if (v.mustPlay) h.innerHTML = '✨ Lá vừa rút đánh được – bấm vào nó để đánh' + (v.canPass ? ', hoặc Giữ lại.' : '!');
   else if (v.playable.length) h.innerHTML = `🎯 Lượt bạn! Đánh lá cùng màu ${dot}, cùng số/ký hiệu, hoặc lá Đổi màu.`;
   else if (v.rules.noActionFinish && meP.hand.length === 1 && meP.hand[0].type !== 'n') h.innerHTML = '🚫 Lá cuối không được là lá chức năng – bấm <b>Rút bài</b>.';
@@ -324,7 +324,7 @@ function renderActions(v, meP) {
     if (iOwe()) { const wait = Date.now() < pullReadyAt; a.push(`<button class="btn red pull ${wait ? 'cd' : ''}" data-act="pull" ${wait ? 'disabled' : ''}>🃏 Bốc! ${v.owe.until ? `(tìm ${COLOR_NAME[v.owe.until]})` : v.owe.kind === 'mystery' && !v.owe.got ? '(xem số mấy ❓)' : `(còn ${v.owe.left})`}</button>`); }
     else if (my && v.stack) { if (v.stackDrew !== myId && v.deckCount > 0) a.push(`<button class="btn blue" data-act="stackdraw" title="Bốc 1 lá: trúng lá cộng, Khiên hoặc No U thì đánh chồng tiếp ngay (+? không tính)">🎲 Bốc thử</button>`); a.push(`<button class="btn red" data-act="take">😵 Chịu phạt +${v.stack.total}</button>`); }
     else if (my && v.skipStack) a.push(`<button class="btn red" data-act="take">🤐 Chịu khoá mõm</button>`);
-    else if (my && v.up) a.push(`<button class="btn red" data-act="take">⬆️ Chịu rút ${v.up.first ? 2 : Math.max(1, v.up.n)}</button>`);
+    else if (my && v.up) a.push(`<button class="btn red" data-act="take">⬆️ Chịu rút ${Math.max(1, v.up.count || 0)}</button>`);
     else if (my && v.canPass) a.push(`<button class="btn" data-act="pass">✋ Giữ lại, qua lượt</button>`);
     else if (my && !v.mustPlay) a.push(`<button class="btn blue" data-act="draw">🂠 Rút bài</button>`);
     if (meP.handCount <= 2 && !meP.saidUno && (my || v.unoWatch === myId)) a.push(`<button class="btn uno" data-act="uno">UNO!</button>`);

@@ -1,5 +1,5 @@
 // Bot UNO đơn giản mà khôn vừa phải.
-import { getPlayer, current, playableIds, COLORS, DRAW_VALUE, isWild } from './engine.js?v=18';
+import { getPlayer, current, playableIds, COLORS, DRAW_VALUE, isWild } from './engine.js?v=19';
 
 function bestColor(hand) {
   const cnt = { R: 0, Y: 0, G: 0, B: 0 };

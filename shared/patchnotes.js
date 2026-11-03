@@ -5,6 +5,9 @@ export const GAMES = {
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
 };
 export const NOTES = [
+  { id: '20261103-15', date: '03/11/2026', game: 'uno', title: 'Lá Up phạt theo độ dài chuỗi', items: [
+    '⬆️ Gãy chuỗi Up giờ phải rút đúng số lá số đã được đánh từ lúc lá Up ra (ít nhất 1) – chuỗi càng dài càng đau.',
+  ] },
   { id: '20261103-14', date: '03/11/2026', game: 'uno', title: 'Bão Tố đúng màu & nhạc không tắt', items: [
     '🌀 Hình xoáy trên lá Bão Tố giờ cùng màu lá bài.',
     '🎵 Chuyển tab/ra màn hình chính rồi quay lại, nhạc nền tự bật lại.',
