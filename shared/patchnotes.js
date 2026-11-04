@@ -6,6 +6,9 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài',
 };
 export const NOTES = [
+  { id: '20261105-04', date: '05/11/2026', game: 'meono', title: 'Sửa con dấu ĐÉO! mất dấu', items: [
+    '🔧 Con dấu ĐÉO! giữa bàn hiện đủ dấu tiếng Việt (HUỶ!, CỨU LẠI!), vân mực nhẹ hơn cho dễ đọc.',
+  ] },
   { id: '20261105-03', date: '05/11/2026', game: 'all', title: 'Nhạc tự bật, hướng dẫn có hình, bộ bài Tây mới', items: [
     '🎵 Nhạc nền tự bật khi chạm vào game (tắt thì máy nhớ). Mỗi game 2–3 bài hợp chất: sảnh, đang chơi, lúc gay cấn – chuyển mượt, đổi tab không mất nhạc. Thêm tiếng tích tắc hết giờ, thắng/thua.',
     '🖼️ Hướng dẫn mọi game có "⚡ Bắt đầu nhanh" và hình minh hoạ cho từng luật (ảnh chụp thật + lá bài/bàn cờ vẽ sẵn).',

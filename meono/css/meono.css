@@ -537,11 +537,16 @@ input#name,.join-row input,.opt select{border:2.5px solid var(--ink)}
 .stamp{position:absolute;left:0;top:0;transform:translate(-50%,-50%) translate(var(--dx),var(--dy)) rotate(var(--r));display:flex;flex-direction:column;align-items:center;justify-content:center;
   width:clamp(170px,min(58vw,72vh),330px);padding:4px 10px 8px;border-radius:18px;color:#e11d48;border:7px solid currentColor;background:#fff7f8f5;
   box-shadow:inset 0 0 0 3px #fff7f8,inset 0 0 0 6px currentColor,0 10px 26px -10px #0008;font-family:"Baloo 2","Be Vietnam Pro",sans-serif;line-height:1;
-  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -4.5 3.4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E") 0 0/160px 160px;
-  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -4.5 3.4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E") 0 0/160px 160px;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -3.6 3.3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E") 0 0/160px 160px;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -3.6 3.3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E") 0 0/160px 160px;
   animation:stampSlam .52s cubic-bezier(.3,1.6,.5,1) both}
 .stamp b{font-size:clamp(46px,min(21vw,24vh),118px);font-weight:800;letter-spacing:1px;line-height:.95;margin-top:4px}
 .stamp small{font-family:"Be Vietnam Pro",sans-serif;font-weight:800;font-size:clamp(12px,min(3.8vw,4vh),18px);letter-spacing:.3px;text-transform:uppercase;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* giữ đủ dấu tiếng Việt: chừa chỗ trên cho dấu, không cắt dòng nhỏ theo chiều dọc, vân mực nhẹ hơn để dấu nhỏ không bị ăn mất */
+.stamp{padding:12px 12px 10px}
+.stamp b{line-height:1.12;padding-top:.08em}
+.stamp small{line-height:1.45;padding:2px 2px 0;overflow:visible;text-overflow:clip;white-space:normal;text-align:center}
+.stamp{-webkit-mask-size:220px 220px;mask-size:220px 220px}
 .stamp .lv{position:absolute;right:8px;top:4px;font-style:normal;font-weight:800;font-size:clamp(18px,5vw,26px)}
 .stamp.save{color:#1d4ed8;background:#f3f7fff5;box-shadow:inset 0 0 0 3px #f3f7ff,inset 0 0 0 6px currentColor,0 10px 26px -10px #0008}
 .stamp.old{opacity:.55;filter:saturate(.8)}
