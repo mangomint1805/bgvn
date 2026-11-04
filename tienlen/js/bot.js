@@ -1,5 +1,5 @@
 // Bot Tiến Lên: 3 cấp – easy (🐣 Gà mờ), normal (🙂 Vừa), hard (😈 Cao thủ)
-import { classify, legalPlays, rankOf, HEO, isHang, isHeoCombo, isChop, getPlayer, current } from './engine.js?v=1';
+import { classify, legalFor, rankOf, HEO, isHang, isHeoCombo, isChop, getPlayer, current } from './engine.js?v=3';
 
 export const LEVELS = { easy: '🐣 Gà mờ', normal: '🙂 Vừa', hard: '😈 Cao thủ' };
 
@@ -93,7 +93,8 @@ export function isBoss(s, hand, c) {
 export function rankPlays(s, pid, level = 'normal') {
   const p = getPlayer(s, pid); if (!p) return [];
   const table = s.table && s.table.combo;
-  const plays = legalPlays(p.hand, table, s.mustInclude);
+  const plays = legalFor(s, pid);
+  const veHeo = (s.opts && s.opts.veHeo) || 'free';
   const base = handScore(p.hand);
   const others = s.players.filter(q => q.id !== pid && !q.out);
   const minOpp = others.length ? Math.min(...others.map(q => q.hand ? q.hand.length || q.handCount || 13 : 13)) : 13;
@@ -108,6 +109,8 @@ export function rankPlays(s, pid, level = 'normal') {
     const c = classify(ids), rest = p.hand.filter(x => !ids.includes(x));
     let sc = handScore(rest) - base;
     if (!rest.length) sc = -999; // về luôn
+    // cấm về heo: đừng để trên tay chỉ còn heo (sẽ kẹt, bị thối) – giữ lại 1 lá thường để về
+    else if (veHeo !== 'free' && rest.every(x => rankOf(x) === HEO)) sc += 8;
     const heoUsed = ids.filter(x => rankOf(x) === HEO).length;
     if (table) {
       if (isChop(c, table)) sc -= isHeoCombo(table) ? 4 : 2.5; // chặt được là chặt

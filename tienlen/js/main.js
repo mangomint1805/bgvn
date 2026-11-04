@@ -1,12 +1,12 @@
-import { Host, Client, MAX, loadSnapshot, session, TL_PHRASES, BEG_LIMIT } from './net.js?v=1';
+import { Host, Client, MAX, loadSnapshot, session, TL_PHRASES, BEG_LIMIT } from './net.js?v=3';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
-import { classify, legalPlays, comboName, comboKind, rankOf, HEO, BETS, TURN_TIMES, DEFAULT_OPTS, START_CHIPS, TOI_TRANG, isHang, cardName } from './engine.js?v=1';
-import { rankPlays, splitHand, LEVELS } from './bot.js?v=1';
-import { cardHTML } from './cards.js?v=1';
-import { guideHTML } from './guide.js?v=1';
-import * as fx from './tfx.js?v=1';
+import { classify, legalPlays, badFinish, VE_HEO, comboName, comboKind, rankOf, HEO, BETS, TURN_TIMES, DEFAULT_OPTS, START_CHIPS, TOI_TRANG, isHang, cardName } from './engine.js?v=3';
+import { rankPlays, splitHand, LEVELS } from './bot.js?v=3';
+import { cardHTML } from './cards.js?v=3';
+import { guideHTML } from './guide.js?v=3';
+import * as fx from './tfx.js?v=3';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -31,6 +31,16 @@ function avColor(name) {
   let h = 0; for (const ch of clean(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return AV_COL[h % AV_COL.length];
 }
 const avatar = (name, cls = '') => `<div class="av ${cls}" style="background:${avColor(name)}">${esc([...clean(name).trim()][0] || '?').toUpperCase()}</div>`;
+
+// ---------- màu bàn (của riêng từng người, lưu máy) ----------
+const THEMES = { xanh: '🟢 Nỉ xanh', tet: '🧧 Đỏ Tết', go: '🪵 Gỗ tối' };
+let theme = THEMES[ls.get('tl-theme')] ? ls.get('tl-theme') : 'xanh';
+function setTheme(t, say = false) {
+  theme = THEMES[t] ? t : 'xanh'; ls.set('tl-theme', theme);
+  document.body.dataset.tlt = theme;
+  $$('#theme-seg [data-theme]').forEach(b => b.classList.toggle('on', b.dataset.theme === theme));
+  if (say) toast('🎨 Bàn ' + THEMES[theme].replace(/^\S+ /, ''));
+}
 
 // ---------- màn hình / hộp thoại ----------
 function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
@@ -116,9 +126,11 @@ function renderLobby() {
   $('#btn-beg-lobby').style.display = meP && meP.chips < BEG_LIMIT(o.bet) ? '' : 'none';
   $('#opts').innerHTML = `<div class="opt-line"><b>🪙 Cược 1 phần</b><div class="seg">${BETS.map(b => `<button class="chip ${o.bet === b ? 'on' : ''}" data-bet="${b}" ${dis}>${b}</button>`).join('')}</div></div>
     ${Object.entries(OPT_INFO).map(([k, [t, d]]) => `<label class="rule"><input type="checkbox" data-opt="${k}" ${o[k] ? 'checked' : ''} ${dis}><span><b>${t}</b><small>${d}</small></span></label>`).join('')}
+    <div class="opt-line"><b>🐷 Về heo</b><div class="seg wrap">${Object.entries(VE_HEO).map(([k, t]) => `<button class="chip ${(o.veHeo || DEFAULT_OPTS.veHeo) === k ? 'on' : ''}" data-vh="${k}" ${dis}>${t}</button>`).join('')}</div></div>
     <div class="opt-line"><b>⏱ Giờ mỗi lượt</b><div class="seg">${TURN_TIMES.map(t => `<button class="chip ${o.turnTime === t ? 'on' : ''}" data-tt="${t}" ${dis}>${t}s</button>`).join('')}</div></div>
     <p class="opt-note">Heo đen ${o.bet} · heo đỏ ${2 * o.bet} · tứ quý ${4 * o.bet} chip… chi tiết trong 📖 Hướng dẫn.</p>`;
   $$('#opts [data-bet]').forEach(b => b.onclick = () => net.setOpt('bet', +b.dataset.bet));
+  $$('#opts [data-vh]').forEach(b => b.onclick = () => net.setOpt('veHeo', b.dataset.vh));
   $$('#opts [data-tt]').forEach(b => b.onclick = () => net.setOpt('turnTime', +b.dataset.tt));
   $$('#opts [data-opt]').forEach(i => i.onchange = () => net.setOpt(i.dataset.opt, i.checked));
   $('#btn-start').style.display = isHost ? '' : 'none';
@@ -139,6 +151,9 @@ $('#btn-guide').onclick = $('#btn-guide-home').onclick = () => openModal(guideHT
 const news = () => { openNews('tienlen'); ['#btn-news-home', '#btn-news'].forEach(k => $(k).classList.remove('bgvn-dot')); };
 $('#btn-news-home').onclick = $('#btn-news').onclick = news;
 newsBadge($('#btn-news-home'), 'tienlen'); newsBadge($('#btn-news'), 'tienlen');
+setTheme(theme);
+$$('#theme-seg [data-theme]').forEach(b => b.onclick = () => setTheme(b.dataset.theme));
+$('#btn-theme').onclick = () => { const k = Object.keys(THEMES); setTheme(k[(k.indexOf(theme) + 1) % k.length], true); };
 $('#btn-log').onclick = () => $('#log').classList.toggle('open');
 $('#btn-log-close').onclick = () => $('#log').classList.remove('open');
 $('#btn-sort').onclick = () => { sortMode = sortMode === 'rank' ? 'combo' : 'rank'; ls.set('tl-sort', sortMode); toast(sortMode === 'rank' ? '🔃 Xếp theo số' : '🔃 Gom theo bộ'); render(); };
@@ -151,7 +166,7 @@ const isMyTurn = () => !!(view && view.phase === 'playing' && view.players[view.
 const pById = id => view && view.players.find(p => p.id === id);
 const nm = (id, subj = true) => id === myId ? (subj ? 'Bạn' : 'bạn') : clean((pById(id) || {}).name || '?');
 const chipsOf = id => { if (!view) return 0; const b = view.before && view.before[id] != null ? view.before[id] : START_CHIPS; return view.settled ? (view.chips[id] ?? b) : b + (view.delta[id] || 0); };
-function legalNow() { const v = view; if (!isMyTurn()) return []; return legalPlays(myHand(), v.table && v.table.combo, v.mustInclude); }
+function legalNow() { const v = view; if (!isMyTurn()) return []; const h = myHand(); return legalPlays(h, v.table && v.table.combo, v.mustInclude).filter(ids => !badFinish(h, ids, v.opts.veHeo)); }
 const keyOf = ids => [...ids].sort((a, b) => a - b).join(',');
 
 // ---------- xếp bài trên tay ----------
@@ -190,7 +205,7 @@ function render() {
     return `<div class="seat pos-${pos[i]} ${p.id === curId ? 'turn' : ''} ${p.passed && v.phase === 'playing' ? 'passed' : ''} ${p.out ? 'out' : ''} ${p.handCount <= 2 && !p.out && v.phase === 'playing' ? 'danger' : ''}" data-pid="${p.id}">
       <div class="plate">${avatar(p.name)}<div class="ring"></div>
         <div class="who"><b class="nm">${esc(clean(p.name))}${p.isBot ? ` <span class="bot" title="${esc(LEVELS[(v.levels || {})[p.id] || 'normal'])}">🤖</span>` : ''}${away ? ' 📴' : ''}</b><span class="chips">🪙 ${fmt(chipsOf(p.id))}</span></div>
-        <div class="cnt" title="Số lá còn lại"><i class="mb"></i><b>${p.handCount}</b></div></div>
+        <div class="cnt ${p.handCount ? '' : 'none'}" title="Còn ${p.handCount} lá">${'<i class="mb"></i>'.repeat(Math.min(3, p.handCount))}<b>${p.handCount}</b></div></div>
       ${st ? `<div class="tag ${st[1]}">${st[0]}</div>` : ''}</div>`;
   }).join('');
   // bàn
@@ -209,6 +224,7 @@ function render() {
 function seatStatus(p, v) {
   if (v.toiTrang) return p.id === v.toiTrang.pid ? ['⚡ Tới trắng', 'gold'] : null;
   if (p.cong) return ['🥶 Cóng', 'bad'];
+  if (p.stuck) return ['😵 Kẹt heo', 'bad'];
   if (p.out) return [['', '🥇 Nhất', '🥈 Nhì', '🥉 Ba', 'Bét'][v.finished.indexOf(p.id) + 1] || '✅ Về', 'gold'];
   if (v.phase === 'ended') return p.place ? [['', '🥇 Nhất', '🥈 Nhì', '🥉 Ba', '💀 Bét'][p.place], p.place === 1 ? 'gold' : ''] : null;
   if (p.passed) return ['🙅 Bỏ', 'muted'];
@@ -222,7 +238,10 @@ function renderPile(v) {
   const k = t ? keyOf(t.cards) + t.pid : 'none' + v.round;
   if (top.dataset.k !== k) {
     top.dataset.k = k;
-    top.innerHTML = t ? `<div class="crow tbl ${isHang(t.combo) ? 'hang' : ''}">${t.cards.map(c => cardHTML(c)).join('')}</div>` : '';
+    // xoè nhẹ: lá giữa thẳng, hai đầu nghiêng & thấp xuống chút
+    const n = t ? t.cards.length : 0, half = (n - 1) / 2 || 1, step = Math.min(4, 22 / Math.max(n, 1));
+    const fan = i => { const d = i - (n - 1) / 2; return `style="--rot:${(d * step).toFixed(2)}deg;--dy:${(6 * (d / half) ** 2).toFixed(1)}px"`; };
+    top.innerHTML = t ? `<div class="crow tbl fan ${isHang(t.combo) ? 'hang' : ''} ${t.chain ? 'chopped' : ''}">${t.cards.map((c, i) => cardHTML(c, '', n > 1 ? fan(i) : '')).join('')}</div>` : '';
     prev.innerHTML = t && before ? `<div class="crow tbl">${before.cards.map(c => cardHTML(c)).join('')}</div>` : '';
     fitRow(top.firstElementChild); fitRow(prev.firstElementChild);
   }
@@ -230,13 +249,14 @@ function renderPile(v) {
   if (v.phase === 'ended') {
     cap.innerHTML = v.toiTrang ? `⚡ <b>${esc(nm(v.toiTrang.pid))}</b> tới trắng: ${esc(TOI_TRANG[v.toiTrang.kind])}` : '🏁 Hết ván';
   } else if (t) {
-    cap.innerHTML = `${avatar(pById(t.pid).name, 'xs')}<span><b>${esc(nm(t.pid))}</b> · ${esc(comboName(t.combo))}${t.chain ? ' <em class="chop-tag">🔪 chặt</em>' : ''}</span>`;
+    cap.innerHTML = `${avatar(pById(t.pid).name, 'xs')}<span><b>${esc(nm(t.pid))}</b> · ${esc(comboName(t.combo))}</span>${t.chain ? '<em class="chop-tag">🔪 chặt</em>' : ''}`;
   } else {
     const L = v.players[v.turn];
     cap.innerHTML = v.mustInclude != null ? `🃏 <b>${esc(nm(L.id))}</b> đi trước · phải có <b class="${v.mustInclude % 4 >= 2 ? 'red' : ''}">${cardName(v.mustInclude)}</b>`
       : `👑 <b>${esc(nm(L.id))}</b> cầm cái · đánh tự do`;
   }
   cap.classList.toggle('empty', !t);
+  $('#pile').classList.toggle('has-hang', !!(t && isHang(t.combo)));
 }
 // dãy lá chồng lên nhau cho vừa chiều ngang
 function fitRow(row) {
@@ -278,13 +298,14 @@ function renderHand(v, meP) {
       list.map(ids => `<button class="sg" data-ids="${ids.join(',')}">${esc(comboName(classify(ids)))}</button>`).join('');
     $$('#suggest [data-ids]').forEach(b => b.onclick = () => { sel = new Set(b.dataset.ids.split(',').map(Number)); fx.sfx.snap(); render(); });
   } else {
-    sg.innerHTML = `<span class="sg-txt">${!legal.length ? '🙈 Không có bài chặn – bấm <b>Bỏ lượt</b>' : v.table ? `👆 Chặn <b>${esc(comboName(v.table.combo))}</b> hoặc Bỏ lượt` : v.mustInclude != null ? `👆 Nước đầu phải có <b>${cardName(v.mustInclude)}</b>` : '👑 Bạn cầm cái – đánh bộ gì cũng được'}</span>`;
+    sg.innerHTML = `<span class="sg-txt">${!legal.length ? '🙈 Không có bài đè được – tự bỏ lượt…' : v.table ? `👆 Chặn <b>${esc(comboName(v.table.combo))}</b> hoặc Bỏ lượt` : v.mustInclude != null ? `👆 Nước đầu phải có <b>${cardName(v.mustInclude)}</b>` : '👑 Bạn cầm cái – đánh bộ gì cũng được'}</span>`;
   }
 }
 function selReason(v, c) {
   const ids = [...sel];
   if (!c) return ids.length >= 3 && ids.some(x => rankOf(x) === HEO) && ids.some(x => rankOf(x) !== HEO) ? '⛔ Sảnh/đôi thông không được có heo' : '🤔 Chưa thành bộ';
   if (v.mustInclude != null && !ids.includes(v.mustInclude)) return `⛔ Phải có ${cardName(v.mustInclude)}`;
+  const bf = badFinish(myHand(), ids, v.opts.veHeo); if (bf) return '⛔ ' + bf + ' – giữ lá thường để về';
   if (v.table) return v.table.combo.type === c.type && v.table.combo.len === c.len ? '⛔ Nhỏ hơn bài trên bàn' : `⛔ Phải là ${comboKind(v.table.combo)}`;
   return '🤔 Chưa thành bộ';
 }
@@ -305,6 +326,9 @@ function renderActions(v, meP) {
   const c = selOk ? classify([...sel]) : null;
   pb.innerHTML = c && v.table && isHang(c) && (v.table.combo.type === 'single' || v.table.combo.type === 'pair' || isHang(v.table.combo)) && c.type !== v.table.combo.type ? '🔪 Chặt!' : 'Đánh';
   pb.classList.toggle('chop', pb.textContent.includes('Chặt'));
+  // chọn đúng bộ nhưng là nước "về" bị cấm → ghi rõ trên nút
+  const selC = my && !selOk && sel.size ? classify([...sel]) : null;
+  if (selC && badFinish(myHand(), [...sel], v.opts.veHeo)) pb.innerHTML = '🚫 Cấm về heo';
   $('#btn-pass').disabled = !(my && v.table);
   $('#btn-hint').disabled = !my || !legal.length;
   $('#btn-sort').disabled = !myHand().length;
@@ -356,20 +380,34 @@ function animate(a, b) {
   for (const e of evs) {
     if (e.k === 'play') {
       incoming = true;
-      const html = `<div class="crow tbl fly">${e.cards.map(c => cardHTML(c)).join('')}</div>`;
       const heo = e.cards.some(c => rankOf(c) === HEO);
-      setTimeout(() => fx.fly(html, seatEl(e.from), $('#pile-top'), { duration: 330, onEnd: () => { incoming = false; $('#pile-top').classList.remove('incoming'); fx.pop($('#pile-top'), 'land'); heo ? fx.sfx.heo() : fx.sfx.play(e.cards.length); } }), delay);
-      if (heo && !evs.some(x => x.k === 'chop')) setTimeout(() => fx.floatText($('#pile-top'), '🐷 Heo!', 'heo'), delay + 340);
+      // điểm xuất phát chụp NGAY (trước khi vẽ lại): lá trên tay mình, hoặc quạt bài của ghế đối thủ
+      const fan = e.from === myId ? null : $(`.seat[data-pid="${e.from}"] .cnt`) || seatEl(e.from);
+      const rectOf = el => { if (!el) return null; const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width }; };
+      const items = e.cards.map((c, i) => {
+        const hc = e.from === myId ? $(`#hand .pc[data-c="${c}"]`) : null;
+        const from = hc ? rectOf(hc) : rectOf(fan || seatEl(e.from));
+        if (from && !hc) { from.w = Math.min(from.w, 26); from.r = (i - (e.cards.length - 1) / 2) * 8 - 10; from.o = .7; }
+        return { html: cardHTML(c), from, to: () => {
+          const el = $(`#pile-top .pc[data-c="${c}"]`); if (!el) return null;
+          const r = el.getBoundingClientRect();
+          return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: el.offsetWidth, h: el.offsetHeight, rot: parseFloat(el.style.getPropertyValue('--rot')) || 0 };
+        } };
+      });
+      fx.flyCards(items, { delay, duration: 420, stagger: Math.min(40, 240 / e.cards.length), onEnd: () => { incoming = false; $('#pile-top').classList.remove('incoming'); fx.pop($('#pile-top'), 'land'); heo ? fx.sfx.heo() : fx.sfx.play(e.cards.length); } });
+      if (heo && !evs.some(x => x.k === 'chop')) setTimeout(() => fx.floatText($('#pile-top'), '🐷 Heo!', 'heo'), delay + 460);
     } else if (e.k === 'pass') {
       setTimeout(() => { fx.floatText(seatEl(e.from), pick(['Bỏ 🙈', 'Né 🏃', 'Thôi 😶', 'Bỏ ✋'])); fx.sfx.pass(); }, delay);
     } else if (e.k === 'chop') {
-      delay += 360;
+      delay += 480;
       setTimeout(() => chopAnim(e), delay);
       delay += 600;
     } else if (e.k === 'round') {
       setTimeout(() => { fx.sfx.round(); fx.floatText(seatEl(e.from), '👑 Cầm cái', 'gold'); }, delay + 250);
     } else if (e.k === 'finish') {
       setTimeout(() => { fx.sfx.finish(); fx.burst(seatEl(e.from), 26); fx.banner(e.n === 1 ? `🥇 ${nm(e.from)} về nhất!` : `${['', '', '🥈', '🥉'][e.n] || '✅'} ${nm(e.from)} về ${['', '', 'nhì', 'ba'][e.n] || ''}`, e.n === 1 ? 'gold' : ''); }, delay + 400);
+    } else if (e.k === 'stuck') {
+      setTimeout(() => { fx.sfx.cong(); fx.banner(`😵 ${nm(e.from)} kẹt heo!`, 'ice', 'Luật cấm về heo – chịu bét, bị thối'); fx.shake(seatEl(e.from)); }, delay + 700);
     } else if (e.k === 'cong') {
       setTimeout(() => { fx.sfx.cong(); fx.banner(`🥶 ${nm(e.from)} bị CÓNG!`, 'ice', 'Chưa đánh được lá nào mà người ta về rồi'); fx.shake(seatEl(e.from)); }, delay + 900);
     } else if (e.k === 'end') {

@@ -23,7 +23,9 @@ export const DEFAULT_OPTS = {
   chatChong: true,  // chặt chồng: người bị chặt sau cùng đền luôn phần trước đó
   spadeEvery: false,// ván nào cũng người có 3♠ đi trước (mặc định: người thắng ván trước đi trước)
   turnTime: 30,     // giây mỗi lượt cho người thật (hết giờ máy đánh thay)
+  veHeo: 'heoHang', // cấm về (đánh nước cuối) bằng: 'heoHang' heo + tứ quý/đôi thông · 'heo' chỉ heo · 'free' cho phép
 };
+export const VE_HEO = { heoHang: 'Cấm về heo + hàng', heo: 'Cấm về heo', free: 'Cho phép' };
 // chip đổi tay (tính theo "phần" = opts.bet)
 export const PAY = { heoDen: 1, heoDo: 2, dt3: 3, tuQuy: 4, dt4: 5, cong: 2, toiTrang: 4 };
 // tiền theo hạng: [hạng trả, hạng nhận, số phần]
@@ -121,6 +123,26 @@ export function legalPlays(hand, tableCombo = null, mustInclude = null) {
     if (c && beats(c, tableCombo)) res.push(ids);
   }
   return res;
+}
+
+// nước đánh làm hết bài (về) có bị cấm không? trả về lý do hoặc null
+export function badFinish(hand, ids, veHeo = 'heoHang') {
+  if (!veHeo || veHeo === 'free' || ids.length !== hand.length) return null;
+  if (ids.some(c => rankOf(c) === HEO)) return 'Không được về bằng heo 🐷';
+  if (veHeo === 'heoHang') { const c = classify(ids); if (isHang(c)) return `Không được về bằng ${c.type === 'quad' ? 'tứ quý' : 'đôi thông'} 💣`; }
+  return null;
+}
+// các nước hợp lệ của người đang tới lượt (đã trừ nước "về" bị cấm)
+export function legalFor(s, pid) {
+  const p = getPlayer(s, pid); if (!p) return [];
+  return legalPlays(p.hand, s.table && s.table.combo, s.mustInclude).filter(ids => !badFinish(p.hand, ids, s.opts && s.opts.veHeo));
+}
+// tới lượt CHẶN (không phải cầm cái) mà trên tay không có bộ nào đè/chặt được → nên tự bỏ lượt
+export function mustAutoPass(s, pid) {
+  if (!s || s.phase !== 'playing' || !s.table) return false;
+  const p = s.players[s.turn];
+  if (!p || p.id !== pid || p.out || s.table.pid === pid) return false;
+  return legalFor(s, pid).length === 0;
 }
 
 // ---------- tới trắng ----------
@@ -230,6 +252,21 @@ function newRound(s, ownerIdx) {
   const L = s.players[lead];
   log(s, s.players[ownerIdx].out ? `Vòng mới – ${pname(L)} hưởng sái, được đánh tự do.` : `Vòng mới – ${pname(L)} cầm cái, đánh tự do.`);
   fx(s, { k: 'round', from: L.id });
+  settleLead(s);
+}
+// cầm cái mà không còn nước nào được phép (vd. chỉ còn heo, bị cấm về heo) → kẹt: ngồi chờ, chịu bét + thối
+function settleLead(s) {
+  while (s.phase === 'playing' && !s.table) {
+    const L = s.players[s.turn];
+    if (legalFor(s, L.id).length) return;
+    L.out = true; L.stuck = true;
+    log(s, `😵 ${pname(L)} kẹt – chỉ còn ${s.opts.veHeo === 'heoHang' ? 'heo / hàng' : 'heo'} mà luật cấm về bằng nó → chịu bét, bị thối!`);
+    fx(s, { k: 'stuck', from: L.id });
+    if (activeIdx(s).length <= 1) { finishGame(s); return; }
+    const nx = nextActive(s, s.turn);
+    s.turn = nx; s.leader = nx; s.mustInclude = null;
+    log(s, `${pname(s.players[nx])} được đánh tự do.`);
+  }
 }
 // chuyển lượt sau khi người ở vị trí fromIdx vừa đánh / bỏ
 function advance(s, fromIdx) {
@@ -247,7 +284,8 @@ function finishGame(s) {
   // ai còn lại cuối cùng → bét (trước những người bị cóng)
   const rest = s.players.filter(p => !p.out);
   const cong = s.players.filter(p => p.cong);
-  s.places = [...s.finished, ...rest.map(p => p.id), ...cong.map(p => p.id)];
+  const stuck = s.players.filter(p => p.stuck && !p.cong);
+  s.places = [...s.finished, ...rest.map(p => p.id), ...stuck.map(p => p.id), ...cong.map(p => p.id)];
   s.players.forEach(p => { p.place = s.places.indexOf(p.id) + 1; });
   const n = s.players.length, win = s.places[0];
   for (const [a, b, u] of PLACE_PAY[n]) pay(s, s.places[a], s.places[b], u, 'place', `Hạng ${a + 1} trả hạng ${b + 1}`);
@@ -285,6 +323,7 @@ export function applyAction(s, pid, a) {
   const c = classify(ids);
   if (!c) return { ok: false, reason: ids.length >= 3 && ids.some(x => rankOf(x) === HEO) && ids.some(x => rankOf(x) !== HEO) ? 'Sảnh / đôi thông không được có heo (2).' : 'Mấy lá này không thành bộ nào hết.' };
   if (s.mustInclude != null && !ids.includes(s.mustInclude)) return { ok: false, reason: `Nước đầu tiên phải có ${cardName(s.mustInclude)}.` };
+  const bf = badFinish(p.hand, ids, s.opts.veHeo); if (bf) return { ok: false, reason: bf };
   const t = s.table;
   if (t && !beats(c, t.combo)) return { ok: false, reason: t.combo.type === c.type && t.combo.len === c.len ? 'Bài nhỏ hơn bài trên bàn rồi 😅' : `Phải đánh ${comboKind(t.combo)} lớn hơn (hoặc hàng chặt được).` };
   // chặt?

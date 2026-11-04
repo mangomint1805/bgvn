@@ -1,6 +1,6 @@
 // Mô phỏng bot vs bot + kiểm tra luật: node tienlen/test/sim.mjs 500
-import { createGame, applyAction, current, classify, beats, legalPlays, toiTrangOf, thoiValue, isChop, cardName, START_CHIPS, DEFAULT_OPTS, setRandom } from '../js/engine.js?v=1';
-import { botAction, LEVELS } from '../js/bot.js?v=1';
+import { createGame, applyAction, current, classify, beats, legalPlays, toiTrangOf, thoiValue, isChop, mustAutoPass, legalFor, badFinish, cardName, START_CHIPS, DEFAULT_OPTS, setRandom } from '../js/engine.js?v=3';
+import { botAction, LEVELS } from '../js/bot.js?v=3';
 
 let fails = 0;
 const eq = (a, b, m) => { if (JSON.stringify(a) !== JSON.stringify(b)) { fails++; console.log('❌', m, '→', JSON.stringify(a), '≠', JSON.stringify(b)); } };
@@ -67,7 +67,7 @@ eq(thoiValue(C('5♠ 5♥ 6♣ 6♦ 7♠ 7♥')).hang, 3, 'thối 3 đôi thông
 
 // ---------- kịch bản ván: 3♠, chặt, cóng, thanh toán ----------
 function rig(hands, opts = {}) {
-  const s = createGame(hands.map((h, i) => ({ id: 'p' + i, name: 'P' + i })), { toiTrang: false, ...opts });
+  const s = createGame(hands.map((h, i) => ({ id: 'p' + i, name: 'P' + i })), { toiTrang: false, veHeo: 'free', ...opts });
   s.players.forEach((p, i) => { p.hand = C(hands[i]).sort((a, b) => a - b); });
   let low = 99, who = 0; s.players.forEach((p, i) => { if (p.hand[0] < low) { low = p.hand[0]; who = i; } });
   if (!opts.starter) { s.turn = who; s.mustInclude = low; }
@@ -139,12 +139,75 @@ function rig(hands, opts = {}) {
   const s2 = createGame([{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], { starter: 'b', spadeEvery: true, toiTrang: false });
   eq(s2.mustInclude != null, true, 'tuỳ chọn ván nào cũng 3♠');
 }
+{ // tự bỏ lượt: chỉ khi đang CHẶN mà không có bộ nào đè / chặt được
+  const s = rig(['3♠ 4♣ 2♥', '5♠ 6♣', '7♠ 8♣ 9♥', 'K♦ Q♥ J♣']); s.mustInclude = null;
+  eq(mustAutoPass(s, 'p0'), false, 'cầm cái (bàn trống) → không tự bỏ');
+  applyAction(s, 'p0', { type: 'play', cards: C('2♥') });
+  eq(mustAutoPass(s, 'p1'), true, 'không có gì đè heo cơ → tự bỏ');
+  eq(mustAutoPass(s, 'p2'), false, 'chưa tới lượt P2 → không');
+  applyAction(s, 'p1', { type: 'pass' });
+  eq(mustAutoPass(s, 'p2'), true, 'P2 cũng không đè được');
+}
+{ // có hàng chặt được heo → KHÔNG tự bỏ
+  const s = rig(['3♠ 2♥ 4♣', '9♠ 9♣ 9♦ 9♥ K♥', '5♠ 6♣', 'J♦ Q♣']); s.mustInclude = null;
+  applyAction(s, 'p0', { type: 'play', cards: C('2♥') });
+  eq(mustAutoPass(s, 'p1'), false, 'có tứ quý chặt heo → được chọn chặt');
+  const t = rig(['3♠ 7♦ 4♣', '8♠ K♥', '5♠ 6♣', 'J♦ Q♣']); t.mustInclude = null;
+  applyAction(t, 'p0', { type: 'play', cards: C('7♦') });
+  eq(mustAutoPass(t, 'p1'), false, 'có lá lớn hơn → không tự bỏ');
+  applyAction(t, 'p1', { type: 'play', cards: C('8♠') });
+  eq(mustAutoPass(t, 'p2'), true, '5♠ 6♣ không đè được 8♠');
+  applyAction(t, 'p2', { type: 'pass' }); applyAction(t, 'p3', { type: 'play', cards: C('J♦') });
+  applyAction(t, 'p0', { type: 'pass' }); applyAction(t, 'p1', { type: 'pass' });
+  eq(t.turn, 3, 'P3 cầm cái vòng mới'); eq(mustAutoPass(t, 'p3'), false, 'cầm cái thì không bao giờ tự bỏ');
+}
+{ // mô phỏng: người tự bỏ mỗi khi mustAutoPass → không bao giờ bị từ chối, ván vẫn kết thúc
+  let bad = 0;
+  for (let g = 0; g < 60; g++) {
+    const s = createGame(['a', 'b', 'c', 'd'].slice(0, 2 + g % 3).map(id => ({ id, name: id, isBot: true })), { ...DEFAULT_OPTS, toiTrang: g % 2 === 0 });
+    let k = 0;
+    while (s.phase === 'playing' && k++ < 2000) {
+      const cur = current(s);
+      if (mustAutoPass(s, cur.id)) { if (!applyAction(s, cur.id, { type: 'pass' }).ok) { bad++; break; } continue; }
+      const a = botAction(s, cur.id, 'normal'); if (!a || !applyAction(s, cur.id, a).ok) { bad++; break; }
+    }
+    if (s.phase !== 'ended') bad++;
+  }
+  eq(bad, 0, 'tự bỏ lượt không làm kẹt ván');
+}
+{ // cấm về heo: không được về bằng heo; còn mỗi heo thì kẹt → bét + thối heo
+  const s = rig(['3♠ 2♥', '4♠ 5♣', '6♦ 7♥'], { veHeo: 'heo', bet: 10 });
+  applyAction(s, 'p0', { type: 'play', cards: C('3♠') });
+  applyAction(s, 'p1', { type: 'play', cards: C('4♠') });
+  applyAction(s, 'p2', { type: 'play', cards: C('6♦') });
+  eq(applyAction(s, 'p0', { type: 'play', cards: C('2♥') }), { ok: false, reason: 'Không được về bằng heo 🐷' }, 'về bằng heo bị từ chối');
+  eq(mustAutoPass(s, 'p0'), true, 'chỉ còn heo khi chặn → tự bỏ');
+  applyAction(s, 'p0', { type: 'pass' }); applyAction(s, 'p1', { type: 'pass' });
+  applyAction(s, 'p2', { type: 'play', cards: C('7♥') });
+  eq(s.players[2].out, true, 'P2 về nhất');
+  applyAction(s, 'p0', { type: 'pass' }); applyAction(s, 'p1', { type: 'pass' });
+  eq(s.players[0].stuck, true, 'P0 cầm cái mà chỉ còn heo → kẹt');
+  eq(s.phase, 'ended', 'còn 1 người → hết ván');
+  eq(s.places, ['p2', 'p1', 'p0'], 'người kẹt heo chịu bét');
+  eq(s.pays.some(x => x.why === 'thoi' && x.from === 'p0'), true, 'kẹt heo bị thối heo');
+}
+{ // cấm về heo + hàng (mặc định)
+  eq(DEFAULT_OPTS.veHeo, 'heoHang', 'mặc định cấm về heo + hàng');
+  const s = rig(['9♠ 9♣ 9♦ 9♥', '3♠ 4♣', '5♠ 6♣'], { veHeo: 'heoHang', starter: 'p0' }); s.turn = 0; s.mustInclude = null;
+  eq(legalFor(s, 'p0').some(ids => ids.length === 4), false, 'không được về bằng tứ quý');
+  eq(legalFor(s, 'p0').length > 0, true, 'vẫn đánh lẻ được');
+  eq(applyAction(s, 'p0', { type: 'play', cards: C('9♠ 9♣ 9♦ 9♥') }).reason, 'Không được về bằng tứ quý 💣', 'lý do tứ quý');
+  eq(badFinish(C('5♠ 5♥ 6♣ 6♦ 7♠ 7♥'), C('5♠ 5♥ 6♣ 6♦ 7♠ 7♥'), 'heoHang'), 'Không được về bằng đôi thông 💣', 'không về bằng 3 đôi thông');
+  eq(badFinish(C('5♠ 5♥ 6♣ 6♦ 7♠ 7♥'), C('5♠ 5♥ 6♣ 6♦ 7♠ 7♥'), 'heo'), null, 'chỉ cấm heo → về đôi thông được');
+  eq(badFinish(C('2♠ 2♥'), C('2♠ 2♥'), 'free'), null, 'cho phép → về heo được');
+  eq(badFinish(C('2♠ 2♥ 3♦'), C('2♠ 2♥'), 'heoHang'), null, 'chưa hết bài thì đánh heo bình thường');
+}
 console.log(fails ? `LUẬT: ${fails} lỗi` : 'Luật: OK (unit test)');
 
 // ---------- mô phỏng hàng trăm ván ----------
 const N = +process.argv[2] || 400;
 const lv = Object.keys(LEVELS);
-let stuck = 0, errs = 0, games = 0, chops = 0, cong = 0, toi = 0, moves = 0, chipBad = 0, wins = { easy: 0, normal: 0, hard: 0 }, seats = { easy: 0, normal: 0, hard: 0 };
+let stuck = 0, errs = 0, games = 0, chops = 0, cong = 0, ketHeo = 0, toi = 0, moves = 0, chipBad = 0, wins = { easy: 0, normal: 0, hard: 0 }, seats = { easy: 0, normal: 0, hard: 0 };
 let seed = 12345; setRandom(() => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; });
 for (const np of [2, 3, 4]) {
   const chips = {}; const ids = Array.from({ length: np }, (_, i) => 'b' + i);
@@ -152,7 +215,7 @@ for (const np of [2, 3, 4]) {
   let minted = 0, starter = null;
   for (let g = 0; g < N; g++) {
     const levels = ids.map((_, i) => lv[(i + g) % 3]);
-    const opts = { ...DEFAULT_OPTS, bet: [10, 20, 50][g % 3], chatChong: g % 4 !== 1, thoiHang: g % 5 !== 2, spadeEvery: g % 7 === 3, starter, firstGame: g === 0 };
+    const opts = { ...DEFAULT_OPTS, bet: [10, 20, 50][g % 3], chatChong: g % 4 !== 1, thoiHang: g % 5 !== 2, spadeEvery: g % 7 === 3, veHeo: ['heoHang', 'heo', 'free'][g % 3], starter, firstGame: g === 0 };
     for (const id of ids) if (chips[id] < 5 * opts.bet) { chips[id] += START_CHIPS; minted += START_CHIPS; }
     const s = createGame(ids.map(id => ({ id, name: id, isBot: true })), opts);
     let k = 0;
@@ -172,11 +235,11 @@ for (const np of [2, 3, 4]) {
     for (const p of s.players) chips[p.id] += s.delta[p.id];
     const all = Object.values(chips).reduce((a, b) => a + b, 0);
     if (all !== np * START_CHIPS + minted) chipBad++;
-    games++; moves += s.moves; chops += s.chopCount; cong += s.players.filter(p => p.cong).length; if (s.toiTrang) toi++;
+    games++; moves += s.moves; chops += s.chopCount; cong += s.players.filter(p => p.cong).length; ketHeo += s.players.filter(p => p.stuck).length; if (s.toiTrang) toi++;
     if (np === 4) { const w = s.players.findIndex(p => p.id === s.places[0]); wins[levels[w]]++; levels.forEach(l => seats[l]++); }
     starter = s.places[0];
   }
 }
-console.log({ games, stuck, errs, chipBad, avgMoves: +(moves / games).toFixed(1), chopsPerGame: +(chops / games).toFixed(2), cong, toiTrang: toi });
+console.log({ games, stuck, errs, chipBad, avgMoves: +(moves / games).toFixed(1), chopsPerGame: +(chops / games).toFixed(2), cong, ketHeo, toiTrang: toi });
 console.log('Tỉ lệ về nhất (4 người, theo cấp bot):', Object.fromEntries(Object.keys(wins).map(k => [k, (wins[k] / seats[k] * 4 * 100).toFixed(0) + '% (kỳ vọng ngẫu nhiên 100%)'])));
 if (fails || stuck || errs || chipBad) { console.log('❌ CÓ LỖI'); process.exitCode = 1; } else console.log('✅ 0 kẹt, 0 lỗi, tổng chip bảo toàn');

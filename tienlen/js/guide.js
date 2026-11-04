@@ -1,6 +1,6 @@
 // Hướng dẫn luật Tiến Lên miền Nam (tiếng Việt, có ví dụ lá bài)
-import { cardHTML } from './cards.js?v=1';
-import { PAY, TOI_TRANG, DEFAULT_OPTS } from './engine.js?v=1';
+import { cardHTML } from './cards.js?v=3';
+import { PAY, TOI_TRANG, DEFAULT_OPTS, VE_HEO } from './engine.js?v=3';
 
 const R = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'], SU = '♠♣♦♥';
 const ids = t => t.split(' ').map(x => R.indexOf(x.slice(0, -1)) * 4 + SU.indexOf(x.slice(-1)));
@@ -61,6 +61,14 @@ ${ex('2♥', 'Heo cơ…')}<p class="g-arrow">bị chặt bởi</p>${ex('4♠ 4�
 <li><b>Thối hàng</b> 💣 <small>(tuỳ chọn, mặc định bật)</small>: còn tứ quý / đôi thông trên tay cũng bị phạt theo giá trị hàng như trên.</li>
 <li><b>Cóng</b> 🥶: đã có người về nhất mà bạn <b>chưa đánh được lá nào</b> → thua ngay, xếp bét, phạt thêm ${u(PAY.cong)} cho người nhất (và vẫn bị thối heo/hàng).</li>
 </ul>
+<h3 id="g-veheo">🐷 Cấm về heo <small>(luật nhà, đang chọn: ${VE_HEO[opts.veHeo || DEFAULT_OPTS.veHeo]})</small></h3>
+<p>Nhiều hội chơi luật <b>"không được về heo"</b>: nước đánh <b>cuối cùng</b> (nước làm bạn hết bài) không được có lá 2. Bản "+ hàng" cấm luôn về bằng <b>tứ quý</b> hay <b>đôi thông</b> (kể cả 3 đôi thông).</p>
+<ul>
+<li>Giữa ván vẫn đánh heo / hàng bình thường – chỉ cấm khi nó là nước <b>về</b>. Vì vậy nhớ <b>giữ lại một lá thường</b> để về.</li>
+<li>Đang chặn mà chỉ còn heo → không đánh được, tự bỏ lượt.</li>
+<li>Tới lượt cầm cái mà trên tay chỉ còn bài bị cấm (vd. còn đúng 1 lá heo) → <b>kẹt heo</b> 😵: ngồi chờ, xếp <b>bét</b> và bị <b>thối heo / hàng</b> như thường. Còn nhiều lá (vd. đôi heo + lá khác) thì vẫn đánh được phần không làm bạn hết bài.</li>
+<li>Chọn trong sảnh: <b>Cấm về heo + hàng</b> (mặc định) · <b>Cấm về heo</b> · <b>Cho phép</b>.</li>
+</ul>
 <p>Ví dụ 4 người, cược ${b}: Tiến về nhất, Thành bét còn 2♥ → Thành trả Tiến ${2 * b} (hạng) + ${PAY.heoDo * b} (thối heo cơ) = <b>${(2 + PAY.heoDo) * b} chip</b>.</p>
 
 <h3>8. Chip ảo 🪙</h3>
@@ -71,6 +79,7 @@ ${ex('2♥', 'Heo cơ…')}<p class="g-arrow">bị chặt bởi</p>${ex('4♠ 4�
 <ul>
 <li>Cược 1 phần: <b>${DEFAULT_OPTS.bet} chip</b></li>
 <li>Tới trắng: <b>bật</b> · Thối hàng: <b>bật</b> · Chặt chồng: <b>bật</b></li>
+<li>🐷 Cấm về: <b>heo + hàng</b> (tứ quý, đôi thông)</li>
 <li>Ván nào cũng 3♠ đi trước: <b>tắt</b> (ván sau người thắng đi trước)</li>
 <li>Giờ mỗi lượt: <b>${DEFAULT_OPTS.turnTime} giây</b> – hết giờ máy đánh giúp (rớt mạng thì máy đánh thay sau vài giây)</li>
 </ul>

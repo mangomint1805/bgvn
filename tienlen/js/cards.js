@@ -1,5 +1,5 @@
 // Lá bài Tây tự vẽ (HTML + CSS): mặt lá to rõ ở góc, lưng lá BGVN
-import { RANKS, SUITS, rankOf, suitOf, isRed, HEO } from './engine.js?v=1';
+import { RANKS, SUITS, rankOf, suitOf, isRed, HEO } from './engine.js?v=3';
 
 // mặt hình J / Q / K: huy hiệu tự vẽ bằng SVG (không theo mẫu bài thương mại)
 const COURT = {

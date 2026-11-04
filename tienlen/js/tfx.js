@@ -65,6 +65,31 @@ export function fly(html, fromEl, toEl, { delay = 0, duration = 380, scale = 1, 
     setTimeout(() => { n.remove(); onEnd && onEnd(); }, duration + 30);
   }, delay);
 }
+// bay TỪNG lá (FLIP): từ vị trí thật (lá trên tay / quạt bài của ghế) tới đúng chỗ lá nằm giữa bàn, xoè sẵn
+// items: [{ html, from: {x,y,w,r?,o?}, to: () => {x,y,w,h,rot} | null }]
+export function flyCards(items, { delay = 0, duration = 420, stagger = 40, onEnd } = {}) {
+  if (!items.length || reduced()) { onEnd && setTimeout(onEnd, reduced() ? 0 : delay); return; }
+  setTimeout(() => {
+    const nodes = []; let left = items.length;
+    const done = () => { if (--left) return; nodes.forEach(n => n.remove()); onEnd && onEnd(); };
+    items.forEach((it, i) => {
+      const t = it.to(), f = it.from;
+      if (!t || !f) { done(); return; }
+      const n = document.createElement('div'); n.className = 'flyer fc';
+      n.style.cssText = `--cw:${t.w}px;--ch:${t.h}px;width:${t.w}px;height:${t.h}px`;
+      n.innerHTML = it.html; layer().appendChild(n); nodes.push(n);
+      const s0 = Math.max(.3, Math.min(1.3, (f.w || t.w) / t.w));
+      const tr = (x, y, r, sc) => `translate(${x - t.w / 2}px,${y - t.h / 2}px) rotate(${r}deg) scale(${sc})`;
+      const mx = (f.x + t.x) / 2, my = Math.min(f.y, t.y) + (Math.abs(f.y - t.y) * .35);
+      const a = n.animate([
+        { transform: tr(f.x, f.y, f.r || 0, s0), opacity: f.o ?? 1, offset: 0 },
+        { transform: tr(mx, my, (t.rot + (f.r || 0)) / 2 + (i % 2 ? 6 : -6), (s0 + 1) / 2 * 1.06), opacity: 1, offset: .55 },
+        { transform: tr(t.x, t.y, t.rot, 1), opacity: 1, offset: 1 },
+      ], { duration, delay: i * stagger, easing: 'cubic-bezier(.22,.8,.3,1)', fill: 'both' });
+      a.onfinish = done; a.oncancel = done;
+    });
+  }, delay);
+}
 export function floatText(el, text, cls = '') {
   if (!el) return; const c = ctr(el);
   const n = document.createElement('div'); n.className = 'float-text ' + cls; n.textContent = text;

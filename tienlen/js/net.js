@@ -1,6 +1,6 @@
 // Lớp mạng Tiến Lên: chủ phòng giữ state, người vào chỉ gửi action. Kết nối dùng chung shared/net/room.js
-import { createGame, applyAction, viewFor, current, DEFAULT_OPTS, BETS, TURN_TIMES, START_CHIPS } from './engine.js?v=1';
-import { botAction, LEVELS } from './bot.js?v=1';
+import { createGame, applyAction, viewFor, current, mustAutoPass, VE_HEO, DEFAULT_OPTS, BETS, TURN_TIMES, START_CHIPS } from './engine.js?v=3';
+import { botAction, LEVELS } from './bot.js?v=3';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 const NS = 'bgvn-tienlen', PREFIX = 'bgvn-tienlen-', GAME = 'tienlen';
@@ -9,7 +9,8 @@ export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem
 export { session };
 const BOT_NAMES = ['Minto', 'Tiến', 'Tuni', 'Thành', 'Khiêm', 'Thái'];
 export const MAX = 4;
-export const AWAY_MS = 6000;   // người rớt mạng: máy đánh thay sau 6 giây
+export const AWAY_MS = 6000;
+export const AUTO_PASS_MS = 800; // nhịp chờ trước khi tự bỏ lượt (người thật hết bài đè)   // người rớt mạng: máy đánh thay sau 6 giây
 export const BEG_LIMIT = b => Math.max(100, 5 * b); // dưới mức này mới được "xin mẹ"
 // câu chọc riêng Tiến Lên (≤ 24 ký tự)
 export const TL_PHRASES = ['Chặt heo nè! 🔪', 'Heo đâu ra đây?', 'Bỏ lượt đi bé', 'Cóng chưa? 🥶', 'Hàng nóng 🔥', 'Run chưa?', 'Cứu tui'];
@@ -85,6 +86,7 @@ export class Host {
     if (this.state || !(k in DEFAULT_OPTS)) return;
     if (k === 'bet') { if (!BETS.includes(+v)) return; v = +v; }
     else if (k === 'turnTime') { if (!TURN_TIMES.includes(+v)) return; v = +v; }
+    else if (k === 'veHeo') { if (!(v in VE_HEO)) return; }
     else v = !!v;
     this.opts[k] = v; this.pushLobby();
   }
@@ -175,6 +177,15 @@ export class Host {
     const wait = Math.max(0, (this.graceUntil || 0) - Date.now());
     const run = lvl => { const st = this.state; if (!st || st.phase !== 'playing' || current(st).id !== p.id) return; const a = botAction(st, p.id, lvl); if (a) this.act(p.id, a); };
     if (p.isBot) { this.botTimer = setTimeout(() => run(p.level || 'normal'), wait + 750 + Math.random() * 650); return; }
+    // người thật tới lượt chặn mà không có bài đè/chặt được → tự bỏ lượt sau một nhịp ngắn
+    if (mustAutoPass(s, p.id)) {
+      this.botTimer = setTimeout(() => {
+        const st = this.state; if (!st || current(st).id !== p.id || !mustAutoPass(st, p.id)) return;
+        this.note(p.id, 'Không có bài đè được – tự bỏ lượt 😶');
+        this.act(p.id, { type: 'pass' });
+      }, wait + AUTO_PASS_MS);
+      return;
+    }
     if (!p.connected && p.id !== 'host') { this.botTimer = setTimeout(() => run('normal'), wait + AWAY_MS); return; }
     // đồng hồ chống treo máy: hết giờ thì máy đánh thay
     const ms = (this.opts.turnTime || 30) * 1000;

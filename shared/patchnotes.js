@@ -6,6 +6,12 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà',
 };
 export const NOTES = [
+  { id: '20261104-17', date: '04/11/2026', game: 'tienlen', title: 'Bàn mới, cấm về heo, tự bỏ lượt', items: [
+    '🎨 Bàn nỉ viền gỗ, đèn lồng, ghế đối thủ có quạt bài – 3 màu bàn: Nỉ xanh, Đỏ Tết, Gỗ tối (nút 🎨).',
+    '🃏 Lá bài bay ra từ chỗ người đánh vào giữa bàn, chặt thì bay từ ghế người chặt.',
+    '🐷 Luật mới (mặc định): cấm về bằng heo, tứ quý, đôi thông. Chỉ còn bài cấm là kẹt, chịu bét.',
+    '😶 Không có bài đè được thì tự bỏ lượt. Nút Bỏ lượt dời sang trái, xa nút Đánh.',
+  ] },
   { id: '20261104-16', date: '04/11/2026', game: 'typhu', title: 'Sửa máy bay, tự bán trả nợ, báo ô đích', items: [
     '✈️ Hết lỗi vàng cả bàn khi du lịch: chạm 1 ô trên bàn để chọn (chỉ ô đó sáng), chạm lại hoặc bấm "Bay tới…" để bay.',
     '⚡ Thiếu tiền trả nợ: nút "Tự bán nhà/thế chấp cho đủ" – bán ít nhất có thể, đủ là dừng, có tóm tắt đã bán gì.',

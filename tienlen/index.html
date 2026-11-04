@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='14' y='14' width='52' height='74' rx='9' fill='%23fff' stroke='%231f1b2e' stroke-width='4' transform='rotate(-12 40 50)'/><rect x='36' y='10' width='52' height='74' rx='9' fill='%23fff' stroke='%23e0263c' stroke-width='4' transform='rotate(10 62 47)'/><text x='58' y='62' font-size='40' text-anchor='middle' fill='%23e0263c' transform='rotate(10 62 47)'>♥</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/tienlen.css?v=1">
+<link rel="stylesheet" href="css/tienlen.css?v=3">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
 </head>
 <body>
@@ -53,6 +53,7 @@
       <div class="panel">
         <h3>Luật bàn</h3>
         <div id="opts" class="opts"></div>
+        <div class="opt-line theme-line"><b>🎨 Màu bàn <small>(của riêng bạn)</small></b><div class="seg" id="theme-seg"><button class="chip" data-theme="xanh">Nỉ xanh</button><button class="chip" data-theme="tet">Đỏ Tết</button><button class="chip" data-theme="go">Gỗ tối</button></div></div>
       </div>
     </div>
     <button class="btn big pri" id="btn-start">▶ Chia bài</button>
@@ -67,6 +68,7 @@
     <button class="chip ic" id="btn-leave" aria-label="Rời ván">←</button>
     <div class="game-tag" id="game-tag"></div>
     <div class="tools">
+      <button class="chip ic" id="btn-theme" title="Đổi màu bàn" aria-label="Đổi màu bàn">🎨</button>
       <button class="chip ic" id="btn-music" title="Nhạc nền" aria-label="Nhạc nền">🎵</button>
       <button class="chip ic" id="btn-mute" title="Âm thanh" aria-label="Âm thanh">🔊</button>
       <button class="chip ic" id="btn-guide" title="Hướng dẫn" aria-label="Hướng dẫn">📖</button>
@@ -75,6 +77,7 @@
     </div>
   </header>
   <div class="table" id="table">
+    <i class="lantern l" aria-hidden="true"></i><i class="lantern r" aria-hidden="true"></i>
     <div id="opps"></div>
     <div class="pile" id="pile">
       <div class="pile-prev" id="pile-prev"></div>
@@ -90,9 +93,10 @@
     <div class="act-row">
       <div class="suggest" id="suggest"></div>
       <div class="actions" id="actions">
+        <button class="btn pass" id="btn-pass">✋ Bỏ lượt</button>
+        <span class="act-gap" aria-hidden="true"></span>
         <button class="btn ic2" id="btn-sort" title="Đổi cách xếp bài" aria-label="Đổi cách xếp bài">🔃</button>
-        <button class="btn" id="btn-hint">💡 Gợi ý</button>
-        <button class="btn gray" id="btn-pass">Bỏ lượt</button>
+        <button class="btn" id="btn-hint" aria-label="Gợi ý">💡<span class="lbl"> Gợi ý</span></button>
         <button class="btn pri" id="btn-play">Đánh</button>
       </div>
     </div>
@@ -104,6 +108,6 @@
 <div class="modal" id="modal"><div class="modal-box" id="modal-box"></div></div>
 <div class="toast" id="toast" role="status"></div>
 <div id="fx-layer"></div>
-<script type="module" src="js/main.js?v=1"></script>
+<script type="module" src="js/main.js?v=3"></script>
 </body>
 </html>
