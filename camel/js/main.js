@@ -15,7 +15,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const settings = fx.settings, k = () => fx.S();
-if (settings.hints === undefined) settings.hints = true;
+if (settings.odds === undefined) settings.odds = false; // % gợi ý mặc định ẩn
 setSpeedFn(() => fx.S());
 const VN = 'ẮẰẲẴẶẤẦẨẪẬĐđơưƯƠếềểễệ';
 const fontsReady = Promise.race([Promise.all(['800 40px "Be Vietnam Pro"', '800 40px "Baloo 2"'].map(f => document.fonts.load(f, 'Aa ' + VN).catch(() => null))), sleep(3500)]);
@@ -49,7 +49,7 @@ function openSettings() {
     <div class="set-row"><b>🎵 Nhạc nền</b><div class="seg"><button class="${settings.musicOn ? 'on' : ''}" ${fnAttr('modal', () => { fx.musicToggle(!settings.musicOn); openSettings(); })}>${settings.musicOn ? 'Đang bật' : 'Đang tắt'}</button></div>
       <input type="range" min="0" max="1" step="0.05" value="${settings.music}" id="vol-music" aria-label="Âm lượng nhạc"></div>
     <div class="set-row"><b>🔊 Hiệu ứng âm thanh</b><input type="range" min="0" max="1" step="0.05" value="${settings.sfx}" id="vol-sfx" aria-label="Âm lượng hiệu ứng"></div>
-    <div class="set-row"><b>📊 % gợi ý trên vé</b>${seg('hints', [[true, 'Hiện'], [false, 'Ẩn']], () => shown && renderPanel())}</div>
+    <div class="set-row"><b>📊 % gợi ý trên vé</b>${seg('odds', [[true, 'Hiện'], [false, 'Ẩn']], () => shown && renderPanel())}</div>
     <div class="set-row"><b>✨ Hiệu ứng hình ảnh</b>${seg('effects', [[true, 'Bật'], [false, 'Tắt']], v => B && B.setEffects(v))}</div>
     <div class="set-row"><b>🖥️ Chất lượng 3D</b>${seg('quality', [['low', 'Thấp'], ['med', 'Vừa'], ['high', 'Cao']], v => B && B.setQuality(v))}</div>
     <div class="set-row"><b>⏩ Tốc độ hoạt ảnh</b>${seg('speed', [['slow', 'Chậm'], ['normal', 'Vừa'], ['fast', 'Nhanh']])}</div>
@@ -353,7 +353,7 @@ function send(a) {
 }
 let oddsKey = '', odds = null;
 function getOdds(v) {
-  if (!settings.hints || v.phase !== 'playing') return null;
+  if (!settings.odds || v.phase !== 'playing') return null;
   const key = v.leg + ':' + v.seq + ':' + v.rolled.length;
   if (key !== oddsKey) { oddsKey = key; try { odds = simLeg(v, 500); } catch (e) { odds = null; } }
   return odds;

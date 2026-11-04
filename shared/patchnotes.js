@@ -6,6 +6,9 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà',
 };
 export const NOTES = [
+  { id: '20261104-14', date: '04/11/2026', game: 'all', title: 'Ẩn tỉ lệ gợi ý mặc định', items: [
+    '🙈 Mèo Nổ (% bom) và Đua Lạc Đà (% về nhất trên vé) giờ mặc định ẩn tỉ lệ cho đỡ "spoil". Muốn xem thì bật lại: Mèo Nổ bấm nút 🎲, Đua Lạc Đà vào ⚙️ Cài đặt.',
+  ] },
   { id: '20261104-13', date: '04/11/2026', game: 'cangua', title: 'Đổ đôi lên chuồng', items: [
     '🎲🎲 Đổ đôi thì 1 ngựa ở cửa đích hoặc trên đích được lên thêm 1 bậc, bất kể số – vẫn được đổ tiếp. Tắt được trong sảnh.',
   ] },

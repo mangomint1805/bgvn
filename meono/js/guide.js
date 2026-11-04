@@ -60,7 +60,7 @@ export function openGuide(openModal) {
         <li>💥 <b>Ra đi đầu tiên</b> – người nổ sớm nhất · 🧘 <b>Né bom thần sầu</b> – thắng mà chưa từng bốc trúng bom</li></ul>
       <p>Bằng điểm thì cùng nhận. Kèm bảng số liệu từng người: số lá đã bốc, số lần trúng bom (gỡ được mấy lần), số lần ĐÉO! và bị Đổ Vỏ.</p>`],
     tips: ['💡 Mẹo', () => `<ul>
-      <li>Thanh <b>💣 nguy cơ</b> giữa bàn cho biết còn bao nhiêu bom trong bao nhiêu lá, và xác suất lá kế là bom. Tắt/bật bằng nút 🎲 trên thanh công cụ.</li>
+      <li>Thanh <b>💣 nguy cơ</b> giữa bàn cho biết còn bao nhiêu bom trong bao nhiêu lá, và (nếu bật) xác suất lá kế là bom – mặc định ẩn, bật bằng nút 🎲 trên thanh công cụ.</li>
       <li>Vừa Soi Kèo thấy bom trên cùng? Đánh <b>Đổ Vỏ / Né Gắt / Xào Bài / Móc Đáy</b> để thoát.</li>
       <li>Gỡ bom xong nhét ngay <b>trên cùng</b> để người kế "ăn" – nhất là khi họ không còn Gỡ Bom.</li>
       <li>Hết Gỡ Bom thì gom mèo để đánh <b>bộ ba gọi tên Gỡ Bom</b>.</li>
