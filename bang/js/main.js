@@ -6,6 +6,7 @@ import { Host, Client, loadSnapshot, session, BANG_PHRASES } from './net.js?v=13
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
+import { syncPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 import { imgTag, avatarTag } from './images.js';
 import { S, SPEEDS, getSpeed, setSpeed, sfx, cardSfx, gunSfx, fly, shake, flash, floatText, banner, toggleMute, isMuted, shoot, arrows, explode, sparkle, confetti, stamp, screenShake } from './fx.js?v=1';
 import { THEMES, getTheme, setTheme, onThemeChange } from './themes.js';
@@ -60,7 +61,7 @@ let selectedCard = null;
 let sidMode = false, sidPick = [];
 
 // ---------- Màn hình ----------
-function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); $('#' + id).classList.add('active'); if (id !== 'screen-game') musicIntensity(-1); }
+function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); $('#' + id).classList.add('active'); if (id !== 'screen-game') { musicIntensity(-1); endPick(); } }
 let toastTimer;
 function toast(msg, info = false) { const t = $('#toast'); t.textContent = msg; t.className = 'toast' + (info ? ' info' : ''); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), 3000); }
 
@@ -405,6 +406,7 @@ function render() {
     placeSeatTop(seat, table);
   });
   requestAnimationFrame(fitCenter);
+  syncTargetPick(v, pr);
 
   // ---- Giữa bàn ----
   $('#deck').innerHTML = backHTML('sm') + `<div class="pile-count">${v.deckCount}</div>`;
@@ -581,6 +583,30 @@ function renderPrompt() {
   }
 }
 
+// ---- Chọn mục tiêu ngay trên bàn: ghế hợp lệ sáng + 🎯, ghế mờ ghi rõ lý do (khoảng cách/tầm) ----
+const TAP_VERB = { bang: 'bắn BANG!', missed: 'bắn (Trượt → BANG!)', panic: 'cướp bài (Panic!)', catbalou: 'phá bài (Cat Balou)', duel: 'thách đấu', jail: 'bỏ tù' };
+function outWhy(p, ct) {
+  if (ct === 'jail' && p.role === 'sheriff') return 'Cảnh sát trưởng';
+  if ((ct === 'panic' || ct === 'catbalou') && !p.handCount && !p.table.length) return 'không có bài';
+  if (p.distance != null) { const r = ct === 'panic' ? 1 : me().gunRange; if (p.distance > r) return `cách ${p.distance} > tầm ${r}`; }
+  return 'không chọn được';
+}
+function syncTargetPick(v, pr) {
+  const o = selectedCard && v.myOptions && v.myOptions[selectedCard];
+  const base = { root: $('#table'), seat: id => $(`#table .seat[data-pid="${id}"]`), glow: '.avatar', keep: true, anchor: () => $('#prompt'), z: 30 };
+  if (o && o.targets) {
+    const ct = me().hand.find(x => x.id === selectedCard)?.type;
+    syncPick({ ...base, key: 'card-' + selectedCard,
+      title: `🎯 Chạm vào người muốn <b>${TAP_VERB[ct] || 'dùng ' + (CARD_INFO[ct] ? CARD_INFO[ct].name : 'lá này')}</b>`,
+      items: v.players.filter(p => p.alive && p.id !== myId).map(p => ({ id: p.id, name: p.name, ok: o.targets.includes(p.id), reason: o.targets.includes(p.id) ? '' : outWhy(p, ct) })),
+      onPick: id => { const p = view.players.find(x => x.id === id); if (p && selectedCard) chooseTarget(p); },
+      onCancel: () => { selectedCard = null; render(); } });
+  } else if (pr && pr.type === 'draw_option' && pr.player === myId && pr.character === 'jessejones') {
+    syncPick({ ...base, key: 'jesse', banner: false, cancelable: false,
+      items: v.players.filter(p => p.alive && p.id !== myId).map(p => ({ id: p.id, name: p.name, ok: p.handCount > 0, reason: p.handCount ? '' : 'hết bài' })),
+      onPick: id => send({ type: 'draw_from_player', target: id }) });
+  } else if (pickActive()) endPick();
+}
 function clickCard(c, o) {
   sidMode = false;
   if (o.targetMode === 'none') { send({ type: 'play_card', cardId: c.id }); return; }
@@ -592,7 +618,7 @@ function chooseTarget(p, sure) {
   const mr = me().role, ct = me().hand.find(x => x.id === selectedCard)?.type;
   if (nb() && !sure && p.role === 'sheriff' && (mr === 'deputy' || mr === 'renegade') && ['bang', 'missed', 'duel', 'jail', 'panic', 'catbalou'].includes(ct)) {
     openModal(`<h3>🐣 Khoan đã!</h3><p>${mr === 'deputy' ? 'Bạn là <b>Phó cảnh sát</b> – bắn sếp ⭐ là đang giúp Tội phạm đó!' : 'Bạn là <b>Kẻ hai mặt</b> – sếp ⭐ chết sớm thì Tội phạm thắng, bạn cũng thua.'}</p><p class="muted">Vẫn muốn dùng <b>${CARD_INFO[ct].name}</b> lên ${esc(p.name)}?</p><div class="row" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn ghost" id="nb-no">Thôi, chọn người khác</button><button class="btn danger" id="nb-yes">Vẫn đánh</button></div>`);
-    $('#nb-no').onclick = closeModal; $('#nb-yes').onclick = () => { closeModal(); chooseTarget(p, true); };
+    $('#nb-no').onclick = () => { closeModal(); render(); }; $('#nb-yes').onclick = () => { closeModal(); chooseTarget(p, true); };
     return;
   }
   if (!o.pickCard) { send({ type: 'play_card', cardId: selectedCard, target: p.id }); return; }
