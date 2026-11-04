@@ -1,10 +1,10 @@
 // Cờ cá ngựa 3D – giao diện: trang chủ, sảnh, ván chơi 3D, hoạt ảnh sự kiện, nút đổ giữ-để-đổ.
-import { Host, Client, MAX, loadSnapshot, session, CANGUA_PHRASES } from './net.js?v=2';
+import { Host, Client, MAX, loadSnapshot, session, CANGUA_PHRASES } from './net.js?v=3';
 import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.js?v=2';
-import { COLOR_NAMES, GATE, HOME0, exitOk } from './engine.js?v=2';
-import { Board3D } from './scene3d.js?v=2';
+import { COLOR_NAMES, GATE, HOME0, exitOk } from './engine.js?v=3';
+import { Board3D } from './scene3d.js?v=3';
 import * as fx from './fx.js?v=2';
-import { guideHTML } from './guide.js?v=2';
+import { guideHTML } from './guide.js?v=3';
 import { netStatus } from '../../shared/ui/status.js';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
 
@@ -103,8 +103,12 @@ const OPTS = [
   ['exit2', '🚪 Xuất chuồng', [['d16', 'Đôi hoặc 1+6'], ['any6', 'Đôi hoặc có con 6']], 'Đổ được thì cũng được đổ tiếp.', o => o.dice === 2],
   ['exit1', '🚪 Xuất chuồng', [['6', 'Chỉ 6'], ['16', '1 hoặc 6']], 'Đổ được thì cũng được đổ tiếp.', o => o.dice === 1],
   ['noJump', '🚧 Nhảy qua đầu ngựa', [[true, 'Không được'], [false, 'Được']], 'Không được: trên đường đi không vượt qua con ngựa nào.'],
-  ['dblUp', '🎲🎲 Đôi lên chuồng', [[true, 'Bật'], [false, 'Tắt']], 'Đổ đôi thì 1 ngựa ở cửa đích hoặc trên đích được lên thêm 1 bậc, bất kể số.'],
-  ['homeRule', '🏁 Lên đích', [['vn', 'Đổ đúng số bậc'], ['count', 'Đếm bước']], 'Đúng số bậc: dừng ở cửa, ra n thì lên bậc n, bậc k lên k+1 phải ra đúng k+1.'],
+  ['homeRule', '🏁 Vào chuồng', [['thru', 'Đếm thẳng vào (luật nhà)'], ['vn', 'Dừng ở cửa, ra n lên bậc n'], ['count', 'Đếm bước cả trong chuồng']], o => ({
+    thru: 'Cách chuồng 2 ô: đổ 3 vào bậc 1, đổ 8 lên luôn bậc 6. Trong chuồng chỉ lên 1 bậc mỗi lần đổ đôi.',
+    vn: 'Dừng đúng ô cửa, ra n thì lên bậc n; bậc k lên k+1 phải ra đúng k+1.',
+    count: 'Đi xuyên cửa vào chuồng, trong chuồng cũng đi đúng số bước, không quá bậc 6.' })[o.homeRule]],
+  ['dblUp', '🎲🎲 Đôi lên chuồng', [[true, 'Bật'], [false, 'Tắt']], 'Đổ đôi thì 1 ngựa ở cửa đích hoặc trên đích được lên thêm 1 bậc, bất kể số.', o => o.homeRule === 'vn' && o.dice === 2],
+  ['dblHalf', '✂️ Đổ đôi', [[true, 'Chọn đi cả hoặc nửa'], [false, 'Chỉ đi cả tổng']], 'Ví dụ 3-3: đi 6 ô hoặc chỉ 3 ô (cả trên đường lẫn lúc vào chuồng).', o => o.dice === 2 && o.moveMode === 'total'],
   ['winRule', '🏆 Thắng khi', [['top4', 'Chiếm bậc 3-4-5-6'], ['home', 'Cả 4 lên đích']]],
   ['triple', '😵 3 lần thưởng liền', [[false, 'Không sao'], [true, 'Mất lượt']], 'Đổ đôi / 1+6 tới lần thứ 3 liên tiếp thì mất lượt.', o => o.dice === 2],
   ['playOn', '🥈 Đua tiếp tranh hạng', [[false, 'Tắt'], [true, 'Bật']]],
@@ -120,7 +124,7 @@ function renderLobby() {
     return `<li><span class="av">${p.isBot ? '🤖' : '🐴'}</span><div><b>${esc(p.name)}</b>${p.id === myId ? ' <small>(bạn)</small>' : ''}<br><small>${tag}</small></div>${isHost && p.id !== 'host' ? `<button class="x" ${fnAttr('lobby', () => net.removePlayer(p.id))} aria-label="Mời ra">✕</button>` : ''}</li>`;
   }).join('');
   $('#opts').innerHTML = OPTS.filter(o => !o[4] || o[4](lobby.opts, offline)).map(([key, name, list, hint]) => `<div class="opt"><b>${name}</b><div class="seg">${list.map(([v, n]) =>
-    `<button class="${lobby.opts[key] === v ? 'on' : ''}" ${isHost ? fnAttr('lobby', () => net.setOpt(key, v)) : 'disabled'}>${n}</button>`).join('')}</div>${hint ? `<small>${hint}</small>` : ''}</div>`).join('');
+    `<button class="${lobby.opts[key] === v ? 'on' : ''}" ${isHost ? fnAttr('lobby', () => net.setOpt(key, v)) : 'disabled'}>${n}</button>`).join('')}</div>${hint ? `<small>${typeof hint === 'function' ? hint(lobby.opts) || '' : hint}</small>` : ''}</div>`).join('');
   $('#btn-addbot').style.display = isHost ? '' : 'none'; $('#btn-addbot').disabled = ps.length >= MAX;
   $('#btn-start').style.display = isHost ? '' : 'none'; $('#wait-msg').style.display = isHost ? 'none' : '';
 }
@@ -218,11 +222,13 @@ async function animate(e, v) {
     case 'nomove': fx.sfx.nomove(); fx.banner(isMine(e.pid) ? 'Không đi được 😶' : `${nm(v, e.pid)} đứng hình 😶`, 'sm'); await sleep(500 * k()); break;
     case 'triple': fx.sfx.bad(); fx.banner('3 lần thưởng liền – mất lượt 😵', 'red sm'); await sleep(700 * k()); break;
     case 'out': {
-      const s = seatOf(v, e.pid); fx.sfx.out(); await B.exit(s, e.h, 650 * k());
+      const s = seatOf(v, e.pid); if (e.auto) await previewAuto(s, { kind: 'out', h: e.h, from: -1, to: 0 }, v, e);
+      fx.sfx.out(); await B.exit(s, e.h, 650 * k());
       B.floatAt && B.floatAt(B.horsePos(s, e.h), 'Xuất chuồng!', P(v, e.pid).color); break;
     }
     case 'move': {
       const s = seatOf(v, e.pid), n = e.path.length, ms = (n <= 8 ? 210 : Math.max(110, 1700 / n)) * k();
+      if (e.auto) await previewAuto(s, { kind: 'move', h: e.h, from: e.from, to: e.to, kick: e.kick, dbl: e.v === 0 && e.to > GATE && e.to - e.from === 1 && e.from > GATE }, v, e);
       await B.walk(s, e.h, e.path, ms, pos => { fx.sfx.hop(); if (pos > GATE && pos === e.to) { fx.sfx.home(); } });
       if (e.to >= HOME0 && B.floatAt) B.floatAt(B.horsePos(s, e.h), e.from < HOME0 ? `Lên đích bậc ${e.to - GATE}! 🏁` : `Bậc ${e.to - GATE}`, '#1aa86a');
       break;
@@ -242,6 +248,11 @@ async function animate(e, v) {
       await sleep(1400 * k()); break;
     }
   }
+}
+// máy tự đi (chỉ 1 nước): vẫn cho thấy điểm đến một chút rồi mới đi
+async function previewAuto(seat, m, v, e) {
+  if (!B.preview) return;
+  B.preview(seat, m); await sleep((isMine(e.pid) ? 750 : 450) * k()); B.highlight(0, []);
 }
 // ---------- nút đổ giữa màn hình (giữ để lấy đà) + xúc xắc lăn giữa màn hình ----------
 let rollPower = null, hold = null;
@@ -338,22 +349,25 @@ function send(a) {
   setTimeout(function chk() { if (!busy) return; if (pumping || queue.length) return setTimeout(chk, 1000); busy = false; renderPanel(); updateFab(shown); }, 5000);
 }
 function moveLabel(v, m) {
-  const c = cur(v), kick = m.kick ? ` · đá ${esc(nm(v, m.kick.pid))}! 🦶` : '';
-  const use = v.opts.dice === 2 && (v.opts.moveMode === 'split' || m.v !== v.dice[0] + v.dice[1]) && m.v ? ` (dùng ${m.v})` : '';
+  const kick = m.kick ? ` · đá ${esc(nm(v, m.kick.pid))}! 🦶` : '', d = v.dice || [], T = d[0] + d[1];
+  const dbl = v.opts.dice === 2 && d.length === 2 && d[0] === d[1] && v.opts.moveMode !== 'split';
+  const use = dbl && v.opts.dblHalf === true && m.v ? (m.v === T ? ` <small>(cả đôi ${T})</small>` : ` <small>(nửa đôi ${m.v})</small>`)
+    : v.opts.dice === 2 && (v.opts.moveMode === 'split' || m.v !== T) && m.v ? ` <small>(dùng ${m.v})</small>` : '';
   if (m.kind === 'out') return `🚪 Xuất chuồng${kick}`;
-  if (m.dbl) return `🎲🎲 Ngựa ${m.h + 1} → bậc ${m.to - GATE} (nhờ đôi)`;
+  if (m.dbl) return `🎲🎲 Ngựa ${m.h + 1} lên bậc ${m.to - GATE} (nhờ đôi)`;
+  if (m.to > GATE && m.from <= GATE && v.opts.homeRule !== 'vn') return `🏁 Ngựa ${m.h + 1} đi ${m.to - m.from} → bậc ${m.to - GATE}${use}`;
   if (m.to > GATE) return `🏁 Ngựa ${m.h + 1} → bậc ${m.to - GATE}${use}`;
-  if (m.to === GATE) return `🐎 Ngựa ${m.h + 1} về cửa đích${use}${kick}`;
-  void c; return `🐎 Ngựa ${m.h + 1} đi ${m.to - m.from} ô${use}${kick}`;
+  if (m.to === GATE) return `🐎 Ngựa ${m.h + 1} đi ${m.to - m.from} ô về cửa chuồng${use}${kick}`;
+  return `🐎 Ngựa ${m.h + 1} đi ${m.to - m.from} ô${use}${kick}`;
 }
 function pickMove(m) { const v = shown; if (!v || v.stage !== 'move' || !isMine(cur(v).id)) return; send(m.kind === 'out' ? { type: 'move', out: true } : { type: 'move', h: m.h, to: m.to }); }
 function onBoardTap(x, y) {
   const v = shown; if (!v || busy || v.phase !== 'playing' || v.stage !== 'move' || !isMine(cur(v).id)) return;
-  const i = B.pickAt(x, y); if (i == null) return;
-  const m = v.moves[i]; if (!m) return;
-  // 2 nước cùng 1 con ngựa: chạm vào ngựa thì hỏi chọn ở bảng dưới
-  const same = v.moves.filter(x => x.h === m.h && x.kind === m.kind);
-  if (same.length > 1 && m.kind !== 'out') { toast('Con này có nhiều nước – chọn ở bảng dưới nhé 👇'); $$('#panel .btns .btn').forEach(b => fx.shakeEl(b)); return; }
+  const pk = B.pickAt(x, y); if (pk == null) return;
+  const m = v.moves[pk.i]; if (!m) return;
+  // chạm ngựa có nhiều nước (vd. đôi đi cả / nửa): hỏi chạm điểm đến hoặc chọn ở bảng dưới
+  const same = v.moves.filter(x => x.h === m.h && x.kind !== 'out');
+  if (!pk.byTo && same.length > 1 && m.kind !== 'out') { toast('Con này có nhiều nước – chạm vào điểm đến hoặc chọn ở bảng dưới nhé 👇'); $$('#panel .btns .btn').forEach(b => fx.shakeEl(b)); return; }
   fx.sfx.click(); pickMove(m);
 }
 function renderPanel() {
@@ -376,12 +390,18 @@ function renderPanel() {
     } else lines.push(head(c, `⏳ <b>${who}</b> ${again ? 'được đổ tiếp…' : 'đang đổ xúc xắc…'}`));
   } else if (v.stage === 'move') {
     if (mine) {
-      lines.push(head(c, `👆 Chạm <b>ngựa sáng</b> trên bàn hoặc chọn nước:`));
+      lines.push(head(c, `👆 Chạm <b>điểm đến</b> trên bàn hoặc chọn nước:`));
+      const d = v.dice; if (d.length === 2 && d[0] === d[1] && v.opts.dblHalf === true && v.opts.moveMode === 'total' && v.moves.some(m => m.v === d[0] && m.kind !== 'out'))
+        lines.push(`<div class="sub">✂️ Đôi ${d[0]}-${d[1]}: đi <b>cả ${d[0] * 2}</b> hoặc <b>nửa ${d[0]}</b> – mỗi lựa chọn có vòng sáng + số bước trên bàn.</div>`);
       v.moves.forEach(m => btns.push(btn('panel', moveLabel(v, m), () => pickMove(m), m.kick ? 'kick' : m.kind === 'out' ? 'out' : m.to > GATE ? 'green' : '')));
       if (v.opts.moveMode === 'split' && v.left.length === 1 && v.dice.length === 2) lines.push(`<div class="sub">Còn con <b>${v.left[0]}</b> chưa đi.</div>`);
     } else lines.push(head(c, `🤔 <b>${who}</b> đang chọn ngựa…`));
   }
-  el.innerHTML = lines.join('') + (btns.length ? `<div class="btns">${btns.join('')}</div>` : '');
+  el.innerHTML = lines.join('') + (btns.length ? `<div class="btns${btns.length >= 4 ? ' many' : ''}">${btns.join('')}</div>` : '');
+  if (btns.length && B && B.pulseMark) $$('#panel .btns .btn').forEach((b, i) => {
+    const on = () => B.pulseMark(i), off = () => B.pulseMark(-1);
+    b.addEventListener('pointerenter', on); b.addEventListener('focus', on); b.addEventListener('pointerleave', off); b.addEventListener('blur', off);
+  });
 }
 
 // ---------- thả emoji / chọc nhau ----------

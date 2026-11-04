@@ -1,5 +1,5 @@
 // Bot cờ cá ngựa: ưu tiên đá ngựa, xuất chuồng, lên đích, né chỗ nguy hiểm. 3 mức: easy / normal / hard.
-import { P, absSq, onTrack, inHome, GATE, HOME0, TRACK, occupant, exitOk } from './engine.js?v=2';
+import { P, absSq, onTrack, inHome, GATE, HOME0, TRACK, occupant, exitOk } from './engine.js?v=3';
 
 // xác suất (thô) 1 ô tuyệt đối bị ngựa đối thủ đá ở lượt sau
 function threat(s, me, sq, ignore = null) {
@@ -21,13 +21,31 @@ function threat(s, me, sq, ignore = null) {
   return Math.min(1, risk);
 }
 
+// luật nhà mới: vào chuồng càng sâu càng tốt (ngựa sau không vượt được ngựa trước), lên bậc nhờ đôi rất quý
+function thruHome(s, me, m) {
+  const b = m.to - GATE, need = s.opts.winRule === 'top4' ? 3 : 1;
+  const above = k => me.horses.some(x => x > GATE + k); // đã có ngựa nhà ở trên bậc k
+  if (m.from <= GATE) {
+    let sc = 18 + b * 7;                     // bậc 6 = 60, bậc 1 = 25
+    if (b < need) sc -= 14;                  // dưới bậc 3: còn phải chờ nhiều lần đôi
+    if (!above(b) && b < 6) sc -= (6 - b) * 2; // chặn đường vào các bậc trên còn trống
+    return sc;
+  }
+  // lên 1 bậc nhờ đôi
+  let sc = 34 + b * 2;
+  if (m.from - GATE < need) sc += 10;        // đang dưới bậc 3 → cần lên lắm
+  if (!above(b)) sc += 6;                    // con trên cùng lên → mở thêm chỗ bên dưới
+  return sc;
+}
+
 export function scoreMove(s, pid, m, level = 'normal') {
   const me = P(s, pid), hard = level === 'hard';
   let sc = 0;
   const worth = pos => pos < 0 ? 0 : 10 + pos * 0.9;
   if (m.kick) { const v = P(s, m.kick.pid); sc += 70 + v.horses[m.kick.h] * 1.3; }
   if (m.kind === 'out') sc += 48 - me.horses.filter(x => onTrack(x)).length * 6;
-  if (m.kind === 'home') sc += m.from <= GATE ? 55 : 22 + (m.to - HOME0) * 3;
+  if (m.kind === 'home' && me && s.opts.homeRule === 'thru') sc += thruHome(s, me, m);
+  else if (m.kind === 'home') sc += m.from <= GATE ? 55 : 22 + (m.to - HOME0) * 3;
   sc += (m.to - Math.max(0, m.from)) * 0.6;
   // an toàn: trước / sau
   if (m.kind !== 'home' || m.to <= GATE) {

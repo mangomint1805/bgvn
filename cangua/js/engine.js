@@ -11,8 +11,12 @@ export const COLORS = ['#e53935', '#1e88e5', '#2fb350', '#f4b400'];
 export const COLOR_NAMES = ['Đỏ', 'Xanh dương', 'Xanh lá', 'Vàng'];
 // dice: 2 (mặc định, luật nhà anh Minto) | 1 · moveMode: 'total' (dồn tổng 1 con) | 'split' (tách 2 xúc xắc)
 // exit2: 'd16' (đôi hoặc 1+6) | 'any6' (đôi hoặc có 1 con 6) · exit1 (1 xúc xắc): '6' | '16'
-// homeRule: 'vn' (lên bậc n phải đổ đúng n) | 'count' (đi đúng số bước) · winRule: 'top4' (chiếm bậc 3-4-5-6) | 'home' (cả 4 vào đích)
-export const DEFAULTS = { dice: 2, moveMode: 'total', exit2: 'd16', exit1: '6', noJump: true, homeRule: 'vn', dblUp: true, winRule: 'top4', triple: false, playOn: false, turnTime: 0, botLevel: 'normal' };
+// homeRule: 'thru' (mặc định – luật nhà anh Minto: đếm thẳng qua cửa vào chuồng, khoảng cách + bậc = số đổ;
+//            trong chuồng chỉ lên 1 bậc mỗi lần đổ đôi) | 'vn' (dừng đúng cửa, ra n lên bậc n, bậc k lên k+1 phải ra k+1)
+//          | 'count' (đếm bước cả trong chuồng)
+// dblHalf: đổ đôi được chọn đi cả tổng hoặc một nửa (mặc định bật; ván cũ thiếu khoá này = tắt → chỉ đi nửa khi tổng kẹt)
+// dblUp (chỉ luật 'vn'): đổ đôi thì lên thêm 1 bậc bất kể số · winRule: 'top4' (chiếm bậc 3-4-5-6) | 'home' (cả 4 vào đích)
+export const DEFAULTS = { dice: 2, moveMode: 'total', exit2: 'd16', exit1: '6', noJump: true, homeRule: 'thru', dblHalf: true, dblUp: true, winRule: 'top4', triple: false, playOn: false, turnTime: 0, botLevel: 'normal' };
 
 let rand = Math.random;
 export function setRandom(f) { rand = f || Math.random; }
@@ -64,6 +68,7 @@ export const bonusOk = (s, dice) => exitOk(s, dice);
 function horseMove(s, p, h, v) {
   const o = s.opts, pos = p.horses[h];
   if (pos < 0) return null;
+  if (inHome(pos) && o.homeRule === 'thru') return null; // trong chuồng chỉ lên bằng đổ đôi (xem colUp)
   if (inHome(pos)) {
     const k = step(pos); if (k >= 6) return null;
     if (o.homeRule === 'vn') { if (v !== k + 1 || homeOcc(p, k + 1)) return null; return { h, v, kind: 'home', from: pos, to: pos + 1, path: [pos + 1] }; }
@@ -90,6 +95,9 @@ function horseMove(s, p, h, v) {
 }
 // ngựa đang "trên đích" theo nghĩa dùng giá trị lên bậc (trên đích, hoặc đứng ở cửa đích với luật vn)
 const homeish = (s, pos) => inHome(pos) || (s.opts.homeRule === 'vn' && pos === GATE);
+// lần đổ này là "đôi" theo nghĩa được lên 1 bậc trong chuồng (2 xúc xắc: đôi bất kỳ; 1 xúc xắc: ra 6)
+export const upRoll = s => s.full && (s.opts.dice === 1 ? s.dice[0] === 6 : s.dice[0] === s.dice[1]);
+const halfOk = s => s.opts.dice === 2 && s.opts.moveMode !== 'split' && s.opts.dblHalf === true && s.dice[0] === s.dice[1];
 
 // mọi nước đi hợp lệ với các giá trị còn lại (s.left) của lần đổ hiện tại
 export function legalMoves(s, pid = actorOf(s)) {
@@ -104,7 +112,7 @@ export function legalMoves(s, pid = actorOf(s)) {
   let trackVals, homeVals;
   if (o.dice === 1) trackVals = homeVals = [L[0]];
   else if (o.moveMode === 'split') trackVals = homeVals = [...new Set(L)];
-  else { const [a, b] = s.dice, T = a + b; trackVals = [T]; homeVals = [...new Set([a, b, T])]; }
+  else { const [a, b] = s.dice, T = a + b; trackVals = halfOk(s) ? [T, a] : [T]; homeVals = [...new Set([a, b, T])]; }
   for (let h = 0; h < HORSES; h++) {
     const pos = p.horses[h];
     for (const v of homeish(s, pos) ? homeVals : trackVals) add(horseMove(s, p, h, v));
@@ -112,15 +120,16 @@ export function legalMoves(s, pid = actorOf(s)) {
     if (o.dice === 2 && o.moveMode !== 'split' && o.homeRule === 'vn' && onTrack(pos) && pos < GATE && GATE - pos <= 6)
       for (const v of new Set(s.dice)) { const m = horseMove(s, p, h, v); if (m && m.to === GATE) add(m); }
   }
-  // luật nhà: đổ đôi thì 1 ngựa ở cửa đích / trên đích được lên thêm 1 bậc bất kể số (dùng cả lần đổ)
-  if (o.dice === 2 && o.homeRule === 'vn' && o.dblUp !== false && s.full && s.dice[0] === s.dice[1])
+  // luật nhà: đổ đôi thì 1 ngựa trong chuồng (luật vn: cả ngựa ở cửa đích) được lên thêm 1 bậc bất kể số (dùng cả lần đổ)
+  const colUp = o.homeRule === 'thru' ? upRoll(s) : o.dice === 2 && o.homeRule === 'vn' && o.dblUp !== false && s.full && s.dice[0] === s.dice[1];
+  if (colUp)
     for (let h = 0; h < HORSES; h++) {
       const pos = p.horses[h]; if (!homeish(s, pos)) continue;
       const k = pos === GATE ? 0 : step(pos); if (k >= 6 || homeOcc(p, k + 1)) continue;
       add({ h, v: 0, kind: 'home', from: pos, to: pos + 1, path: [pos + 1], all: true, dbl: true });
     }
   // luật đôi (dồn tổng): tổng không đi được con nào thì được đi 1 con xúc xắc
-  if (o.dice === 2 && o.moveMode !== 'split' && s.dice[0] === s.dice[1] && !out.some(m => m.kind !== 'out'))
+  if (o.dice === 2 && o.moveMode !== 'split' && !halfOk(s) && s.dice[0] === s.dice[1] && !out.some(m => m.kind !== 'out'))
     for (let h = 0; h < HORSES; h++) if (!homeish(s, p.horses[h])) add(horseMove(s, p, h, s.dice[0]));
   return out;
 }

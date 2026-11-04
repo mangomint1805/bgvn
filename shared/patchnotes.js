@@ -6,6 +6,11 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà',
 };
 export const NOTES = [
+  { id: '20261104-15', date: '04/11/2026', game: 'cangua', title: 'Luật vào chuồng mới, đôi đi cả/nửa, hiện điểm đến', items: [
+    '🏁 Vào chuồng đếm thẳng: cách cửa 2 ô, đổ 3 vào bậc 1, đổ 8 lên luôn bậc 6. Đã vào chuồng thì phải đổ đôi mới lên thêm 1 bậc.',
+    '✂️ Đổ đôi được chọn đi cả hoặc nửa (3-3 đi 3 hay 6 đều được).',
+    '🎯 Đổ xong hiện ngay điểm đến của từng nước trên bàn (đỏ là đá được ngựa bạn) – chạm điểm đến là đi.',
+  ] },
   { id: '20261104-14', date: '04/11/2026', game: 'all', title: 'Ẩn tỉ lệ gợi ý mặc định', items: [
     '🙈 Mèo Nổ (% bom) và Đua Lạc Đà (% về nhất trên vé) giờ mặc định ẩn tỉ lệ cho đỡ "spoil". Muốn xem thì bật lại: Mèo Nổ bấm nút 🎲, Đua Lạc Đà vào ⚙️ Cài đặt.',
   ] },

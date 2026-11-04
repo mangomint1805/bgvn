@@ -190,3 +190,9 @@ input:focus{border-color:var(--acc)}
 .turn-tag small.lw{font-size:inherit;font-weight:inherit}
 @media (max-width:430px){.timer:not([hidden])~.tools{gap:4px}.topbar:has(.timer:not([hidden])) .turn-tag small.lw{display:none}}
 @media (orientation:landscape) and (max-height:560px){.pc{flex-direction:row;align-items:center;gap:6px;border-top:0;border-left:5px solid var(--pc);padding:4px 26px 4px 7px}.pc .nm{flex:1;min-width:0;font-size:13.5px}.pc .badge{top:50%;transform:translateY(-50%)}}
+/* nhiều nước đi (vd. đôi đi cả / nửa) trên điện thoại dọc: xếp 2 cột cho bàn 3D còn chỗ */
+@media (orientation:portrait),(max-width:899px) and (min-height:561px){
+  .act .btns.many{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+  .act .btns.many .btn{font-size:13px;line-height:1.2;padding:4px 6px;min-height:42px}
+  .act .btns.many .btn small{display:block;font-size:11px;opacity:.85}
+}

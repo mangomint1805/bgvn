@@ -3,7 +3,7 @@
 // vật liệu / hình học dùng chung.
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
-import { COLORS, GATE, HOME0, onTrack, absSq } from './engine.js?v=2';
+import { COLORS, GATE, HOME0, onTrack, absSq } from './engine.js?v=3';
 
 export const QUALITY = { low: { aa: false, pr: 1, shadow: 0, tex: 1024 }, med: { aa: true, pr: 1.5, shadow: 1024, tex: 1536 }, high: { aa: true, pr: 2, shadow: 2048, tex: 2048 } };
 const FONT = '"Be Vietnam Pro", system-ui, sans-serif', TITLE = '"Baloo 2", "Be Vietnam Pro", system-ui, sans-serif';
@@ -246,13 +246,17 @@ export class Board3D {
         this.root.add(g); return g;
       });
     }
-    // điểm đích sáng (pool)
+    // điểm đích sáng (pool): vòng sáng + ngựa ma mờ + nhãn số bước (đỏ = đá ngựa)
     const mg = new THREE.RingGeometry(0.26, 0.46, 28), dg = new THREE.CircleGeometry(0.24, 20);
-    this.marks = Array.from({ length: 8 }, () => {
+    this.marks = Array.from({ length: 16 }, () => {
       const g = new THREE.Group(), m = new THREE.Mesh(mg, new THREE.MeshBasicMaterial({ color: 0xffe14d, transparent: true, opacity: 0.9, depthWrite: false })), d = new THREE.Mesh(dg, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false }));
-      m.rotation.x = d.rotation.x = -Math.PI / 2; g.add(m, d); g.visible = false; g.renderOrder = 5; this.root.add(g); return g;
+      m.rotation.x = d.rotation.x = -Math.PI / 2; g.add(m, d); g.visible = false; g.renderOrder = 5;
+      const gm = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.42, depthWrite: false });
+      const ghost = new THREE.Group(), gb = new THREE.Mesh(baseG, gm), gk = new THREE.Mesh(kg, gm); gb.position.y = BAS / 2; gk.position.y = BAS; gk.scale.setScalar(1.05); ghost.add(gb, gk); ghost.scale.setScalar(1.18); g.add(ghost);
+      g.userData = { ghost, gm, label: null, key: '' };
+      this.root.add(g); return g;
     });
-    this.picks = [];
+    this.picks = []; this.markI = -1;
   }
   // ---------- vị trí ----------
   posOf(seat, h, pos) {
@@ -286,25 +290,56 @@ export class Board3D {
     this.focusOn(c);
   }
   // làm sáng ngựa đi được + ô tới
-  highlight(seat, moves) {
+  // nhãn trên ô tới: số bước / bậc chuồng
+  static markText(m) {
+    if (m.kind === 'out') return m.kick ? 'Xuất · ĐÁ!' : 'Xuất chuồng';
+    const n = m.to - m.from, b = m.to - GATE;
+    const t = m.dbl ? `Lên bậc ${b}` : m.to > GATE ? `${n} → bậc ${b}` : `${n} ô`;
+    return m.kick ? `ĐÁ! ${t}` : t;
+  }
+  setMark(mk, seat, m, lift = 0) {
+    const p = this.posOf(seat, m.h, m.to), u = mk.userData, red = !!m.kick;
+    mk.position.set(p.x, p.y + 0.02, p.z); mk.visible = true; mk.scale.setScalar(1);
+    mk.children[0].material.color.set(red ? '#ff3b3b' : '#ffe14d');
+    u.gm.color.set(tint(COLORS[seat], 0.25)); u.ghost.rotation.y = this.restYaw(seat, m.to);
+    const text = Board3D.markText(m), key = text + red;
+    if (u.key !== key) {
+      if (u.label) { mk.remove(u.label); u.label.material.map.dispose(); u.label.material.dispose(); }
+      u.label = textSprite(text, red ? '#e53935' : '#1b1b2a', '#fff', 0.36); u.key = key; mk.add(u.label);
+    }
+    const k = this.portrait ? 1.35 : 1, s0 = u.label.userData.s0 || (u.label.userData.s0 = u.label.scale.clone()); u.label.scale.set(s0.x * k, s0.y * k, 1); // điện thoại dọc: chữ to hơn
+    u.label.position.set(0, 1.25 + lift * (this.portrait ? 0.56 : 0.42), 0);
+  }
+  // làm sáng 1 nước khi rê chuột / focus nút ở bảng dưới (-1 = bỏ)
+  pulseMark(i) { this.markI = i; }
+  // xem trước 1 nước (khi máy tự đi vì chỉ có 1 nước)
+  preview(seat, m) { this.highlight(seat, [m]); }
+  highlight(seat, moves, focus = true) {
     for (let k = 0; k < 4; k++) this.horses[k].forEach(g => { g.userData.ring.visible = g.userData.arrow.visible = false; });
     this.marks.forEach(m => { m.visible = false; });
-    this.picks = [];
+    this.picks = []; this.markI = -1;
     if (!moves || !moves.length) return;
+    const stack = {};
     moves.forEach((m, i) => {
       const g = this.horses[seat][m.h]; g.userData.ring.visible = g.userData.arrow.visible = true;
-      const mk = this.marks[i]; if (mk) { const p = this.posOf(seat, m.h, m.to); mk.position.set(p.x, p.y + 0.02, p.z); mk.visible = true; mk.children[0].material.color.set(m.kick ? '#ff3b3b' : '#ffe14d'); }
+      const key = m.kind === 'out' ? 'o' : m.to > GATE ? 'c' + m.to : 't' + absSq(seat, m.to), lift = stack[key] = (stack[key] ?? -1) + 1;
+      const mk = this.marks[i]; if (mk) this.setMark(mk, seat, m, lift);
       this.picks.push({ i, h: m.h, horse: g, to: this.posOf(seat, m.h, m.to) });
     });
+    if (!focus) return;
     const c = new THREE.Vector3(); this.picks.forEach(p => c.add(p.horse.position).add(p.to)); this.focusOn(c.multiplyScalar(1 / (2 * this.picks.length)));
   }
-  // chạm màn hình → nước đi gần nhất (theo ngựa hoặc theo ô tới), trong bán kính ~48px
+  // chạm màn hình → nước đi gần nhất (theo ngựa, ô tới hoặc nhãn số bước), trong bán kính ~52px
+  // trả { i, byTo }: byTo = chạm đúng điểm đến (chọn luôn nước đó)
   pickAt(x, y) {
     const r = this.renderer.domElement.getBoundingClientRect(); let best = null, bd = 52;
     const scr = v => { const p = v.clone().project(this.camera); return [(p.x + 1) / 2 * r.width + r.left, (1 - p.y) / 2 * r.height + r.top]; };
     for (const pk of this.picks) {
-      for (const [v, w] of [[pk.horse.position.clone().add(new THREE.Vector3(0, 0.4, 0)), 1], [pk.to, 0.85]]) {
-        const [sx, sy] = scr(v), d = Math.hypot(sx - x, sy - y) / w; if (d < bd) { bd = d; best = pk.i; }
+      const mk = this.marks[pk.i], lab = mk && mk.userData.label ? mk.localToWorld(mk.userData.label.position.clone()) : null;
+      const cands = [[pk.horse.position.clone().add(new THREE.Vector3(0, 0.4, 0)), 1, false], [pk.to, 0.85, true], [pk.to.clone().add(new THREE.Vector3(0, 0.5, 0)), 0.9, true]];
+      if (lab) cands.push([lab, 0.8, true]);
+      for (const [v, w, byTo] of cands) {
+        const [sx, sy] = scr(v), d = Math.hypot(sx - x, sy - y) / w; if (d < bd) { bd = d; best = { i: pk.i, byTo }; }
       }
     }
     return best;
@@ -414,7 +449,7 @@ export class Board3D {
       for (const g of this.horses[k]) { const u = g.userData; if (u.arrow.visible) { u.arrow.position.y = 1.35 + Math.sin(el * 5) * 0.1; u.arrow.rotation.y = el * 2.5; u.ring.scale.setScalar(1 + Math.sin(el * 6) * 0.08); } }
       const f = this.gates[k].userData.flag; f.rotation.y = Math.sin(el * 3 + k) * 0.4;
     }
-    this.marks.forEach((m, i) => { if (m.visible) m.children[0].scale.setScalar(1 + 0.12 * Math.sin(el * 6 + i)); });
+    this.marks.forEach((m, i) => { if (!m.visible) return; const hot = i === this.markI; m.children[0].scale.setScalar((hot ? 1.35 : 1) + 0.12 * Math.sin(el * 6 + i)); m.userData.gm.opacity = hot ? 0.85 : 0.6 + 0.1 * Math.sin(el * 4); });
     this.star.rotation.y = el * 1.6; this.star.position.y = STEP_H(6) + 1.1 + Math.sin(el * 2) * 0.05;
     for (const P of this.pools) if (P.pts.visible) {
       P.t += dt; const k = P.t / P.life; if (k >= 1) { P.pts.visible = false; continue; }
