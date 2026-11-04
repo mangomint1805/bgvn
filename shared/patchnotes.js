@@ -3,9 +3,14 @@
 export const GAMES = {
   all: '🎲 BGVN', bang: '🤠 BANG!', uno: '🃏 UNO', typhu: '🏙️ Cờ Tỷ Phú', scribble: '🎨 Scribble it!',
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
-  xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà',
+  xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài',
 };
 export const NOTES = [
+  { id: '20261105-02', date: '05/11/2026', game: 'solitaire', title: 'Game mới: Xếp bài (Solitaire)!', items: [
+    '🃏 Xếp bài Klondike như Windows ngày xưa: rút 1 hoặc 3, điểm Tiêu chuẩn / Vegas (điểm ảo) / không tính.',
+    '↶ Hoàn tác không giới hạn, 💡 gợi ý, chạm đúp lên đích, tự xếp nốt – thắng thì bài nảy tưng bừng.',
+    '🧠 "Ván này giải được không?" – máy tự giải thử. Có thống kê, số ván để chơi lại đúng ván.',
+  ] },
   { id: '20261105-01', date: '05/11/2026', game: 'all', title: 'Bấm link là vào phòng, gợi ý chỉ khi chơi với bot', items: [
     '🔗 Mở link phòng bạn gửi là vào thẳng sảnh (chưa có tên thì hỏi tên 1 lần). Phòng hết hạn thì báo và quay về trang đầu.',
     '🙈 Có từ 2 người thật trong phòng thì tắt gợi ý / xác suất (Mèo Nổ % bom, Lạc Đà % vé, Poker 💡, Tiến Lên 💡 Gợi ý, Tam Quốc Sát thầy đồ, BANG! 🐣, Cờ tỷ phú tính lời lỗ giao dịch). Chơi với bot vẫn dùng được.',

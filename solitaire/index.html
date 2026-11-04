@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Xếp bài cổ điển (Solitaire) – BGVN</title>
+<meta name="description" content="Xếp bài cổ điển (Klondike) như Solitaire Windows ngày xưa: rút 1/rút 3, tính điểm Tiêu chuẩn/Vegas, gợi ý, hoàn tác, bài nảy khi thắng.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='22' width='46' height='64' rx='8' fill='%231f9e8f' stroke='%23fff' stroke-width='4' transform='rotate(-14 33 54)'/><rect x='40' y='12' width='46' height='64' rx='8' fill='%23fff' stroke='%23e0263c' stroke-width='4' transform='rotate(8 63 44)'/><text x='63' y='58' font-size='34' text-anchor='middle' fill='%23e0263c' transform='rotate(8 63 44)'>♥</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/sol.css?v=1">
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <a class="back-hub" href="../">← Bàn chơi BGVN</a>
+    <button class="vbtn" id="btn-variant" title="Tuỳ chọn ván"><span id="v-icon">🃏</span><b id="v-name">Xếp bài cổ điển</b><small id="v-opt"></small><i>▾</i></button>
+    <div class="info">
+      <button class="chip deal" id="btn-deal" title="Chọn số ván">Ván <b id="deal-no">#1</b></button>
+      <span class="stat" title="Thời gian">⏱ <b id="timer">00:00</b></span>
+      <span class="stat" title="Số nước">👣 <b id="moves">0</b></span>
+      <span class="stat" id="score-wrap" title="Điểm">🏆 <b id="score">0</b></span>
+    </div>
+    <div class="tools">
+      <button class="chip ic" id="btn-music" title="Nhạc nền" aria-label="Nhạc nền">🎵</button>
+      <button class="chip ic" id="btn-mute" title="Âm thanh" aria-label="Âm thanh">🔊</button>
+      <button class="chip ic" id="btn-guide" title="Hướng dẫn" aria-label="Hướng dẫn">📖</button>
+      <button class="chip ic" id="btn-news" title="Có gì mới" aria-label="Có gì mới" data-news="solitaire">📝</button>
+    </div>
+  </header>
+  <main id="felt"><div id="board" aria-label="Bàn xếp bài"></div></main>
+  <nav class="acts" id="acts">
+    <button class="act" id="btn-undo" title="Hoàn tác (Ctrl+Z)"><i>↶</i><span>Hoàn tác</span></button>
+    <button class="act" id="btn-redo" title="Làm lại (Ctrl+Y)"><i>↷</i><span>Làm lại</span></button>
+    <button class="act" id="btn-hint" title="Gợi ý (H)"><i>💡</i><span>Gợi ý</span></button>
+    <button class="act hot" id="btn-finish" title="Tự xếp nốt (F)" hidden><i>✨</i><span>Tự xếp nốt</span></button>
+    <button class="act" id="btn-new" title="Ván mới (N)"><i>🆕</i><span>Ván mới</span></button>
+    <button class="act" id="btn-more" title="Thêm"><i>☰</i><span>Thêm</span></button>
+  </nav>
+</div>
+<div class="modal" id="modal"><div class="modal-box" id="modal-box" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<canvas id="win-canvas" hidden></canvas>
+<script type="module" src="js/main.js?v=1"></script>
+</body>
+</html>
