@@ -1,11 +1,11 @@
-import { Host, Client, MAX, loadSnapshot, session, UNO_PHRASES } from './net.js?v=20';
+import { Host, Client, MAX, loadSnapshot, session, UNO_PHRASES } from './net.js?v=21';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=6';
 import { MODES, COLOR_NAME, cardText, DRAW_VALUE, CARD_NAME, MATCH_TARGETS } from './engine.js?v=19';
-import * as fx from './ufx.js?v=19';
-import { openGuide, CARD_HELP, NEW_TYPES } from './guide.js?v=19';
+import * as fx from './ufx.js?v=20';
+import { openGuide, CARD_HELP, NEW_TYPES } from './guide.js?v=20';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -35,7 +35,7 @@ const avatar = name => `<div class="av" style="background:${avColor(name)}">${es
 const COL_HEX = { R: '#ff4d5e', Y: '#ffc23d', G: '#2fc76f', B: '#3d8bff' };
 
 // ---------- màn hình ----------
-function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
+function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') fx.musicMood('lobby'); }
 let toastT;
 function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 function openModal(html, cls = '', key = null) { $('#modal-box').className = 'modal-box ' + cls; $('#modal-box').innerHTML = html; $('#modal').classList.add('open'); modalKey = key; }
@@ -267,6 +267,8 @@ function render() {
   handlePending(v);
   checkNewTips(v, hand);
   reacts.setVisible(v.phase === 'playing' || v.phase === 'ended');
+  // nhạc: đang chơi / gay cấn (có người còn ≤ 2 lá) / hết ván về nhạc sảnh
+  fx.musicMood(v.phase === 'playing' ? (v.players.some(p => !p.out && p.handCount <= 2) ? 'tense' : 'game') : 'lobby');
   if (v.phase === 'ended') showWin(v);
   else if (modalKey === 'win') closeModal();
 }
@@ -453,7 +455,7 @@ function animate(a, b) {
   }
   // tới lượt mình
   if (isMyTurn() && !(a.phase === 'playing' && a.players[a.turn].id === myId && !a.pending)) setTimeout(() => fx.sfx.turn(), 380 * fx.S());
-  if (b.phase === 'ended' && a.phase !== 'ended') setTimeout(() => { if (b.winner === myId) { fx.confetti(); fx.sfx.win(); } else { fx.sfx.win(); fx.confetti(); } }, 600 * fx.S());
+  if (b.phase === 'ended' && a.phase !== 'ended') setTimeout(() => { if (b.winner === myId) { fx.confetti(); fx.sfx.win(); fx.musicStinger('win'); } else { fx.sfx.lose(); fx.confetti(); fx.musicStinger('lose'); } }, 600 * fx.S());
 }
 function playSfx(c) {
   const t = c.type;
@@ -614,7 +616,7 @@ setInterval(() => {
   const left = afkEnd ? Math.max(0, Math.ceil((afkEnd - Date.now()) / 1000)) : 0;
   const on = !!(afkEnd && afkPid === myId && view && view.phase === 'playing' && left <= 15);
   el.style.display = on ? '' : 'none';
-  if (on) { el.textContent = `⏳ ${left}s`; if (left <= 5 && left !== afkBeep) { afkBeep = left; fx.sfx.turn(); } }
+  if (on) { el.textContent = `⏳ ${left}s`; if (left <= 5 && left !== afkBeep) { afkBeep = left; fx.sfx.tick(); } }
 }, 250);
 if (location.hash === '#debug') window.__dbg = () => ({ net, view });
 

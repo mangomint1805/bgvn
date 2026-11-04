@@ -1,4 +1,5 @@
 // Âm thanh tổng hợp (WebAudio) + hiệu ứng DOM cho Mèo Nổ. Không dùng file âm thanh nào.
+import { createBGM, sfxVolStore } from '../../shared/audio/bgm.js?v=2';
 export const SPEEDS = { slow: { k: 1.5, name: 'Chậm' }, normal: { k: 1, name: 'Vừa' }, fast: { k: 0.7, name: 'Nhanh' } };
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 let speedKey = SPEEDS[ls.get('meono-speed')] ? ls.get('meono-speed') : 'normal';
@@ -12,8 +13,10 @@ export const isMuted = () => muted;
 export function toggleMute() { muted = !muted; ls.set('meono-mute', muted ? '1' : '0'); return muted; }
 
 let ac = null, master = null;
+const sv = sfxVolStore('meono');
+export function sfxVolume(v) { if (v == null) return sv.get(); sv.set(v); if (master) master.gain.value = 0.9 * v; return v; }
 export function actx() {
-  if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination); } catch (e) { return null; } }
+  if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = 0.9 * sv.get(); master.connect(ac.destination); } catch (e) { return null; } }
   if (ac.state === 'suspended') ac.resume().catch(() => {});
   return ac;
 }
@@ -242,83 +245,17 @@ function nextB() {
   setTimeout(() => { n.remove(); nextB(); }, 1050 * S());
 }
 
-// ---------- nhạc nền "mèo quậy" – tung tăng, căng dần theo độ nguy hiểm ----------
-let musicOn = ls.get('meono-music') === '1', vol = +(ls.get('meono-music-vol') || 0.5);
-let mGain = null, tension = 0, schedT = null, nextT = 0, step = 0, pad = null;
-const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
-// vòng hợp âm C – Am – F – G (vui) / Cm – Ab – Bb – G (khi sắp toang)
-const CH_HAPPY = [[48, 52, 55], [45, 48, 52], [41, 45, 48], [43, 47, 50]];
-const CH_TENSE = [[48, 51, 55], [44, 48, 51], [46, 50, 53], [43, 47, 50]];
-const SC_HAPPY = [0, 2, 4, 7, 9, 12, 14, 16, 19];   // ngũ cung trưởng
-const SC_TENSE = [0, 3, 5, 6, 7, 10, 12, 15, 17];   // blues "rình mò"
-// motif 2 ô nhịp (16 móc đơn), -1 = nghỉ
-const MOTIF = [[0, 2, 4, -1, 5, 4, 2, -1, 3, -1, 4, 5, 7, -1, 6, -1], [4, -1, 5, 7, 8, 7, 5, -1, 4, 2, -1, 3, 2, -1, 0, -1]];
-export function setTension(t) { tension = Math.max(0, Math.min(1, t)); if (pad && ac) pad.g.gain.setTargetAtTime(0.0001 + Math.max(0, tension - 0.4) * 0.07, ac.currentTime, 0.6); }
+// ---------- nhạc nền: shared/audio/bgm.js – sảnh bossa / "mèo quậy" khi chơi / rình mò khi sắp nổ. Mặc định BẬT ----------
+const bgm = createBGM({ game: 'meono', ctx: actx, legacy: ls.get('meono-music'), volKey: 'meono-music-vol' });
+let tension = 0;
+// độ nguy hiểm 0..1 (tỉ lệ bom trong chồng bài) → đổi bài nhạc khi đang chơi
+export function setTension(t) { tension = Math.max(0, Math.min(1, t)); if (bgm.getMood() !== 'lobby') bgm.mood(tension > 0.5 ? 'tense' : 'game'); }
 export const getTension = () => tension;
-function mnote(f, t, d, type, g) {
-  const o = ac.createOscillator(); o.type = type; o.frequency.value = f; const gn = ac.createGain();
-  gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.012); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
-  o.connect(gn); gn.connect(mGain); o.start(t); o.stop(t + d + 0.05);
-}
-// tiếng gảy dây (pizzicato) – có chút "boing" đầu nốt
-function pluck(f, t, d, g) {
-  const o = ac.createOscillator(); o.type = 'triangle'; o.frequency.setValueAtTime(f * 1.02, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.03);
-  const o2 = ac.createOscillator(); o2.type = 'sine'; o2.frequency.value = f * 2; const g2 = ac.createGain(); g2.gain.value = 0.3; o2.connect(g2);
-  const gn = ac.createGain(); gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.006); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
-  o.connect(gn); g2.connect(gn); gn.connect(mGain); o.start(t); o2.start(t); o.stop(t + d + 0.05); o2.stop(t + d + 0.05);
-}
-function mnoise(t, d, f, g) {
-  const b = ac.createBuffer(1, Math.floor(ac.sampleRate * d), ac.sampleRate); const x = b.getChannelData(0);
-  for (let i = 0; i < x.length; i++) x[i] = (Math.random() * 2 - 1) * (1 - i / x.length);
-  const s = ac.createBufferSource(); s.buffer = b; const fl = ac.createBiquadFilter(); fl.type = 'highpass'; fl.frequency.value = f;
-  const gn = ac.createGain(); gn.gain.value = g; s.connect(fl); fl.connect(gn); gn.connect(mGain); s.start(t);
-}
-function kick(t, g) { const o = ac.createOscillator(); o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12); const gn = ac.createGain(); gn.gain.setValueAtTime(g, t); gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.2); o.connect(gn); gn.connect(mGain); o.start(t); o.stop(t + 0.22); }
-function schedule() {
-  const lookahead = 1.2;
-  while (nextT < ac.currentTime + lookahead) {
-    const T = tension, bpm = 118 + T * 46, st = 60 / bpm / 2;   // móc đơn
-    const i = step % 8, bar = Math.floor(step / 8), tense = T > 0.55;
-    const ch = (tense ? CH_TENSE : CH_HAPPY)[bar % 4], sc = T > 0.35 ? SC_TENSE : SC_HAPPY;
-    const t = nextT + (i % 2 ? st * 0.2 : 0);                   // nhịp "swing" nhún nhảy
-    // bass "bùm-chát": gốc ở phách 1, quãng 5 ở phách 3; hợp âm gảy ở phách sau
-    if (i === 0) pluck(mtof(ch[0] - 12), t, st * 1.8, 0.24);
-    if (i === 4) pluck(mtof(ch[2] - 12), t, st * 1.6, 0.2);
-    if (i === 2 || i === 6) ch.forEach((m, k) => pluck(mtof(m + 12), t + k * 0.008, st * 0.6, 0.045));
-    // giai điệu
-    const mel = MOTIF[(bar >> 1) % 2][(bar % 2) * 8 + i];
-    if (mel >= 0 && !(T > 0.75 && i % 2)) pluck(mtof(72 + sc[Math.min(sc.length - 1, mel)]), t, st * 1.1, 0.075);
-    // leng keng chuông nhỏ đầu mỗi 2 ô nhịp khi còn yên bình
-    if (T < 0.4 && i === 0 && bar % 2 === 0) mnote(mtof(96 + sc[(bar >> 1) % 5]), t, 0.5, 'sine', 0.025);
-    // "meo~" cuối câu nhạc (mỗi 4 ô nhịp)
-    if (T < 0.6 && bar % 4 === 3 && i === 6) meow(Math.max(0, t - ac.currentTime), 1.15, 0.035, mGain);
-    // trống: lắc lư nhẹ → hi-hat dày + tim đập khi căng
-    if (i % 2 === 1) mnoise(t, 0.025, 8000, 0.03 + T * 0.07);
-    if (T > 0.3 && i % 2 === 0) mnoise(t, 0.02, 9000, 0.02 + T * 0.04);
-    if (i === 0 || (i === 4 && T > 0.2)) kick(t, 0.12 + T * 0.18);
-    if (T > 0.7 && i === 1) kick(t, 0.18);
-    nextT += st; step++;
-  }
-}
-export function musicStart() {
-  const a = actx(); if (!a || schedT || !musicOn) return;
-  if (!mGain) { mGain = a.createGain(); mGain.connect(master); }
-  mGain.gain.value = vol * 0.35;
-  if (!pad) { // nền rung căng thẳng
-    const g = a.createGain(); g.gain.value = 0.0001; const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 500;
-    const o1 = a.createOscillator(), o2 = a.createOscillator(); o1.type = o2.type = 'sawtooth'; o1.frequency.value = 55; o2.frequency.value = 55.9;
-    o1.connect(f); o2.connect(f); f.connect(g); g.connect(mGain); o1.start(); o2.start(); pad = { g, o1, o2 };
-  }
-  setTension(tension);
-  nextT = a.currentTime + 0.1; schedT = setInterval(schedule, 200); schedule();
-}
-export function musicStop() {
-  clearInterval(schedT); schedT = null;
-  if (pad) { try { pad.o1.stop(); pad.o2.stop(); } catch (e) {} pad = null; }
-  if (mGain) { try { mGain.disconnect(); } catch (e) {} mGain = null; }
-}
-export const musicIsOn = () => musicOn;
-export function musicToggle() { musicOn = !musicOn; ls.set('meono-music', musicOn ? '1' : '0'); musicOn ? musicStart() : musicStop(); return musicOn; }
-export function musicVolume(v) { if (v == null) return vol; vol = v; ls.set('meono-music-vol', String(v)); if (mGain) mGain.gain.value = vol * 0.35; }
-export function musicResumeIfOn() { if (musicOn) musicStart(); }
-document.addEventListener('visibilitychange', () => { if (ac && !document.hidden && ac.state !== 'running') ac.resume().catch(() => {}); if (!document.hidden && schedT && ac) nextT = Math.max(nextT, ac.currentTime + 0.05); });
+export const musicIsOn = () => bgm.isOn();
+export function musicToggle(v) { return bgm.toggle(v); }
+export function musicVolume(v) { return bgm.volume(v); }
+export function musicStart() { bgm.start(); }
+export function musicStop() { bgm.stop(); }
+export function musicResumeIfOn() { bgm.resumeIfOn(); }
+export const musicMood = m => bgm.mood(m);
+export const musicStinger = k => bgm.stinger(k);

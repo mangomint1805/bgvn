@@ -1,9 +1,19 @@
 import { GMODES, GMODE_KEYS } from './engine.js?v=7';
+import { gp, ill } from '../../shared/ui/guidepics.js?v=1';
+import { GI, GV } from './guide-img.js?v=1';
+const big = e => `<span style="font-size:34px;line-height:1">${e}</span>`;
 // Hướng dẫn luật Scribble it!
 export function guideHTML() {
+  const P = gp(GI, GV);
   return `
   <h2>📖 Cách chơi Scribble it!</h2>
   <div class="guide">
+    ${P.quick([
+      ['q-home', 'Trang chủ Scribble: ô tên, Tạo phòng online, ô mã phòng, Vẽ thử', '① Nhập tên → ② <b>Tạo phòng online</b>, hoặc ③ nhập mã phòng bạn gửi rồi bấm Vào. Một mình thì ④ <b>Vẽ thử</b>.'],
+      ['q-lobby', 'Phòng chờ: mã phòng, danh sách người chơi, các kiểu chơi, nút Bắt đầu', '① Gửi mã / link mời cho hội bạn (cần ≥ 2 người) → ② chọn kiểu chơi → ③ <b>Bắt đầu</b>.'],
+      ['choose', 'Tới lượt vẽ: chọn 1 trong 3 từ', 'Tới lượt vẽ: ① chọn 1 trong 3 từ rồi vẽ cho cả bọn đoán.'],
+      ['guess', 'Người đoán: ô gợi ý số chữ, đồng hồ, tranh đang vẽ, khung chat có dòng Gần đúng rồi', '① Gợi ý số chữ · ② đồng hồ. Gõ đáp án vào ③ khung chat – sai 1 ký tự là hiện “Gần đúng rồi! 🔥”.'],
+    ])}
     <section>
       <h3>🎨 Đoán hình</h3>
       <ol>
@@ -16,6 +26,7 @@ export function guideHTML() {
         <li>Đoán ra rồi thì chat vẫn được, nhưng chỉ hoạ sĩ và những người đã đoán ra mới đọc được 🤫.</li>
         <li>Lượt kết thúc khi hết giờ hoặc tất cả đã đoán ra. Mỗi vòng ai cũng được vẽ 1 lần.</li>
       </ol>
+      ${P.fig('guess', 'Màn hình người đoán', 'Đoán sai 1 ký tự: chỉ mình bạn thấy dòng cam “Gần đúng rồi! 🔥”.')}
       <h4>Tính điểm</h4>
       <ul>
         <li>Người đoán: <b>100 – 500 điểm</b>, đoán càng nhanh càng nhiều.</li>
@@ -24,6 +35,7 @@ export function guideHTML() {
     </section>
     <section>
       <h3>📞 Tam sao thất bản</h3>
+      ${ill([[big('✍️'), 'Tiến viết câu'], '→', [big('🎨'), 'Tuni vẽ lại'], '→', [big('🤔'), 'Thành đoán thành câu'], '→', [big('🎨'), 'Khiêm vẽ tiếp…'], '→', [big('😂'), 'chiếu lại cả chuỗi']])}
       <ol>
         <li>Mỗi người <b>viết 1 câu</b> (bí ý tưởng thì bấm 🎲).</li>
         <li>Câu được chuyền cho người kế để <b>vẽ lại</b>.</li>
@@ -45,6 +57,7 @@ export function guideHTML() {
     </section>
     <section>
       <h3>🖌️ Bảng vẽ</h3>
+      ${P.fig('draw', 'Bảng vẽ và thanh công cụ: màu, cỡ nét, bút, tẩy, đổ màu, hoàn tác, xoá', '① Thanh công cụ: màu · cỡ nét · bút · tẩy · đổ màu · hoàn tác · xoá hết.')}
       <ul>
         <li>20 màu, 5 cỡ nét, <b>tẩy</b>, <b>đổ màu</b> (bấm vào vùng kín), <b>hoàn tác</b>, <b>xoá hết</b>.</li>
         <li>Máy tính: <kbd>B</kbd> bút, <kbd>E</kbd> tẩy, <kbd>F</kbd> đổ màu, <kbd>Ctrl</kbd>+<kbd>Z</kbd> hoàn tác.</li>
@@ -53,6 +66,7 @@ export function guideHTML() {
     </section>
     <section>
       <h3>🌐 Chơi online</h3>
+      ${P.fig('q-lobby', 'Phòng chờ với mã phòng', '① Mã 5 ký tự / link mời ở đầu phòng chờ.')}
       <ul>
         <li>Cần ít nhất <b>2 người</b>. Một người tạo phòng, gửi mã 5 ký tự (hoặc link mời) cho hội bạn.</li>
         <li>Chế độ Đoán hình cho phép vào giữa ván – vào là thấy lại toàn bộ tranh đang vẽ.</li>

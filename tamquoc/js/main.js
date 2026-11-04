@@ -3,14 +3,14 @@ import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, SUIT_SYMBOL, SUIT_NAME, cardLabel, cardName, rankLabel, rolesFor, infoOf } from './cards.js?v=7';
 import { JUDGE_TEXT } from './engine.js?v=7';
-import { Host, Client, loadSnapshot, session, MAX, MIN, TQ_PHRASES } from './net.js?v=8';
+import { Host, Client, loadSnapshot, session, MAX, MIN, TQ_PHRASES } from './net.js?v=9';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=1';
 import { portrait, blankPortrait, cardHTML, backHTML, generalCardHTML, kindTag, iconsFor, emoOf } from './art.js?v=7';
-import * as fx from './fx.js?v=7';
-import { musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=7';
-import { openGuide as guide } from './guide.js?v=7';
+import * as fx from './fx.js?v=8';
+import { musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=8';
+import { openGuide as guide } from './guide.js?v=8';
 import { SKILL_HELP, SKILL_TYPE } from './skillhelp.js?v=7';
 import { PHASE_HELP } from './coach.js?v=7';
 
@@ -27,7 +27,7 @@ let lobbyOpts = { exp: true, expGen: true };
 let ui = null, askSig = '', modalSig = '', lastEv = 0, autoPass = null, introShown = false, endShown = false;
 
 // ======================= MÀN HÌNH =======================
-function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
+function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') musicIntensity(-1); }
 let toastT;
 function toast(msg, kind = '') { const t = $('#toast'); t.innerHTML = suitify(esc(msg)); t.className = 'toast ' + kind; clearTimeout(toastT); toastT = setTimeout(() => t.classList.add('hidden'), 2800); }
 function openModal(html, cls = '') { $('#modal-box').innerHTML = html; $('#modal-box').className = 'modal-box ' + cls; $('#modal').classList.remove('hidden'); }
@@ -981,13 +981,14 @@ function playEvents(v) {
       case 'skill': if (SKILLS[e.sk]) at(() => { bubbleAt(e.p, `<b>✨ ${SKILLS[e.sk].name}</b>`, 'skill'); (fx.sfx[SKILL_SFX[e.sk]] || fx.sfx.qin)(); }); else if (e.sk === 'qinglong' || e.sk === 'guanshi') at(() => { bubbleAt(e.p, `<b>${e.sk === 'qinglong' ? '🐉 Thanh long đao' : '🪓 Quán thạch phủ'}</b>`); fx.sfx.slash(); (e.to || []).forEach(id => fx.slashFx(anchor(id), 150)); }); t += 90; break;
       case 'win': at(() => {
         const m = me(); const side = r => r === 'lord' || r === 'loyal' ? 'lord' : r; const won = m && side(m.role) === e.w;
-        fx.banner(won ? '🏆 Chiến thắng!' : '😵 Thất bại', winText(e.w)); if (won) { fx.sfx.win(); fx.confetti(); } musicStinger(won ? 'win' : 'lose');
+        fx.banner(won ? '🏆 Chiến thắng!' : '😵 Thất bại', winText(e.w)); if (won) { fx.sfx.win(); fx.confetti(); } else fx.sfx.lose(); musicStinger(won ? 'win' : 'lose');
       }, 600); break;
     }
   }
 }
 function musicMood(v) {
-  if (!v || v.phase !== 'playing' || !v.turnCount) { musicIntensity(0); return; }
+  if (!v || v.phase !== 'playing') { musicIntensity(-1); return; }
+  if (!v.turnCount) { musicIntensity(0); return; }
   const alive = v.players.filter(p => p.alive), m = me(), a = v.ask; const lord = v.players.find(p => p.role === 'lord');
   let lv = 0;
   if (alive.some(p => p.hp <= 1) || alive.length <= Math.ceil(v.players.length / 2) || (m && m.alive && m.hp <= 2)) lv = 1;

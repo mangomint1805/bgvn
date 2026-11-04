@@ -1,5 +1,5 @@
 // Hướng dẫn tiếng Việt: luật Xếp bài cổ điển (Klondike) + cách tính điểm + thao tác
-import { cardHTML } from './cards.js?v=1';
+import { cardHTML } from './cards.js?v=2';
 import { RANKS, SUITS } from './core.js?v=1';
 
 const C = t => RANKS.indexOf(t.slice(0, -1)) + 13 * SUITS.indexOf(t.slice(-1));

@@ -1,0 +1,22 @@
+/* BGVN Deck – giấy bài + lớp SVG. Kích thước / bo góc / bóng do game tự đặt trên phần tử .dk-card */
+:root{--dk-s:#1b1a1f;--dk-h:#c4152f;--dk-d:#c4152f;--dk-c:#1b1a1f}
+:root.dk-4c{--dk-d:#1f5fbf;--dk-c:#1c7a3e}
+.dk-card{
+  position:relative;container:dk-card/inline-size;overflow:hidden;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .38 0 0 0 0 .28 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='96' height='96' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(160deg,#fffefa 0%,#fbf7ee 55%,#f2ebdc 100%);
+  border:1px solid #c3b8a5;
+  box-shadow:0 1px 0 #fff inset,0 5px 12px -6px #1a0e0699,0 1px 2px #1a0e0633;
+  color:#1b1a1f;
+}
+.dk-card>.dk-svg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;overflow:hidden}
+.dk-svg .dk-c{display:none}
+@container dk-card (max-width:47px){
+  .dk-svg .dk-f{display:none}
+  .dk-svg .dk-c{display:inline}
+}
+/* ép kiểu */
+.dk-card.dk-compact .dk-f{display:none}.dk-card.dk-compact .dk-c{display:inline}
+.dk-card.dk-full .dk-f{display:inline}.dk-card.dk-full .dk-c{display:none}
+.dk-card.dk-back{background:#fbf7ee}

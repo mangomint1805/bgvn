@@ -2,7 +2,7 @@
 import { createGame, applyAction, viewFor, topPrompt, current, alivePlayers, responseCards, getPlayer } from './engine.js?v=2';
 export const TURN_TIME = 60, PROMPT_TIME = 20; // giây: hết giờ thì máy tự đánh thay (chống treo máy)
 import { botAction } from './bot.js?v=2';
-import { S } from './fx.js';
+import { S } from './fx.js?v=1';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 // Câu chọc riêng của BANG! (bảng thả emoji – shared/ui/react.js), mỗi câu ≤ 24 ký tự

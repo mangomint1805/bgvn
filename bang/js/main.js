@@ -2,15 +2,15 @@
 import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { CARD_INFO, CHARACTERS, ROLES, SUIT_SYMBOL, rankLabel, cardLabel, suitify } from './cards.js';
-import { Host, Client, loadSnapshot, session, BANG_PHRASES } from './net.js?v=12';
+import { Host, Client, loadSnapshot, session, BANG_PHRASES } from './net.js?v=13';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
 import { imgTag, avatarTag } from './images.js';
-import { S, SPEEDS, getSpeed, setSpeed, sfx, cardSfx, gunSfx, fly, shake, flash, floatText, banner, toggleMute, isMuted, shoot, arrows, explode, sparkle, confetti, stamp, screenShake } from './fx.js';
+import { S, SPEEDS, getSpeed, setSpeed, sfx, cardSfx, gunSfx, fly, shake, flash, floatText, banner, toggleMute, isMuted, shoot, arrows, explode, sparkle, confetti, stamp, screenShake } from './fx.js?v=1';
 import { THEMES, getTheme, setTheme, onThemeChange } from './themes.js';
-import { openGuide } from './guide.js?v=13';
-import { musicSetTheme, musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=9';
+import { openGuide } from './guide.js?v=14';
+import { musicSetTheme, musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=10';
 
 const $ = s => document.querySelector(s);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
@@ -60,7 +60,7 @@ let selectedCard = null;
 let sidMode = false, sidPick = [];
 
 // ---------- Màn hình ----------
-function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); $('#' + id).classList.add('active'); }
+function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); $('#' + id).classList.add('active'); if (id !== 'screen-game') musicIntensity(-1); }
 let toastTimer;
 function toast(msg, info = false) { const t = $('#toast'); t.textContent = msg; t.className = 'toast' + (info ? ' info' : ''); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), 3000); }
 
@@ -744,7 +744,7 @@ function animateDiff(a, b) {
     setTimeout(() => { sfx.win(); confetti(); banner('🏆 ' + names[b.winner]); }, 700);
     const r = (b.players.find(p => p.id === myId) || {}).role;
     const won = b.winner === 'law' ? r === 'sheriff' || r === 'deputy' : b.winner === r;
-    musicStinger(won ? 'win' : 'lose');
+    musicStinger(won ? 'win' : 'lose'); if (!won) setTimeout(() => sfx.lose(), 1500);
   }
   for (const l of newLines(a, b)) { if (/ bị loại! Vai trò/.test(l)) musicStinger('death'); else if (/ thách .+ Duel!$/.test(l)) musicStinger('duel'); }
 }
@@ -778,7 +778,7 @@ function tickTimer() {
   el.style.display = '';
   el.className = (mine ? 'mine ' : '') + (left <= 10 ? 'low' : '');
   el.innerHTML = `⏳ ${mine ? 'Bạn còn' : esc(p ? p.name : '?') + ':'} <b>${left}s</b>`;
-  if (mine && left <= 5 && left > 0 && left !== lastBeep) { lastBeep = left; sfx.turn(); }
+  if (mine && left <= 5 && left > 0 && left !== lastBeep) { lastBeep = left; sfx.tick(); }
 }
 
 // ---------- Bỏ bớt bài cuối lượt: chọn đủ rồi bỏ một lần ----------
@@ -798,7 +798,7 @@ function sendNextDiscard() {
 // ---------- Nhạc theo diễn biến ----------
 function newLines(a, b) { const la = a.log || [], lb = b.log || []; if (!la.length) return []; const last = la[la.length - 1]; const i = lb.lastIndexOf(last); return i >= 0 ? lb.slice(i + 1) : []; }
 function musicMood(v) {
-  if (!v || v.phase !== 'playing') { musicIntensity(0); return; }
+  if (!v || v.phase !== 'playing') { musicIntensity(-1); return; }
   const alive = v.players.filter(p => p.alive), meP = v.players.find(p => p.id === myId), pr = v.prompt;
   const sheriff = v.players.find(p => p.role === 'sheriff');
   let lv = 0;

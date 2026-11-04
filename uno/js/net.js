@@ -1,7 +1,7 @@
 // Lớp mạng UNO: host giữ state, client chỉ gửi action. Kết nối dùng chung ở shared/net/room.js
 import { createGame, applyAction, viewFor, current, MODES, newMatch, recordRound, MATCH_TARGETS } from './engine.js?v=19';
 import { botAction, botCatch } from './bot.js?v=19';
-import { S } from './ufx.js?v=19';
+import { S } from './ufx.js?v=20';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 const NS = 'bgvn-uno', PREFIX = 'bgvn-uno-', GAME = 'uno';

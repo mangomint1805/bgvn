@@ -4,9 +4,9 @@ import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
 import { KIND_NAME, OPT_CHOICES, DEFAULT_OPTS, MAX_CARDS } from './engine.js?v=1';
-import { cardHTML } from './cards.js?v=1';
-import * as fx from './xfx.js?v=1';
-import { openGuide } from './guide.js?v=1';
+import { cardHTML } from './cards.js?v=2';
+import * as fx from './xfx.js?v=2';
+import { openGuide } from './guide.js?v=3';
 
 const GAME = 'xidach';
 const $ = s => document.querySelector(s);
@@ -26,7 +26,7 @@ const clean = n => String(n || '').replace(' 🤖', '').trim();
 const avatar = name => `<div class="av" style="background:${avColor(name)}">${esc([...clean(name)][0] || '?').toUpperCase()}</div>`;
 
 // ---------- màn hình ----------
-function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
+function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') fx.musicMood('lobby'); }
 let toastT;
 function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 function openModal(html, cls = '', key = null) { $('#modal-box').className = 'modal-box ' + cls; $('#modal-box').innerHTML = html; $('#modal').classList.add('open'); modalKey = key; }
@@ -169,6 +169,8 @@ function cardsOf(p, flip) {
 }
 function render() {
   const v = view; if (!v) return;
+  // nhạc: cái lật bài / xét bài = gay cấn
+  fx.musicMood(v.phase === 'dealer' ? 'tense' : 'game');
   const C = P(v.caiId);
   $('#round-tag').innerHTML = `Ván ${v.round} · 👑 ${amCai() ? 'Bạn' : esc(nameOf(v.caiId))} làm cái`;
   renderDealer(v, C);
@@ -312,6 +314,7 @@ function tickClock() {
   const nl = $('#next-left'); if (nl) nl.textContent = `(${left}s)`;
   if (!mine) { el.style.display = 'none'; return; }
   el.style.display = ''; el.textContent = `⏳ ${left}s`; el.classList.toggle('low', left <= 8);
+  if (left <= 5 && left > 0 && left !== tickClock.last) { tickClock.last = left; fx.sfx.tick(); }
 }
 setInterval(tickClock, 250);
 

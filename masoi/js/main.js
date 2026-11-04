@@ -3,11 +3,11 @@ import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { ROLES, ROLE_ORDER, STEP_TEXT, TEAM_NAME, roleList, presetRoles, isWolfRole, DEFAULT_OPTS } from './engine.js?v=3';
-import { openReplay, replayFollowUpdate } from './replay.js?v=3';
-import { coachCheck, coachHide, coachTipEnd } from './coach.js?v=3';
+import { openReplay, replayFollowUpdate } from './replay.js?v=4';
+import { coachCheck, coachHide, coachTipEnd } from './coach.js?v=4';
 import { roleCardSVG, cardBackSVG, roleChip, roleDot, bambooSVG, dinhSVG, hillsSVG, starsHTML, firefliesHTML, heroSVG } from './art.js?v=3';
-import * as fx from './fx.js?v=3';
-import { openGuide } from './guide.js?v=4';
+import * as fx from './fx.js?v=4';
+import { openGuide } from './guide.js?v=5';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=4';
 
 const $ = s => document.querySelector(s);
@@ -71,7 +71,7 @@ function phaseTheme(v) {
   return { night: 'night', dawn: 'dawn', day: 'day', vote: 'dusk', last: 'dusk', hunter: theme === 'night' ? 'dawn' : theme }[v.phase] || 'night';
 }
 function moodFor(v) {
-  if (!v) { fx.music('night'); fx.ambient('night'); fx.setTension(0); return; }
+  if (!v) { fx.music('lobby'); fx.ambient('night'); fx.setTension(0); return; }
   const m = { night: 'night', dawn: 'day', day: 'day', vote: 'vote', last: 'vote', hunter: 'vote', ended: v.winner && v.winner.team === 'wolf' ? 'night' : 'day' }[v.phase];
   fx.music(m); fx.ambient(v.phase === 'night' || (v.phase === 'ended' && m === 'night') ? 'night' : 'day');
   fx.setTension(v.phase === 'night' && (v.step === 'wolves' || v.step === 'wolves2') ? 0.8 : 0);

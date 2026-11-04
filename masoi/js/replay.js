@@ -1,7 +1,7 @@
 // 🎞️ Xem lại cuối ván: dòng thời gian Chia vai → Đêm 1 → Ngày 1 → … (lộ hết vai, phiếu từng người).
 // Chủ phòng có thể "chiếu" cho cả hội: lướt tới trang nào thì máy mọi người theo trang đó.
 import { ROLES, TEAM_NAME } from './engine.js?v=3';
-import * as fx from './fx.js?v=3';
+import * as fx from './fx.js?v=4';
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const clean = n => String(n).replace(' 🤖', '').trim();

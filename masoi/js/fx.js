@@ -1,11 +1,12 @@
 // Âm thanh tự tổng hợp (WebAudio) + hiệu ứng DOM cho Ma Sói. Không dùng file âm thanh nào.
+import { createBGM, sfxVolStore } from '../../shared/audio/bgm.js?v=2';
 // Nhạc nền: đêm (đàn bầu + trống trầm + mõ), ngày (đàn tranh vui), bỏ phiếu (trống dồn). Môi trường: dế kêu, chim hót.
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 export const reduced = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
 
 let muted = ls.get('masoi-mute') === '1';
-let musicOn = ls.get('masoi-music') !== '0';
-let musicVol = +(ls.get('masoi-vol') || 0.55);
+const sv = sfxVolStore('masoi');
+export function sfxVolume(v) { if (v == null) return sv.get(); sv.set(v); if (sfxBus) sfxBus.gain.value = v; return v; }
 export const isMuted = () => muted;
 export function toggleMute() { muted = !muted; ls.set('masoi-mute', muted ? '1' : '0'); if (muted) ambient(null); else ambient(ambMode); return muted; }
 
@@ -15,8 +16,8 @@ export function actx() {
     try {
       ac = new (window.AudioContext || window.webkitAudioContext)();
       master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination);
-      sfxBus = ac.createGain(); sfxBus.gain.value = 1; sfxBus.connect(master);
-      musBus = ac.createGain(); musBus.gain.value = musicOn ? musicVol * 0.6 : 0; musBus.connect(master);
+      sfxBus = ac.createGain(); sfxBus.gain.value = sv.get(); sfxBus.connect(master);
+      musBus = ac.createGain(); musBus.gain.value = 1; musBus.connect(master);
       // tiếng vang (đêm vắng giữa làng)
       verb = ac.createConvolver(); const len = ac.sampleRate * 2.6, b = ac.createBuffer(2, len, ac.sampleRate);
       for (let c = 0; c < 2; c++) { const x = b.getChannelData(c); for (let i = 0; i < len; i++) x[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
@@ -143,91 +144,18 @@ export function ambient(mode) {
   loop();
 }
 
-// ---------- nhạc nền (bộ hẹn giờ nhìn trước) ----------
-let musMode = null, musTimer = null, nextBeat = 0, beat = 0, drone = null, tension = 0;
-export const musicIsOn = () => musicOn;
-export function musicVolume(v) { if (v != null) { musicVol = v; ls.set('masoi-vol', String(v)); if (musBus && musicOn) musBus.gain.setTargetAtTime(v * 0.6, T(), 0.1); } return musicVol; }
-export function musicToggle() { musicOn = !musicOn; ls.set('masoi-music', musicOn ? '1' : '0'); if (actx()) musBus.gain.setTargetAtTime(musicOn ? musicVol * 0.6 : 0, T(), 0.15); if (musicOn && musMode) startMus(); return musicOn; }
-export function musicResumeIfOn() { if (musicOn && actx() && musMode) startMus(); }
+// ---------- nhạc nền: shared/audio/bgm.js – sảnh ma mị / ngày (đàn tranh) / đêm (đàn bầu + trống trầm) / bỏ phiếu (trống dồn) ----------
+const bgm = createBGM({ game: 'masoi', ctx: actx, dest: () => musBus, legacy: ls.get('masoi-music'), volKey: 'masoi-vol', volDefault: 0.55 });
+let tension = 0;
+export const musicIsOn = () => bgm.isOn();
+export function musicVolume(v) { return bgm.volume(v); }
+export function musicToggle(v) { return bgm.toggle(v); }
+export function musicResumeIfOn() { bgm.resumeIfOn(); }
 export function setTension(v) { tension = v; }
-// thang âm ngũ cung
-const NIGHT = [146.8, 174.6, 196, 220, 261.6, 293.7, 349.2, 392]; // Rê thứ ngũ cung (rê fa son la đô)
-const DAY = [261.6, 293.7, 329.6, 392, 440, 523.3, 587.3, 659.3];   // Đô ngũ cung
-// đàn bầu: luyến từ dưới lên, rung sau đó
-function danbau(f, t, d, g) {
-  const o = ac.createOscillator(); o.type = 'sine';
-  o.frequency.setValueAtTime(f * 0.94, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.12);
-  const lfo = ac.createOscillator(); lfo.frequency.value = 5.5; const lg = ac.createGain(); lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(f * 0.012, t + d * 0.6); lfo.connect(lg); lg.connect(o.frequency);
-  const o2 = ac.createOscillator(); o2.type = 'triangle'; o2.frequency.setValueAtTime(f * 2 * 0.94, t); o2.frequency.exponentialRampToValueAtTime(f * 2, t + 0.12);
-  const g2 = ac.createGain(); g2.gain.value = 0.25; o2.connect(g2);
-  const gn = ac.createGain(); gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.05); gn.gain.exponentialRampToValueAtTime(g * 0.5, t + d * 0.5); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
-  o.connect(gn); g2.connect(gn); gn.connect(musBus); const w = ac.createGain(); w.gain.value = 0.6; gn.connect(w); w.connect(verbIn);
-  o.start(t); o2.start(t); lfo.start(t); o.stop(t + d + 0.05); o2.stop(t + d + 0.05); lfo.stop(t + d + 0.05);
-}
-// đàn tranh: gảy nhanh, tắt nhanh
-function pluck(f, t, g = 0.05) {
-  const o = ac.createOscillator(); o.type = 'triangle'; o.frequency.value = f;
-  const o2 = ac.createOscillator(); o2.type = 'sine'; o2.frequency.value = f * 2.01;
-  const gn = ac.createGain(); env(gn, t, 0.004, g, 0.7); const g2 = ac.createGain(); g2.gain.value = 0.3;
-  o.connect(gn); o2.connect(g2); g2.connect(gn); gn.connect(musBus); const w = ac.createGain(); w.gain.value = 0.3; gn.connect(w); w.connect(verbIn);
-  o.start(t); o2.start(t); o.stop(t + 0.8); o2.stop(t + 0.8);
-}
-function mtone(f, t, d, type, g) { const o = ac.createOscillator(); o.type = type; o.frequency.value = f; const gn = ac.createGain(); env(gn, t, 0.01, g, d); o.connect(gn); gn.connect(musBus); o.start(t); o.stop(t + d + 0.05); }
-function mdrum(t, g, f = 80) { const o = ac.createOscillator(); o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 0.55, t + 0.3); const gn = ac.createGain(); env(gn, t, 0.005, g, 0.35); o.connect(gn); gn.connect(musBus); o.start(t); o.stop(t + 0.4); }
-function mmo(t, g) { mtone(900, t, 0.06, 'sine', g); mtone(1350, t, 0.04, 'triangle', g * 0.4); }
-function setDrone(on, freqs = [73.4, 110]) {
-  if (drone) { const d = drone; drone = null; d.g.gain.setTargetAtTime(0.0001, T(), 0.6); setTimeout(() => d.oscs.forEach(o => { try { o.stop(); } catch (e) {} }), 2500); }
-  if (!on) return;
-  const g = ac.createGain(); g.gain.value = 0.0001; g.gain.setTargetAtTime(0.03, T(), 1.2);
-  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 340; lp.Q.value = 4;
-  const lfo = ac.createOscillator(); lfo.frequency.value = 0.07; const lg = ac.createGain(); lg.gain.value = 160; lfo.connect(lg); lg.connect(lp.frequency);
-  const oscs = [lfo];
-  for (const f of freqs) for (const det of [-6, 6]) { const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = det; o.connect(lp); oscs.push(o); o.start(); }
-  lp.connect(g); g.connect(musBus); lfo.start();
-  drone = { g, oscs };
-}
-const MEL_N = [0, -1, 2, -1, 3, 2, -1, 1, 0, -1, -1, 4, 3, -1, 2, -1, 5, -1, 3, 2, 1, -1, 0, -1];
-const MEL_D = [4, 5, 7, 5, 4, 2, 4, 5, 7, 6, 4, 3, 2, 4, 5, 3];
-function stepMus() {
-  if (!musMode || !ac) return;
-  const bpm = musMode === 'night' ? 64 + tension * 30 : musMode === 'vote' ? 108 : 96;
-  const spb = 60 / bpm / (musMode === 'day' ? 2 : 1);
-  while (nextBeat < T() + 0.25) {
-    const t = nextBeat, b = beat++;
-    if (musMode === 'night') {
-      if (b % 8 === 0) mdrum(t, 0.12, 62);
-      if (b % 8 === 5) mdrum(t, 0.06, 70);
-      if (b % 4 === 2) mmo(t, 0.025);
-      const n = MEL_N[b % MEL_N.length];
-      if (n >= 0 && (b >> 3) % 4 !== 3) danbau(NIGHT[n + (b % 48 > 24 ? 1 : 0)] , t, spb * 2.6, 0.05);
-      if (tension > 0.4 && b % 2 === 0) { mtone(55, t, 0.12, 'sine', 0.08 * tension); mtone(52, t + 0.18, 0.12, 'sine', 0.06 * tension); }
-    } else if (musMode === 'day') {
-      if (b % 8 === 0) mtone(130.8, t, 0.5, 'triangle', 0.05);
-      if (b % 8 === 4) mtone(196, t, 0.4, 'triangle', 0.04);
-      if (b % 2 === 1) mmo(t, 0.018);
-      const n = MEL_D[b % MEL_D.length];
-      if ((b % 16) < 12 && (b % 3 !== 2)) pluck(DAY[n], t, 0.04);
-      if (b % 16 === 14) { pluck(DAY[7], t, 0.03); pluck(DAY[5], t + spb / 3, 0.03); pluck(DAY[4], t + 2 * spb / 3, 0.03); }
-    } else if (musMode === 'vote') {
-      mdrum(t, b % 4 === 0 ? 0.14 : 0.07, b % 4 === 0 ? 70 : 95);
-      if (b % 2 === 1) mmo(t, 0.03);
-      if (b % 8 === 0) danbau(NIGHT[b % 16 ? 3 : 2], t, spb * 3.5, 0.04);
-    }
-    nextBeat += spb;
-  }
-}
-function startMus() {
-  if (!ac) return;
-  clearInterval(musTimer); nextBeat = T() + 0.1;
-  musTimer = setInterval(stepMus, 60);
-  setDrone(musMode === 'night' || musMode === 'vote', musMode === 'vote' ? [110, 116.5] : [73.4, 110]);
-}
-export function music(mode) {
-  if (mode === musMode) return;
-  musMode = mode;
-  if (!mode) { clearInterval(musTimer); if (ac) setDrone(false); return; }
-  if (actx()) startMus();
-}
+export const getTension = () => tension;
+export const musicStinger = k => bgm.stinger(k);
+// mode: 'lobby' | 'day' | 'night' | 'vote'
+export function music(mode) { bgm.mood(mode || 'lobby'); }
 
 // ---------- người dẫn truyện (giọng đọc tiếng Việt của máy, nếu có) ----------
 let voiceOn = ls.get('masoi-voice') === '1';

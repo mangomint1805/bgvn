@@ -2,7 +2,7 @@
 // Kết nối dùng chung shared/net/room.js (Firebase → PeerJS → MQTT), tự vào lại khi tải trang.
 import { createGame, applyAction, viewFor, actorOf, P } from './engine.js?v=3';
 import { botAction } from './bot.js?v=3';
-import { S } from './fx.js?v=2';
+import { S } from './fx.js?v=3';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 const NS = 'bgvn-cangua', PREFIX = 'bgvn-cangua-', GAME = 'cangua', SNAP = 'bgvn-hostsnap-' + GAME;

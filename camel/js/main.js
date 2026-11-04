@@ -6,8 +6,8 @@ import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.j
 import { CAMEL, RACERS, TRACK, LEG_ROLLS, OVERALL_PAY, legalTiles, ranking } from './engine.js?v=1';
 import { simLeg } from './bot.js?v=1';
 import { Board3D, DIE_COLORS } from './scene3d.js?v=1';
-import * as fx from './fx.js?v=1';
-import { guideHTML } from './guide.js?v=1';
+import * as fx from './fx.js?v=2';
+import { guideHTML } from './guide.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
 
@@ -26,7 +26,7 @@ const CN = c => CAMEL[c].short;
 const cc = c => `--cc:${CAMEL[c].color}`;
 
 // ---------- tiện ích ----------
-function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
+function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') fx.musicMood('lobby'); syncMusicBtns(); }
 let toastT; function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 const fns = { panel: [], modal: [], lobby: [] };
 function btn(scope, label, fn, cls = '', dis = false, title = '') { const i = fns[scope].push(fn) - 1; return `<button class="btn ${cls}" data-f="${scope}:${i}" ${dis ? 'disabled' : ''} ${title ? `title="${esc(title)}"` : ''}>${label}</button>`; }
@@ -48,7 +48,7 @@ const myName = () => { const n = ($('#name').value.trim() || 'Bạn').slice(0, 1
 function openSettings() {
   const seg = (key, list, fn) => `<div class="seg">${list.map(([v, n]) => `<button class="${settings[key] === v ? 'on' : ''}" ${fnAttr('modal', () => { settings[key] = v; fx.saveSettings(); fn && fn(v); openSettings(); })}>${n}</button>`).join('')}</div>`;
   openModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>⚙️ Cài đặt</h2>
-    <div class="set-row"><b>🎵 Nhạc nền</b><div class="seg"><button class="${settings.musicOn ? 'on' : ''}" ${fnAttr('modal', () => { fx.musicToggle(!settings.musicOn); openSettings(); })}>${settings.musicOn ? 'Đang bật' : 'Đang tắt'}</button></div>
+    <div class="set-row"><b>🎵 Nhạc nền</b><div class="seg"><button class="${settings.musicOn ? 'on' : ''}" ${fnAttr('modal', () => { fx.musicToggle(!settings.musicOn); syncMusicBtns(); openSettings(); })}>${settings.musicOn ? 'Đang bật' : 'Đang tắt'}</button></div>
       <input type="range" min="0" max="1" step="0.05" value="${settings.music}" id="vol-music" aria-label="Âm lượng nhạc"></div>
     <div class="set-row"><b>🔊 Hiệu ứng âm thanh</b><input type="range" min="0" max="1" step="0.05" value="${settings.sfx}" id="vol-sfx" aria-label="Âm lượng hiệu ứng"></div>
     <div class="set-row"><b>📊 % gợi ý trên vé</b>${oddsOk() ? seg('odds', [[true, 'Hiện'], [false, 'Ẩn']], () => shown && renderPanel()) : `<div class="seg"><button disabled>Hiện</button><button class="on" disabled>Ẩn</button></div><small style="flex-basis:100%;opacity:.75">🔒 ${BOT_ONLY_NOTE}</small>`}</div>
@@ -63,6 +63,11 @@ function openSettings() {
   $('#vol-sfx').onchange = () => fx.sfx.hop();
 }
 $('#btn-settings').onclick = $('#btn-settings-home').onclick = () => { fx.actx(); openSettings(); };
+// nút 🎵 nhanh (trang chủ + trong ván)
+function syncMusicBtns() { const on = fx.musicIsOn(); for (const b of $$('.btn-music')) { b.classList.toggle('on', on); b.classList.toggle('off', !on); b.style.opacity = on ? '' : '.55'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.title = on ? 'Nhạc nền: đang bật (bấm để tắt)' : 'Nhạc nền: đang tắt (bấm để bật)'; } const h = $('#btn-music-home'); if (h) h.textContent = on ? '🎵 Nhạc: bật' : '🔇 Nhạc: tắt'; }
+for (const b of $$('.btn-music')) b.onclick = () => { fx.actx(); fx.musicToggle(); syncMusicBtns(); if (fx.sfx.click) fx.sfx.click(); };
+syncMusicBtns();
+
 const openGuide = () => openModal(guideHTML(), 'wide', 'guide');
 function news() { openNews(GAME); $$('.bgvn-dot').forEach(b => b.classList.remove('bgvn-dot')); }
 for (const id of ['#btn-news-home', '#btn-news-lobby']) { const b = $(id); newsBadge(b, GAME); b.onclick = () => { fx.sfx.click(); news(); }; }
@@ -304,6 +309,8 @@ function legModal(sum, v) {
 // ---------- thanh trên + người chơi ----------
 function renderTop() {
   const v = shown, el = $('#turn-tag');
+  // nhạc: đang đua / gay cấn khi lạc đà dẫn đầu sắp về đích (≥ ô 13) / hết ván
+  { const lead = (v.board || []).reduce((m, s, p) => s && s.length ? Math.max(m, p) : m, 0); fx.musicMood(v.phase === 'ended' ? 'lobby' : lead >= 13 ? 'tense' : 'game'); }
   if (v.phase === 'ended') { const w = v.result.winners.map(id => nm(v, id)).join(', '); el.innerHTML = `<i style="--pc:#ffc928"></i><span>🏆 ${esc(w)} thắng</span>`; }
   else { const c = cur(v); el.innerHTML = `<i style="--pc:${pcol(v, c.id)}"></i><span><small class="lw">Lượt </small>${isMine(c.id) ? 'bạn' : esc(nm(v, c.id))}</span>`; }
   const all = v.opts.crazy ? [...RACERS, 'xam'] : RACERS;
@@ -444,6 +451,7 @@ function showEnd(v) {
   const order = [...v.players].sort((a, b) => b.coins - a.coins);
   const betRows = (list, label) => list.length ? list.map(b => `<tr class="${isMine(b.pid) ? 'me' : ''}"><td>${label}</td><td><b>${esc(nm(v, b.pid))}</b></td><td><div class="chips">${chip(b.camel, CN(b.camel))}</div></td><td class="${b.gain > 0 ? 'g' : 'l'}">${b.gain > 0 ? '+' : ''}${b.gain}</td></tr>`).join('') : `<tr><td colspan="4"><small style="color:var(--muted)">Không ai cược ${label === '🏆' ? 'vô địch' : 'bét'}.</small></td></tr>`;
   const win = r.winners.includes(v.me);
+  fx.musicStinger(win ? 'win' : 'lose'); if (!win) setTimeout(() => fx.sfx.lose(), 600);
   setTimeout(() => {
     if (!shown || shown.phase !== 'ended') return;
     openModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><div class="win"><div class="trophy">${win ? '🏆' : '🐪'}</div>

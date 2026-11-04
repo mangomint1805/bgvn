@@ -1,25 +1,29 @@
 // Âm thanh tổng hợp WebAudio (không file nhạc), nhạc nền lofi tự sáng tác, hiệu ứng DOM.
+import { createBGM, sfxVolStore } from '../../shared/audio/bgm.js?v=2';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 export const reduced = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
 
 let muted = ls.get('scribble-mute') === '1';
 export const isMuted = () => muted;
 export function toggleMute() { muted = !muted; ls.set('scribble-mute', muted ? '1' : '0'); return muted; }
-let ac = null;
+let ac = null, sfxBus = null;
+const sv = sfxVolStore('scribble');
+function out(a) { if (!sfxBus || sfxBus.context !== a) { sfxBus = a.createGain(); sfxBus.gain.value = sv.get(); sfxBus.connect(a.destination); } return sfxBus; }
+export function sfxVolume(v) { if (v == null) return sv.get(); sv.set(v); if (sfxBus) sfxBus.gain.value = v; return v; }
 export function actx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } } if (ac.state === 'suspended') ac.resume(); return ac; }
 function tone(f, d, type = 'sine', g = 0.12, slide = 0, at = 0) {
   const a = actx(); if (!a || muted) return; const t = a.currentTime + at;
   const o = a.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t);
   if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + d);
   const gn = a.createGain(); gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.01); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
-  o.connect(gn); gn.connect(a.destination); o.start(t); o.stop(t + d + 0.03);
+  o.connect(gn); gn.connect(out(a)); o.start(t); o.stop(t + d + 0.03);
 }
 function noise(d, freq, g, at = 0, type = 'bandpass') {
   const a = actx(); if (!a || muted) return; const t = a.currentTime + at;
   const b = a.createBuffer(1, Math.max(1, Math.floor(a.sampleRate * d)), a.sampleRate); const x = b.getChannelData(0);
   for (let i = 0; i < x.length; i++) x[i] = (Math.random() * 2 - 1) * (1 - i / x.length);
   const s = a.createBufferSource(); s.buffer = b; const f = a.createBiquadFilter(); f.type = type; f.frequency.value = freq;
-  const gn = a.createGain(); gn.gain.value = g; s.connect(f); f.connect(gn); gn.connect(a.destination); s.start(t);
+  const gn = a.createGain(); gn.gain.value = g; s.connect(f); f.connect(gn); gn.connect(out(a)); s.start(t);
 }
 const arp = (notes, step = 0.07, type = 'triangle', g = 0.1, d = 0.18) => notes.forEach((f, i) => tone(f, d, type, g, 0, i * step));
 let tikTok = 0;
@@ -60,7 +64,7 @@ export function scribble(amount, kind = 'pen', vol = 1) {
     const hp = a.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 800;
     const bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.8; bp.frequency.value = 3000;
     const g = a.createGain(); g.gain.value = 0;
-    src.connect(hp); hp.connect(bp); bp.connect(g); g.connect(a.destination); src.start();
+    src.connect(hp); hp.connect(bp); bp.connect(g); g.connect(out(a)); src.start();
     scr = { g, bp };
   }
   const t = a.currentTime, lvl = Math.min(0.1, 0.01 + amount * 0.002) * vol;
@@ -68,59 +72,16 @@ export function scribble(amount, kind = 'pen', vol = 1) {
   scr.g.gain.cancelScheduledValues(t); scr.g.gain.setTargetAtTime(lvl, t, 0.01); scr.g.gain.setTargetAtTime(0, t + 0.07, 0.035);
 }
 
-// ---------- nhạc nền: điệu vui tung tăng (marimba + ukulele + shaker), tự sáng tác ----------
-let musicOn = ls.get('scribble-music') === '1', mGain = null, mBuf = null, mSrc = null;
-const N = m => 440 * 2 ** ((m - 69) / 12);          // số MIDI -> Hz
-const PROG = [[60, 64, 67], [55, 59, 62], [57, 60, 64], [53, 57, 60]]; // C – G – Am – F
-// giai điệu 2 lượt x 4 ô nhịp, mỗi ô 8 nốt móc đơn (null = nghỉ)
-const MEL = [
-  [72, null, 76, 79, 76, null, 74, 72], [71, null, 74, 79, 74, null, 72, 71], [72, 76, null, 81, 79, 76, null, 74], [72, null, 69, 72, 74, null, 76, null],
-  [79, 79, null, 76, 77, 76, 74, null], [74, null, 71, 74, 79, null, 77, 74], [76, null, 72, 76, 81, 79, 76, null], [77, 76, 74, null, 72, null, null, null],
-];
-async function renderMusic(a) {
-  if (mBuf) return mBuf;
-  const sr = a.sampleRate, e = 0.25, BARS = 8, L = Math.round(BARS * 8 * e * sr), tail = sr;
-  const off = new OfflineAudioContext(2, L + tail, sr);
-  const bus = off.createGain(); bus.gain.value = 0.9; bus.connect(off.destination);
-  const env = (g, at, peak, d, atk = 0.004) => { g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(peak, at + atk); g.gain.exponentialRampToValueAtTime(0.0001, at + d); };
-  const osc = (f, type, at, d, peak, pan = 0) => {
-    const o = off.createOscillator(); o.type = type; o.frequency.value = f; const g = off.createGain(); env(g, at, peak, d);
-    const p = off.createStereoPanner(); p.pan.value = pan; o.connect(g); g.connect(p); p.connect(bus); o.start(at); o.stop(at + d + 0.05);
-  };
-  const marimba = (m, at, v = 1, pan = 0.15) => { const f = N(m); osc(f, 'sine', at, 0.5, 0.11 * v, pan); osc(f * 4, 'sine', at, 0.07, 0.03 * v, pan); osc(f * 10, 'sine', at, 0.02, 0.012 * v, pan); };
-  const uke = (m, at, v = 1) => { const f = N(m); osc(f, 'triangle', at, 0.32, 0.035 * v, -0.3); osc(f * 2, 'sine', at, 0.12, 0.015 * v, -0.3); };
-  const bass = (m, at, d) => { const f = N(m); osc(f, 'sine', at, d, 0.2); osc(f * 2, 'triangle', at, d * 0.5, 0.03); };
-  const nz = (at, d, freq, g, type = 'highpass') => {
-    const b = off.createBuffer(1, Math.max(1, sr * d | 0), sr), x = b.getChannelData(0); for (let j = 0; j < x.length; j++) x[j] = (Math.random() * 2 - 1) * (1 - j / x.length);
-    const s = off.createBufferSource(); s.buffer = b; const f = off.createBiquadFilter(); f.type = type; f.frequency.value = freq; const gn = off.createGain(); gn.gain.value = g;
-    s.connect(f); f.connect(gn); gn.connect(bus); s.start(at);
-  };
-  for (let bar = 0; bar < BARS; bar++) {
-    const ch = PROG[bar % 4], base = bar * 8 * e;
-    bass(ch[0] - 24, base, 0.4); bass(ch[2] - 24, base + 2 * e, 0.3); bass(ch[0] - 24, base + 4 * e, 0.4); bass(ch[1] - 24, base + 6 * e, 0.3);
-    for (let i = 0; i < 8; i++) {
-      const at = base + i * e + (i % 2 ? 0.018 : 0); // hơi "nhún" (swing)
-      nz(at, 0.035, 6500, i % 2 ? 0.05 : 0.025);                 // shaker
-      if (i % 2) ch.forEach((m, k) => uke(m + 12, at + k * 0.012, 0.9)); // ukulele gõ phách lệch
-      if (i === 2 || i === 6) nz(at, 0.07, 1800, 0.07, 'bandpass');  // tiếng búng tay
-      const m = MEL[bar][i]; if (m) marimba(m, at, i % 2 ? 0.8 : 1);
-    }
-  }
-  const out0 = await off.startRendering(); const out = a.createBuffer(2, L, sr);
-  for (let c = 0; c < 2; c++) { const d = out0.getChannelData(c), o = out.getChannelData(c); o.set(d.subarray(0, L)); for (let i = 0; i < tail; i++) o[i] += d[L + i]; }
-  return (mBuf = out);
-}
-async function musicStart() {
-  const a = actx(); if (!a || mSrc) return;
-  if (!mGain) { mGain = a.createGain(); mGain.connect(a.destination); } mGain.gain.value = 0.42;
-  mSrc = true; const buf = await renderMusic(a); if (mSrc !== true || !musicOn) { if (mSrc === true) mSrc = null; return; }
-  mSrc = a.createBufferSource(); mSrc.buffer = buf; mSrc.loop = true; mSrc.connect(mGain); mSrc.start();
-}
-function musicStop() { if (mSrc && mSrc !== true) try { mSrc.stop(); } catch (e) {} mSrc = null; }
-export const musicIsOn = () => musicOn;
-export function musicToggle() { musicOn = !musicOn; ls.set('scribble-music', musicOn ? '1' : '0'); musicOn ? musicStart() : musicStop(); return musicOn; }
-export function musicResumeIfOn() { if (musicOn) musicStart(); }
-document.addEventListener('visibilitychange', () => { if (ac && !document.hidden && ac.state !== 'running') ac.resume(); });
+// ---------- nhạc nền: shared/audio/bgm.js (sảnh / đang chơi / gay cấn), mặc định BẬT, nhớ lựa chọn tắt ----------
+const bgm = createBGM({ game: 'scribble', ctx: actx, legacy: ls.get('scribble-music'), volKey: 'scribble-music-vol' });
+export const musicIsOn = () => bgm.isOn();
+export function musicToggle(v) { return bgm.toggle(v); }
+export function musicVolume(v) { return bgm.volume(v); }
+export function musicStart() { bgm.start(); }
+export function musicStop() { bgm.stop(); }
+export function musicResumeIfOn() { bgm.resumeIfOn(); }
+export const musicMood = m => bgm.mood(m);
+export const musicStinger = k => bgm.stinger(k);
 
 // ---------- hiệu ứng ----------
 function layer() { let l = document.getElementById('fx-layer'); if (!l) { l = document.createElement('div'); l.id = 'fx-layer'; document.body.appendChild(l); } return l; }

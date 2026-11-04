@@ -1,3 +1,4 @@
+@import url("../../shared/ui/deck/deck.css?v=1");
 :root{
   --red:#e0263c;--blk:#1f1b2e;--ink:#241f36;--muted:#756d8c;--bg:#fff6ea;--panel:#ffffffef;--line:#efe4d4;
   --acc:#ff5b3a;--acc2:#ffb020;--mint:#1f9e8f;--felt1:#34b36a;--felt2:#147a45;
@@ -51,33 +52,14 @@ h1,h2,h3,.btn,.vbtn b,.act span{font-family:"Baloo 2","Be Vietnam Pro",sans-seri
 .badge.cnt{background:var(--ink);color:#fff}
 
 /* ---------- lá bài ---------- */
-.pc{position:absolute;left:0;top:0;width:var(--cw);height:var(--ch);border-radius:calc(var(--cw)*.1);background:#fff;border:1px solid #cdc4da;
-  box-shadow:0 1px 1px #0000001a,0 3px 8px -4px #0005;color:var(--blk);font-family:"Baloo 2",sans-serif;font-weight:800;user-select:none;-webkit-user-select:none;
+/* mặt/lưng: bộ bài SVG chung (shared/ui/deck) – lá < 48px tự đổi kiểu compact qua container query */
+.pc{position:absolute;left:0;top:0;width:var(--cw);height:var(--ch);border-radius:calc(var(--cw)*.08);border:1px solid #c3b8a5;container:dk-card/inline-size;
+  background:linear-gradient(160deg,#fffefa 0%,#fbf7ee 55%,#f2ebdc 100%);
+  box-shadow:0 1px 1px #0000001a,0 3px 8px -4px #0005;user-select:none;-webkit-user-select:none;
   touch-action:none;cursor:pointer;overflow:hidden;transition:transform .24s cubic-bezier(.2,.8,.3,1),box-shadow .15s;will-change:transform}
-.pc.red{color:var(--red)}
 .pc[hidden]{display:none}
-.pc .ix{position:absolute;left:6%;top:1%;display:flex;align-items:baseline;line-height:1.05;white-space:nowrap}
-.pc .ix b{font-size:calc(var(--cw)*.36);letter-spacing:-.03em}
-.pc .ix.two b{font-size:calc(var(--cw)*.33);letter-spacing:-.09em;margin-right:.06em}
-.pc .ix i{font-style:normal;font-size:calc(var(--cw)*.27);margin-left:.04em}
-.pc .pip,.pc .ace,.pc .court{position:absolute;left:50%;top:60%;transform:translate(-50%,-50%);line-height:1}
-.pc .pip{font-size:calc(var(--cw)*.58)}
-.pc .ace{font-size:calc(var(--cw)*.62)}
-.pc .ace::after{content:"";position:absolute;inset:-14% -22%;border:2px dashed currentColor;border-radius:50%;opacity:.35}
-.pc .court{width:58%;height:52%;border-radius:calc(var(--cw)*.08);background:color-mix(in srgb,currentColor 9%,#fff);border:1.5px solid currentColor;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.pc .court svg{width:78%;fill:currentColor;opacity:.85}
-.pc .court b{font-size:calc(var(--cw)*.26);line-height:.95}
-.pc .br{position:absolute;right:6%;bottom:1%;transform:rotate(180deg);display:flex;align-items:baseline;line-height:1;opacity:.85}
-.pc .br b{font-size:calc(var(--cw)*.22)}.pc .br i{font-style:normal;font-size:calc(var(--cw)*.18)}
-#board.tiny .pc .br{display:none}
-#board.tiny .pc .court svg{display:none}
-#board.tiny .pc .court b{font-size:calc(var(--cw)*.34)}
-#board.mini .pc .ix{left:4%}
-.pc .bk{display:none;position:absolute;inset:0;border-radius:inherit;
-  background:radial-gradient(circle at 50% 50%,#ffffff2a 0 22%,transparent 23%),repeating-linear-gradient(45deg,#ffffff1f 0 3px,transparent 3px 9px),repeating-linear-gradient(-45deg,#ffffff1f 0 3px,transparent 3px 9px),linear-gradient(150deg,#ff6b4a,#e8456b 55%,#7a5cff);
-  box-shadow:inset 0 0 0 calc(var(--cw)*.06) #fff,inset 0 0 0 calc(var(--cw)*.08) #ffd23f}
-.pc .bk i{position:absolute;left:50%;top:50%;width:46%;aspect-ratio:1;transform:translate(-50%,-50%) rotate(45deg);border-radius:22%;background:#fff6ea;box-shadow:0 0 0 2px #1f9e8f}
-.pc .bk i::before{content:"♥";position:absolute;inset:0;display:grid;place-items:center;transform:rotate(-45deg);color:#1f9e8f;font-size:calc(var(--cw)*.24)}
+.pc .dk-svg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+.pc .bk{display:none;position:absolute;inset:0;border-radius:inherit;background:#fbf7ee}
 .pc.down{cursor:default;touch-action:pan-y}
 .pc.down .bk{display:block}
 .pc.down>:not(.bk){visibility:hidden}

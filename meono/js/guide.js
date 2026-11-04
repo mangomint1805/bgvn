@@ -1,11 +1,20 @@
 // Hướng dẫn luật Mèo Nổ (tiếng Việt)
 import { cardHTML } from './cards.js?v=7';
 import { CARD } from './engine.js?v=7';
+import { gp } from '../../shared/ui/guidepics.js?v=1';
+import { GI, GV } from './guide-img.js?v=1';
 const row = items => `<div class="cards-row">${items.map(([t, txt]) => `<div>${cardHTML({ t }, 'sm')}<span><b>${CARD[t].name}</b> <i class="en">(${CARD[t].en})</i>: ${txt}</span></div>`).join('')}</div>`;
 
 export function openGuide(openModal) {
+  const P = gp(GI, GV);
   const tabs = {
     basic: ['💣 Cơ bản', () => `
+      ${P.quick([
+        ['q-home', 'Trang chủ Mèo Nổ: ô tên, nút Chơi với bot, Tạo phòng online', '① Nhập tên → ② <b>Chơi với bot</b>, hoặc ③ <b>Tạo phòng online</b> rồi gửi mã cho hội bạn.'],
+        ['q-lobby', 'Phòng chờ: danh sách người chơi, nút Thêm bot, nút Bắt đầu', '① Thêm bot (2–8 người) → ② <b>Bắt đầu</b>.'],
+        ['turn', 'Lượt của bạn: chồng bài, chọn lá Né Gắt, nút Bốc bài và Đánh Né Gắt', 'Chạm ② lá chức năng → ③ <b>Đánh</b> (đánh bao nhiêu lá cũng được). Xong lượt thì ① <b>bốc 1 lá</b> từ chồng bài. ④ là chồng bỏ.'],
+        ['bomb', 'Bốc trúng Mèo Nổ nhưng có Gỡ Bom: thanh trượt chọn chỗ nhét bom', 'Trúng bom mà có Gỡ Bom: ① kéo chọn chỗ nhét bom lại (bí mật) → ② <b>Gỡ bom & nhét lại</b>.'],
+      ])}
       <h3>Số người</h3><p><b>2–8 người</b>, thiếu người thì thêm bot (bot cũng biết ĐÉO! và gài bom đấy 😼).</p>
       <h3>Mục tiêu</h3><p>Là <b>con mèo cuối cùng còn sống</b>. Trong chồng bài có <b>số người − 1</b> lá <b>Mèo Nổ</b>. Ai bốc trúng mà không gỡ được là <b>BÙM</b> – bị loại.</p>
       <h3>Chia bài</h3><p>Mỗi người có <b>1 Gỡ Bom + 7 lá</b>. Phần còn lại trộn chung với Mèo Nổ (và vài Gỡ Bom dư) thành chồng bài. Bộ bài tự co giãn theo số người cho ván không quá dài.</p>
@@ -13,9 +22,10 @@ export function openGuide(openModal) {
         <li>Đánh <b>bao nhiêu lá chức năng tuỳ thích</b> (hoặc không đánh gì). Bấm lá để chọn, rồi bấm nút <b>Đánh</b>.</li>
         <li>Kết thúc lượt bằng cách <b>BỐC 1 lá</b> từ chồng bài (bấm chồng bài hoặc nút <b>Bốc bài</b>).</li></ol>
       <p>Một số lá cho bạn kết thúc lượt mà <b>khỏi bốc</b>: Đổ Vỏ, Né Gắt. Móc Đáy thì bốc lá dưới cùng.</p>
-      <h3>Bốc trúng Mèo Nổ 💣</h3><ul>
+      <h3>Bốc trúng Mèo Nổ 💣</h3>${row([['bomb', 'không gỡ được là bị loại.'], ['defuse', 'tự dùng khi bốc trúng bom.']])}<ul>
         <li>Có <b>Gỡ Bom</b>: tự động dùng nó, rồi bạn <b>bí mật chọn chỗ nhét bom lại</b> bằng thanh trượt từ <b>trên cùng</b> (người kế bốc ngay 😈) tới <b>dưới cùng</b>. Không ai khác biết bạn nhét ở đâu.</li>
         <li>Không có: <b>nổ tung</b>, bị loại, bài trên tay bỏ hết.</li></ul>
+      ${P.fig('bomb', 'Hộp thoại chọn chỗ nhét bom lại chồng bài', 'Kéo thanh hoặc bấm nhanh: Trên cùng · Thứ 2 · Ngẫu nhiên · Dưới cùng.')}
       <h3>Đồng hồ</h3><p>Mỗi lượt có <b>đồng hồ</b> (mặc định 45 giây, chủ phòng chỉnh được). Hết giờ máy <b>tự bốc giùm</b>. Chọn chỗ nhét bom / chọn lá cho người khác có 25 giây. Ai rớt mạng thì bot tạm đánh thay.</p>`],
     cards: ['🃏 Các lá', () => `
       ${row([['bomb', 'bốc trúng mà không gỡ được là bị loại. Không đánh ra được.'], ['defuse', 'chỉ dùng khi bốc trúng Mèo Nổ. Gỡ xong nhét bom lại chồng bài, chỗ nào tuỳ bạn.']])}
@@ -38,8 +48,9 @@ export function openGuide(openModal) {
       <h3>Combo mèo</h3><ul>
         <li><b>ĐÔI</b> (2 mèo cùng loại): chọn 1 người, <b>rút ngẫu nhiên</b> 1 lá trên tay họ.</li>
         <li><b>BỘ BA</b> (3 mèo cùng loại): chọn 1 người và <b>gọi tên 1 lá</b> (vd. Gỡ Bom). Họ có thì phải đưa, không có thì hụt.</li></ul>
-      <p>Mẹo bấm: chạm 1 lá mèo là hiện nút <b>Đánh đôi</b> / <b>Bộ ba</b> nếu bạn có đủ.</p>
-      <h3>ĐÉO! 🙅</h3><ul>
+      ${row([['cat2', 'đủ 2 lá cùng loại → <b>Đánh đôi</b>.']])}
+      ${P.fig('pair', 'Chạm lá Mèo Mướp, nút Đánh đôi hiện ra', 'Chạm 1 lá mèo là hiện nút <b>🐾 Đánh đôi</b> / <b>Bộ ba</b> nếu bạn có đủ.')}
+      <h3>ĐÉO! 🙅</h3>${P.fig('nope', 'Tiến vừa đánh Đổ Vỏ, thanh đếm ngược và nút ĐÉO! màu đỏ', '① Tiến vừa đánh Đổ Vỏ → ② thanh đếm ngược ~3 giây, ai có lá ĐÉO! thấy nút đỏ để huỷ.')}<ul>
         <li>Sau <b>mỗi hành động</b> (lá chức năng hoặc combo), có <b>~3 giây</b> để mọi người phản ứng – thanh đếm ngược hiện cho cả bàn.</li>
         <li>Ai cầm lá <b>ĐÉO!</b> sẽ thấy nút <b>ĐÉO!</b> to đỏ. Bấm là huỷ hành động đó (lá đã đánh vẫn mất).</li>
         <li>Có người ĐÉO! thì cửa sổ <b>mở lại từ đầu</b>: người khác có thể ĐÉO! cái ĐÉO! đó để hành động có hiệu lực trở lại. Cứ thế chồng tiếp – số ĐÉO! lẻ là bị huỷ, chẵn là được.</li>
@@ -47,7 +58,7 @@ export function openGuide(openModal) {
         <li>ĐÉO! chỉ đánh được trong cửa sổ này, kể cả khi chưa tới lượt bạn. Bot cũng biết ĐÉO! đấy 😼</li>
         <li>Mỗi lần ĐÉO!, một <b>con dấu mộc to</b> đóng "cộp" giữa bàn cho cả phòng thấy (kèm tiếng mèo rít). ĐÉO! chồng ĐÉO! thì dấu chồng lên nhau, lệch góc: dấu <b>đỏ "HUỶ!"</b> là hành động đang bị huỷ, dấu <b>xanh "cứu lại!"</b> là được hiệu lực trở lại.</li></ul>`],
     modes: ['🌀 Chế độ', () => `
-      <h3>🌀 Bộ bài Hỗn loạn</h3><p>Chủ phòng bật trong sảnh. So với bộ thường:</p><ul>
+      <h3>🌀 Bộ bài Hỗn loạn</h3><p>Chủ phòng bật trong sảnh. So với bộ thường:</p>${row([['attack', 'gấp đôi số lá.'], ['nope', 'nhiều gần gấp đôi.']])}<ul>
         <li><b>Gấp đôi Đổ Vỏ</b> và <b>Móc Đáy</b> (Móc Đáy chỉ có khi bật Cải Mệnh & Móc Đáy), <b>ĐÉO! ×1.8</b>, <b>Xào Bài ×1.6</b>.</li>
         <li>Bớt mèo thường (×0.75) và bớt Né Gắt, Soi Kèo, Xin Vía (×0.8) để ván không dài ra.</li>
         <li><b>Thêm 1 Gỡ Bom</b> trong chồng bài, vì Đổ Vỏ dồn lượt liên tục nên ai cũng phải bốc nhiều hơn. Số Mèo Nổ vẫn là số người − 1.</li></ul>
@@ -60,7 +71,8 @@ export function openGuide(openModal) {
         <li>💥 <b>Ra đi đầu tiên</b> – người nổ sớm nhất · 🧘 <b>Né bom thần sầu</b> – thắng mà chưa từng bốc trúng bom</li></ul>
       <p>Bằng điểm thì cùng nhận. Kèm bảng số liệu từng người: số lá đã bốc, số lần trúng bom (gỡ được mấy lần), số lần ĐÉO! và bị Đổ Vỏ.</p>`],
     tips: ['💡 Mẹo', () => `<ul>
-      <li>Thanh <b>💣 nguy cơ</b> giữa bàn cho biết còn bao nhiêu bom trong bao nhiêu lá, và (nếu bật) xác suất lá kế là bom – mặc định ẩn, bật bằng nút 🎲 trên thanh công cụ.</li>
+      <li>Thanh <b>💣 nguy cơ</b> giữa bàn cho biết còn bao nhiêu bom trong bao nhiêu lá. <b>Xác suất</b> lá kế là bom <b>mặc định ẩn</b>, chỉ bật được khi <b>chơi với bot</b> (phòng có người thật thì khoá cho công bằng): bấm nút 🎲 trên thanh công cụ.
+        ${P.fig('prob', 'Nút xúc xắc trên thanh công cụ và thanh nguy cơ hiện 3 bom trên 28 lá, 11 phần trăm', '① Nút 🎲 → ② thanh nguy cơ hiện thêm % bom.')}</li>
       <li>Vừa Soi Kèo thấy bom trên cùng? Đánh <b>Đổ Vỏ / Né Gắt / Xào Bài / Móc Đáy</b> để thoát.</li>
       <li>Gỡ bom xong nhét ngay <b>trên cùng</b> để người kế "ăn" – nhất là khi họ không còn Gỡ Bom.</li>
       <li>Hết Gỡ Bom thì gom mèo để đánh <b>bộ ba gọi tên Gỡ Bom</b>.</li>

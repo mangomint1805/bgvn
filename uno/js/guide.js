@@ -26,18 +26,29 @@ export const CARD_HELP = {
 };
 // lá không có trong bộ cổ điển → lần đầu gặp sẽ hiện gợi ý
 export const NEW_TYPES = ['skipall', 'discall', 'd4', 'wrd4', 'wd6', 'wd10', 'roulette', 'wtd4', 'wup', 'tornado', 'nou', 'shield', 'dq', 'gift', 'steal', 'wswap'];
+import { gp, ill } from '../../shared/ui/guidepics.js?v=1';
+import { GI, GV } from './guide-img.js?v=1';
 const C = (color, type, num = null) => ({ id: 'g' + color + type + num, color, type, num });
 const row = (cardHTML, items) => `<div class="cards-row">${items.map(([c, t]) => `<div>${cardHTML(c)}<span>${t}</span></div>`).join('')}</div>`;
 
 export function openGuide(openModal, cardHTML) {
+  const P = gp(GI, GV, '.gp-ill .ucard{--cw:46px;--ch:69px}'), K = c => `<span class="g-mini">${cardHTML(c)}</span>`;
   const tabs = {
     basic: ['🎴 Cơ bản', () => `
+      ${P.quick([
+        ['q-home', 'Trang chủ UNO: ô nhập tên, nút Chơi với bot và Tạo phòng online', '① Nhập tên → ② <b>Chơi với bot</b>, hoặc ③ <b>Tạo phòng online</b> rồi gửi mã cho hội bạn.'],
+        ['q-lobby', 'Phòng chờ: danh sách người chơi, nút Thêm bot và Bắt đầu', '① Thêm bot cho đủ người (chọn chế độ ngay bên dưới) → ② <b>Bắt đầu</b>.'],
+        ['turn', 'Bàn chơi: lá trên cùng chồng bỏ, chồng rút bài và các lá đánh được nổi lên', 'Tới lượt: chạm lá <b>nổi lên</b> để đánh (hợp với ① lá trên cùng). Không có lá hợp → ② chạm chồng bài để <b>Rút</b>.'],
+        ['uno', 'Nút UNO! hiện khi còn 2 lá', 'Còn 2 lá: bấm <b>UNO!</b> rồi mới đánh lá áp chót.'],
+      ])}
       <h3>Mục tiêu</h3><p>Đánh hết bài trên tay trước mọi người. Mỗi người được chia <b>7 lá</b>, lật 1 lá ra giữa làm lá mở đầu.</p>
       <h3>Đến lượt bạn</h3><ol>
         <li>Đánh <b>1 lá cùng màu</b> hoặc <b>cùng số / cùng ký hiệu</b> với lá trên cùng của chồng bỏ. Lá <b>Đổi màu</b> đánh lúc nào cũng được.</li>
         <li>Không có lá hợp (hoặc không muốn đánh) → bấm <b>Rút bài</b>. Lá vừa rút mà hợp thì có thể đánh ngay, không thì qua lượt.</li></ol>
+      ${ill([[K(C('R', 'n', 7)), 'Lá trên cùng: <b>Đỏ 7</b>'], '→', [K(C('R', 'n', 2)), '✅ cùng màu'], [K(C('G', 'n', 7)), '✅ cùng số'], [K(C('W', 'wild')), '✅ Đổi màu'], [K(C('B', 'n', 3)), '❌ khác cả màu lẫn số']])}
       <p>Lá đánh được sẽ <b>nổi lên và phát sáng</b>; lá mờ là không đánh được. Chấm tròn màu cạnh chồng bỏ cho biết <b>màu hiện tại</b>, vòng mũi tên cho biết <b>chiều chơi</b>.</p>
-      <h3>Hô UNO!</h3><p>Khi còn <b>2 lá</b> và sắp đánh lá áp chót, bấm nút <b>UNO!</b>. Quên hô mà bị người khác bấm <b>🚨 Bắt lỗi</b> trước khi người kế tiếp đi thì phải <b>rút 2 lá</b> phạt. Bot cũng biết bắt lỗi đấy nhé 😏</p>`],
+      <h3>Hô UNO!</h3><p>Khi còn <b>2 lá</b> và sắp đánh lá áp chót, bấm nút <b>UNO!</b>. Quên hô mà bị người khác bấm <b>🚨 Bắt lỗi</b> trước khi người kế tiếp đi thì phải <b>rút 2 lá</b> phạt. Bot cũng biết bắt lỗi đấy nhé 😏</p>
+      ${P.fig('uno', 'Nút UNO! màu cam cạnh nút Rút bài khi trên tay còn 2 lá', 'Còn 2 lá là nút <b>UNO!</b> hiện ra – bấm trước khi đánh.')}`],
     cards: ['🃏 Các lá bài', () => `
       <h3>Bộ cổ điển (108 lá)</h3>${row(cardHTML, [
         [C('R', 'n', 7), 'Lá số 0–9: đánh theo màu hoặc theo số.'],
@@ -69,9 +80,11 @@ export function openGuide(openModal, cardHTML) {
         [C('W', 'wup'), '<b>Up</b>: đổi màu, rồi từ người kế mỗi người đánh 1 lá số (màu nào cũng được), số sau phải <b>bằng hoặc lớn hơn</b> số trước. Ai không theo được rút số lá bằng <b>số lá số đã được đánh</b> từ lúc lá Up ra (ít nhất 1) – chuỗi càng dài càng đau.'],
       ])}`],
     modes: ['⚙️ Chế độ', () => `
+      ${P.fig('modes', 'Bảng chọn chế độ trong phòng chờ: Cổ điển, Luật rừng, No Mercy', 'Chủ phòng chọn chế độ trong phòng chờ, trước khi bấm Bắt đầu.')}
       <h3>🎴 Cổ điển</h3><p>Luật chuẩn. Bị +2/+4 thì rút luôn, không được chồng.</p>
       <h3>🔥 Luật rừng</h3><ul>
-        <li><b>Cộng dồn</b>: bị +2 thì đánh +2 hoặc +4 đẩy sang người kế, tổng phạt cộng dồn. <b>+2 và +4 chồng lẫn nhau thoải mái</b> (+2 lên +4 cũng được).</li>
+        <li><b>Cộng dồn</b>: bị +2 thì đánh +2 hoặc +4 đẩy sang người kế, tổng phạt cộng dồn. <b>+2 và +4 chồng lẫn nhau thoải mái</b> (+2 lên +4 cũng được).
+          ${ill([[K(C('B', 'd2')), 'Tiến đánh +2'], '→', [K(C('G', 'd2')), 'Tuni chồng +2'], '→', [K(C('W', 'wd4')), 'Thành chồng +4'], '→', ['<b style="font-size:26px">+8</b>', 'người kế không chồng được thì <b>rút 8</b>']])}</li>
         <li><b>Khoá mõm chồng Khoá mõm</b>: bị khoá mõm mà có lá Khoá mõm thì đánh để chuyền cho người kế.</li>
         <li><b>Bốc thử khi bị dồn</b>: bị dồn +2/+4 mà không có lá chồng thì được bốc thử 1 lá – trúng lá cộng, Khiên hoặc No U thì đánh chồng tiếp ngay (+? không tính), không trúng thì chịu phạt.</li>
         <li><b>Tự bốc phạt</b>: bị cộng bao nhiêu lá thì tự bấm bốc từng lá, mỗi lá cách nhau 1 giây. Cho thấm 😈</li>

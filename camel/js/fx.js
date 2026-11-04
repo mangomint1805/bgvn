@@ -1,4 +1,5 @@
 // Âm thanh tự tổng hợp (WebAudio) + hiệu ứng DOM + cài đặt người dùng. Không dùng file nhạc nào.
+import { createBGM } from '../../shared/audio/bgm.js?v=2';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 const reduced = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const coarse = typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches;
@@ -42,6 +43,7 @@ function grunt(at = 0) {
 }
 const arp = (notes, step = 0.07, type = 'triangle', g = 0.1) => notes.forEach((f, i) => tone(f, 0.2, type, g, 0, i * step));
 export const sfx = {
+  lose() { [523, 494, 466, 392].forEach((f, k) => tone(f, k === 3 ? 0.5 : 0.2, 'triangle', 0.08, k === 3 ? -60 : 0, k * 0.22)); },
   dice() { for (let i = 0; i < 9; i++) noise(0.05, 500 + Math.random() * 1200, 0.45, i * 0.07 + Math.random() * 0.03); tone(180, 0.3, 'triangle', 0.05, -60, 0.55); }, // lục cục trong kim tự tháp
   hop() { noise(0.07, 380 + Math.random() * 160, 0.4, 0, 'lowpass'); tone(150 + Math.random() * 30, 0.08, 'sine', 0.06, -40); }, // bịch bịch trên cát
   ticket() { noise(0.12, 4000, 0.18, 0, 'highpass'); tone(880, 0.08, 'triangle', 0.05, 200, 0.05); },
@@ -61,58 +63,17 @@ export const sfx = {
   win() { arp([523, 659, 784, 1047, 784, 1047, 1319, 1568], 0.12, 'triangle', 0.1); [0.4, 0.9, 1.4].forEach(t => noise(0.5, 3000, 0.15, t, 'highpass')); grunt(1.1); },
 };
 
-// ---------- nhạc nền: điệu sa mạc lắc lư (dựng sẵn thành vòng lặp để đổi tab không mất) ----------
-let mBuf = null, mSrc = null;
-const NOTE = n => 261.63 * Math.pow(2, n / 12);
-const CHORDS = [[0, 4, 7], [1, 5, 8], [0, 4, 7], [-2, 1, 5], [0, 4, 7], [1, 5, 8], [-4, 0, 3], [0, 4, 7]];
-const MEL = [7, 8, 7, 5, 4, 5, 4, 1, 0, 1, 4, 5, 7, 8, 10, 8, 7, 8, 7, 5, 4, 1, 0, -1, 0, 4, 7, 8, 7, 5, 4, 0];
-function mtone(c, f, d, type, g, t) {
-  const o = c.createOscillator(); o.type = type; o.frequency.value = f; const gn = c.createGain();
-  gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.012); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
-  o.connect(gn); gn.connect(c.destination); o.start(t); o.stop(t + d + 0.05);
-}
-async function renderMusic(a) {
-  if (mBuf) return mBuf;
-  const sr = a.sampleRate, beat = 60 / 112 / 2, bars = 8, L = Math.round(bars * 8 * beat * sr), tail = Math.round(sr);
-  const off = new OfflineAudioContext(2, L + tail, sr);
-  const nb = off.createBuffer(1, Math.floor(sr * 0.04), sr), nx = nb.getChannelData(0); for (let i = 0; i < nx.length; i++) nx[i] = (Math.random() * 2 - 1) * (1 - i / nx.length);
-  for (let b = 0; b < bars; b++) {
-    const ch = CHORDS[b], t0 = b * 8 * beat;
-    for (let i = 0; i < 8; i++) {
-      const t = t0 + i * beat;
-      if (i % 4 === 0) mtone(off, NOTE(ch[0] - 24), beat * 1.6, 'triangle', 0.3, t);
-      if (i % 4 === 2) mtone(off, NOTE(ch[2] - 24), beat * 1.2, 'triangle', 0.2, t);
-      if (i % 2 === 1) for (const n of ch) mtone(off, NOTE(n), beat * 0.5, 'square', 0.016, t);
-      const m = MEL[(b * 4 + (i >> 1)) % 32];
-      if (i % 2 === 0) mtone(off, NOTE(m + 12), beat * 1.5, 'sine', 0.085, t);
-      // trống tay darbuka: dum – tek-tek
-      for (const dt of [0, beat * 0.33]) { const s = off.createBufferSource(); s.buffer = nb; const f = off.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = i % 4 === 0 ? 220 : 1600; const g = off.createGain(); g.gain.value = i % 4 === 0 ? 0.35 : 0.09; if (i % 4 === 0 && dt) continue; s.connect(f); f.connect(g); g.connect(off.destination); s.start(t + dt); }
-    }
-  }
-  const r = await off.startRendering(); const out = a.createBuffer(2, L, sr);
-  for (let c = 0; c < 2; c++) { const d = r.getChannelData(c), o = out.getChannelData(c); o.set(d.subarray(0, L)); for (let i = 0; i < tail; i++) o[i] += d[L + i]; }
-  return (mBuf = out);
-}
-export async function musicStart() {
-  const a = actx(); if (!a || mSrc) return;
-  mSrc = true; const buf = await renderMusic(a); if (mSrc !== true || !settings.musicOn) { if (mSrc === true) mSrc = null; return; }
-  mSrc = a.createBufferSource(); mSrc.buffer = buf; mSrc.loop = true; mSrc.connect(musicBus); mSrc.start();
-  const me = mSrc; me.onended = () => { if (mSrc === me) mSrc = null; };
-}
-export function musicStop() { if (mSrc && mSrc !== true) try { mSrc.stop(); } catch (e) {} mSrc = null; }
-export function musicToggle(on = !settings.musicOn) { settings.musicOn = on; saveSettings(); on ? musicStart() : musicStop(); return on; }
-export function musicResumeIfOn() { if (settings.musicOn) musicStart(); }
-// Ra/vào tab hoặc khoá màn hình: trình duyệt hay tạm dừng âm thanh – quay lại thì bật lại (cần chạm thì chờ lần chạm kế tiếp)
-function revive() {
-  if (typeof document === 'undefined' || document.hidden || !ac) return;
-  const go = () => { if (ac.state !== 'running') ac.resume().catch(() => {}); if (settings.musicOn && !mSrc) musicStart(); };
-  go();
-  if (ac.state !== 'running') { const once = () => { go(); removeEventListener('pointerdown', once, true); removeEventListener('keydown', once, true); }; addEventListener('pointerdown', once, true); addEventListener('keydown', once, true); }
-}
-if (typeof document !== 'undefined') {
-  document.addEventListener('visibilitychange', revive); addEventListener('focus', revive); addEventListener('pageshow', revive);
-  setInterval(() => { if (ac && !document.hidden && ac.state === 'running' && settings.musicOn && !mSrc) musicStart(); }, 4000);
-}
+// ---------- nhạc nền: shared/audio/bgm.js (sảnh / đang chơi / gay cấn), mặc định BẬT, nhớ lựa chọn tắt ----------
+// (settings.musicOn cũ mặc định false nên không coi là "người dùng đã tắt"; khoá mới bgvn-music-camel)
+const bgm = createBGM({ game: 'camel', ctx: actx, dest: () => musicBus, legacy: () => (settings.musicOn === true ? '1' : null), volDefault: 1, gain: 1.3 });
+settings.musicOn = bgm.isOn();
+export const musicIsOn = () => bgm.isOn();
+export function musicToggle(on = !bgm.isOn()) { settings.musicOn = bgm.toggle(on); return settings.musicOn; }
+export function musicStart() { bgm.start(); }
+export function musicStop() { bgm.stop(); }
+export function musicResumeIfOn() { bgm.resumeIfOn(); }
+export const musicMood = m => bgm.mood(m);
+export const musicStinger = k => bgm.stinger(k);
 
 // ---------- hiệu ứng DOM ----------
 function layer() { let l = document.getElementById('fx-layer'); if (!l) { l = document.createElement('div'); l.id = 'fx-layer'; document.body.appendChild(l); } return l; }

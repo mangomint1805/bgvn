@@ -6,8 +6,9 @@ import { createReactions } from '../../shared/ui/react.js?v=2';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
 import { OPT_CHOICES } from './engine.js?v=1';
 import { evaluate, preflopTier, TIER_TXT } from './eval.js?v=1';
-import * as fx from './pfx.js?v=1';
-import { openGuide } from './guide.js?v=1';
+import * as fx from './pfx.js?v=2';
+import { openGuide } from './guide.js?v=2';
+import { cardHTML } from './cards.js?v=1';
 setSpeedFn(fx.S);
 
 const GAME = 'poker';
@@ -31,21 +32,13 @@ const hintOk = () => hintsAllowed(lobby || (view && view.players));
 const hintOn = () => hintPref() && hintOk();
 
 // ---------- lá bài ----------
-const SUIT_NAME = { s: 'bích', h: 'cơ', d: 'rô', c: 'chuồn' };
-const rkTxt = r => r === 'T' ? '10' : r;
-const suitSvg = s => `<svg viewBox="0 0 100 100" aria-hidden="true"><use href="#su-${s}"/></svg>`;
-export function cardHTML(c, cls = '', attrs = '') {
-  if (!c) return `<div class="card back ${cls}" ${attrs}><i></i></div>`;
-  const r = c[0], s = c[1], red = s === 'h' || s === 'd';
-  const face = 'JQK'.includes(r) ? `<span class="fc">${{ J: '♞', Q: '♛', K: '♚' }[r]}</span>` : '';
-  return `<div class="card ${red ? 'red' : 'blk'} ${cls}" data-c="${c}" aria-label="${rkTxt(r)} ${SUIT_NAME[s]}" ${attrs}><b class="rk">${rkTxt(r)}</b><span class="s1">${suitSvg(s)}</span><span class="s2">${suitSvg(s)}</span>${face}</div>`;
-}
+export { cardHTML }; // lá bài: poker/js/cards.js (bộ bài SVG chung)
 const AV_COL = ['#ff5a7a', '#ff8a3d', '#e0a800', '#2fb86f', '#1fa6a0', '#3d8bff', '#7a5cff', '#d94dff', '#ff2d87', '#5b6b8a'];
 const avColor = name => { let h = 0; for (const ch of clean(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return AV_COL[h % AV_COL.length]; };
 const avatar = name => `<div class="av" style="background:${avColor(name)}">${esc([...clean(name).trim()][0] || '?').toUpperCase()}</div>`;
 
 // ---------- màn hình / hộp thoại ----------
-function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
+function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') fx.musicMood('lobby'); }
 let toastT;
 function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 function openModal(html, cls = '', key = null) { $('#modal-box').className = 'modal-box ' + cls; $('#modal-box').innerHTML = html; $('#modal').classList.add('open'); modalKey = key; $('#modal-box').scrollTop = 0; }
@@ -139,6 +132,7 @@ function openMenu() {
     <div class="menu">
       <div class="m-row"><span>🎵 Nhạc nền</span><button class="opt ${fx.musicIsOn() ? 'on' : ''}" id="m-music">${fx.musicIsOn() ? 'Đang bật' : 'Đang tắt'}</button></div>
       <div class="m-row"><span>🔉 Âm lượng nhạc</span><input type="range" id="m-vol" min="0" max="1" step="0.05" value="${fx.musicVolume()}"></div>
+      <div class="m-row"><span>🔔 Âm lượng hiệu ứng</span><input type="range" id="m-sfxvol" min="0" max="1" step="0.05" value="${fx.sfxVolume()}"></div>
       <div class="m-row"><span>🔊 Hiệu ứng âm thanh</span><button class="opt ${fx.isMuted() ? '' : 'on'}" id="m-mute">${fx.isMuted() ? 'Đang tắt' : 'Đang bật'}</button></div>
       <div class="m-row"><span>⚡ Tốc độ bot & hiệu ứng</span><div class="opt-btns">${sp}</div></div>
       <div class="m-row"><span>💡 Gợi ý bài cho người mới${hintOk() ? '' : `<br><small style="opacity:.7">🔒 ${BOT_ONLY_NOTE}</small>`}</span><button class="opt ${hintOn() ? 'on' : ''}" id="m-hint" ${hintOk() ? '' : 'disabled'}>${!hintOk() ? 'Đang tắt' : hintOn() ? 'Đang bật' : 'Đang tắt'}</button></div>
@@ -146,6 +140,8 @@ function openMenu() {
     </div>`, '', 'menu');
   $('#m-music').onclick = () => { fx.actx(); fx.musicToggle(); syncMusic(); openMenu(); };
   $('#m-vol').oninput = e => fx.musicVolume(+e.target.value);
+  $('#m-sfxvol').oninput = e => fx.sfxVolume(+e.target.value);
+  $('#m-sfxvol').onchange = () => fx.sfx.chip();
   $('#m-mute').onclick = () => { fx.toggleMute(); openMenu(); };
   $('#m-hint').onclick = () => { if (!hintOk()) return; ls.set('poker-hint', hintPref() ? '0' : '1'); syncHint(); render(); openMenu(); };
   $$('[data-sp]').forEach(b => b.onclick = () => { fx.setSpeed(b.dataset.sp); openMenu(); });
@@ -255,6 +251,8 @@ function geometry(v) {
 const TAG = { sb: 'Mù nhỏ', bb: 'Mù lớn', fold: 'Bỏ bài', check: 'Xem', call: 'Theo', bet: 'Cược', raise: 'Tố', allin: 'TẤT TAY' };
 function render() {
   const v = view; if (!v || !$('#screen-game').classList.contains('active')) return;
+  // nhạc: river hoặc có người all-in = gay cấn; hết giải về nhạc sảnh
+  fx.musicMood(v.phase === 'over' ? 'lobby' : v.phase === 'playing' && (v.street === 'river' || v.players.some(p => p.allIn && p.inHand && !p.folded)) ? 'tense' : 'game');
   syncHint();
   const g = G = geometry(v);
   const T = $('#table'); T.classList.toggle('big', g.big); T.style.setProperty('--pw', g.PW + 'px'); T.style.setProperty('--ph', g.PH + 'px'); T.style.setProperty('--mini', g.mini + 'px'); T.style.setProperty('--cw', g.cw + 'px');
@@ -510,7 +508,7 @@ function showOver(v) {
     openModal(`<div class="over"><div class="big">🏆</div><h2>${meWin ? 'Bạn vô địch giải đấu!' : esc(pname(view.winner)) + ' vô địch!'}</h2><p class="center-t sm">Sau ${view.handNo} ván · cầm trọn ${fmt(view.players.find(p => p.id === view.winner).chips)} chip ảo</p>
       <ol class="podium">${rows.map(p => `<li class="${p.id === myId ? 'me' : ''}"><span class="pl">#${p.place || 1}</span>${avatar(p.name)}<span>${esc(clean(p.name))}</span></li>`).join('')}</ol>
       <div class="btns">${isHost ? '<button class="btn pri" id="o-again">🏆 Giải mới</button><button class="btn" id="o-lobby">Về sảnh</button>' : '<p>Chờ chủ phòng mở giải mới…</p>'}<button class="btn" onclick="__closeModal()">Xem bàn</button></div></div>`, '', 'over');
-    if (meWin) { fx.confetti(140); fx.sfx.win(); }
+    if (meWin) { fx.confetti(140); fx.sfx.win(); fx.musicStinger('win'); } else fx.musicStinger('lose');
     const ag = $('#o-again'); if (ag) ag.onclick = () => onAct('again');
     const lb = $('#o-lobby'); if (lb) lb.onclick = () => onAct('lobby');
   }, 2600 * fx.S());

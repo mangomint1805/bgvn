@@ -8,8 +8,8 @@ import { REACTS, GMODES, GMODE_KEYS, buildPlan, groupSizes, frameCount, REVEAL_A
 import { planFrames, totalMs, drawFrame, exportGif, exportVideo, videoType, FW, FH } from './export.js?v=5';
 import { encodeGif } from './gif.js?v=5';
 import { opsBytes, simplifyOps } from './ops.js?v=5';
-import * as fx from './fx.js?v=5';
-import { guideHTML } from './guide.js?v=8';
+import * as fx from './fx.js?v=6';
+import { guideHTML } from './guide.js?v=9';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=4';
 
 const $ = s => document.querySelector(s);
@@ -20,7 +20,7 @@ const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return
 let net = null, isHost = false, myId = null, lobby = null, view = null;
 
 // ---------- tiện ích giao diện ----------
-function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); syncReacts(id); }
+function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); syncReacts(id); if (id !== 'screen-game' && id !== 'screen-gartic') fx.musicMood('lobby'); }
 // ---------- thả emoji / chọc nhau (shared/ui/react.js): nút nằm trên thanh trên, không đè bảng vẽ / ô chat ----------
 let reacts = null;
 function syncReacts(id) {
@@ -58,7 +58,7 @@ const fname = s => fx && String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').repl
 function syncSound() {
   const m = fx.isMuted(), mu = fx.musicIsOn();
   $('#btn-sound-home').textContent = m ? '🔇 Âm thanh' : '🔊 Âm thanh'; $('#btn-sound-home').classList.toggle('on', !m);
-  $('#btn-music-home').textContent = mu ? '🎵 Nhạc: bật' : '🎵 Nhạc'; $('#btn-music-home').classList.toggle('on', mu);
+  $('#btn-music-home').textContent = mu ? '🎵 Nhạc: bật' : '🎵 Nhạc: tắt'; $('#btn-music-home').classList.toggle('on', mu);
   $('#sp-sfx').textContent = m ? '🔇 Hiệu ứng: tắt' : '🔊 Hiệu ứng: bật'; $('#sp-sfx').classList.toggle('on', !m);
   $('#sp-music').textContent = mu ? '🎵 Nhạc nền: bật' : '🎵 Nhạc nền: tắt'; $('#sp-music').classList.toggle('on', mu);
   $$('.ic.snd-btn').forEach(b => b.classList.toggle('muted', m));
@@ -274,6 +274,8 @@ setInterval(() => {
   $('#' + p + '-secs').textContent = secs;
   $('#' + p + '-ring').style.strokeDashoffset = RING * (1 - Math.min(1, left / clock.total));
   const urgent = secs <= 10 && ((g && view.phase === 'draw') || (t && view.phase === 'play'));
+  // nhạc: đang vẽ/đoán; 15 giây cuối chuyển sang bài gấp gáp; hết ván về nhạc sảnh
+  fx.musicMood(view.phase === 'end' ? 'lobby' : secs <= 15 && left > 0 && ((g && view.phase === 'draw') || (t && view.phase === 'play')) ? 'tense' : 'game');
   box.classList.toggle('urgent', urgent);
   if (secs !== lastSec) {
     if (urgent && secs > 0 && secs <= (g ? 10 : 5)) fx.sfx.tick();

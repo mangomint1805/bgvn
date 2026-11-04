@@ -2,9 +2,9 @@
 import { VARIANTS, newGame, defaultOpts, optsKey, optsName, scoreStart, liveScore, timeBonus, passesLeft, SCORE_NONE, SCORE_VEGAS } from './variants.js?v=1';
 import { apply, canMove, legalMoves, autoMoves, greedyFinish, key, hintMove, idsOf, isSeq, isRed, cardName, top } from './core.js?v=1';
 import { solve } from './solver.js?v=1';
-import { faceHTML, BACK, drawCard } from './cards.js?v=1';
+import { faceHTML, BACK, drawCard } from './cards.js?v=2';
 import * as fx from './sfx.js?v=1';
-import { guideHTML } from './guide.js?v=1';
+import { guideHTML } from './guide.js?v=2';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
 
 const $ = s => document.querySelector(s);

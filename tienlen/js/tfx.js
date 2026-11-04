@@ -1,4 +1,5 @@
 // Âm thanh tổng hợp WebAudio + hiệu ứng DOM cho Tiến Lên (không dùng file âm thanh)
+import { createBGM, sfxVolStore } from '../../shared/audio/bgm.js?v=2';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 export const reduced = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
 export const S = () => 1;
@@ -7,14 +8,17 @@ let muted = ls.get('tl-mute') === '1';
 export const isMuted = () => muted;
 export function toggleMute() { muted = !muted; ls.set('tl-mute', muted ? '1' : '0'); return muted; }
 
-let ac = null;
+let ac = null, sfxBus = null;
+const sv = sfxVolStore('tienlen');
+function out(a) { if (!sfxBus || sfxBus.context !== a) { sfxBus = a.createGain(); sfxBus.gain.value = sv.get(); sfxBus.connect(a.destination); } return sfxBus; }
+export function sfxVolume(v) { if (v == null) return sv.get(); sv.set(v); if (sfxBus) sfxBus.gain.value = v; return v; }
 export function actx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } } if (ac.state === 'suspended') ac.resume().catch(() => {}); return ac; }
 function tone(f, d, type = 'sine', g = 0.12, slide = 0, at = 0) {
   const a = actx(); if (!a || muted) return; const t = a.currentTime + at;
   const o = a.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t);
   if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + d);
   const gn = a.createGain(); gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.01); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
-  o.connect(gn); gn.connect(a.destination); o.start(t); o.stop(t + d + 0.02);
+  o.connect(gn); gn.connect(out(a)); o.start(t); o.stop(t + d + 0.02);
 }
 function noise(d, freq, g, at = 0, type = 'bandpass', sweep = 0) {
   const a = actx(); if (!a || muted) return; const t = a.currentTime + at;
@@ -22,10 +26,11 @@ function noise(d, freq, g, at = 0, type = 'bandpass', sweep = 0) {
   for (let i = 0; i < x.length; i++) x[i] = (Math.random() * 2 - 1) * (1 - i / x.length);
   const s = a.createBufferSource(); s.buffer = b; const f = a.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(freq, t);
   if (sweep) f.frequency.exponentialRampToValueAtTime(Math.max(60, freq + sweep), t + d);
-  const gn = a.createGain(); gn.gain.value = g; s.connect(f); f.connect(gn); gn.connect(a.destination); s.start(t);
+  const gn = a.createGain(); gn.gain.value = g; s.connect(f); f.connect(gn); gn.connect(out(a)); s.start(t);
 }
 const arp = (notes, step = 0.07, type = 'triangle', g = 0.1) => notes.forEach((f, i) => tone(f, 0.2, type, g, 0, i * step));
 export const sfx = {
+  tick() { tone(1500, 0.05, 'square', 0.035); noise(0.03, 4000, 0.12); },
   deal() { for (let i = 0; i < 8; i++) noise(0.04, 2800 + i * 60, 0.22, i * 0.05); },
   snap() { noise(0.05, 3200, 0.35); tone(1200, 0.05, 'sine', 0.04, -400); },
   play(n = 1) { for (let i = 0; i < Math.min(n, 6); i++) noise(0.05, 2900 + i * 120, 0.3, i * 0.045); tone(660, 0.08, 'triangle', 0.05, 120, 0.02); },
@@ -155,56 +160,13 @@ export function coinRain(fromEl, toEl, n = 6) {
   for (let i = 0; i < n; i++) fly('<span class="coin">🪙</span>', fromEl, toEl, { delay: 220 + i * 70, duration: 520 });
 }
 
-// ---------- nhạc nền: ngũ cung kiểu Tết, vui vui ----------
-let musicOn = ls.get('tl-music') === '1', mGain = null, vol = +(ls.get('tl-music-vol') || 0.45);
-// thang ngũ cung (C D F G A) – nghe "Việt Nam" hơn
-const PENTA = [523.3, 587.3, 698.5, 784, 880, 1046.5, 1174.7, 1396.9];
-const BASS = [[130.8, 196], [174.6, 261.6], [146.8, 220], [196, 293.7]];
-const MEL = [4, 3, 2, 3, 4, 6, 5, 4, 2, 1, 2, 3, 2, 1, 0, -1, 3, 4, 5, 4, 3, 2, 3, 4, 6, 5, 4, 2, 3, 2, 1, -1];
-function mtone(c, dest, f, d, type, g, t) {
-  const o = c.createOscillator(); o.type = type; o.frequency.value = f; const gn = c.createGain();
-  gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.015); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
-  o.connect(gn); gn.connect(dest); o.start(t); o.stop(t + d + 0.05);
-}
-function mnoise(c, dest, d, g, t, freq) {
-  const b = c.createBuffer(1, Math.floor(c.sampleRate * d), c.sampleRate); const x = b.getChannelData(0);
-  for (let i = 0; i < x.length; i++) x[i] = (Math.random() * 2 - 1) * (1 - i / x.length);
-  const s = c.createBufferSource(); s.buffer = b; const f = c.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = freq;
-  const gn = c.createGain(); gn.gain.value = g; s.connect(f); f.connect(gn); gn.connect(dest); s.start(t);
-}
-let mBuf = null, mSrc = null;
-async function renderMusic(a) {
-  if (mBuf) return mBuf;
-  const sr = a.sampleRate, bt = 0.19, steps = 32, L = Math.round(steps * bt * sr), tail = Math.round(sr);
-  const off = new OfflineAudioContext(2, L + tail, sr); const dest = off.destination;
-  for (let i = 0; i < steps; i++) {
-    const at = i * bt, bar = Math.floor(i / 8), ch = BASS[bar % 4];
-    if (i % 4 === 0) mtone(off, dest, ch[0], 0.34, 'triangle', 0.24, at);
-    if (i % 4 === 2) mtone(off, dest, ch[1], 0.2, 'triangle', 0.16, at);
-    if (i % 2 === 1) mnoise(off, dest, 0.04, 0.05, at, 6000);
-    if (i % 8 === 4) mnoise(off, dest, 0.1, 0.07, at, 1500);
-    const m = MEL[i]; if (m >= 0) { mtone(off, dest, PENTA[m], 0.22, 'sine', 0.075, at); mtone(off, dest, PENTA[m] * 2, 0.08, 'triangle', 0.012, at); }
-  }
-  const r = await off.startRendering(); const out = a.createBuffer(2, L, sr);
-  for (let c = 0; c < 2; c++) { const d = r.getChannelData(c), o = out.getChannelData(c); o.set(d.subarray(0, L)); for (let i = 0; i < tail; i++) o[i] += d[L + i]; }
-  return (mBuf = out);
-}
-export async function musicStart() {
-  const a = actx(); if (!a || mSrc) return;
-  if (!mGain) { mGain = a.createGain(); mGain.connect(a.destination); } mGain.gain.value = vol * 0.3;
-  mSrc = true; const buf = await renderMusic(a); if (mSrc !== true || !musicOn) { if (mSrc === true) mSrc = null; return; }
-  mSrc = a.createBufferSource(); mSrc.buffer = buf; mSrc.loop = true; mSrc.connect(mGain); mSrc.start(); const me = mSrc; me.onended = () => { if (mSrc === me) mSrc = null; };
-}
-export function musicStop() { if (mSrc && mSrc !== true) try { mSrc.stop(); } catch (e) {} mSrc = null; }
-// đổi tab / khoá màn hình rồi quay lại: bật lại âm thanh (máy đòi chạm thì chờ lần chạm kế tiếp)
-function revive() {
-  if (document.hidden || !ac) return;
-  const go = () => { if (ac.state !== 'running') ac.resume().catch(() => {}); if (musicOn && !mSrc) musicStart(); };
-  go();
-  if (ac.state !== 'running') { const once = () => { go(); removeEventListener('pointerdown', once, true); removeEventListener('keydown', once, true); }; addEventListener('pointerdown', once, true); addEventListener('keydown', once, true); }
-}
-if (typeof document !== 'undefined') { document.addEventListener('visibilitychange', revive); addEventListener('focus', revive); addEventListener('pageshow', revive); setInterval(() => { if (ac && !document.hidden && ac.state === 'running' && musicOn && !mSrc) musicStart(); }, 4000); }
-export const musicIsOn = () => musicOn;
-export function musicToggle() { musicOn = !musicOn; ls.set('tl-music', musicOn ? '1' : '0'); musicOn ? musicStart() : musicStop(); return musicOn; }
-export function musicVolume(v) { if (v == null) return vol; vol = v; ls.set('tl-music-vol', String(v)); if (mGain) mGain.gain.value = vol * 0.3; }
-export function musicResumeIfOn() { if (musicOn) musicStart(); }
+// ---------- nhạc nền: shared/audio/bgm.js (sảnh / đang chơi / gay cấn), mặc định BẬT, nhớ lựa chọn tắt ----------
+const bgm = createBGM({ game: 'tienlen', ctx: actx, legacy: ls.get('tl-music'), volKey: 'tl-music-vol' });
+export const musicIsOn = () => bgm.isOn();
+export function musicToggle(v) { return bgm.toggle(v); }
+export function musicVolume(v) { return bgm.volume(v); }
+export function musicStart() { bgm.start(); }
+export function musicStop() { bgm.stop(); }
+export function musicResumeIfOn() { bgm.resumeIfOn(); }
+export const musicMood = m => bgm.mood(m);
+export const musicStinger = k => bgm.stinger(k);

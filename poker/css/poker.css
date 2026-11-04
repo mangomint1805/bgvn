@@ -1,3 +1,4 @@
+@import url("../../shared/ui/deck/deck.css?v=1");
 /* Poker Hold'em – BGVN. Tông sáng, viền đậm kiểu sticker, bàn nỉ xanh. */
 :root {
   --ink: #26213a; --muted: #6b6383; --paper: #fffdf7; --cream: #fff4e4; --pink: #ff5a7a; --orange: #ff8a3d; --gold: #ffcf3f;
@@ -70,21 +71,10 @@ button, input, select { font-family: inherit; }
 .wait { text-align: center; color: var(--muted); font-weight: 700; }
 
 /* ---------- lá bài (tự vẽ) ---------- */
-.card { --w: 48px; width: var(--w); height: calc(var(--w) * 1.4); border-radius: calc(var(--w) * .14); background: #fff; border: 1.5px solid #cfc6dd; position: relative; flex: none; box-shadow: 0 2px 4px #0003; font-family: "Baloo 2", sans-serif; overflow: hidden; transition: transform .25s, box-shadow .25s, filter .25s; }
-.card.red { color: var(--red); } .card.blk { color: var(--black); }
-.card .rk { position: absolute; left: 7%; top: 0; font-size: calc(var(--w) * .5); font-weight: 800; line-height: 1.12; letter-spacing: -1px; }
-.card .s1 { position: absolute; left: 9%; top: 38%; width: calc(var(--w) * .27); height: calc(var(--w) * .27); }
-.card .s2 { position: absolute; right: 7%; bottom: 6%; width: calc(var(--w) * .5); height: calc(var(--w) * .5); }
-.card svg { width: 100%; height: 100%; display: block; fill: currentColor; }
-.card .fc { position: absolute; right: 9%; top: 6%; font-size: calc(var(--w) * .32); line-height: 1; opacity: .85; }
-.card.back { background: #7a5cff; border: 2px solid #fff; box-shadow: 0 0 0 1.5px #3c2a8a, 0 2px 4px #0004; }
-.card.back i { position: absolute; inset: 9%; border-radius: calc(var(--w) * .08); border: 1.5px solid #ffffffb0;
-  background: radial-gradient(circle at 50% 50%, #ffcf3f 0 14%, transparent 15%), repeating-linear-gradient(45deg, #ff5a7a 0 4px, transparent 4px 9px), repeating-linear-gradient(-45deg, #ffffff55 0 2px, transparent 2px 9px), #7a5cff; }
+/* lá bài: mặt/lưng vẽ bằng bộ bài SVG chung (shared/ui/deck) – ở đây chỉ kích thước, bo góc, bóng */
+.card { --w: 48px; width: var(--w); height: calc(var(--w) * 1.4); border-radius: calc(var(--w) * .09); position: relative; flex: none; box-shadow: 0 2px 4px #0003; overflow: hidden; transition: transform .25s, box-shadow .25s, filter .25s; }
 .card.ghost { opacity: .18; filter: grayscale(1); }
 .card.mini { --w: var(--mini, 26px); }
-.card.mini .s2, .card.mini .fc { display: none; }
-.card.mini .rk { font-size: calc(var(--w) * .58); left: 8%; }
-.card.mini .s1 { width: calc(var(--w) * .42); height: calc(var(--w) * .42); top: auto; bottom: 8%; left: auto; right: 9%; }
 .card.sm { --w: 34px; }
 .card.big { --w: 50px; }
 .card.hl { box-shadow: 0 0 0 2.5px var(--gold), 0 2px 6px #0004; }

@@ -1,4 +1,5 @@
 // Âm thanh tự tổng hợp (WebAudio) + hiệu ứng DOM + cài đặt người dùng. Không dùng file nhạc nào.
+import { createBGM } from '../../shared/audio/bgm.js?v=2';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 const reduced = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const coarse = typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches;
@@ -35,6 +36,7 @@ function noise(d, freq, g, at = 0, type = 'bandpass') {
 }
 const arp = (notes, step = 0.07, type = 'triangle', g = 0.1) => notes.forEach((f, i) => tone(f, 0.2, type, g, 0, i * step));
 export const sfx = {
+  lose() { [523, 494, 466, 392].forEach((f, k) => tone(f, k === 3 ? 0.5 : 0.2, 'triangle', 0.08, k === 3 ? -60 : 0, k * 0.22)); },
   dice() { for (let i = 0; i < 9; i++) noise(0.045, 1400 + Math.random() * 2600, 0.4, i * 0.09 + Math.random() * 0.04); },
   hop() { tone(480 + Math.random() * 90, 0.07, 'sine', 0.06, 240); },
   cash() { tone(1318, 0.08, 'square', 0.045); tone(1760, 0.22, 'square', 0.045, 0, 0.07); noise(0.15, 6000, 0.1, 0.05); },
@@ -59,47 +61,17 @@ export const sfx = {
   win() { arp([523, 659, 784, 1047, 784, 1047, 1319, 1568], 0.12, 'triangle', 0.1); [0.4, 0.9, 1.4].forEach(t => noise(0.5, 3000, 0.15, t, 'highpass')); },
 };
 
-// ---------- nhạc nền: điệu ngũ cung vui, dựng sẵn thành vòng lặp ----------
-let mBuf = null, mSrc = null;
-const NOTE = n => 261.63 * Math.pow(2, n / 12);
-// C – Am – F – G, giai điệu ngũ cung (Đô Rê Mi Son La)
-const CHORDS = [[0, 4, 7], [-3, 0, 4], [-7, -3, 0], [-5, -1, 2]];
-const MEL = [12, 14, 16, 19, 16, 14, 12, 9, 9, 12, 14, 16, 14, 12, 9, 7, 5, 9, 12, 14, 12, 9, 7, 9, 7, 11, 14, 16, 19, 16, 14, 12];
-function mtone(c, f, d, type, g, t) {
-  const o = c.createOscillator(); o.type = type; o.frequency.value = f; const gn = c.createGain();
-  gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + 0.015); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
-  o.connect(gn); gn.connect(c.destination); o.start(t); o.stop(t + d + 0.05);
-}
-async function renderMusic(a) {
-  if (mBuf) return mBuf;
-  const sr = a.sampleRate, beat = 60 / 116 / 2, bars = 8, L = Math.round(bars * 8 * beat * sr), tail = Math.round(sr);
-  const off = new OfflineAudioContext(2, L + tail, sr);
-  const nb = off.createBuffer(1, Math.floor(sr * 0.05), sr), nx = nb.getChannelData(0); for (let i = 0; i < nx.length; i++) nx[i] = (Math.random() * 2 - 1) * (1 - i / nx.length);
-  for (let b = 0; b < bars; b++) {
-    const ch = CHORDS[b % 4], t0 = b * 8 * beat;
-    for (let i = 0; i < 8; i++) {
-      const t = t0 + i * beat;
-      if (i % 4 === 0) mtone(off, NOTE(ch[0] - 24), beat * 1.8, 'triangle', 0.32, t);
-      if (i % 4 === 2) mtone(off, NOTE(ch[0] - 17), beat * 1.2, 'triangle', 0.2, t);
-      if (i % 2 === 1) for (const n of ch) mtone(off, NOTE(n), beat * 0.6, 'square', 0.018, t);
-      const m = MEL[((b % 4) * 8 + i) % 32];
-      if ((i % 2 === 0) || (b + i) % 3 === 0) mtone(off, NOTE(m), beat * (i % 2 ? 0.8 : 1.4), 'sine', 0.09, t);
-      const s = off.createBufferSource(); s.buffer = nb; const f = off.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 7000; const g = off.createGain(); g.gain.value = i % 2 ? 0.05 : 0.09; s.connect(f); f.connect(g); g.connect(off.destination); s.start(t);
-    }
-  }
-  const r = await off.startRendering(); const out = a.createBuffer(2, L, sr);
-  for (let c = 0; c < 2; c++) { const d = r.getChannelData(c), o = out.getChannelData(c); o.set(d.subarray(0, L)); for (let i = 0; i < tail; i++) o[i] += d[L + i]; }
-  return (mBuf = out);
-}
-export async function musicStart() {
-  const a = actx(); if (!a || mSrc) return;
-  mSrc = true; const buf = await renderMusic(a); if (mSrc !== true || !settings.musicOn) { if (mSrc === true) mSrc = null; return; }
-  mSrc = a.createBufferSource(); mSrc.buffer = buf; mSrc.loop = true; mSrc.connect(musicBus); mSrc.start();
-}
-export function musicStop() { if (mSrc && mSrc !== true) try { mSrc.stop(); } catch (e) {} mSrc = null; }
-export function musicToggle(on = !settings.musicOn) { settings.musicOn = on; saveSettings(); on ? musicStart() : musicStop(); return on; }
-export function musicResumeIfOn() { if (settings.musicOn) musicStart(); }
-if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => { if (ac && !document.hidden && ac.state !== 'running') ac.resume(); });
+// ---------- nhạc nền: shared/audio/bgm.js (sảnh / đang chơi / gay cấn), mặc định BẬT, nhớ lựa chọn tắt ----------
+// (settings.musicOn cũ mặc định false nên không coi là "người dùng đã tắt"; khoá mới bgvn-music-typhu)
+const bgm = createBGM({ game: 'typhu', ctx: actx, dest: () => musicBus, legacy: () => (settings.musicOn === true ? '1' : null), volDefault: 1, gain: 1.3 });
+settings.musicOn = bgm.isOn();
+export const musicIsOn = () => bgm.isOn();
+export function musicToggle(on = !bgm.isOn()) { settings.musicOn = bgm.toggle(on); return settings.musicOn; }
+export function musicStart() { bgm.start(); }
+export function musicStop() { bgm.stop(); }
+export function musicResumeIfOn() { bgm.resumeIfOn(); }
+export const musicMood = m => bgm.mood(m);
+export const musicStinger = k => bgm.stinger(k);
 
 // ---------- hiệu ứng DOM ----------
 function layer() { let l = document.getElementById('fx-layer'); if (!l) { l = document.createElement('div'); l.id = 'fx-layer'; document.body.appendChild(l); } return l; }

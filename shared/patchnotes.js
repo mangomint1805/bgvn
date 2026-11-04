@@ -6,6 +6,11 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài',
 };
 export const NOTES = [
+  { id: '20261105-03', date: '05/11/2026', game: 'all', title: 'Nhạc tự bật, hướng dẫn có hình, bộ bài Tây mới', items: [
+    '🎵 Nhạc nền tự bật khi chạm vào game (tắt thì máy nhớ). Mỗi game 2–3 bài hợp chất: sảnh, đang chơi, lúc gay cấn – chuyển mượt, đổi tab không mất nhạc. Thêm tiếng tích tắc hết giờ, thắng/thua.',
+    '🖼️ Hướng dẫn mọi game có "⚡ Bắt đầu nhanh" và hình minh hoạ cho từng luật (ảnh chụp thật + lá bài/bàn cờ vẽ sẵn).',
+    '🃏 Bộ bài Tây vẽ lại đẹp kiểu cổ điển: J/Q/K hai đầu có khung, Át bích hoa văn, 3 kiểu lưng bài – dùng cho Tiến Lên, Cát tê, Xì dách, Poker, Xếp bài.',
+  ] },
   { id: '20261105-02', date: '05/11/2026', game: 'solitaire', title: 'Game mới: Xếp bài (Solitaire)!', items: [
     '🃏 Xếp bài Klondike như Windows ngày xưa: rút 1 hoặc 3, điểm Tiêu chuẩn / Vegas (điểm ảo) / không tính.',
     '↶ Hoàn tác không giới hạn, 💡 gợi ý, chạm đúp lên đích, tự xếp nốt – thắng thì bài nảy tưng bừng.',

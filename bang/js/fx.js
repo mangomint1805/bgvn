@@ -1,4 +1,5 @@
 // Hiệu ứng: bài bay, rung, số sát thương, âm thanh tổng hợp (không cần file âm thanh)
+import { sfxVolStore } from '../../shared/audio/bgm.js?v=2';
 // Tốc độ hiệu ứng: hệ số nhân thời gian (lớn hơn = chậm hơn)
 export const SPEEDS = { slow: { k: 2.2, name: 'Chậm' }, normal: { k: 1.6, name: 'Vừa' }, fast: { k: 1, name: 'Nhanh' } };
 let speedKey = 'normal';
@@ -15,6 +16,11 @@ export function toggleMute() { muted = !muted; try { localStorage.setItem('bangv
 
 let ac = null;
 function ctx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } } if (ac.state === 'suspended') ac.resume(); return ac; }
+export const actx = () => ctx();
+// bus hiệu ứng riêng: chỉnh âm lượng hiệu ứng tách khỏi nhạc nền
+const sv = sfxVolStore('bang'); let sfxBus = null;
+function out(a) { if (!sfxBus || sfxBus.context !== a) { sfxBus = a.createGain(); sfxBus.gain.value = sv.get(); sfxBus.connect(a.destination); } return sfxBus; }
+export function sfxVolume(v) { if (v == null) return sv.get(); sv.set(v); if (sfxBus) sfxBus.gain.value = v; return v; }
 function noise(dur, filterFreq, gain, decay = dur) {
   const a = ctx(); if (!a) return;
   const buf = a.createBuffer(1, Math.floor(a.sampleRate * dur), a.sampleRate);
@@ -22,16 +28,18 @@ function noise(dur, filterFreq, gain, decay = dur) {
   const src = a.createBufferSource(); src.buffer = buf;
   const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = filterFreq;
   const g = a.createGain(); g.gain.setValueAtTime(gain, a.currentTime); g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + decay);
-  src.connect(f); f.connect(g); g.connect(a.destination); src.start();
+  src.connect(f); f.connect(g); g.connect(out(a)); src.start();
 }
 function tone(freq, dur, type = 'sine', gain = 0.15, slide = 0) {
   const a = ctx(); if (!a) return;
   const o = a.createOscillator(); o.type = type; o.frequency.setValueAtTime(freq, a.currentTime);
   if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), a.currentTime + dur);
   const g = a.createGain(); g.gain.setValueAtTime(gain, a.currentTime); g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + dur);
-  o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + dur);
+  o.connect(g); g.connect(out(a)); o.start(); o.stop(a.currentTime + dur);
 }
 export const sfx = {
+  tick() { if (!muted) { tone(1500, 0.05, 'square', 0.04); noise(0.03, 5000, 0.12, 0.03); } },
+  lose() { if (!muted) { tone(392, 0.3, 'triangle', 0.1, 0); setTimeout(() => tone(370, 0.3, 'triangle', 0.1), 260); setTimeout(() => tone(349, 0.3, 'triangle', 0.1), 520); setTimeout(() => tone(262, 0.8, 'sawtooth', 0.08, -60), 780); } },
   card() { if (!muted) noise(0.08, 3500, 0.25, 0.07); },
   shot() { if (!muted) { noise(0.35, 1800, 0.9, 0.3); tone(120, 0.2, 'triangle', 0.3, -80); } },
   hit() { if (!muted) { tone(220, 0.25, 'sawtooth', 0.12, -150); } },
@@ -178,7 +186,7 @@ function nz(dur, { type = 'lowpass', freq = 2000, q = 1, gain = .5, delay = 0, s
   const src = a.createBufferSource(); src.buffer = buf;
   const f = a.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q; if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
   const g = a.createGain(); g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
-  src.connect(f); f.connect(g); g.connect(a.destination); src.start(t);
+  src.connect(f); f.connect(g); g.connect(out(a)); src.start(t);
 }
 function tn(freq, dur, { type = 'sine', gain = .15, slide = 0, delay = 0, attack = .005, vib = 0, vibRate = 6 } = {}) {
   const a = ctx(); if (!a) return; const t = a.currentTime + delay / 1000;
@@ -186,7 +194,7 @@ function tn(freq, dur, { type = 'sine', gain = .15, slide = 0, delay = 0, attack
   if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), t + dur);
   if (vib) { const l = a.createOscillator(); l.frequency.value = vibRate; const lg = a.createGain(); lg.gain.value = vib; l.connect(lg); lg.connect(o.frequency); l.start(t); l.stop(t + dur); }
   const g = a.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + attack); g.gain.exponentialRampToValueAtTime(.001, t + dur);
-  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + .02);
+  o.connect(g); g.connect(out(a)); o.start(t); o.stop(t + dur + .02);
 }
 const SND = {
   // --- tiếng súng theo loại ---

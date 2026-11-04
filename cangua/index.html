@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐴</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/cangua.css?v=3">
+<link rel="stylesheet" href="css/cangua.css?v=4">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
 </head>
 <body>
@@ -26,7 +26,7 @@
       <div class="join-row"><input id="join-code" maxlength="5" placeholder="MÃ PHÒNG" autocomplete="off" aria-label="Mã phòng"><button class="btn" id="btn-join">Vào</button></div>
       <button class="btn big" id="btn-offline">🤖 Chơi với bot</button>
     </div>
-    <div class="home-tools"><button class="chip" id="btn-guide-home">📖 Hướng dẫn</button><button class="chip" id="btn-settings-home">⚙️ Cài đặt</button><button class="chip" id="btn-news-home">📝 Có gì mới</button></div>
+    <div class="home-tools"><button class="chip" id="btn-guide-home">📖 Hướng dẫn</button><button class="chip btn-music" id="btn-music-home">🎵 Nhạc: bật</button><button class="chip" id="btn-settings-home">⚙️ Cài đặt</button><button class="chip" id="btn-news-home">📝 Có gì mới</button></div>
     <p class="note">Bản fan-made phi thương mại cho hội bạn · 2–4 người · tự vẽ 100% bằng code.</p>
   </div>
 </section>
@@ -58,6 +58,7 @@
       <button class="chip ic" id="btn-follow" title="Camera theo ngựa" aria-label="Camera theo ngựa">🎯</button>
       <button class="chip ic" id="btn-overview" title="Xem toàn bàn" aria-label="Xem toàn bàn">🗺️</button>
       <button class="chip ic" id="btn-log" title="Nhật ký" aria-label="Nhật ký">📜</button>
+      <button class="chip ic btn-music" id="btn-music" title="Nhạc nền" aria-label="Nhạc nền">🎵</button>
       <button class="chip ic" id="btn-settings" title="Cài đặt" aria-label="Cài đặt">⚙️</button>
     </div>
   </header>
@@ -72,6 +73,6 @@
 <div class="modal" id="modal"><div class="modal-box" id="modal-box"></div></div>
 <div class="toast" id="toast"></div>
 <div id="fx-layer"></div>
-<script type="module" src="js/main.js?v=4"></script>
+<script type="module" src="js/main.js?v=6"></script>
 </body>
 </html>

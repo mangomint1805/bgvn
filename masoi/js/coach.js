@@ -1,7 +1,7 @@
 // 🎓 Ván tập: máy giải thích từng bước bằng bong bóng (chỉ ván offline có opts.tutorial).
 // Bong bóng mở thì đồng hồ + bot tạm dừng; "Hiểu rồi" là chạy tiếp, "Bỏ qua hướng dẫn" là tắt hẳn.
 import { ROLES, isWolfRole } from './engine.js?v=3';
-import * as fx from './fx.js?v=3';
+import * as fx from './fx.js?v=4';
 
 let el = null, curKey = null, hlEl = null;
 const active = c => c.isHost && c.net && c.net.offline && c.net.tut && c.view && c.view.opts && c.view.opts.tutorial && !c.net.tut.off;

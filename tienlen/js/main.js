@@ -6,9 +6,9 @@ import { createReactions } from '../../shared/ui/react.js?v=2';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
 import { classify, legalPlays, badFinish, VE_HEO, comboName, comboKind, rankOf, HEO, BETS, TURN_TIMES, DEFAULT_OPTS, START_CHIPS, TOI_TRANG, isHang, cardName } from './engine.js?v=4';
 import { rankPlays, splitHand, LEVELS } from './bot.js?v=4';
-import { cardHTML } from './cards.js?v=4';
-import { guideHTML } from './guide.js?v=4';
-import * as fx from './tfx.js?v=4';
+import { cardHTML } from './cards.js?v=5';
+import { guideHTML } from './guide.js?v=6';
+import * as fx from './tfx.js?v=5';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -47,7 +47,7 @@ function setTheme(t, say = false) {
 }
 
 // ---------- màn hình / hộp thoại ----------
-function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
+function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') fx.musicMood('lobby'); }
 let toastT;
 function toast(m, kind = '') { const t = $('#toast'); t.textContent = m; t.className = 'toast show ' + kind; clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 function openModal(html, cls = '', key = null) { $('#modal-box').className = 'modal-box ' + cls; $('#modal-box').innerHTML = html; $('#modal').classList.add('open'); modalKey = key; $('#modal-box').scrollTop = 0; }
@@ -198,6 +198,8 @@ function sortedHand(hand) {
 const POS = { 1: ['top'], 2: ['right', 'left'], 3: ['right', 'top', 'left'] };
 function render() {
   const v = view; if (!v) return;
+  // nhạc: đang đánh / gay cấn (có người còn ≤ 3 lá) / hết ván
+  fx.musicMood(v.phase === 'playing' ? (v.players.some(p => !p.out && p.place == null && p.handCount > 0 && p.handCount <= 3) ? 'tense' : 'game') : 'lobby');
   const meP = me(); const n = v.players.length;
   $('#game-tag').innerHTML = `<span>Ván ${v.gameNo || 1}</span><span class="gt-bet" title="1 phần = ${v.opts.bet} chip">🪙${v.opts.bet}</span>`;
   // đối thủ
@@ -419,7 +421,7 @@ function animate(a, b) {
     } else if (e.k === 'cong') {
       setTimeout(() => { fx.sfx.cong(); fx.banner(`🥶 ${nm(e.from)} bị CÓNG!`, 'ice', 'Chưa đánh được lá nào mà người ta về rồi'); fx.shake(seatEl(e.from)); }, delay + 900);
     } else if (e.k === 'end') {
-      setTimeout(() => { const mine = b.places && b.places[0] === myId; if (mine) { fx.sfx.win(); fx.confetti(); } else fx.sfx.lose(); }, delay + 700);
+      setTimeout(() => { const mine = b.places && b.places[0] === myId; if (mine) { fx.sfx.win(); fx.confetti(); fx.musicStinger('win'); } else { fx.sfx.lose(); fx.musicStinger('lose'); } }, delay + 700);
     }
   }
   if (isMyTurn() && !(a.phase === 'playing' && a.players[a.turn] && a.players[a.turn].id === myId)) {
@@ -522,7 +524,7 @@ setInterval(() => {
   const s = Math.ceil(left / 1000);
   const on = timerPid === myId && timerEnd && s <= 15;
   el.textContent = on ? `⏳ ${s}s` : ''; el.classList.toggle('on', !!on);
-  if (on && s <= 5 && s !== beeped) { beeped = s; fx.sfx.pip(); }
+  if (on && s <= 5 && s !== beeped) { beeped = s; fx.sfx.tick(); }
 }, 250);
 // đóng / tải lại trang: lưu ngay ván của chủ phòng
 addEventListener('pagehide', () => { if (net && net.saveNow) net.saveNow(); });

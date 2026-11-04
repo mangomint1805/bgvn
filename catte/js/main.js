@@ -4,9 +4,9 @@ import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
 import { cardName, rankLabel, SUIT_SYM, SUIT_NAME, WHITE_NAME, OPT_CHOICES, CUT, REFILL, parseCard } from './engine.js?v=2';
-import { cardHTML, cardTxt, suitTxt } from './cards.js?v=2';
-import * as fx from './cfx.js?v=2';
-import { openGuide } from './guide.js?v=2';
+import { cardHTML, cardTxt, suitTxt } from './cards.js?v=3';
+import * as fx from './cfx.js?v=3';
+import { openGuide } from './guide.js?v=4';
 setSpeedFn(fx.S);
 
 const $ = s => document.querySelector(s);
@@ -25,7 +25,7 @@ const clean = n => String(n || '').replace(' 🤖', '').trim();
 const avColor = name => { let h = 0; for (const ch of clean(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return AV_COL[h % AV_COL.length]; };
 const initial = name => esc(([...clean(name)][0] || '?').toUpperCase());
 const fmt = n => n >= 10000 ? (n / 1000).toFixed(n >= 100000 ? 0 : 1).replace('.0', '') + 'k' : String(n);
-function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
+function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') fx.musicMood('lobby'); }
 let toastT;
 function toast(m) { const t = $('#toast'); t.innerHTML = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 function openModal(html, cls = '', key = null) { const b = $('#modal-box'); b.onclick = null; b.className = 'modal-box ' + cls; b.innerHTML = html; $('#modal').classList.add('open'); modalKey = key; }
@@ -177,6 +177,8 @@ function geom() {
 }
 function render() {
   const v = view; if (!v) return;
+  // nhạc: vòng chưng / các nước cuối (sau vòng loại) = gay cấn
+  fx.musicMood(v.phase === 'chung' || (v.phase === 'play' && v.trickNo > CUT) ? 'tense' : 'game');
   $('#hand-no').textContent = `Ván ${v.handNo}`;
   renderProg(v); renderPrompt(v); renderHand(v); renderActions(v); renderSeats(v); renderPot(v);
   $('#table').classList.toggle('hot', v.phase !== 'handEnd' && v.trickNo > CUT);

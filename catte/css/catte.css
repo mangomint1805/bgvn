@@ -1,3 +1,4 @@
+@import url("../../shared/ui/deck/deck.css?v=1");
 /* Cát tê – tông sáng, bàn nỉ xanh ngọc, lá bài tự vẽ */
 :root{
   --bg:#fff6e8;--ink:#1f2433;--muted:#6f6a7d;--card:#fff;
@@ -81,22 +82,9 @@ input#name:focus,.join-row input:focus{border-color:var(--pri)}
 #btn-start{align-self:center;min-width:220px}
 
 /* ---------- lá bài ---------- */
-.pc{position:relative;width:var(--cw);height:var(--ch);border-radius:calc(var(--cw) * .13);background:linear-gradient(160deg,#fff 0,#fffdf6 100%);border:1px solid #d9d2c3;box-shadow:0 2px 0 #00000018,0 5px 12px -6px #0006;flex:none;user-select:none;-webkit-user-select:none;font-family:"Baloo 2","Be Vietnam Pro",sans-serif;overflow:hidden}
-.pc.red{color:var(--red)}.pc.blk{color:#1d2433}
-.pc .ix{position:absolute;left:7%;top:2%;display:flex;flex-direction:column;align-items:center;line-height:.82;z-index:1}
-.pc .ix b{font-size:calc(var(--cw) * .38);font-weight:800;letter-spacing:-1px}
-.pc .ix i{font-style:normal;font-size:calc(var(--cw) * .28);font-family:"Segoe UI Symbol","DejaVu Sans",sans-serif}
-.pc .ix.br{left:auto;top:auto;right:7%;bottom:2%;transform:rotate(180deg)}
-.pc .pip{position:absolute;left:0;right:0;top:22%;bottom:8%;display:grid;place-items:center;font-size:calc(var(--cw) * .58);line-height:1;font-family:"Segoe UI Symbol","DejaVu Sans",sans-serif}
-.pc .pip.ace{font-size:calc(var(--cw) * .78);top:16%}
-.pc .face{position:absolute;left:24%;right:12%;top:26%;bottom:12%;border-radius:calc(var(--cw) * .1);border:2px solid currentColor;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:.85;background:repeating-linear-gradient(45deg,#0000 0 4px,#ffd23f22 4px 8px)}
-.pc .face b{font-size:calc(var(--cw) * .4)}.pc .face i{font-style:normal;font-size:calc(var(--cw) * .24);font-family:"Segoe UI Symbol","DejaVu Sans",sans-serif}
-.pc.back{background:#ff6b35;border:2px solid #fff;box-shadow:0 0 0 1px #c94a1d,0 4px 10px -5px #0007}
-.pc.back::before{content:"";position:absolute;inset:3px;border-radius:calc(var(--cw) * .09);background:repeating-linear-gradient(45deg,#ff8a55 0 5px,#ff6b35 5px 10px),#ff6b35;border:1.5px solid #ffffffaa}
-.pc.back .bk{position:absolute;inset:0;display:grid;place-items:center}
-.pc.back .bk i{font-style:normal;font-weight:800;font-size:calc(var(--cw) * .3);color:#fff;background:#1f2433;border:2px solid #fff;border-radius:50%;width:calc(var(--cw) * .56);height:calc(var(--cw) * .56);display:grid;place-items:center;letter-spacing:-.5px}
+/* lá bài: mặt/lưng vẽ bằng bộ bài SVG chung (shared/ui/deck) – ở đây chỉ kích thước, bo góc, bóng */
+.pc{position:relative;width:var(--cw);height:var(--ch);border-radius:calc(var(--cw) * .09);box-shadow:0 2px 0 #00000018,0 5px 12px -6px #0006;flex:none;user-select:none;-webkit-user-select:none;overflow:hidden}
 .pc.sm{--cw:40px;--ch:57px}.pc.xs{--cw:24px;--ch:34px}
-.pc.xs .ix.br,.pc.xs .pip,.pc.xs .face{display:none}.pc.xs .ix{left:0;right:0;top:4%}
 .g-row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
 
 /* ---------- ván chơi ---------- */

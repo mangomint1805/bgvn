@@ -1,3 +1,4 @@
+@import url("../../shared/ui/deck/deck.css?v=1");
 :root{
   --red:#e0263c;--redd:#b3172b;--blk:#1f1b2e;--ink:#241f36;--muted:#756d8c;--bg:#fff6ea;--panel:#ffffffef;--line:#efe4d4;
   --acc:#ff5b3a;--acc2:#ffb020;--mint:#1fa37a;--felt1:#e3f6e9;--felt2:#c9ecd6;--gold:#ffb020;
@@ -81,32 +82,9 @@ input:focus{border-color:var(--acc)}
 .wait{text-align:center;color:var(--muted);font-weight:700}
 
 /* ---------- lá bài ---------- */
-.pc{width:var(--cw);height:var(--ch);border-radius:calc(var(--cw)*.13);position:relative;flex:none;background:linear-gradient(165deg,#fffefb 0%,#fbf7ef 60%,#f3ecdf 100%);border:1px solid #cfc4b3;box-shadow:0 1px 0 #fff inset,0 6px 12px -6px #1a0e0699,0 1px 2px #1a0e0633;user-select:none;-webkit-user-select:none;color:var(--blk);font-family:"Baloo 2",sans-serif;font-weight:800;overflow:hidden}
-.pc.red{color:var(--red)}
-.pc .ix{position:absolute;left:5%;top:3%;display:flex;flex-direction:column;align-items:center;line-height:.86;width:calc(var(--cw)*.36)}
-.pc .ix b{font-size:calc(var(--cw)*.38);letter-spacing:-1px}
-.pc.r7 .ix b{font-size:calc(var(--cw)*.31);letter-spacing:-2px}
-.pc .ix i{font-style:normal;font-size:calc(var(--cw)*.28);margin-top:1px}
-.pc .pip,.pc .ace,.pc .pig,.pc .court{position:absolute;left:62%;top:60%;transform:translate(-50%,-50%);line-height:1}
-.pc .pip{font-size:calc(var(--cw)*.66)}
-.pc .ace{font-size:calc(var(--cw)*.7);filter:drop-shadow(0 2px 0 #0001)}
-.pc .ace::after{content:"";position:absolute;inset:-12% -18%;border:2px dashed currentColor;border-radius:50%;opacity:.35}
-.pc .pig{font-size:calc(var(--cw)*.52);display:flex;flex-direction:column;align-items:center}
-.pc .pig em{font-style:normal;font-size:calc(var(--cw)*.17);border-radius:6px;padding:1px 4px;margin-top:2px;letter-spacing:.5px;color:#fff;background:var(--blk)}
-.pc.red .pig em{background:var(--red)}
-.pc.heo{background:linear-gradient(160deg,#fffefb 50%,#fff0e6);box-shadow:0 0 0 1px #e8b94a inset,0 6px 12px -6px #1a0e0699}
-.pc .court{left:63%;top:58%;width:calc(var(--cw)*.56);height:calc(var(--ch)*.62);border-radius:8px;background:color-mix(in srgb,currentColor 9%,#fffaf0);border:2px solid currentColor;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
-.pc .court svg{width:80%;fill:currentColor;opacity:.85}
-.pc .court b{font-size:calc(var(--cw)*.34);line-height:.9}
-.pc .court i{font-style:normal;font-size:calc(var(--cw)*.2);line-height:1}
-/* lưng lá: đỏ son, lưới vàng, huy hiệu giữa */
-.pc.back{background:
-  radial-gradient(circle at 50% 50%,#0000 0 30%,#0000 30%),
-  repeating-linear-gradient(45deg,#f6c95c38 0 1.5px,#0000 1.5px 7px),
-  repeating-linear-gradient(-45deg,#f6c95c38 0 1.5px,#0000 1.5px 7px),
-  linear-gradient(160deg,#d42a37,#9c1222);border:3px solid #fff7e6;box-shadow:0 0 0 1px #c9a35a,0 5px 10px -5px #1a0e06aa}
-.pc.back .bk{position:absolute;inset:16% 12%;border-radius:45%;background:radial-gradient(circle,#b8192a,#8a0f1c);display:grid;place-items:center;box-shadow:0 0 0 2px #f2c94c,0 0 0 4px #9c1222,0 0 0 5px #f2c94c88}
-.pc.back .bk b{font-size:calc(var(--cw)*.28);color:#f7d77a;letter-spacing:-1px}
+/* lá bài: mặt/lưng vẽ bằng bộ bài SVG chung (shared/ui/deck) – ở đây chỉ kích thước, bo góc, bóng */
+.pc{width:var(--cw);height:var(--ch);border-radius:calc(var(--cw)*.09);position:relative;flex:none;box-shadow:0 1px 0 #fff inset,0 6px 12px -6px #1a0e0699,0 1px 2px #1a0e0633;user-select:none;-webkit-user-select:none;overflow:hidden}
+.pc.heo{box-shadow:0 0 0 1.5px #e8b94a inset,0 6px 12px -6px #1a0e0699}
 /* lá trên tay */
 .hand .pc{cursor:pointer;margin-left:var(--ov,0px);transition:transform .14s,box-shadow .14s,filter .14s}
 .hand .pc:first-child{margin-left:0}
@@ -123,8 +101,6 @@ input:focus{border-color:var(--acc)}
 .crow.fan .pc{transform:translateY(var(--dy,0)) rotate(var(--rot,0deg));transform-origin:50% 130%;box-shadow:0 1px 0 #fff inset,-3px 8px 14px -6px #000b}
 .crow.mini .pc{--cw:34px;--ch:49px;border-radius:5px;margin-left:-12px}
 .crow.mini .pc:first-child{margin-left:0}
-.crow.mini .pc .pip,.crow.mini .pc .ace,.crow.mini .pc .pig,.crow.mini .pc .court{display:none}
-.crow.mini .pc .ix{left:8%;width:auto}
 
 /* ---------- ván chơi: màu bàn ---------- */
 body{--rim:9px;--gold:#f2c94c;--cream:#fff4dc;
@@ -185,7 +161,7 @@ body[data-tlt="go"] .lantern{display:none}
 /* quạt lưng bài + số lá */
 .seat .cnt{position:relative;width:34px;height:40px;flex:none;--cw:21px;--ch:30px}
 .seat .cnt .mb{position:absolute;left:50%;bottom:2px;width:var(--cw);height:var(--ch);margin-left:calc(var(--cw)/-2);border-radius:4px;transform-origin:50% 100%;
-  background:repeating-linear-gradient(45deg,#f6c95c40 0 1px,#0000 1px 4px),repeating-linear-gradient(-45deg,#f6c95c40 0 1px,#0000 1px 4px),linear-gradient(160deg,#d42a37,#9c1222);border:1.5px solid #fff7e6;box-shadow:0 2px 4px #0007}
+  background:repeating-linear-gradient(45deg,#f6c95c40 0 1px,#0000 1px 4px),repeating-linear-gradient(-45deg,#f6c95c40 0 1px,#0000 1px 4px),linear-gradient(160deg,#13695a,#0b4a3c);border:1.5px solid #fbf7ee;box-shadow:0 2px 4px #0007}
 .seat .cnt .mb:nth-of-type(1){transform:rotate(-16deg) translateX(-2px)}
 .seat .cnt .mb:nth-of-type(2){transform:rotate(0deg)}
 .seat .cnt .mb:nth-of-type(3){transform:rotate(16deg) translateX(2px)}

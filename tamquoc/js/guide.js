@@ -2,6 +2,8 @@
 import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, buildDeck, rolesFor, DECK_SIZE_BASE, DECK_SIZE_EXP, HORSE_NAMES, artKey } from './cards.js?v=7';
 import { cardHTML, portrait } from './art.js?v=7';
 import { IMG } from './images.js?v=7';
+import { gp, ill } from '../../shared/ui/guidepics.js?v=1';
+import { GI, GV } from './guide-img.js?v=1';
 
 const deck = buildDeck(true);
 const red = t => String(t).replace(/([♥♦])/g, '<span class="red">$1</span>');
@@ -39,6 +41,7 @@ export function guideHTML() {
   const weapons = ['zhuge', 'cixiong', 'qinggang', 'hanbing', 'qinglong', 'zhangba', 'guanshi', 'fangtian', 'qilin'];
   const armor = ['bagua', 'renwang', 'plus', 'minus'];
   const byK = (k, exp) => Object.keys(GENERALS).filter(id => GENERALS[id].kingdom === k && !!GENERALS[id].exp === exp);
+  const P = gp(GI, GV, '.gp-ill .qcard{flex:none}');
   const expCards = ['jiu', 'hoasat', 'loisat', 'huogong', 'tiesuo', 'bingliang', 'zhuque', 'guding', 'tengjia', 'baiyin'];
   return `
 <div class="g-head"><h2>📖 Luật Tam Quốc Sát</h2><button class="btn sm" id="g-close">Đóng ✕</button></div>
@@ -49,6 +52,12 @@ export function guideHTML() {
 <div class="g-body">
 <p class="g-lead">Thời loạn Tam Quốc, 2–8 người ngồi quanh bàn. Mỗi người bí mật giữ một <b>thân phận</b> và điều khiển một <b>võ tướng</b> có kỹ năng riêng. Dùng bài Sát, Né, Đào, cẩm nang và trang bị để bảo vệ phe mình – nhưng ngoài Chúa công ra, chẳng ai biết ai là bạn, ai là thù!</p>
 
+${P.quick([
+  ['q-home', 'Trang chủ Tam Quốc Sát: ô tên, nút Chơi với bot, Tạo phòng online, Tập chơi', '① Nhập tên → ② <b>Chơi với bot</b>, hoặc ③ <b>Tạo phòng online</b>. Mới chơi? Bấm <b>🎓 Tập chơi</b> có thầy gợi ý.'],
+  ['q-lobby', 'Phòng chờ: danh sách người chơi, nút Thêm bot, nút Bắt đầu', '① Thêm bot (2–8 người, bật/tắt bản mở rộng bên dưới) → ② <b>Bắt đầu</b>.'],
+  ['pick', 'Màn chọn võ tướng: thẻ Tào Tháo, Lưu Bị kèm kỹ năng', 'Bốc thân phận xong thì ① chạm 1 <b>võ tướng</b> (đọc kỹ năng bên dưới thẻ).'],
+  ['turn', 'Lượt của bạn: thanh 6 pha, khoảng cách, lá Sát trên tay, nút Kết thúc lượt', '① Pha hiện tại (Ra bài). ② Số = khoảng cách. ③ Chạm lá sáng để dùng. Xong thì ④ <b>Kết thúc lượt</b>.'],
+])}
 <section id="g-goal"><h3>1. Thân phận và cách thắng</h3>
 <div class="g-roles">${Object.entries(ROLES).map(([k, r]) => `<div class="g-role r-${k}"><b>${r.icon} ${r.name}</b><p>${r.desc}</p></div>`).join('')}</div>
 ${roleTable()}
@@ -58,13 +67,13 @@ ${roleTable()}
 <li><b>Phản tặc</b> thắng khi Chúa công chết (trừ trường hợp dưới) – kể cả những Phản tặc đã nằm xuống cũng thắng theo.</li>
 <li><b>Nội gián</b> chỉ thắng khi là <b>người duy nhất còn sống</b>. Nếu Chúa công chết khi bàn còn người khác, Phản tặc thắng ngay.</li>
 <li>Thân phận người khác chỉ lật lên khi họ tử trận (hết ván thì lật tất cả).</li>
-</ul></section>
+</ul>${P.fig('role', 'Màn bốc thẻ thân phận: thẻ của bạn lật lên là Chúa công', 'Đầu ván bốc thẻ thân phận – chỉ mình bạn thấy (Chúa công thì cả bàn biết).')}</section>
 
 <section id="g-setup"><h3>2. Chuẩn bị</h3><ul>
 <li>Bộ bài cơ bản ${DECK_SIZE_BASE} lá (bật bản mở rộng Quân Tranh: thêm ${DECK_SIZE_EXP} lá), mỗi lá có <b>chất</b> (♠ Bích, ♥ Cơ, ♣ Chuồn, ♦ Rô) và <b>số</b> (A–K) – dùng khi phán định.</li>
 <li><b>Chọn tướng:</b> Chúa công chọn trước trong 3 tướng Chúa (Tào Tháo, Lưu Bị, Tôn Quyền) + 2 tướng ngẫu nhiên. Sau đó mọi người cùng lúc chọn 1 trong 3 tướng được chia.</li>
 <li>Máu tối đa = số máu ghi trên tướng (Chúa công +1). Mỗi người nhận 4 lá, Chúa công đi trước rồi theo chiều kim đồng hồ.</li>
-</ul></section>
+</ul>${P.fig('pick', 'Chọn 1 trong các võ tướng được chia', 'Chọn tướng: ① chạm thẻ tướng muốn chơi.')}</section>
 
 <section id="g-turn"><h3>3. Một lượt gồm 6 pha</h3>
 <ol class="g-steps">
@@ -74,7 +83,7 @@ ${roleTable()}
 <li><b>Ra bài</b> – dùng bao nhiêu lá cũng được, nhưng <b>mỗi lượt chỉ 1 Sát</b> (trừ Gia Cát liên nỏ, Bào hao). Bấm <i>Kết thúc</i> khi xong.</li>
 <li><b>Bỏ bài</b> – số lá trên tay không được vượt quá <b>số máu hiện tại</b>; thừa thì tự chọn lá bỏ.</li>
 <li><b>Kết thúc</b> – một số kỹ năng (Bế nguyệt) kích hoạt, rồi tới người kế tiếp.</li>
-</ol></section>
+</ol>${P.fig('turn', 'Thanh 6 pha Đầu, Phán, Rút, Ra bài, Bỏ, Cuối trên bàn', '① Thanh pha trên bàn sáng ở pha đang chạy (Đầu · Phán · Rút · <b>Ra bài</b> · Bỏ · Cuối).')}</section>
 
 <section id="g-dist"><h3>4. Khoảng cách và tầm đánh</h3>
 <div class="g-flex">${distSVG()}<ul>
@@ -83,7 +92,7 @@ ${roleTable()}
 <li><b>Tầm đánh</b> mặc định 1, đeo vũ khí thì bằng tầm của vũ khí. <b>Sát</b> chỉ chọn được người có khoảng cách ≤ tầm đánh.</li>
 <li><b>Thuận thủ khiên dương</b> chỉ với tới người cách bạn 1 (không tính tầm vũ khí). Các cẩm nang khác không giới hạn khoảng cách.</li>
 <li>Trên bàn, mỗi ghế có huy hiệu số = khoảng cách từ bạn tới người đó; ghế viền đỏ là đang trong tầm đánh.</li>
-</ul></div></section>
+</ul></div>${P.fig('target', 'Chọn Sát: ghế trong tầm sáng viền đỏ, ghế ngoài tầm bị mờ', 'Chọn Sát → ① ghế trong tầm <b>viền đỏ</b>, ② ngoài tầm bị mờ.')}</section>
 
 <section id="g-basic"><h3>5. Lá cơ bản</h3><div class="g-grid">${basic.map(row).join('')}</div>
 <p class="g-note">Bị <b>Sát</b> thì cần đánh ra 1 <b>Né</b>, không có thì mất 1 máu. Nếu không còn lá đỡ được, máy tự cho bạn chịu đòn ngay khỏi phải chờ.</p></section>
@@ -99,13 +108,13 @@ ${roleTable()}
 <div class="g-grid">${weapons.map(row).join('')}</div><div class="g-grid">${armor.map(row).join('')}</div>
 <p class="g-note">Hình binh khí do BGVN vẽ lại theo mô tả hình dáng trên Wikipedia: <b>Thanh long đao</b> (yển nguyệt đao) là lưỡi bản to gắn thẳng trên đầu cán, sống có khấc, cổ đao đầu rồng, cuối cán có mũi nhọn; <b>Xà mâu</b> có mũi giáo lượn sóng; <b>Phương thiên hoạ kích</b> có mũi giáo giữa và hai lưỡi trăng khuyết hai bên.</p></section>
 
-<section id="g-judge"><h3>9. Phán định</h3><ul>
+<section id="g-judge"><h3>9. Phán định</h3>${ill([[cardHTML(sample('lebu'), 'sm'), 'Lạc bất tư thục: ra <span class="red">♥</span> thì thoát'], [cardHTML(sample('shandian'), 'sm'), 'Thiểm điện: ♠2–9 thì mất 3 máu'], [cardHTML(sample('bagua'), 'sm'), 'Bát quái: ra đỏ = Né']])}<ul>
 <li>Phán định = lật lá trên cùng của chồng bài, xem chất/số rồi bỏ đi.</li>
 <li>Lạc bất tư thục: ra ♥ thì thoát, khác thì <b>bỏ qua pha Ra bài</b>. Thiểm điện: ra ♠2–♠9 thì mất 3 máu (không phải do ai gây), khác thì chuyền sang người kế tiếp.</li>
 <li>Bát quái trận: ra đỏ (♥♦) là coi như đã Né. Kỹ năng Quỷ tài của Tư Mã Ý có thể đánh 1 lá trên tay thay cho lá phán định!</li>
 </ul></section>
 
-<section id="g-dying"><h3>10. Hấp hối, tử trận, thưởng phạt</h3><ul>
+<section id="g-dying"><h3>10. Hấp hối, tử trận, thưởng phạt</h3>${ill([[cardHTML(sample('dao'), 'sm'), 'Về 0 máu: ai cũng được đánh <b>Đào</b> cứu']])}<ul>
 <li>Về 0 máu là <b>hấp hối</b>: bắt đầu từ người đang có lượt, lần lượt mọi người được hỏi có muốn đánh <b>Đào</b> cứu không (chính người hấp hối cũng tự ăn được). Đủ lên 1 máu thì sống tiếp.</li>
 <li>Bản mở rộng: người hấp hối có thể tự uống <b>Rượu 🍶</b> thay Đào để hồi 1 máu (Rượu chỉ cứu được chính mình).</li>
 <li>Không ai cứu: tử trận, lật thân phận, bỏ hết bài.</li>

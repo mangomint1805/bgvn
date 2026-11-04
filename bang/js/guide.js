@@ -1,6 +1,8 @@
 // Hướng dẫn chơi – soạn theo sách luật chính thức BANG! (Emiliano Sciarra, dV Giochi)
 import { CARD_INFO, CHARACTERS, ROLES, suitify } from './cards.js';
 import { imgTag, avatarTag } from './images.js';
+import { gp, ill } from '../../shared/ui/guidepics.js?v=1';
+import { GI, GV } from './guide-img.js?v=1';
 
 const KIND = { brown: 'Dùng ngay', blue: 'Trang bị', gun: 'Súng' };
 const COUNT = { bang: 25, missed: 12, beer: 6, panic: 4, catbalou: 4, stagecoach: 2, wellsfargo: 1, store: 2, saloon: 1, indians: 2, duel: 3, gatling: 1,
@@ -40,6 +42,7 @@ export function guideHTML() {
   const brown = ['bang', 'missed', 'beer', 'saloon', 'stagecoach', 'wellsfargo', 'store', 'panic', 'catbalou', 'gatling', 'indians', 'duel'];
   const blue = ['barrel', 'mustang', 'scope', 'jail', 'dynamite'];
   const guns = ['volcanic', 'schofield', 'remington', 'carabine', 'winchester'];
+  const P = gp(GI, GV, '.gp-ill .pcard{flex:none}');
   return `
 <div class="g-head"><h2>📖 Hướng dẫn chơi BANG!</h2><button class="btn small" id="g-close">Đóng ✕</button></div>
 <nav class="g-toc">
@@ -48,6 +51,12 @@ export function guideHTML() {
 </nav>
 <div class="g-body">
 <p class="g-lead">Miền Viễn Tây, 4–7 tay súng. Mỗi người giữ bí mật một <b>vai trò</b>, trừ Cảnh sát trưởng. Bạn phải đoán ai là đồng đội, ai là kẻ thù và bắn đúng người.</p>
+${P.quick([
+  ['q-home', 'Trang chủ BANG!: ô tên, nút Chơi một mình với bot, Tạo phòng', '① Nhập tên → ② <b>Chơi một mình với bot</b>, hoặc ③ <b>Tạo phòng</b> rồi gửi mã cho hội bạn.'],
+  ['q-lobby', 'Phòng chờ: danh sách tay súng, nút Thêm bot, nút Bắt đầu', '① Thêm bot cho đủ 4–7 người → ② <b>Bắt đầu</b>.'],
+  ['intro', 'Màn hình đầu ván: lá vai trò bí mật và nhân vật của bạn', 'Đầu ván xem <b>vai trò bí mật</b> + nhân vật của bạn (luôn hiện lại ở góc dưới bên trái).'],
+  ['turn', 'Tới lượt: số khoảng cách trên mỗi người, lá BANG! sáng trên tay, nút Kết thúc lượt', '① Số vàng = khoảng cách tới người đó. ② Chạm lá <b>sáng viền</b> để đánh. Xong thì ③ <b>Kết thúc lượt</b>.'],
+])}
 
 <section id="g-goal"><h3>1. Vai trò và mục tiêu</h3>
 <div class="g-grid2">${['sheriff', 'deputy', 'outlaw', 'renegade'].map(roleRow).join('')}</div>
@@ -61,12 +70,14 @@ export function guideHTML() {
 <li>Mỗi người nhận 1 vai trò bí mật và 1 nhân vật. Cảnh sát trưởng lật vai trò lên cho mọi người thấy.</li>
 <li>Máu được thể hiện bằng <b>viên đạn</b> 🔸: số đạn = số máu của nhân vật (3 hoặc 4). <b>Cảnh sát trưởng được +1 viên.</b> Viên đạn xám là máu đã mất.</li>
 <li>Mỗi người được chia số lá bằng số máu của mình.</li>
-<li><b>Cảnh sát trưởng đi trước</b>, sau đó lần lượt theo chiều kim đồng hồ.</li></ul></section>
+<li><b>Cảnh sát trưởng đi trước</b>, sau đó lần lượt theo chiều kim đồng hồ.</li></ul>
+${P.fig('intro', 'Lá vai trò Kẻ hai mặt và lá nhân vật Rose Doolan', 'Mỗi người 1 vai trò bí mật + 1 nhân vật (ở đây: Kẻ hai mặt · Rose Doolan, 4 viên đạn).')}</section>
 
 <section id="g-turn"><h3>3. Một lượt chơi gồm 3 bước</h3>
 <ol class="g-steps"><li><b>Rút 2 lá</b> từ chồng bài. Hết chồng bài thì xào chồng bài bỏ làm chồng mới.</li>
 <li><b>Đánh bài</b> tuỳ thích, nhưng:<ul><li>Mỗi lượt chỉ được đánh <b>1 lá BANG!</b></li><li>Không được có 2 lá cùng tên trước mặt.</li><li>Chỉ được có 1 khẩu súng (đánh súng mới thì súng cũ bị bỏ).</li></ul></li>
 <li><b>Bỏ bớt bài</b>: cuối lượt, số lá trên tay không được nhiều hơn số máu hiện tại.</li></ol>
+${P.fig('turn', 'Bàn chơi tới lượt bạn', 'Lá đánh được <b>sáng viền</b>; xong bấm <b>Kết thúc lượt</b> (thừa bài thì bỏ bớt).')}
 <p class="g-note">Lá <b>nâu</b> dùng ngay rồi bỏ. Lá <b>xanh</b> đặt trước mặt và có tác dụng lâu dài cho đến khi bị lấy hoặc bỏ đi.</p></section>
 
 <section id="g-dist"><h3>4. Khoảng cách và tầm bắn</h3>
@@ -75,23 +86,25 @@ export function guideHTML() {
 <li>Bạn chỉ <b>BANG!</b> được người có khoảng cách ≤ <b>tầm súng</b>. Không có súng thì dùng Colt .45 tầm 1.</li>
 <li><b>Mustang</b>: người khác thấy bạn xa thêm 1. <b>Scope</b>: bạn thấy người khác gần đi 1.</li>
 <li>Súng <b>không</b> làm thay đổi khoảng cách, nên <b>Panic!</b> vẫn chỉ dùng được với người cách 1.</li>
-<li>Trên bàn, số trong vòng tròn vàng cạnh mỗi người là khoảng cách từ bạn tới họ.</li></ul></div></div></section>
+<li>Trên bàn, số trong vòng tròn vàng cạnh mỗi người là khoảng cách từ bạn tới họ.</li></ul></div></div>
+${P.fig('target', 'Chọn lá BANG!: người trong tầm sáng viền đỏ, người ngoài tầm bị mờ', 'Chọn BANG! → ① người trong tầm <b>sáng viền đỏ</b>, ② người ngoài tầm bị mờ.')}</section>
 
 <section id="g-draw"><h3>5. "Lật bài" là gì?</h3>
-<p>Một số lá (Barrel, Jail, Dynamite) bắt bạn <b>lật lá trên cùng của chồng bài</b> rồi xem <b>chất</b> của nó: ra <span class="suit red">♥</span> Cơ thì thoát Jail / né được đạn; ra <span class="suit black">♠</span> Bích từ 2 đến 9 thì Dynamite phát nổ. Lá lật xong bị bỏ đi. Mỗi lá bài đều có số và chất ở góc trên bên trái.</p></section>
+<p>Một số lá (Barrel, Jail, Dynamite) bắt bạn <b>lật lá trên cùng của chồng bài</b> rồi xem <b>chất</b> của nó: ra <span class="suit red">♥</span> Cơ thì thoát Jail / né được đạn; ra <span class="suit black">♠</span> Bích từ 2 đến 9 thì Dynamite phát nổ. Lá lật xong bị bỏ đi. Mỗi lá bài đều có số và chất ở góc trên bên trái.</p>
+${ill([[mini('barrel'), 'Lật ra <span class="suit red">♥</span> → né được'], [mini('jail'), 'Lật ra <span class="suit red">♥</span> → ra tù'], [mini('dynamite'), 'Lật ra <span class="suit black">♠</span> 2–9 → <b>nổ</b>, mất 3 máu']])}</section>
 
 <section id="g-brown"><h3>6. Lá nâu – dùng ngay</h3><div class="g-cards">${brown.map(cardRow).join('')}</div></section>
 <section id="g-blue"><h3>7. Lá xanh – đặt trước mặt</h3><div class="g-cards">${blue.map(cardRow).join('')}</div>
 <p class="g-note">Thứ tự đầu lượt: xét <b>Dynamite</b> trước, rồi mới tới <b>Jail</b>. Người bị nhốt vẫn có thể bị bắn và vẫn né được bình thường.</p></section>
 <section id="g-guns"><h3>8. Súng</h3><div class="g-cards">${guns.map(cardRow).join('')}</div></section>
 
-<section id="g-death"><h3>9. Hết máu và bị loại</h3><ul>
+<section id="g-death"><h3>9. Hết máu và bị loại</h3>${ill([[mini('beer'), 'Còn Beer khi mất máu cuối → tự uống, sống tiếp'], [mini('bang'), 'Hạ Tội phạm → thưởng rút 3 lá']])}<ul>
 <li>Mất máu cuối cùng thì bị loại, trừ khi dùng ngay 1 lá <b>Beer</b> (game tự dùng giúp bạn).</li>
 <li>Người bị loại lật vai trò lên, bỏ hết bài trên tay và trước mặt.</li>
 <li><b>Thưởng:</b> ai hạ một Tội phạm thì được rút 3 lá (kể cả người hạ là Tội phạm khác).</li>
 <li><b>Phạt:</b> Cảnh sát trưởng lỡ hạ Phó cảnh sát thì phải bỏ hết bài trên tay và trước mặt.</li></ul></section>
 
-<section id="g-end"><h3>10. Kết thúc ván</h3><ul>
+<section id="g-end"><h3>10. Kết thúc ván</h3>${ill(['sheriff', 'outlaw', 'renegade'].map(r => [`<div class="pcard role" style="--w:80px"><div class="art">${imgTag(r)}</div><div class="cname">${ROLES[r].name}</div></div>`, r === 'sheriff' ? 'Phe Cảnh sát' : r === 'outlaw' ? 'Tội phạm' : 'Kẻ hai mặt']))}<ul>
 <li><b>Phe Cảnh sát thắng</b> khi tất cả Tội phạm và Kẻ hai mặt bị loại.</li>
 <li><b>Tội phạm thắng</b> khi Cảnh sát trưởng bị loại.</li>
 <li><b>Kẻ hai mặt thắng</b> khi chỉ còn mình hắn sống sót.</li></ul></section>

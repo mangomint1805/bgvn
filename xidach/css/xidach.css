@@ -1,3 +1,4 @@
+@import url("../../shared/ui/deck/deck.css?v=1");
 :root{
   --bg:#fff6ec;--ink:#2a2140;--muted:#776e8c;--panel:#ffffffee;--line:#efe3d6;
   --acc:#7b5cff;--red:#e63946;--blk:#1f1b2e;--gold:#ffb703;--ok:#12a66a;--bad:#e5484d;
@@ -78,24 +79,10 @@ input:focus{border-color:var(--acc)}
 .wait{text-align:center;color:var(--muted)}
 
 /* ---------- lá bài ---------- */
-.pc{--w:var(--cw);width:var(--w);height:calc(var(--w)*1.4);border-radius:calc(var(--w)*.12);background:#fff;position:relative;flex:none;
-  box-shadow:0 3px 8px -3px #0005,inset 0 0 0 1.5px #e7e1ef;font-size:calc(var(--w)*.3);font-family:"Baloo 2",sans-serif;font-weight:800;user-select:none}
-.pc.red{color:var(--red)}.pc.blk{color:var(--blk)}
-.pc .ix{position:absolute;left:7%;top:3%;line-height:.92;text-align:center;font-size:1em;display:flex;flex-direction:column;align-items:center}
-.pc .ix i{font-style:normal;font-size:.8em;line-height:1}
-.pc .ix.br{left:auto;top:auto;right:7%;bottom:3%;transform:rotate(180deg)}
-.pc .pip{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);font-size:1.7em;line-height:1}
-.pc .pip.ace{font-size:2.3em}
-.pc .face{position:absolute;inset:22% 20%;border-radius:.25em;border:1.5px solid currentColor;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(160deg,#fff7e6,#ffe9f0);line-height:1}
-.pc .face b{font-size:.95em}.pc .face em{font-style:normal;font-size:.9em}
-.pc.back{background:#5b3fd1;box-shadow:0 3px 8px -3px #0006,inset 0 0 0 2px #fff;overflow:hidden}
-.pc.back::before{content:"";position:absolute;inset:7%;border-radius:calc(var(--w)*.08);border:1.5px solid #ffffff99;
-  background:repeating-linear-gradient(45deg,#ff6b8b 0 5px,transparent 5px 10px),repeating-linear-gradient(-45deg,#ffb70355 0 5px,transparent 5px 10px),linear-gradient(135deg,#7b5cff,#ff5d73)}
-.pc.back i{position:absolute;left:50%;top:50%;width:46%;aspect-ratio:1;transform:translate(-50%,-50%) rotate(45deg);background:#fff;border-radius:22%;box-shadow:0 0 0 2px #5b3fd1}
-.pc.back i::after{content:"BG";position:absolute;inset:0;display:grid;place-items:center;transform:rotate(-45deg);color:#5b3fd1;font-size:calc(var(--w)*.17);font-weight:800;letter-spacing:-.5px}
+/* lá bài: mặt/lưng vẽ bằng bộ bài SVG chung (shared/ui/deck) – ở đây chỉ kích thước, bo góc, bóng */
+.pc{--w:var(--cw);width:var(--w);height:calc(var(--w)*1.4);border-radius:calc(var(--w)*.09);position:relative;flex:none;
+  box-shadow:0 3px 8px -3px #0005;user-select:none;-webkit-user-select:none;overflow:hidden}
 .pc.mini{--w:30px}
-.pc.mini .pip{font-size:1.5em}.pc.mini .face{inset:30% 14% 14%;border-width:1px}.pc.mini .face em{display:none}
-.pc.mini .ix.br{display:none}
 .pc.flip{animation:flip .45s ease-out}
 @keyframes flip{0%{transform:rotateY(90deg) scale(.9)}100%{transform:none}}
 

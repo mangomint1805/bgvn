@@ -1,7 +1,7 @@
 // Cờ Tỷ Phú Sài Gòn – giao diện: trang chủ, tạo nhân vật, sảnh, ván chơi 3D, hoạt ảnh sự kiện.
 import { hintsAllowed, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
-import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=50';
+import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=51';
 import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.js?v=2';
 import {
   setData, TILES, GROUPS, GROUP_LIST, STATION_RENT, money, rentOf, canBuild, canSell, canMortgage, canUnmortgage, houseCost, mortgageValue,
@@ -9,8 +9,8 @@ import {
   tradeImpact, tradeSideValue, planRaise, raiseSummary,
 } from './engine.js?v=49';
 import { Board3D, THEMES } from './scene3d.js?v=49';
-import * as fx from './fx.js?v=49';
-import { guideHTML } from './guide.js?v=49';
+import * as fx from './fx.js?v=50';
+import { guideHTML } from './guide.js?v=50';
 import { OPTIONS, PRESETS, buildAvatar, portrait } from '../../shared/js/avatar3d.js';
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
@@ -33,7 +33,7 @@ const fontsReady = Promise.race([
 ]);
 
 // ---------- tiện ích giao diện ----------
-function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
+function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') fx.musicMood('lobby'); syncMusicBtns(); }
 let toastT; function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 // nút bấm có hàm xử lý, tách theo vùng (panel / modal / lobby) để vẽ lại vùng này không làm hỏng vùng kia
 const fns = { panel: [], modal: [], lobby: [] };
@@ -145,7 +145,7 @@ $('#btn-avatar-lobby').onclick = editMine;
 function openSettings() {
   const seg = (k, list, fn) => `<div class="seg">${list.map(([v, n]) => `<button class="${settings[k] === v ? 'on' : ''}" ${fnAttr('modal', () => { settings[k] = v; fx.saveSettings(); fn && fn(v); openSettings(); })}>${n}</button>`).join('')}</div>`;
   openModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>⚙️ Cài đặt</h2>
-    <div class="set-row"><b>🎵 Nhạc nền</b><div class="seg"><button class="${settings.musicOn ? 'on' : ''}" ${fnAttr('modal', () => { fx.musicToggle(!settings.musicOn); openSettings(); })}>${settings.musicOn ? 'Đang bật' : 'Đang tắt'}</button></div>
+    <div class="set-row"><b>🎵 Nhạc nền</b><div class="seg"><button class="${settings.musicOn ? 'on' : ''}" ${fnAttr('modal', () => { fx.musicToggle(!settings.musicOn); syncMusicBtns(); openSettings(); })}>${settings.musicOn ? 'Đang bật' : 'Đang tắt'}</button></div>
       <input type="range" min="0" max="1" step="0.05" value="${settings.music}" id="vol-music" aria-label="Âm lượng nhạc"></div>
     <div class="set-row"><b>🔊 Hiệu ứng âm thanh</b><input type="range" min="0" max="1" step="0.05" value="${settings.sfx}" id="vol-sfx" aria-label="Âm lượng hiệu ứng"></div>
     <div class="set-row"><b>✨ Hiệu ứng hình ảnh</b>${seg('effects', [[true, 'Bật'], [false, 'Tắt']], v => B && B.setEffects(v))}</div>
@@ -160,6 +160,11 @@ function openSettings() {
   $('#vol-sfx').onchange = () => fx.sfx.cash();
 }
 $('#btn-settings').onclick = $('#btn-settings-home').onclick = openSettings;
+// nút 🎵 nhanh (trang chủ + trong ván)
+function syncMusicBtns() { const on = fx.musicIsOn(); for (const b of $$('.btn-music')) { b.classList.toggle('on', on); b.classList.toggle('off', !on); b.style.opacity = on ? '' : '.55'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.title = on ? 'Nhạc nền: đang bật (bấm để tắt)' : 'Nhạc nền: đang tắt (bấm để bật)'; } const h = $('#btn-music-home'); if (h) h.textContent = on ? '🎵 Nhạc: bật' : '🔇 Nhạc: tắt'; }
+for (const b of $$('.btn-music')) b.onclick = () => { fx.actx(); fx.musicToggle(); syncMusicBtns(); if (fx.sfx.click) fx.sfx.click(); };
+syncMusicBtns();
+
 const openGuide = () => openModal(guideHTML(), 'wide', 'guide');
 // 📝 Có gì mới (patch notes dùng chung)
 function news() { openNews('typhu'); $$('.bgvn-dot').forEach(b => b.classList.toggle('bgvn-dot', false)); }
@@ -505,7 +510,10 @@ function flashPc(id) { const el = pcEl(id); if (!el) return; el.classList.remove
 
 // ---------- thanh trên + người chơi ----------
 function renderTop() {
-  const v = shown; $('#round-tag').textContent = `Vòng ${v.round}${v.opts.maxRounds ? '/' + v.opts.maxRounds : ''}`;
+  const v = shown;
+  // nhạc: đang chơi / gay cấn (có người mắc nợ, sắp phá sản hoặc vòng cuối) / hết ván
+  fx.musicMood(v.phase === 'over' ? 'lobby' : v.stage === 'debt' || v.debt || v.players.some(p => !p.out && p.cash < 0) || (v.opts.maxRounds && v.round >= v.opts.maxRounds) ? 'tense' : 'game');
+  $('#round-tag').textContent = `Vòng ${v.round}${v.opts.maxRounds ? '/' + v.opts.maxRounds : ''}`;
 }
 setInterval(() => {
   const el = $('#timer'); const v = shown;
@@ -1015,6 +1023,7 @@ reacts.setVisible(false);
 function showWin(v) {
   const w = P(v, v.winner);
   if (w) { B.celebrate(w.id); fx.sfx.win(); fx.confetti(160); }
+  fx.musicStinger(w && isMine(w.id) ? 'win' : 'lose'); if (!(w && isMine(w.id))) setTimeout(() => fx.sfx.lose(), 600);
   const why = { last: 'là người cuối cùng trụ lại 💪', groups: 'sở hữu trọn 3 nhóm màu 🏘️', stations: 'gom đủ cả 4 bến xe 🚌', rounds: 'giàu nhất khi hết giới hạn vòng 💰' }[v.winReason] || '';
   setTimeout(() => {
     if (!shown || shown.phase !== 'over') return;

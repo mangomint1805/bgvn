@@ -1,22 +1,32 @@
 // Hướng dẫn chơi Xì dách (tiếng Việt, có ví dụ). Nội dung lấy theo tuỳ chọn bàn hiện tại nếu có.
-import { row } from './cards.js?v=1';
+import { row } from './cards.js?v=2';
 import { DEFAULT_OPTS } from './engine.js?v=1';
+import { gp } from '../../shared/ui/guidepics.js?v=1';
+import { GI, GV } from './guide-img.js?v=1';
 const H = (...cs) => `<span class="g-hand">${row(...cs)}</span>`;
 
 export function openGuide(openModal, opts = DEFAULT_OPTS) {
-  const o = { ...DEFAULT_OPTS, ...(opts || {}) };
+  const o = { ...DEFAULT_OPTS, ...(opts || {}) }; const P = gp(GI, GV);
   const tabs = {
     basic: ['🃏 Cơ bản', `
       <p class="g-free">💛 <b>Chỉ chơi vui bằng chip ảo.</b> Chip không nạp, không rút, không đổi ra tiền hay quà gì hết. Hết chip thì bấm <b>🥺 Xin mẹ thêm chip</b> là có lại vốn.</p>
+      ${P.quick([
+        ['q-home', 'Trang chủ Xì dách: ô tên, nút Chơi với bot, Tạo phòng online', '① Nhập tên → ② <b>Chơi với bot</b>, hoặc ③ <b>Tạo phòng online</b> rồi gửi mã cho hội bạn.'],
+        ['q-lobby', 'Phòng chờ: danh sách người chơi, nút Thêm bot, nút Vào bàn', '① Thêm bot (chọn ai làm cái, vốn, cược… ngay bên dưới) → ② <b>Vào bàn</b>.'],
+        ['bet', 'Đặt cược: hàng đồng chip, ô tổng cược, nút Chốt cược', '① Bấm đồng chip để cộng tiền cược → ② xem tổng → ③ <b>Chốt cược</b>.'],
+        ['turn', 'Tới lượt: bài nhà cái úp, 2 lá của bạn được 20 điểm, nút Rút và Dằn', '① Nhà cái (bài úp). ② Bài của bạn, ③ điểm tự tính. ④ <b>Rút</b> thêm lá hoặc ⑤ <b>Dằn</b> để dừng.'],
+      ])}
       <h3>Mục tiêu</h3><p>Mỗi người chơi đấu riêng với <b>nhà cái 👑</b>: ai có bài <b>gần 21 điểm hơn</b> (mà không quá 21) thì thắng. Người chơi không đấu với nhau.</p>
       <h3>Một ván diễn ra thế nào?</h3><ol>
-        <li><b>Đặt cược</b>: mọi người (trừ nhà cái) bấm các đồng chip để chọn mức cược (${o.minBet}–${o.maxBet ? o.maxBet : 'tất tay'} chip) rồi bấm <b>Chốt cược</b>.</li>
+        <li>${P.fig('bet', 'Hàng đồng chip 10, 50, 100, 200 và nút Chốt cược', '')}<b>Đặt cược</b>: mọi người (trừ nhà cái) bấm các đồng chip để chọn mức cược (${o.minBet}–${o.maxBet ? o.maxBet : 'tất tay'} chip) rồi bấm <b>Chốt cược</b>.</li>
         <li><b>Chia bài</b>: mỗi người 2 lá úp. Ai có <b>Xì bàn</b> hoặc <b>Xì dách</b> thì lật ngay (xem tab Bài đặc biệt).</li>
         <li><b>Rút / Dằn</b>: lần lượt từng người (bắt đầu từ bên trái nhà cái). Bấm <b>Rút</b> để lấy thêm lá, <b>Dằn</b> để dừng. Tối đa <b>5 lá</b>.</li>
         <li><b>Nhà cái rút & xét bài</b>: nhà cái rút tới khi đủ <b>${o.caiMin} điểm</b>, rồi lật (xét) từng người hoặc xét hết cả bàn.</li>
         <li><b>Tính chip</b>: thắng thì nhà cái trả, thua thì trả cho nhà cái. Xong ván, nhà cái ${o.caiMode === 'rotate' ? 'xoay sang người kế tiếp' : o.caiMode === 'xidach' ? 'đổi sang người có xì dách (nếu có)' : 'giữ nguyên'}.</li></ol>
+      ${P.fig('turn', 'Lượt rút: điểm hiện to cạnh bài, nút Rút và Dằn', 'Số to cạnh bài là điểm hiện tại, kèm chữ “đủ tuổi” hay “non”.')}
       <h3>Đủ tuổi & Non</h3><p>Người chơi phải có ít nhất <b>${o.minPts} điểm</b> mới được Dằn ("đủ tuổi"). Dưới ${o.minPts} gọi là <b>non</b> 🍼 – ${o.allowNon ? 'bàn này cho phép dằn non, nhưng lật ra là <b>thua chắc</b> (kể cả khi nhà cái quắc).' : 'nút Dằn bị khoá, phải rút tiếp.'}</p>
-      <h3>Quắc 💥</h3><p>Quá 21 điểm là <b>quắc</b> (cháy). Bị quắc thì tự hết lượt, bài vẫn úp – không ai biết cho tới lúc nhà cái xét. Cầu cho nhà cái quắc theo 🙏 (cùng quắc thì ${o.bothBust === 'hoa' ? '<b>hoà</b>' : '<b>nhà cái vẫn ăn</b>'}).</p>`],
+      <div class="g-ex">${H(['9', 'S'], ['5', 'H'])}<span>14 điểm: <b>non 🍼</b> – chưa đủ ${o.minPts}, phải rút tiếp</span></div>
+      <h3>Quắc 💥</h3><div class="g-ex">${H(['K', 'C'], ['8', 'H'], ['6', 'D'])}<span>10 + 8 + 6 = <b>24 → quắc 💥</b></span></div><p>Quá 21 điểm là <b>quắc</b> (cháy). Bị quắc thì tự hết lượt, bài vẫn úp – không ai biết cho tới lúc nhà cái xét. Cầu cho nhà cái quắc theo 🙏 (cùng quắc thì ${o.bothBust === 'hoa' ? '<b>hoà</b>' : '<b>nhà cái vẫn ăn</b>'}).</p>`],
     points: ['🔢 Tính điểm', `
       <h3>Giá trị lá bài</h3><ul>
         <li>Lá <b>2 – 10</b>: đúng số trên lá.</li>
@@ -49,12 +59,13 @@ export function openGuide(openModal, opts = DEFAULT_OPTS) {
       <h3>Mẹo hay: xét sớm 👀</h3><p>Đủ ${o.caiMin} điểm rồi, nhà cái có thể bấm <b>Xét</b> trên ghế <b>từng người</b> – lật riêng người đó và tính tiền theo bài hiện tại của nhà cái – rồi <b>rút tiếp</b> để đấu với những người còn lại. Bấm <b>Xét hết</b> để lật cả bàn.</p>
       <div class="g-ex"><span class="g-hand">${row(['9', 'C'], ['6', 'D'])}</span><span>Ví dụ: nhà cái 15 điểm. Tiến đã rút tới 4 lá (dễ quắc) → xét Tiến trước${o.bothBust === 'hoa' ? ' (nếu Tiến quắc thì ăn chắc, đỡ bị hoà khi lỡ mình quắc sau)' : ''}. Tuni dằn ngay với 2 lá (chắc ≥ 16) → nhà cái 15 thì thua chắc, nên <b>rút thêm</b> rồi mới xét Tuni.</span></div>
       <p>Đã xét ai thì kết quả người đó <b>giữ nguyên</b>, nhà cái rút thêm hay quắc sau cũng không đổi.</p>
-      <h3>Ai làm cái?</h3><ul>
+      <h3>Ai làm cái?</h3>${P.fig('cai', 'Lựa chọn Ai làm cái trong phòng chờ, đang chọn Bot làm cái', 'Chủ phòng chọn trong phòng chờ (ở đây: 🤖 Bot làm cái).')}<ul>
         <li><b>🔄 Xoay vòng</b>: mỗi ván chuyển sang người kế tiếp.</li>
         <li><b>📌 Cố định</b>: chủ phòng chọn 1 người làm cái suốt.</li>
         <li><b>🤖 Bot làm cái</b>: 1 bot ngồi cái, ai cũng được làm "con".</li>
         <li><b>🃏 Ai xì dách thì làm cái</b>: ván nào có người xì bàn/xì dách (mà nhà cái không có) thì ván sau người đó lên cái.</li></ul>`],
     pay: ['🪙 Ăn thua & ví dụ', `
+      <div class="g-ex">${H(['A', 'D'], ['K', 'S'])}<span>vs</span>${H(['10', 'C'], ['9', 'H'])}<span>Bạn <b>xì dách</b>, nhà cái 19 → bạn ăn <b>×${o.mXiDach}</b> tiền cược</span></div>
       <h3>Tính chip</h3><p>Thắng: nhận <b>tiền cược × hệ số</b> từ nhà cái. Thua: trả nhà cái <b>tiền cược × hệ số</b>. Hoà: giữ nguyên. Hệ số lấy theo bài của <b>bên thắng</b>:</p>
       <table class="g-tbl"><tr><th>Bài thắng</th><th>Hệ số bàn này</th></tr><tr><td>Xì bàn</td><td>×${o.mXiBan}</td></tr><tr><td>Xì dách</td><td>×${o.mXiDach}</td></tr><tr><td>Ngũ linh</td><td>×${o.mNguLinh}</td></tr><tr><td>Bài thường / nhà cái quắc</td><td>×1</td></tr></table>
       <h3>Ví dụ (cược 50 chip)</h3><ul>

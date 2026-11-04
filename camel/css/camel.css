@@ -241,3 +241,6 @@ input:focus{border-color:var(--acc)}
 @media (orientation:landscape) and (min-width:900px),(orientation:landscape) and (max-height:560px){.game-body{grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"players view" "act view" ". view"}}
 @media (max-width:430px){.turn-tag{min-width:68px}.timer{padding:4px 8px;font-size:13px}}
 .leg-tag .nr{display:none}@media (max-width:430px){.leg-tag .wd{display:none}.leg-tag .nr{display:inline}}
+
+/* nút 🎵 nhanh trong ván: máy rất hẹp thì ẩn để nhãn lượt không bị cắt (vẫn bật/tắt được trong ⚙️ Cài đặt) */
+@media (max-width:380px){.tools .btn-music{display:none}}

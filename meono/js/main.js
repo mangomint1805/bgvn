@@ -5,8 +5,8 @@ import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat, awards } from './engine.js?v=7';
 import { cardHTML, catSVG, bombSVG, cardIcon, mascotSVG, tint } from './cards.js?v=7';
-import * as fx from './mfx.js?v=7';
-import { openGuide } from './guide.js?v=8';
+import * as fx from './mfx.js?v=8';
+import { openGuide } from './guide.js?v=9';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=4';
 setSpeedFn(fx.S);
 
@@ -30,7 +30,7 @@ const avColor = name => { let h = 0; for (const ch of name) h = (h * 31 + ch.cha
 const clean = n => String(n).replace(' 🤖', '').trim();
 const furOf = id => tint(avColor(clean((view && view.players.find(p => p.id === id) || {}).name || '?')), 0.5); // màu lông mèo theo người chơi
 const avatar = (name, extra = '') => `<div class="av" style="background:${avColor(clean(name))}"><i class="ears"></i><b>${esc([...clean(name)][0] || '?').toUpperCase()}</b>${extra}</div>`;
-function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
+function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') fx.musicMood('lobby'); }
 let toastT;
 function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 function openModal(html, cls = '', key = null) { $('#modal-box').className = 'modal-box ' + cls; $('#modal-box').innerHTML = html; $('#modal').classList.add('open'); modalKey = key; }
@@ -194,7 +194,7 @@ function onState(v) {
   if (evs.some(e => e.k === 'bomb' && e.by === myId)) holdUntil = Date.now() + 1500 * fx.S();
   render();
   playEvents(evs, prev);
-  fx.setTension(Math.min(1, risk(v) * 2.4 + (isMyTurn() ? 0.12 : 0)));
+  if (v.phase === 'ended') fx.musicMood('lobby'); else { if (fx.musicMood() === 'lobby') fx.musicMood('game'); fx.setTension(Math.min(1, risk(v) * 2.4 + (isMyTurn() ? 0.12 : 0))); }
 }
 
 // ---------- vẽ bàn ----------
@@ -550,7 +550,7 @@ function playEvents(evs, prev) {
         if (e.by === myId) { fx.sfx.turn(); fx.pop($('#hand'), 'pulse'); if (e.turns > 1) fx.banner(`😬 Bạn phải đi ${e.turns} lượt!`, 'attack'); }
         else if (e.turns > 1) fx.floatText(seatEl(e.by), `×${e.turns}`, 'bad');
       }); break;
-      case 'win': setTimeout(() => { fx.confetti(); fx.sfx.win(); }, at + 600 * S); break;
+      case 'win': setTimeout(() => { fx.confetti(); fx.sfx.win(); fx.musicStinger(view && view.winner === myId ? 'win' : 'lose'); }, at + 600 * S); break;
     }
   }
   void prev;
