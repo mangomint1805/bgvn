@@ -9,6 +9,7 @@ import { roleCardSVG, cardBackSVG, roleChip, roleDot, bambooSVG, dinhSVG, hillsS
 import * as fx from './fx.js?v=4';
 import { openGuide } from './guide.js?v=5';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=4';
+import { syncPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -42,7 +43,7 @@ const clean = n => String(n).replace(' 🤖', '').trim();
 const avatar = (name, isBot) => `<div class="av" style="--c:${avColor(clean(name))}"><b>${esc([...clean(name)][0] || '?').toUpperCase()}</b>${isBot ? '<span class="bot">🤖</span>' : ''}</div>`;
 const pl = id => view && view.players.find(p => p.id === id);
 const pname = id => { const p = pl(id); return p ? clean(p.name) : '?'; };
-function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); }
+function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') endPick(); }
 let toastT;
 function toast(m, ms = 2800) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms); }
 let modalKey = null;
@@ -427,6 +428,27 @@ function renderSeats() {
     return `<button class="${cls}" data-pid="${p.id}"${style} ${can ? '' : 'tabindex="-1"'} aria-label="${esc(clean(p.name))}${p.alive ? '' : ' (đã chết)'}">${avatar(p.name, false)}<span class="nm">${esc(clean(p.name))}</span><span class="sub">${esc(sub)}</span>${b.join('')}</button>`;
   }).join('');
   $$('#seats .seat').forEach(el => el.onclick = () => seatClick(el.dataset.pid));
+  syncSeatPick(v, mode);
+}
+// chọn ngay trên vòng ghế (dùng chung với các game khác): ghế chọn được sáng + 🎯, ghế không chọn được mờ kèm lý do
+// (thanh hành động bên dưới đã nói đang chọn gì + nút Bỏ qua, nên không hiện thanh nhắc riêng)
+function whyNot(mode, p) {
+  const v = view;
+  if (mode === 'medium') return v.me.seen && p.id in v.me.seen ? 'đã gọi hồn' : '';
+  if (mode === 'guard' && p.id === v.lastGuard) return 'đã che đêm qua';
+  if (mode === 'wolves') { const m = v.me; return m && p.role && isWolfRole(p.role) ? 'đồng bọn' : 'không cắn được'; }
+  if (mode === 'vote') return 'không lên giàn';
+  return '';
+}
+function syncSeatPick(v, mode) {
+  if (!mode || !v.players.some(p => canPick(mode, p))) { if (pickActive()) endPick(); return; }
+  syncPick({
+    key: 'ms-' + mode + '-' + (v.day || 0) + '-' + (v.phase || ''), root: $('#seats'), seat: id => $(`#seats .seat[data-pid="${id}"]`), glow: '.av', keep: true, banner: false, cancelable: false,
+    items: v.players.filter(p => mode === 'medium' ? !p.alive : p.alive).filter(p => canPick(mode, p) || p.id !== myId).map(p => {
+      const ok = canPick(mode, p); return { id: p.id, name: clean(p.name), ok, sel: ok && $(`#seats .seat[data-pid="${p.id}"]`)?.classList.contains('sel'), reason: ok ? '' : whyNot(mode, p) };
+    }),
+    onPick: id => seatClick(id),
+  });
 }
 function seatClick(pid) {
   const v = view, mode = pickMode(), p = pl(pid);

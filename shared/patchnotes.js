@@ -6,6 +6,9 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài',
 };
 export const NOTES = [
+  { id: '20261105-05', date: '05/11/2026', game: 'all', title: 'Chọn đối thủ ngay trên bàn', items: [
+    '🎯 Mèo Nổ, UNO, BANG!, Tam Quốc Sát, Ma Sói: tới lúc chọn người thì ghế chọn được sáng lên có 🎯, chạm thẳng vào ghế là xong – ghế không chọn được mờ đi kèm lý do (hết bài, ngoài tầm…). Có nút ✕ Huỷ, phím Esc.',
+  ] },
   { id: '20261105-04', date: '05/11/2026', game: 'meono', title: 'Sửa con dấu ĐÉO! mất dấu', items: [
     '🔧 Con dấu ĐÉO! giữa bàn hiện đủ dấu tiếng Việt (HUỶ!, CỨU LẠI!), vân mực nhẹ hơn cho dễ đọc.',
   ] },

@@ -3,6 +3,7 @@ import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=6';
+import { startPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 import { MODES, COLOR_NAME, cardText, DRAW_VALUE, CARD_NAME, MATCH_TARGETS } from './engine.js?v=19';
 import * as fx from './ufx.js?v=20';
 import { openGuide, CARD_HELP, NEW_TYPES } from './guide.js?v=20';
@@ -35,7 +36,7 @@ const avatar = name => `<div class="av" style="background:${avColor(name)}">${es
 const COL_HEX = { R: '#ff4d5e', Y: '#ffc23d', G: '#2fc76f', B: '#3d8bff' };
 
 // ---------- màn hình ----------
-function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') fx.musicMood('lobby'); }
+function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') { fx.musicMood('lobby'); endPick(); } }
 let toastT;
 function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 function openModal(html, cls = '', key = null) { $('#modal-box').className = 'modal-box ' + cls; $('#modal-box').innerHTML = html; $('#modal').classList.add('open'); modalKey = key; }
@@ -51,7 +52,7 @@ $('#hero-cards').innerHTML = hero.map((c, i) => cardHTML(c, '', `style="transfor
 function myName() { const n = $('#name').value.trim() || 'Bạn'; ls.set('bgvn-name', n); return n; }
 const handlers = {
   onLobby(info, code, started) { lobby = info; $('#room-code').textContent = code; if (!started) { view = null; prevView = null; renderLobby(); if (!$('#screen-lobby').classList.contains('active')) show('screen-lobby'); } },
-  onState(v) { afkEnd = v && v.timer ? Date.now() + v.timer.ms : 0; afkPid = v && v.timer ? v.timer.pid : null; if (!v) { view = null; closeModal(); show('screen-lobby'); renderLobby(); return; } prevView = view; view = v; if (!$('#screen-game').classList.contains('active')) { show('screen-game'); prevView = null; } render(); animate(prevView, view); },
+  onState(v) { afkEnd = v && v.timer ? Date.now() + v.timer.ms : 0; afkPid = v && v.timer ? v.timer.pid : null; if (!v) { view = null; closeModal(); endPick(); show('screen-lobby'); renderLobby(); return; } prevView = view; view = v; if (!$('#screen-game').classList.contains('active')) { show('screen-game'); prevView = null; } render(); animate(prevView, view); },
   onError(m) { toast(m); fx.sfx.bad(); },
   onJoined(id) { myId = id; },
   onDisconnect() {},
@@ -186,7 +187,22 @@ function pickColor(title, cb) {
   $$('.color-pick [data-c]').forEach(b => b.onclick = () => { closeModal(); cb(b.dataset.c); });
 }
 
-function pickTarget(title, cb, key = null, minCards = 0) {
+// chọn đối thủ ngay trên bàn (ghế sáng lên + 🎯); không thấy ghế mới mở danh sách cũ
+const TAP = { steal: '🫳 Chạm vào người muốn <b>móc túi</b>', gift: '🎁 Chạm vào người muốn <b>tặng quà</b>', wswap: '🤝 Chạm vào người muốn <b>đổi tay</b>', wtd4: '🎯 Chạm vào người bị <b>nhắm rút 4 lá</b>', swap: '🔄 Chạm vào người muốn <b>đổi bài</b>' };
+function pickTarget(title, cb, key = null, minCards = 0, act = 'wtd4', cardId = null) {
+  const elig = () => view.players.filter(p => !p.out && p.id !== myId);
+  const any = () => elig().some(p => p.handCount >= minCards);
+  const pk = key ? 'pend-' + key : 'play-' + act + '-' + cardId;
+  startPick({
+    key: pk, root: $('#opps'), seat: id => $(`#opps .seat[data-pid="${id}"]`), glow: '.plate', title: TAP[act] || title, anchor: () => $('#hint'),
+    items: () => elig().map(p => { const ok = p.handCount >= minCards || !any(); return { id: p.id, name: p.name.replace(' 🤖', ''), ok, reason: ok ? '' : `chỉ còn ${p.handCount} lá` }; }),
+    valid: () => key ? !!(view && view.phase === 'playing' && view.pending && view.pending.player === myId) : !!(isMyTurn() && cardId && (me().hand || []).some(c => c.id === cardId)),
+    cancelable: !key, onCancel: () => render(),
+    onPick: t => { fx.sfx.flip && fx.sfx.flip(); cb(t); },
+    fallback: () => listTarget(title, cb, key, minCards),
+  });
+}
+function listTarget(title, cb, key = null, minCards = 0) {
   const others = view.players.filter(p => !p.out && p.id !== myId && (p.handCount >= minCards || view.players.filter(q => !q.out && q.id !== myId && q.handCount >= minCards).length === 0));
   openModal(`<h2>${title}</h2><div class="target-list">${others.map(p => `<button data-t="${p.id}">${avatar(p.name)}${esc(p.name)}<span class="n">${p.handCount} lá</span></button>`).join('')}</div>${key ? '' : '<div class="win"><div class="btns"><button class="btn" onclick="__closeModal()">Huỷ</button></div></div>'}`, '', key);
   $$('.target-list [data-t]').forEach(b => b.onclick = () => { closeModal(); cb(b.dataset.t); });
@@ -341,10 +357,10 @@ function onCardClick(id) {
   const v = view; if (!isMyTurn()) { toast('Chưa tới lượt bạn 😤'); return; }
   const c = me().hand.find(x => x.id === id); if (!c) return;
   if (!v.playable.includes(id)) { fx.sfx.bad(); fx.shake($(`#hand [data-id="${id}"]`)); toast(v.rules.noActionFinish && (me().hand.length === 1 || (c.type === 'discall' && me().hand.every(x => x.color === c.color))) && c.type !== 'n' ? 'Không được về bằng lá chức năng – lá cuối phải là lá số!' : v.stack ? (v.rules.stackAny ? 'Đang bị dồn: chỉ chồng được lá +2/+4' : `Phải chồng lá rút ≥ +${v.stack.last}`) : v.mustPlay ? 'Chỉ được đánh lá vừa rút' : 'Lá này không hợp màu/số'); return; }
-  if (c.type === 'wtd4') { pickColor('🎯 Cộng nhắm +4 – chọn màu tiếp theo', Object.assign(col => pickTarget('🎯 Nhắm ai rút 4 lá?', t => send({ type: 'play', cardId: id, color: col, target: t })), { cancel: true })); return; }
-  if (c.type === 'wswap') { pickColor('🤝 Đổi tay – chọn màu tiếp theo', Object.assign(col => pickTarget('🤝 Đổi nguyên tay bài với ai?', t => send({ type: 'play', cardId: id, color: col, target: t })), { cancel: true })); return; }
-  if (c.type === 'steal') { pickTarget('🫳 Móc túi ai? (lấy ngẫu nhiên 1 lá)', t => send({ type: 'play', cardId: id, target: t }), null, 2); return; }
-  if (c.type === 'gift') { pickTarget('🎁 Tặng quà cho ai?', t => pickGift(id, gs => send({ type: 'play', cardId: id, target: t, give: gs }))); return; }
+  if (c.type === 'wtd4') { pickColor('🎯 Cộng nhắm +4 – chọn màu tiếp theo', Object.assign(col => pickTarget('🎯 Nhắm ai rút 4 lá?', t => send({ type: 'play', cardId: id, color: col, target: t }), null, 0, 'wtd4', id), { cancel: true })); return; }
+  if (c.type === 'wswap') { pickColor('🤝 Đổi tay – chọn màu tiếp theo', Object.assign(col => pickTarget('🤝 Đổi nguyên tay bài với ai?', t => send({ type: 'play', cardId: id, color: col, target: t }), null, 0, 'wswap', id), { cancel: true })); return; }
+  if (c.type === 'steal') { pickTarget('🫳 Móc túi ai? (lấy ngẫu nhiên 1 lá)', t => send({ type: 'play', cardId: id, target: t }), null, 2, 'steal', id); return; }
+  if (c.type === 'gift') { pickTarget('🎁 Tặng quà cho ai?', t => pickGift(id, gs => send({ type: 'play', cardId: id, target: t, give: gs })), null, 0, 'gift', id); return; }
   if (c.type === 'dq') { send({ type: 'play', cardId: id }); return; }
   if (c.color === 'W') { pickColor('Chọn màu tiếp theo', Object.assign(col => send({ type: 'play', cardId: id, color: col }), { cancel: true })); return; }
   send({ type: 'play', cardId: id });
@@ -364,17 +380,14 @@ function pickGift(giftId, cb) {
 }
 function handlePending(v) {
   const pr = v.pending;
-  if (!pr || pr.player !== myId || v.phase !== 'playing') { if (modalKey && modalKey.startsWith('pend')) closeModal(); return; }
+  if (!pr || pr.player !== myId || v.phase !== 'playing') { if (modalKey && modalKey.startsWith('pend')) closeModal(); if (pickActive('pend-*')) endPick(); return; }
   const key = 'pend-' + pr.type + v.logN;
   if (modalKey && modalKey.startsWith('pend')) return;
+  if (pickActive('pend-*')) return;
   if (pr.type === 'color') pickColor('Chọn màu tiếp theo', Object.assign(col => send({ type: 'color', color: col }), { key }));
   else if (pr.type === 'roulette') pickColor('🎡 Vòng quay màu! Chọn 1 màu – bạn sẽ lật bài tới khi ra màu đó', Object.assign(col => send({ type: 'color', color: col }), { key }));
-  else if (pr.type === 'target') pickTarget({ steal: '🫳 Móc túi ai?', gift: '🎁 Tặng quà cho ai?', wswap: '🤝 Đổi tay với ai?' }[pr.card] || '🎯 Nhắm ai rút 4 lá?', t => send({ type: 'target', target: t }), key, pr.card === 'steal' ? 2 : 0);
-  else if (pr.type === 'swap') {
-    const others = v.players.filter(p => !p.out && p.id !== myId);
-    openModal(`<h2>🔄 Đổi bài với ai?</h2><div class="target-list">${others.map(p => `<button data-t="${p.id}">${avatar(p.name)}${esc(p.name)}<span class="n">${p.handCount} lá</span></button>`).join('')}</div>`, '', key);
-    $$('.target-list [data-t]').forEach(b => b.onclick = () => { closeModal(); send({ type: 'swap', target: b.dataset.t }); });
-  }
+  else if (pr.type === 'target') pickTarget({ steal: '🫳 Móc túi ai?', gift: '🎁 Tặng quà cho ai?', wswap: '🤝 Đổi tay với ai?' }[pr.card] || '🎯 Nhắm ai rút 4 lá?', t => send({ type: 'target', target: t }), key, pr.card === 'steal' ? 2 : 0, pr.card in TAP ? pr.card : 'wtd4');
+  else if (pr.type === 'swap') pickTarget('🔄 Đổi bài với ai?', t => send({ type: 'swap', target: t }), key, 0, 'swap');
 }
 function showWin(v) {
   if (modalKey === 'win') return;

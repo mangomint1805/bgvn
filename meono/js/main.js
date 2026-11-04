@@ -8,6 +8,7 @@ import { cardHTML, catSVG, bombSVG, cardIcon, mascotSVG, tint } from './cards.js
 import * as fx from './mfx.js?v=8';
 import { openGuide } from './guide.js?v=9';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=4';
+import { startPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 setSpeedFn(fx.S);
 
 const $ = s => document.querySelector(s);
@@ -30,7 +31,7 @@ const avColor = name => { let h = 0; for (const ch of name) h = (h * 31 + ch.cha
 const clean = n => String(n).replace(' 🤖', '').trim();
 const furOf = id => tint(avColor(clean((view && view.players.find(p => p.id === id) || {}).name || '?')), 0.5); // màu lông mèo theo người chơi
 const avatar = (name, extra = '') => `<div class="av" style="background:${avColor(clean(name))}"><i class="ears"></i><b>${esc([...clean(name)][0] || '?').toUpperCase()}</b>${extra}</div>`;
-function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') fx.musicMood('lobby'); }
+function show(id) { $$('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') { fx.musicMood('lobby'); endPick(); } }
 let toastT;
 function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 function openModal(html, cls = '', key = null) { $('#modal-box').className = 'modal-box ' + cls; $('#modal-box').innerHTML = html; $('#modal').classList.add('open'); modalKey = key; }
@@ -177,7 +178,7 @@ const risk = v => v.peek && v.peek.length ? (v.peek[0].t === 'bomb' ? 1 : 0) : v
 
 // ---------- nhận state ----------
 function onState(v) {
-  if (!v) { view = null; closeModal(); show('screen-lobby'); renderLobby(); fx.setTension(0); reacts.setVisible(false); return; }
+  if (!v) { view = null; closeModal(); endPick(); show('screen-lobby'); renderLobby(); fx.setTension(0); reacts.setVisible(false); return; }
   // state chủ phòng gửi là sự thật duy nhất: luôn vẽ theo state mới nhất; hàng đợi hoạt ảnh chỉ là phần phụ, có thể bỏ
   const newGame = !!(view && view.gid && v.gid && view.gid !== v.gid);
   const first = !view || newGame || !$('#screen-game').classList.contains('active');
@@ -346,6 +347,7 @@ addEventListener('resize', () => view && render());
 function onCardClick(id) {
   const v = view, meP = me(); if (!v || !meP) return;
   const c = meP.hand.find(x => x.id === id); if (!c) return;
+  if (pickActive()) endPick(); // đang chọn người mà bấm lá khác → bỏ phiên chọn
   if (c.t === 'nope' && v.window && v.window.canNope) { send({ type: 'nope' }); return; }
   if (sel.has(id)) sel.delete(id);
   else {
@@ -373,7 +375,16 @@ function playCards(ids) {
   const go = (target, named) => { sel.clear(); send({ type: 'play', cardIds: ids, target, named }); };
   if (!needsTarget(kind)) { go(); return; }
   const title = kind === 'favor' ? '🙏 Xin vía ai? (họ chọn lá cho bạn)' : kind === 'pair' ? '🐾 Rút bừa 1 lá của ai?' : '🎯 Đòi lá của ai?';
-  pickTarget(title, t => { if (kind === 'triple') pickName(t, nmd => go(t, nmd)); else go(t); });
+  const tap = kind === 'favor' ? '🙏 Chạm vào người muốn <b>xin vía</b>' : kind === 'pair' ? '🐾 Chạm vào người muốn <b>rút bừa 1 lá</b>' : '🎯 Chạm vào người muốn <b>đòi lá</b>';
+  const cb = t => { if (kind === 'triple') pickName(t, nmd => go(t, nmd)); else go(t); };
+  // chọn ngay trên bàn: ghế đối thủ sáng lên; không thấy ghế (bố cục quá nhỏ) mới mở danh sách cũ
+  startPick({
+    key: 'play-' + ids.join(','), root: $('#opps'), seat: id => $(`#opps .seat[data-pid="${id}"]`), glow: '.av', title: tap, anchor: () => $('#strip'),
+    items: () => view.players.filter(p => !p.out && p.id !== myId).map(p => ({ id: p.id, name: clean(p.name), ok: p.handCount > 0, reason: p.handCount ? '' : 'hết bài' })),
+    valid: () => isMyTurn() && ids.every(id => (me().hand || []).some(c => c.id === id)),
+    onPick: t => { fx.sfx.flip(); cb(t); }, onCancel: () => render(),
+    fallback: () => pickTarget(title, cb),
+  });
 }
 function pickTarget(title, cb) {
   const others = view.players.filter(p => !p.out && p.id !== myId);

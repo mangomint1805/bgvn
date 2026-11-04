@@ -7,6 +7,7 @@ import { Host, Client, loadSnapshot, session, MAX, MIN, TQ_PHRASES } from './net
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=1';
+import { syncPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 import { portrait, blankPortrait, cardHTML, backHTML, generalCardHTML, kindTag, iconsFor, emoOf } from './art.js?v=7';
 import * as fx from './fx.js?v=8';
 import { musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=8';
@@ -27,7 +28,7 @@ let lobbyOpts = { exp: true, expGen: true };
 let ui = null, askSig = '', modalSig = '', lastEv = 0, autoPass = null, introShown = false, endShown = false;
 
 // ======================= MÀN HÌNH =======================
-function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') musicIntensity(-1); }
+function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id)); if (id !== 'screen-game') { musicIntensity(-1); endPick(); } }
 let toastT;
 function toast(msg, kind = '') { const t = $('#toast'); t.innerHTML = suitify(esc(msg)); t.className = 'toast ' + kind; clearTimeout(toastT); toastT = setTimeout(() => t.classList.add('hidden'), 2800); }
 function openModal(html, cls = '') { $('#modal-box').innerHTML = html; $('#modal-box').className = 'modal-box ' + cls; $('#modal').classList.remove('hidden'); }
@@ -285,6 +286,33 @@ function renderSeats() {
     const hh = seat.offsetHeight / 2, hw = seat.offsetWidth / 2;
     seat.style.top = Math.min(Math.max(top, hh + 2), TH - hh - 2) + 'px';
     seat.style.left = Math.min(Math.max(parseFloat(seat.style.left), hw + 2), TW - hw - 2) + 'px';
+  });
+  syncSeatPick(ti);
+}
+// chọn mục tiêu ngay trên bàn: ghế hợp lệ sáng + 🎯 (Tab/Enter được), ghế mờ ghi lý do ngắn (khoảng cách/tầm), Esc = huỷ
+function shortWhy(p) {
+  const as = ui && ui.as, d = p.distance;
+  if (ui && ui.k === 'jiedao' && !ui.a && !(p.equip && p.equip.weapon)) return 'không có vũ khí';
+  if (as === 'sat' && d != null) return `cách ${d} > tầm ${me().range}`;
+  if ((as === 'shunshou' || as === 'bingliang') && d != null) return `cách ${d} > 1`;
+  if (d != null && p.inRange === false && ui && (ui.k === 'liuli' || (ui.k === 'skill' && ui.sk === 'xamau'))) return `ngoài tầm (cách ${d})`;
+  return 'không chọn được';
+}
+function syncSeatPick(ti) {
+  if (!ti || !view || view.phase !== 'playing') { if (pickActive()) endPick(); return; }
+  const mine = ui.k === 'use' || ui.k === 'jiedao' || ui.k === 'skill';
+  const pt = promptText();
+  const single = (ui.k === 'use' && ui.opt.max === 1) || ui.k === 'jiedao';
+  syncPick({
+    key: 'tq-' + ui.k + '-' + (ui.cid || ui.sk || askSig), root: $('#table'), seat: id => $(`#table .seat[data-pid="${id}"]`), glow: '.ava', keep: true,
+    banner: single, anchor: () => $('#actions'), z: 58, mark: el => el.classList.contains('compact') ? 'right' : 'left',
+    title: single ? pt.t.replace(/^👉 Chọn mục tiêu cho/, '🎯 Chạm vào mục tiêu cho').replace('Chọn người', 'Chạm vào người') : `${pt.t} <b>(${ti.sel.length}/${ui.opt ? ui.opt.max || ui.opt.tmax : ''})</b>`,
+    cancelable: mine, onCancel: () => { ui = null; render(); },
+    items: view.players.filter(p => p.alive && p.id !== myId).map(p => {
+      if (p.id === ti.fixed) return { id: p.id, name: p.name, ok: true, sel: true };
+      const ok = ti.can.includes(p.id); return { id: p.id, name: p.name, ok, sel: ti.sel.includes(p.id), reason: ok ? '' : shortWhy(p) };
+    }),
+    onPick: id => { if (!ui) return; if (ti.fixed && id === ti.fixed) { ui.a = null; render(); } else clickSeat(id); },
   });
 }
 function outReason(p) {
