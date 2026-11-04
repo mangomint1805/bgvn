@@ -6,6 +6,11 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà',
 };
 export const NOTES = [
+  { id: '20261104-16', date: '04/11/2026', game: 'typhu', title: 'Sửa máy bay, tự bán trả nợ, báo ô đích', items: [
+    '✈️ Hết lỗi vàng cả bàn khi du lịch: chạm 1 ô trên bàn để chọn (chỉ ô đó sáng), chạm lại hoặc bấm "Bay tới…" để bay.',
+    '⚡ Thiếu tiền trả nợ: nút "Tự bán nhà/thế chấp cho đủ" – bán ít nhất có thể, đủ là dừng, có tóm tắt đã bán gì.',
+    '📍 Đổ xúc xắc xong hiện ngay tên ô sẽ tới và đánh dấu ô đích trên bàn.',
+  ] },
   { id: '20261104-15', date: '04/11/2026', game: 'cangua', title: 'Luật vào chuồng mới, đôi đi cả/nửa, hiện điểm đến', items: [
     '🏁 Vào chuồng đếm thẳng: cách cửa 2 ô, đổ 3 vào bậc 1, đổ 8 lên luôn bậc 6. Đã vào chuồng thì phải đổ đôi mới lên thêm 1 bậc.',
     '✂️ Đổ đôi được chọn đi cả hoặc nửa (3-3 đi 3 hay 6 đều được).',

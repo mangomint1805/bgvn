@@ -298,5 +298,7 @@ input:focus{border-color:var(--acc)}
 #dice-ov .dsum{font:800 clamp(20px,5vmin,28px) "Baloo 2","Be Vietnam Pro",sans-serif;color:#fff;background:#24314dd9;padding:4px 16px;border-radius:999px;opacity:0;transform:scale(.8);transition:.2s}
 #dice-ov.done .dsum{opacity:1;transform:none}
 #dice-ov .dsum em{font-style:normal;color:#ffe14d}
+#dice-ov .dsum .dto{display:block;font:700 clamp(13px,3.4vmin,16px) "Be Vietnam Pro",sans-serif;color:#ffe14d;text-align:center;line-height:1.3;max-width:80vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#panel .raise-pv{background:#fff6d6;border:1px solid #ffd54a;border-radius:10px;padding:5px 9px;margin-top:4px}
 @media (prefers-reduced-motion:reduce){#rollfab{animation:none}}
 @media (max-height:560px){#rollfab{width:84px;bottom:10px}#rollfab .ic{font-size:30px}#rollfab .tx{font-size:11px}#rollfab .pw{display:none}}

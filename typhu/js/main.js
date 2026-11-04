@@ -1,14 +1,14 @@
 // Cờ Tỷ Phú Sài Gòn – giao diện: trang chủ, tạo nhân vật, sảnh, ván chơi 3D, hoạt ảnh sự kiện.
-import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=48';
+import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=49';
 import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.js?v=2';
 import {
   setData, TILES, GROUPS, GROUP_LIST, STATION_RENT, money, rentOf, canBuild, canSell, canMortgage, canUnmortgage, houseCost, mortgageValue,
   unmortgageCost, travelOk, buildBlock, tradable, tradeError, buybackPrice, netWorth, tilesOf, ownsGroup, JAIL_FINE, MAX_TRADES, isProp,
-  tradeImpact, tradeSideValue,
-} from './engine.js?v=48';
-import { Board3D, THEMES } from './scene3d.js?v=48';
-import * as fx from './fx.js?v=48';
-import { guideHTML } from './guide.js?v=48';
+  tradeImpact, tradeSideValue, planRaise, raiseSummary,
+} from './engine.js?v=49';
+import { Board3D, THEMES } from './scene3d.js?v=49';
+import * as fx from './fx.js?v=49';
+import { guideHTML } from './guide.js?v=49';
 import { OPTIONS, PRESETS, buildAvatar, portrait } from '../../shared/js/avatar3d.js';
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
@@ -22,7 +22,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const settings = fx.settings;
 
 // ---------- dữ liệu bàn cờ ----------
-const [tilesData, cardsData] = await Promise.all(['tiles.json?v=48', 'cards.json?v=48'].map(u => fetch(u).then(r => r.json())));
+const [tilesData, cardsData] = await Promise.all(['tiles.json?v=49', 'cards.json?v=49'].map(u => fetch(u).then(r => r.json())));
 setData(tilesData, cardsData);
 const VN = 'ẮẰẲẴẶẤẦẨẪẬĐđơưƯƠếềểễệ';
 const fontsReady = Promise.race([
@@ -47,15 +47,35 @@ function openModal(html, cls = '', key = null) {
   $('#modal-box').className = 'modal-box ' + cls; $('#modal-box').innerHTML = html; $('#modal').classList.add('open'); modalKey = key;
 }
 function setModal(html) { const b = $('#modal-box'), y = b.scrollTop; b.innerHTML = html; b.scrollTop = y; }
-function closeModal() { $('#modal').classList.remove('open'); modalKey = null; fns.modal = []; if (onModalClose) { const f = onModalClose; onModalClose = null; f(); } if (B) B.pick(travelPicks()); }
-// đang tới lượt mình du lịch: làm sáng mọi ô bay tới được
+function closeModal() { $('#modal').classList.remove('open'); modalKey = null; fns.modal = []; if (onModalClose) { const f = onModalClose; onModalClose = null; f(); } if (B) { B.pick([]); syncTravelMark(); } }
+// ✈️ du lịch: KHÔNG làm sáng cả bàn nữa. Chạm 1 ô trên bàn để chọn (chỉ ô đó sáng), chạm lần nữa / bấm nút để bay.
 const myTravel = () => !!shown && shown.phase === 'playing' && shown.stage === 'travel' && isMine(shown.actor);
-const travelPicks = () => myTravel() ? TILES.map((t, i) => i).filter(travelOk) : [];
+let travelSel = null;
+const travelBad = i => !travelOk(i) ? (TILES[i].type === 'parking' ? 'Bạn đang ở Bãi đậu xe rồi' : 'Không bay vào tù được 😅') : shown && i === P(shown, shown.actor).pos ? 'Bạn đang đứng ở đây rồi' : '';
+// 📍 ô đích trên bàn 3D: kind 'travel' (đang chọn nơi bay) hoặc 'move' (đích sau khi đổ / bay / thẻ)
+let markKind = null, markTok = 0;
+function setMark(kind, i, label, color) { if (!B) return; markKind = kind; markTok++; B.target(i, label, color); }
+function clearMark(kind, delay = 0) {
+  if (!B || (kind && markKind !== kind)) return;
+  const tok = markTok, go = () => { if (tok !== markTok) return; markKind = null; B.clearTarget(); };
+  if (delay) setTimeout(go, delay); else go();
+}
+function syncTravelMark() {
+  if (!B) return;
+  if (!myTravel()) { travelSel = null; clearMark('travel'); return; }
+  if (travelSel != null && !travelBad(travelSel)) setMark('travel', travelSel, '✈️ ' + tileName(travelSel), '#5ec8ff');
+  else clearMark('travel');
+}
+function travelTap(i) {
+  const why = travelBad(i); if (why) { toast(why); return; }
+  if (travelSel === i) { flyTo(i); return; }
+  travelSel = i; syncTravelMark(); renderPanel();
+}
+function flyTo(i) { const pid = shown.actor; travelSel = null; setMark('move', i, '✈️ ' + tileName(i), '#5ec8ff'); send(pid, { type: 'travel', tile: i }); }
 function openTravel() {
   const v = shown, me = v.actor;
-  const row = i => `<div class="row" style="border-left:6px solid ${gColor(i)};padding-left:8px"><span class="nm">${esc(tileName(i))} <small>${v.props[i] ? (v.props[i].owner === me ? '🙋 của mình ' : '👤 ' + esc(nm(v, v.props[i].owner)) + ' ') + statusOf(v, i) : isProp(i) ? '🏦 trống · ' + money(TILES[i].price) : ''}</small></span><button class="btn sm pri" ${fnAttr('modal', () => { closeModal(); send(me, { type: 'travel', tile: i }); })}>✈️ Bay</button></div>`;
-  openModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>✈️ Du lịch tới đâu?</h2><p class="note">Bay ngược qua <b>Bắt đầu</b> vẫn nhận 200K. Không bay tới Vào tù được.</p><div class="mg">${TILES.map((t, i) => i).filter(i => travelOk(i) && i !== v.players.find(p => p.id === me).pos).map(row).join('')}</div>`);
-  B && B.pick(travelPicks());
+  const row = i => `<div class="row" style="border-left:6px solid ${gColor(i)};padding-left:8px"><span class="nm" ${fnAttr('modal', () => { travelSel = i; closeModal(); renderPanel(); })}>${esc(tileName(i))} <small>${v.props[i] ? (v.props[i].owner === me ? '🙋 của mình ' : '👤 ' + esc(nm(v, v.props[i].owner)) + ' ') + statusOf(v, i) : isProp(i) ? '🏦 trống · ' + money(TILES[i].price) : ''}</small></span><button class="btn sm pri" ${fnAttr('modal', () => { closeModal(); flyTo(i); })}>✈️ Bay</button></div>`;
+  openModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>✈️ Du lịch tới đâu?</h2><p class="note">Mẹo: chạm thẳng vào ô trên bàn cờ cũng chọn được. Bay ngược qua <b>Bắt đầu</b> vẫn nhận 200K. Không bay tới Vào tù được.</p><div class="mg">${TILES.map((t, i) => i).filter(i => travelOk(i) && i !== v.players.find(p => p.id === me).pos).map(row).join('')}</div>`);
 }
 $('#modal').addEventListener('click', e => { if (e.target.id === 'modal' && modalKey !== 'lock') closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modal').classList.contains('open') && modalKey !== 'lock') closeModal(); });
@@ -226,7 +246,7 @@ $('#btn-start').onclick = () => { fx.actx(); net && net.start(); };
 
 // ================= VÁN CHƠI =================
 let B = null, shown = null, seenEv = 0, busy = false, deadlineAt = 0, winShown = false, logOpen = false;
-const queue = []; let pumping = false, curAnim = '';
+const queue = []; let pumping = false, curAnim = '', curBatch = [];
 const P = (v, id) => v.players.find(p => p.id === id);
 const cur = v => v.players[v.turn];
 const mineIds = v => v.controlled || [];
@@ -240,7 +260,7 @@ const youOr = (v, id) => isMine(id) && !multiLocal(v) ? 'Bạn' : esc(nm(v, id))
 function resetGame() {
   if (typeof reacts !== 'undefined' && reacts) reacts.setVisible(false);
   shown = null; seenEv = 0; busy = false; winShown = false; queue.length = 0; deadlineAt = 0; recap = { list: [], buf: null, open: false, hide: false }; renderRecap(); stopTour(false);
-  if (B) { B.pick([]); }
+  travelSel = null; markKind = null; if (B) { B.pick([]); B.clearTarget(); }
   if (modalKey && modalKey !== 'avatar' && modalKey !== 'settings') closeModal();
 }
 function rentsFor(v) {
@@ -264,7 +284,7 @@ async function ensureBoard() {
   try {
     B = new Board3D($('#game3d'), {
       tiles: TILES, groups: GROUPS, quality: settings.quality, theme: settings.theme, effects: settings.effects,
-      onCell: i => { fx.sfx.click(); openTile(i); },
+      onCell: i => { fx.sfx.click(); if (myTravel() && !busy) travelTap(i); else openTile(i); },
       onCamera: m => { $('#btn-home-cam').classList.toggle('on', m === 'free'); $('#btn-overview').classList.toggle('on', m === 'overview'); },
     });
   } catch (e) { console.error(e); toast('Máy không hỗ trợ 3D (WebGL) – thử trình duyệt khác nhé.'); throw e; }
@@ -282,6 +302,7 @@ async function pump() {
       try { collectRecap(evs, v); } catch (err) { console.error(err); }
       const fast = queue.length > 2 || document.hidden;
       const anim = evs.filter((e, k) => !(e.t === 'build' && evs.slice(k + 1).some(x => x.t === 'build' && x.tile === e.tile)));
+      curBatch = anim;
       if (anim.length && !fast) { $('#panel').classList.add('busy'); for (const e of anim) { curAnim = e.t; try { await animate(e, v); } catch (err) { console.error(err); } } curAnim = ''; }
       applyView(v);
     }
@@ -307,6 +328,8 @@ function applyView(v) {
   if (v.phase === 'playing') B.setTurn(cur(v).id);
   $('#panel').classList.remove('busy');
   reacts.setVisible(true);
+  if (!myTravel()) travelSel = null;
+  if (markKind === 'move') clearMark('move', 700); else syncTravelMark();
   renderTop(); renderPlayers(); renderPanel(); renderLog();
   if (modalKey === 'manage') renderManage();
   else if (modalKey && modalKey.startsWith('tile:')) openTile(+modalKey.slice(5), true);
@@ -329,12 +352,15 @@ async function animate(e, v) {
     }
     case 'roll': {
       B.follow(e.pid); fx.sfx.dice(); setDice(e.d);
-      await centerDice(e.d, isMine(e.pid) && rollPower != null ? rollPower : 0.5); rollPower = null;
+      // 📍 đích đến: tìm sự kiện đi bộ ngay sau lần đổ này để báo trước ô sẽ dừng
+      const bi = curBatch.indexOf(e), mv = !e.util && bi >= 0 ? curBatch.slice(bi + 1).find(x => x.t === 'roll' || (x.t === 'move' && x.pid === e.pid)) : null;
+      const dest = mv && mv.t === 'move' && mv.kind !== 'jail' && mv.from !== mv.to ? mv.to : null;
+      await centerDice(e.d, isMine(e.pid) && rollPower != null ? rollPower : 0.5, dest, () => { if (dest != null) setMark('move', dest, '📍 ' + tileName(dest), '#ffd54a'); }); rollPower = null;
       if (e.d[0] === e.d[1] && !e.util) { fx.banner('Đôi! 🎲🎲', 'gold sm'); }
       await sleep(150 * k()); break;
     }
     case 'move': await moveAnim(e); break;
-    case 'land': B.pulse(e.tile, 0.9); break;
+    case 'land': B.pulse(e.tile, 0.9); clearMark('move', 650); break;
     case 'salary': fx.sfx.cash(); B.coins(null, e.pid, 5); B.floatAt(e.pid, '+' + money(e.amt), '#1aa86a'); flashPc(e.pid); await sleep(300 * k()); break;
     case 'buy': case 'sold': {
       if (!e.pid) { fx.banner('Không ai mua 🤷', 'sm'); await sleep(500 * k()); break; }
@@ -374,6 +400,7 @@ async function animate(e, v) {
     }
     case 'sell': fx.sfx.pay(); B.floatAt(e.tile, '🔨 +' + money(e.amt), '#1aa86a'); partialProp(e.tile, { ...(shown.props[e.tile] || {}), h: e.h }, v); await sleep(200 * k()); break;
     case 'mort': fx.sfx.cash(); B.floatAt(e.tile, '🏦 +' + money(e.amt), '#6b7895'); partialProp(e.tile, { ...(shown.props[e.tile] || {}), mort: true }, v); await sleep(200 * k()); break;
+    case 'raise': fx.sfx.cash(); toast(`⚡ ${nm(v, e.pid)} đã ${raiseSummary(e.steps)} (+${money(e.amt)})`); await sleep(300 * k()); break;
     case 'unmort': fx.sfx.unlock(); B.floatAt(e.tile, '🔑 Chuộc', '#1aa86a'); await sleep(200 * k()); break;
     case 'offer': fx.sfx.notify(); if (isMine(e.to)) fx.banner('🤝 Có kèo giao dịch!', 'sm'); break;
     case 'reject': fx.sfx.bad(); toast(`🙅 ${nm(v, e.to)} từ chối giao dịch.`); break;
@@ -389,6 +416,8 @@ function partialProp(i, pr, v) {
 }
 async function moveAnim(e) {
   const id = e.pid; B.follow(id);
+  if (e.from !== e.to && !(markKind === 'move' && B.tgt && B.tgt.i === e.to)) setMark('move', e.to, (e.kind === 'jail' ? '🚔 ' : e.kind === 'fly' ? '✈️ ' : '📍 ') + tileName(e.to), e.kind === 'jail' ? '#ff8a80' : e.kind === 'fly' ? '#5ec8ff' : '#ffd54a');
+  if (e.kind === 'jail') { clearMark('move', 1400 * k()); }
   if (e.kind === 'jail') { fx.sfx.jail(); B.sirens(2400); fx.banner('🚔 Vào tù!', 'red'); await B.fly(id, 10, 950 * k()); return; }
   if (e.kind === 'fly' || (!e.steps && e.from !== e.to)) { fx.sfx.hop(); await B.fly(id, e.to, 900 * k()); return; }
   if (!e.steps) return;
@@ -447,7 +476,7 @@ const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7,
 const faceHTML = n => `<div class="df">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(c => `<i${PIPS[n].includes(c) ? ' class="on"' : ''}></i>`).join('')}</div>`;
 // mặt n hướng ra người xem: góc xoay của khối
 const FACE_ROT = { 1: [0, 0], 2: [0, -90], 3: [-90, 0], 4: [90, 0], 5: [0, 90], 6: [0, 180] };
-function centerDice(d, power = 0.5) {
+function centerDice(d, power = 0.5, dest = null, onReveal = null) {
   let ov = $('#dice-ov');
   if (!ov) { ov = document.createElement('div'); ov.id = 'dice-ov'; ov.setAttribute('aria-hidden', 'true'); $('#game3d').appendChild(ov); }
   const cube = () => `<div class="dc"><div class="dcube">${[1, 6, 2, 5, 3, 4].map((n, k) => `<div class="fc f${k}">${faceHTML(n)}</div>`).join('')}</div></div>`;
@@ -460,7 +489,8 @@ function centerDice(d, power = 0.5) {
     requestAnimationFrame(() => requestAnimationFrame(() => { c.style.transition = `transform ${ms}ms cubic-bezier(.15,.7,.25,1)`; c.style.transform = `rotateX(${X}deg) rotateY(${Y}deg)`; c.parentNode.classList.add('go'); }));
   });
   return sleep(ms + 60).then(() => {
-    ov.querySelector('.dsum').innerHTML = `${d[0]} + ${d[1]} = <b>${d[0] + d[1]}</b>${d[0] === d[1] ? ' <em>ĐÔI!</em>' : ''}`; ov.classList.add('done');
+    ov.querySelector('.dsum').innerHTML = `${d[0]} + ${d[1]} = <b>${d[0] + d[1]}</b>${d[0] === d[1] ? ' <em>ĐÔI!</em>' : ''}${dest != null ? `<span class="dto">→ 📍 ${esc(tileName(dest))}</span>` : ''}`; ov.classList.add('done');
+    if (onReveal) try { onReveal(); } catch (err) { console.error(err); }
     setTimeout(() => { if (ov.classList.contains('done')) ov.className = ''; }, Math.round(900 * k()));
     return sleep(Math.round(380 * k()));
   });
@@ -580,8 +610,12 @@ function renderPanel() {
       break;
     }
     case 'travel': {
-      lines.push(head(actor, mine ? `✈️ <b>${who}</b> tới Bãi đậu xe – chọn 1 ô để <b>du lịch</b> tới ngay! <span class="sub">(bấm ô đang sáng trên bàn cờ)</span>` : `✈️ <b>${who}</b> đang chọn nơi du lịch…`));
-      if (mine) { btns.push(btn('panel', '🗺️ Chọn ô', () => openTravel(), 'pri main'), btn('panel', '🅿️ Ở lại', () => send(me, { type: 'stay' }), 'ghost')); if (B && !modalKey) B.pick(travelPicks()); }
+      const sel = mine && travelSel != null && !travelBad(travelSel) ? travelSel : null;
+      lines.push(head(actor, !mine ? `✈️ <b>${who}</b> đang chọn nơi du lịch…` : sel != null ? `✈️ Bay tới <b>${esc(tileName(sel))}</b>? <span class="sub">(chạm ô lần nữa hoặc bấm nút để bay · chạm ô khác để đổi)</span>` : `✈️ <b>${who}</b> tới Bãi đậu xe – <b>chạm 1 ô</b> trên bàn cờ để chọn nơi du lịch!`));
+      if (mine) {
+        if (sel != null) btns.push(btn('panel', `✈️ Bay tới ${esc(tileName(sel))}`, () => flyTo(sel), 'pri main'), btn('panel', 'ℹ️', () => openTile(sel), 'ghost sm', false, 'Xem ô ' + TILES[sel].name));
+        btns.push(btn('panel', '🗺️ Chọn ô', () => openTravel(), sel != null ? 'ghost' : 'pri main'), btn('panel', '🅿️ Ở lại', () => send(me, { type: 'stay' }), 'ghost'));
+      }
       break;
     }
     case 'debt': {
@@ -589,9 +623,12 @@ function renderPanel() {
       if (!mine) { lines.push(head(actor, `😰 <b>${who}</b> đang xoay ${money(D.amount)} để trả nợ…`)); break; }
       lines.push(head(actor, `😰 <b>${who}</b> phải trả <b>${money(D.amount)}</b> – đang có ${money(A.cash)}`));
       lines.push(`<div class="sub">Bán nhà hoặc thế chấp đất để gom đủ tiền. Hết cách thì đành phá sản.</div>`);
-      const canPay = A.cash >= D.amount;
+      const canPay = A.cash >= D.amount, plan = canPay ? null : planRaise(v, me, D.amount);
+      if (plan && plan.ok) lines.push(`<div class="sub raise-pv">⚡ Tự động sẽ ${esc(raiseSummary(plan.steps))} <b>(+${money(plan.raised)})</b> rồi trả luôn.</div>`);
+      else if (plan) lines.push(`<div class="sub">😵 Bán hết nhà + thế chấp hết đất vẫn thiếu – chỉ còn cách phá sản.</div>`);
+      if (plan && plan.ok) btns.push(btn('panel', '⚡ Tự bán nhà/thế chấp cho đủ', () => send(me, { type: 'autoRaise' }), 'gold main'));
       btns.push(btn('panel', '💳 Trả nợ', () => send(me, { type: 'payDebt' }), canPay ? 'green main' : 'green', !canPay));
-      btns.push(btn('panel', '🏗️ Bán / Thế chấp', () => openManage(me), canPay ? 'gold' : 'gold main'));
+      btns.push(btn('panel', '🏗️ Tự chọn bán', () => openManage(me), canPay || (plan && plan.ok) ? 'ghost' : 'gold main'));
       btns.push(btn('panel', '💀 Phá sản', () => confirmBankrupt(me), 'red sm tiny'));
       break;
     }
@@ -655,7 +692,7 @@ function openTile(i, refresh = false) {
   const mb = v && actPid ? manageBtns(v, actPid, i) : '';
   const html = `<button class="close-x" data-close aria-label="Đóng">✕</button><div class="deed" style="--gc:${gColor(i)}"><div class="hd"><small>${t.type === 'city' ? 'Nhóm ' + GROUPS[t.group].name : t.type === 'station' ? 'Bến xe' : t.type === 'utility' ? 'Công ty' : 'Ô đặc biệt'}</small><b>${esc(t.name)}</b>${t.area ? `<small>${esc(t.area)}</small>` : ''}</div>${ownRow}${body}
     ${here.length ? `<div class="own">Đang đứng: ${here.map(p => `<img src="${pic(p.avatar, 60)}" alt="" title="${esc(p.name)}">`).join('')}</div>` : ''}</div>${mb ? `<div class="mbtns">${mb}</div>` : ''}`;
-  const fly = myTravel() && travelOk(i) && i !== P(v, v.actor).pos ? `<div class="mbtns">${btn('modal', '✈️ Bay tới đây', () => { closeModal(); send(v.actor, { type: 'travel', tile: i }); }, 'pri main')}</div>` : '';
+  const fly = myTravel() && travelOk(i) && i !== P(v, v.actor).pos ? `<div class="mbtns">${btn('modal', '✈️ Bay tới đây', () => { closeModal(); flyTo(i); }, 'pri main')}</div>` : '';
   if (refresh) { setModal(html + fly); } else openModal(html + fly, '', 'tile:' + i);
   B && B.pick([i]);
 }
@@ -679,7 +716,8 @@ function renderManage() {
     { name: 'Bến xe', color: '#24314d', tiles: TILES.map((t, i) => t.type === 'station' ? i : -1).filter(i => i >= 0) },
     { name: 'Công ty', color: '#1e88e5', tiles: TILES.map((t, i) => t.type === 'utility' ? i : -1).filter(i => i >= 0) }]
     .map(g => ({ ...g, mine: g.tiles.filter(i => own.includes(i)) })).filter(g => g.mine.length);
-  const debt = v.stage === 'debt' && v.actor === pid ? `<p class="sub" style="text-align:center">Cần trả <b>${money(v.debt.amount)}</b> · đang có <b>${money(p.cash)}</b></p>` : '';
+  const plan = v.stage === 'debt' && v.actor === pid && p.cash < v.debt.amount ? planRaise(v, pid, v.debt.amount) : null;
+  const debt = v.stage === 'debt' && v.actor === pid ? `<p class="sub" style="text-align:center">Cần trả <b>${money(v.debt.amount)}</b> · đang có <b>${money(p.cash)}</b></p>${plan && plan.ok ? `<div class="mbtns">${btn('modal', '⚡ Tự bán nhà/thế chấp cho đủ', () => { closeModal(); send(pid, { type: 'autoRaise' }); }, 'gold main')}</div>` : ''}` : '';
   setModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>🏗️ Tài sản của ${esc(p.name)}</h2><p class="sub" style="text-align:center;margin:-4px 0 4px">Xây nhà · bán nhà · thế chấp · chuộc đất</p>
     <p style="text-align:center;margin:0">💵 <b>${money(p.cash)}</b> tiền mặt</p>${debt}
     ${groups.length ? `<div class="mg">${groups.map(g => `<div class="grp"><h5 style="--gc:${g.color}"><i></i>${g.name}${g.full ? ' ✅ đủ nhóm' : ` (${g.mine.length}/${g.tiles.length})`}</h5>
@@ -838,6 +876,7 @@ function summarize(b, v) {
       case 'mort': det.push(`🏦 Thế chấp ${esc(tileName(e.tile))} (+${money(e.amt)})`); break;
       case 'unmort': det.push(`🔑 Chuộc ${esc(tileName(e.tile))}`); break;
       case 'sell': det.push(`🔨 Bán nhà ở ${esc(tileName(e.tile))}`); break;
+      case 'raise': det.push(`⚡ Tự ${esc(raiseSummary(e.steps))} (+${money(e.amt)})`); break;
       case 'traded': { const mine = me(e.from) || me(e.to); imp = imp || mine; const t = `🤝 chốt kèo với ${N(e.from === b.pid ? e.to : e.from)}`; head.push(mine ? `<b class="hot">${t}</b>` : t); det.push(t); break; }
       case 'reject': det.push(`🙅 ${N(e.to)} từ chối giao dịch`); break;
       case 'bankrupt': { imp = true; const t = `💀 ${N(e.pid)} phá sản${e.to ? ' → tài sản về ' + N(e.to) : ''}`; head.push(`<b class="hot">${t}</b>`); det.push(t); break; }

@@ -2,7 +2,7 @@
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
 import { buildAvatar } from '../../shared/js/avatar3d.js';
-import { buildCity } from './city.js?v=48';
+import { buildCity } from './city.js?v=49';
 
 export const FONT = '"Be Vietnam Pro", system-ui, sans-serif', TITLE = '"Baloo 2", "Be Vietnam Pro", system-ui, sans-serif';
 const TW = 1, TD = 1.6, CW = 1.6, L = 2 * CW + 9 * TW, TILE_H = 0.12;
@@ -520,7 +520,34 @@ export class Board3D {
     const i = this.pawnTile[id] ?? 0; this.fireworks(i, 8);
   }
   bump(id) { const g = this.pawns[id]; if (!g) return; this.tween(500, t => { g.userData.av.position.y = Math.sin(Math.PI * t) * 0.3; g.userData.av.rotation.z = Math.sin(t * Math.PI * 4) * 0.2 * (1 - t); }); }
-  pick(list) { this.picked = new Set(list || []); }
+  // làm sáng vài ô (ô đang xem). Ô không còn trong danh sách phải TẮT sáng ngay – trước đây ô cũ giữ nguyên màu vàng.
+  pick(list) {
+    const nx = new Set(list || []);
+    if (this.picked) this.picked.forEach(i => { if (!nx.has(i) && this.tileObjs[i] && !(this.tgt && this.tgt.i === i)) this.tileObjs[i].glow.material.opacity = 0; });
+    this.picked = nx;
+  }
+  // 📍 ô đích (đổ xúc xắc / du lịch): vòng sáng + cột sáng + nhãn tên ô – chỉ 1 ô; target(null) để xoá
+  target(i, label = '', color = '#ffd54a') {
+    if (this.tgt && this.tgt.i === i && this.tgt.label === label && this.tgt.color === color) return;
+    this.clearTarget();
+    if (i == null || !this.tileObjs[i]) return;
+    const c = this.tileCenter(i), g = new THREE.Group(); g.position.copy(c);
+    const cl = col(color);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.42, 40), new THREE.MeshBasicMaterial({ color: cl, transparent: true, opacity: 0.95, depthWrite: false, side: THREE.DoubleSide }));
+    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.04; ring.renderOrder = 5; g.add(ring);
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.44, 1.5, 28, 1, true), new THREE.MeshBasicMaterial({ color: cl, transparent: true, opacity: 0.2, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+    beam.position.y = 0.76; g.add(beam);
+    let sp = null;
+    if (label) { sp = textSprite(label, color, '#1b2440', 0.3); sp.position.y = 1.75; g.add(sp); }
+    this.root.add(g);
+    const glow = this.tileObjs[i].glow.material; this.tgt = { i, label, color, g, ring, beam, sp, glowCol: glow.color.getHex() }; glow.color.set(cl);
+  }
+  clearTarget() {
+    const T = this.tgt; if (!T) return; this.tgt = null;
+    this.root.remove(T.g);
+    T.g.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } });
+    const o = this.tileObjs[T.i]; if (o) { o.glow.material.color.setHex(T.glowCol); if (!(this.picked && this.picked.has(T.i))) o.glow.material.opacity = 0; }
+  }
   click(e) {
     const r = this.renderer.domElement.getBoundingClientRect();
     this.ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
@@ -534,6 +561,7 @@ export class Board3D {
     for (const k in this.pawns) { const u = this.pawns[k].userData; if (u.arrow.visible) { u.arrow.position.y = 1.05 + Math.sin(el * 4) * 0.06; u.arrow.rotation.y = el * 2; } if (!this.moving.has(k)) u.av.rotation.y = Math.sin(el * 1.3 + k.length) * 0.15; }
     for (const i in this.bld) this.bld[i].objs.forEach(o => { if (o.userData.flag) o.userData.flag.rotation.y = Math.sin(el * 3 + +i) * 0.35; if (o.userData.spin) o.userData.spin.rotation.y = el * 2; });
     if (this.picked && this.picked.size) this.tileObjs.forEach((o, i) => { if (this.picked.has(i)) o.glow.material.opacity = 0.3 + 0.25 * Math.sin(el * 6); });
+    if (this.tgt) { const T = this.tgt, w = Math.sin(el * 5); this.tileObjs[T.i].glow.material.opacity = 0.45 + 0.25 * w; T.ring.scale.setScalar(1 + 0.12 * w); T.beam.material.opacity = 0.16 + 0.08 * w; T.beam.rotation.y = el; if (T.sp) T.sp.position.y = 1.75 + Math.sin(el * 3) * 0.06; }
     if (this.city) this.city.tick(el);
     const on = this.sirenUntil && now < this.sirenUntil; this.siren[0].intensity = on ? (Math.sin(el * 18) > 0 ? 6 : 0) : 0; this.siren[1].intensity = on ? (Math.sin(el * 18) > 0 ? 0 : 6) : 0;
     this.updateCamera(dt || 0.016);

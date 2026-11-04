@@ -1,8 +1,8 @@
 // Unit test luật Cờ Tỷ Phú. Chạy: node typhu/test/rules.mjs
 import './load.mjs';
 import assert from 'assert/strict';
-import { createGame, applyAction, setRandom, TILES, CARDS, actorOf, rentOf, buybackPrice, netWorth, canBuild, tradeImpact, tradeSideValue } from '../js/engine.js?v=48';
-import { botAction, judgeTrade } from '../js/bot.js?v=48';
+import { createGame, applyAction, setRandom, TILES, CARDS, actorOf, rentOf, buybackPrice, netWorth, canBuild, tradeImpact, tradeSideValue, planRaise, raiseSummary } from '../js/engine.js?v=49';
+import { botAction, judgeTrade } from '../js/bot.js?v=49';
 
 let pass = 0, fail = 0;
 function test(name, fn) { try { fn(); pass++; console.log('  ✓ ' + name); } catch (e) { fail++; console.log('  ✗ ' + name + '\n    ' + (e.stack || e).toString().split('\n').slice(0, 3).join('\n    ')); } }
@@ -116,6 +116,37 @@ test('thiếu tiền → nợ → thế chấp rồi trả', () => {
 test('trả nợ xong thì ván tiếp tục', () => {
   const s = game(3); own(s, 'p1', 3); own(s, 'p0', 39); P(s, 'p0').cash = 2; dice(1, 2); act(s, 'p0', { type: 'roll' }); assert.equal(s.stage, 'debt');
   act(s, 'p0', { type: 'mortgage', tile: 39 }); act(s, 'p0', { type: 'payDebt' }); assert.notEqual(s.stage, 'debt'); assert.equal(P(s, 'p1').cash, 1504);
+});
+test('⚡ tự gom tiền: bán nhà nhóm đắt trước, đều tay, đủ là dừng rồi trả luôn', () => {
+  const s = game(); own(s, 'p1', 39, 3); [31, 32, 34].forEach(i => own(s, 'p0', i, 2)); own(s, 'p0', 1, 1); own(s, 'p0', 3, 1); own(s, 'p0', 5);
+  s.players[0].pos = 35; P(s, 'p0').cash = 1000; dice(1, 3); act(s, 'p0', { type: 'roll' });
+  assert.equal(s.stage, 'debt'); assert.equal(s.debt.amount, 1400);
+  const before = JSON.stringify(s); const plan = planRaise(s, 'p0', 1400); assert.equal(JSON.stringify(s), before, 'planRaise không đổi state');
+  assert.equal(plan.ok, true); assert.equal(plan.steps.length, 4);
+  act(s, 'p0', { type: 'autoRaise' });
+  assert.deepEqual([31, 32, 34].map(i => s.props[i].h).sort(), [0, 1, 1], 'bán đều tay nhóm xanh lá');
+  assert.equal(s.props[1].h, 1); assert.equal(s.props[3].h, 1); assert.equal(s.props[5].mort, false, 'không bán/thế chấp dư');
+  assert.equal(P(s, 'p0').cash, 0); assert.equal(P(s, 'p1').cash, 1500 + 1400); assert.notEqual(s.stage, 'debt'); assert.equal(s.debt, null);
+  const e = s.ev.find(x => x.t === 'raise'); assert.ok(e && e.amt === 400); assert.match(raiseSummary(e.steps), /bán 4 nhà/);
+});
+test('⚡ tự gom tiền: hết nhà thì thế chấp – chọn ô rẻ nhất vừa đủ, không thế chấp dư', () => {
+  const s = game(); own(s, 'p1', 39, 3); own(s, 'p0', 1); own(s, 'p0', 3); own(s, 'p0', 5); own(s, 'p0', 6, 1);
+  s.players[0].pos = 35; P(s, 'p0').cash = 1300; dice(1, 3); act(s, 'p0', { type: 'roll' }); assert.equal(s.stage, 'debt');
+  act(s, 'p0', { type: 'autoRaise' });
+  assert.equal(s.props[6].h, 0); assert.equal(s.props[5].mort, true); assert.equal(s.props[1].mort, false); assert.equal(s.props[3].mort, false); assert.equal(s.props[6].mort, false);
+  assert.equal(P(s, 'p0').cash, 25); assert.equal(s.stage, 'end');
+});
+test('⚡ tự gom tiền: không đủ thì bị từ chối, không đụng tài sản; ngoài lúc nợ cũng bị từ chối', () => {
+  const s = game(); own(s, 'p1', 39, 5); own(s, 'p0', 31, 1); own(s, 'p0', 1);
+  assert.equal(applyAction(s, 'p0', { type: 'autoRaise' }).ok, false);
+  s.players[0].pos = 35; P(s, 'p0').cash = 100; dice(1, 3); act(s, 'p0', { type: 'roll' }); assert.equal(s.stage, 'debt');
+  const before = JSON.stringify(s); assert.equal(applyAction(s, 'p0', { type: 'autoRaise' }).ok, false); assert.equal(JSON.stringify(s), before);
+  assert.equal(applyAction(s, 'p1', { type: 'autoRaise' }).ok, false, 'người khác không bấm hộ được');
+});
+test('⚡ tự gom tiền theo luật ZingPlay thật (bán ô nào cũng được)', () => {
+  const s = game(2, { freeBuild: 'zing' }); own(s, 'p1', 39, 3); own(s, 'p0', 31, 3); own(s, 'p0', 6, 2);
+  s.players[0].pos = 35; P(s, 'p0').cash = 1250; dice(1, 3); act(s, 'p0', { type: 'roll' });
+  act(s, 'p0', { type: 'autoRaise' }); assert.equal(s.props[31].h, 1); assert.equal(s.props[6].h, 2); assert.equal(P(s, 'p0').cash, 50);
 });
 test('phá sản với ngân hàng → đất trả về ngân hàng', () => {
   const s = game(3); own(s, 'p0', 1); P(s, 'p0').cash = 10; dice(1, 3); act(s, 'p0', { type: 'roll' }); assert.equal(s.stage, 'debt'); act(s, 'p0', { type: 'bankrupt' });

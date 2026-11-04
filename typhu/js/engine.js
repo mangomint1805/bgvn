@@ -245,6 +245,14 @@ export function applyAction(s, pid, a) {
       const D = s.debt; if (p.cash < D.amount) return no(`Còn thiếu ${money(D.amount - p.cash)} – bán nhà hoặc thế chấp đất`);
       s.debt = null; s.stage = 'resolving'; payOut(s, p, D.to, D.why); return cont(s, D.then);
     }
+    case 'autoRaise': { // ⚡ tự bán nhà/thế chấp vừa đủ rồi trả nợ luôn
+      if (s.stage !== 'debt') return no('Bạn không nợ');
+      const D = s.debt;
+      if (!planRaise(s, pid, D.amount).ok) return no('Bán hết nhà + thế chấp hết đất vẫn chưa đủ – đành phá sản');
+      const r = autoRaise(s, p, D.amount);
+      if (r.steps.length) { ev(s, { t: 'raise', pid, steps: r.steps, amt: r.raised }); log(s, `⚡ ${p.name} tự ${raiseSummary(r.steps)} → +${money(r.raised)}.`); }
+      s.debt = null; s.stage = 'resolving'; payOut(s, p, D.to, D.why); return cont(s, D.then);
+    }
     case 'bankrupt': {
       if (s.stage !== 'debt') return no('Chỉ phá sản khi đang nợ');
       const D = s.debt; s.debt = null;
@@ -368,17 +376,49 @@ function forcePay(s, payer, toPid, amt, why) {
   if (payer.cash >= amt) { payOut(s, payer, [{ pid: toPid, amt }], why); return; }
   bankrupt(s, payer, toPid);
 }
-// gom tiền tự động: bán nhà nhóm đắt trước, rồi thế chấp đất rẻ trước
-export function autoRaise(s, p, need) {
-  let guard = 0;
-  while (p.cash < need && guard++ < 200) {
-    const own = tilesOf(s, p.id);
-    const sell = own.filter(i => canSell(s, p.id, i)).sort((a, b) => houseCost(b) - houseCost(a))[0];
-    if (sell != null) { const v = Math.floor(houseCost(sell) / 2); s.props[sell].h--; p.cash += v; ev(s, { t: 'sell', pid: p.id, tile: sell, h: s.props[sell].h, amt: v }); continue; }
-    const mort = own.filter(i => canMortgage(s, p.id, i)).sort((a, b) => TILES[a].price - TILES[b].price)[0];
-    if (mort != null) { s.props[mort].mort = true; p.cash += mortgageValue(mort); ev(s, { t: 'mort', pid: p.id, tile: mort, amt: mortgageValue(mort) }); continue; }
-    break;
+// ⚡ gom tiền tự động (dùng cho nút "Tự bán nhà/thế chấp cho đủ" + người bị buộc trả ngoài lượt).
+// Tất định, ít thiệt nhất: bán nhà trước (nhóm đắt trước, đều tay – ô nhiều nhà nhất trước), hết nhà mới thế chấp đất (rẻ trước).
+// Còn thiếu ít: chọn món RẺ NHẤT vừa đủ bù phần thiếu để khỏi bán dư. Dừng ngay khi đủ.
+function raiseStep(s, pid, need) {
+  const p = P(s, pid), rem = need - p.cash, own = tilesOf(s, pid);
+  const sells = own.filter(i => canSell(s, pid, i));
+  if (sells.length) {
+    const val = i => Math.floor(houseCost(i) / 2);
+    const cover = sells.filter(i => val(i) >= rem).sort((a, b) => val(a) - val(b) || s.props[b].h - s.props[a].h || a - b)[0];
+    return { t: 'sell', tile: cover != null ? cover : sells.sort((a, b) => val(b) - val(a) || s.props[b].h - s.props[a].h || b - a)[0] };
   }
+  const morts = own.filter(i => canMortgage(s, pid, i));
+  if (morts.length) {
+    const cover = morts.filter(i => mortgageValue(i) >= rem).sort((a, b) => mortgageValue(a) - mortgageValue(b) || a - b)[0];
+    return { t: 'mort', tile: cover != null ? cover : morts.sort((a, b) => mortgageValue(a) - mortgageValue(b) || a - b)[0] };
+  }
+  return null;
+}
+function doRaiseStep(s, p, st, emit = true) {
+  const pr = s.props[st.tile];
+  if (st.t === 'sell') { const v = Math.floor(houseCost(st.tile) / 2); pr.h--; p.cash += v; if (emit) ev(s, { t: 'sell', pid: p.id, tile: st.tile, h: pr.h, amt: v }); return v; }
+  pr.mort = true; p.cash += mortgageValue(st.tile); if (emit) ev(s, { t: 'mort', pid: p.id, tile: st.tile, amt: mortgageValue(st.tile) }); return mortgageValue(st.tile);
+}
+// kế hoạch gom tiền (không đổi state): { steps, raised, ok } – UI dùng để xem trước
+export function planRaise(s, pid, need) {
+  const c = { opts: s.opts, props: JSON.parse(JSON.stringify(s.props)), players: s.players.map(q => ({ ...q })), turn: s.turn, landed: s.landed, landH: s.landH };
+  const p = P(c, pid), steps = []; let raised = 0, guard = 0;
+  while (p.cash < need && guard++ < 300) { const st = raiseStep(c, pid, need); if (!st) break; raised += doRaiseStep(c, p, st, false); steps.push(st); }
+  return { steps, raised, ok: p.cash >= need };
+}
+// gộp các bước thành câu ngắn: "bán 3 nhà (Nguyễn Huệ ×2, Lê Lợi), thế chấp Cống Quỳnh"
+export function raiseSummary(steps) {
+  const sold = {}, mort = [];
+  for (const st of steps) { if (st.t === 'sell') sold[st.tile] = (sold[st.tile] || 0) + 1; else mort.push(st.tile); }
+  const nSold = Object.values(sold).reduce((a, b) => a + b, 0), out = [];
+  if (nSold) out.push(`bán ${nSold} nhà (${Object.keys(sold).map(i => TILES[i].name + (sold[i] > 1 ? ' ×' + sold[i] : '')).join(', ')})`);
+  if (mort.length) out.push(`thế chấp ${mort.map(i => TILES[i].name).join(', ')}`);
+  return out.join(', ') || 'không cần bán gì';
+}
+export function autoRaise(s, p, need) {
+  const steps = []; let raised = 0, guard = 0;
+  while (p.cash < need && guard++ < 300) { const st = raiseStep(s, p.id, need); if (!st) break; raised += doRaiseStep(s, p, st); steps.push(st); }
+  return { steps, raised };
 }
 function bankrupt(s, p, creditorId) {
   const cr = creditorId && P(s, creditorId);

@@ -1,8 +1,8 @@
 // Lớp mạng Cờ Tỷ Phú: host giữ state (luật + xúc xắc do host quyết định), client chỉ gửi action.
 // Kết nối dùng chung shared/net/room.js (Firebase → PeerJS → MQTT), tự vào lại khi tải trang.
-import { createGame, applyAction, viewFor, actorOf, P } from './engine.js?v=48';
-import { botAction } from './bot.js?v=48';
-import { S } from './fx.js?v=48';
+import { createGame, applyAction, viewFor, actorOf, P } from './engine.js?v=49';
+import { botAction } from './bot.js?v=49';
+import { S } from './fx.js?v=49';
 import { OPTIONS, PRESETS } from '../../shared/js/avatar3d.js';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
