@@ -6,6 +6,9 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà',
 };
 export const NOTES = [
+  { id: '20261104-13', date: '04/11/2026', game: 'cangua', title: 'Đổ đôi lên chuồng', items: [
+    '🎲🎲 Đổ đôi thì 1 ngựa ở cửa đích hoặc trên đích được lên thêm 1 bậc, bất kể số – vẫn được đổ tiếp. Tắt được trong sảnh.',
+  ] },
   { id: '20261104-12', date: '04/11/2026', game: 'camel', title: 'Game mới: Đua Lạc Đà 3D!', items: [
     '🐪 Lạc đà 3D chồng lên nhau, con dưới đi là cõng cả chồng. Mỗi lượt: lấy vé chặng, đặt thảm ốc đảo/ảo ảnh, lắc kim tự tháp, hoặc cược kín con về nhất/bét.',
     '🤪 Lạc đà xỉn đen/trắng chạy ngược phá đám (tắt được). Vé hiện % về nhất chặng cho dễ chơi.',

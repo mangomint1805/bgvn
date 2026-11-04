@@ -1,5 +1,5 @@
 // Unit test luật cờ cá ngựa. Chạy: node cangua/test/rules.mjs
-import { createGame, applyAction, legalMoves, absSq, occupant, GATE, HOME0, exitOk, finished } from '../js/engine.js?v=1';
+import { createGame, applyAction, legalMoves, absSq, occupant, GATE, HOME0, exitOk, finished } from '../js/engine.js?v=2';
 let pass = 0, fail = 0;
 const t = (name, f) => { try { f(); pass++; } catch (e) { fail++; console.log('✗', name, '-', e.message); } };
 const eq = (a, b, m = '') => { if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error(`${m} mong ${JSON.stringify(b)}, nhận ${JSON.stringify(a)}`); };
@@ -82,6 +82,13 @@ t('3 lần thưởng liền mất lượt (tuỳ chọn)', () => {
   roll(s, [1, 1]); if (s.stage === 'move') applyAction(s, 'p0', { type: 'move', h: 0 }); roll(s, [2, 2]); if (s.stage === 'move') applyAction(s, 'p0', { type: 'move', h: 0 });
   eq(s.turn, 0); const before = JSON.stringify(s.players[0].horses); roll(s, [3, 3]); eq(s.turn, 1); eq(JSON.stringify(s.players[0].horses), before); ok(s.ev.some(e => e.t === 'triple'));
   const s2 = G(); roll(s2, [1, 1]); roll(s2, [6, 1]); if (s2.stage === 'move') applyAction(s2, 'p0', { type: 'move', out: true }); roll(s2, [3, 3]); ok(!s2.ev.some(e => e.t === 'triple'), 'mặc định tắt');
+});
+t('đổ đôi lên chuồng thêm 1 bậc (mặc định bật)', () => {
+  const s = G(2); s.players[0].horses = [HOME0 + 1, 30, -1, -1]; roll(s, [4, 4]);
+  if (s.stage === 'move') { ok(s.moves.some(m => m.dbl && m.h === 0 && m.to === HOME0 + 2), 'có nước lên bậc nhờ đôi'); applyAction(s, 'p0', { type: 'move', h: 0, to: HOME0 + 2 }); }
+  eq(s.players[0].horses[0], HOME0 + 2); eq(s.turn, 0, 'đôi vẫn được đổ tiếp');
+  const s2 = G(2, { dblUp: false }); s2.players[0].horses = [HOME0 + 1, 30, -1, -1]; roll(s2, [4, 4]); ok(!(s2.moves || []).some(m => m.dbl), 'tắt thì không có');
+  const s3 = G(2); s3.players[0].horses = [GATE, 30, -1, -1]; roll(s3, [5, 5]); ok((s3.moves || []).some(m => m.dbl && m.to === GATE + 1) || s3.players[0].horses[0] > GATE, 'ở cửa đích đổ đôi lên bậc 1');
 });
 t('sai lượt / sai giai đoạn bị từ chối', () => { const s = G(); ok(!applyAction(s, 'p1', { type: 'roll' }).ok); ok(!applyAction(s, 'p0', { type: 'move', h: 0 }).ok); });
 console.log(`rules: ${pass} đạt, ${fail} lỗi`); if (fail) process.exit(1);

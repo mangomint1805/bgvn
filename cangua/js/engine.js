@@ -12,7 +12,7 @@ export const COLOR_NAMES = ['Đỏ', 'Xanh dương', 'Xanh lá', 'Vàng'];
 // dice: 2 (mặc định, luật nhà anh Minto) | 1 · moveMode: 'total' (dồn tổng 1 con) | 'split' (tách 2 xúc xắc)
 // exit2: 'd16' (đôi hoặc 1+6) | 'any6' (đôi hoặc có 1 con 6) · exit1 (1 xúc xắc): '6' | '16'
 // homeRule: 'vn' (lên bậc n phải đổ đúng n) | 'count' (đi đúng số bước) · winRule: 'top4' (chiếm bậc 3-4-5-6) | 'home' (cả 4 vào đích)
-export const DEFAULTS = { dice: 2, moveMode: 'total', exit2: 'd16', exit1: '6', noJump: true, homeRule: 'vn', winRule: 'top4', triple: false, playOn: false, turnTime: 0, botLevel: 'normal' };
+export const DEFAULTS = { dice: 2, moveMode: 'total', exit2: 'd16', exit1: '6', noJump: true, homeRule: 'vn', dblUp: true, winRule: 'top4', triple: false, playOn: false, turnTime: 0, botLevel: 'normal' };
 
 let rand = Math.random;
 export function setRandom(f) { rand = f || Math.random; }
@@ -112,6 +112,13 @@ export function legalMoves(s, pid = actorOf(s)) {
     if (o.dice === 2 && o.moveMode !== 'split' && o.homeRule === 'vn' && onTrack(pos) && pos < GATE && GATE - pos <= 6)
       for (const v of new Set(s.dice)) { const m = horseMove(s, p, h, v); if (m && m.to === GATE) add(m); }
   }
+  // luật nhà: đổ đôi thì 1 ngựa ở cửa đích / trên đích được lên thêm 1 bậc bất kể số (dùng cả lần đổ)
+  if (o.dice === 2 && o.homeRule === 'vn' && o.dblUp !== false && s.full && s.dice[0] === s.dice[1])
+    for (let h = 0; h < HORSES; h++) {
+      const pos = p.horses[h]; if (!homeish(s, pos)) continue;
+      const k = pos === GATE ? 0 : step(pos); if (k >= 6 || homeOcc(p, k + 1)) continue;
+      add({ h, v: 0, kind: 'home', from: pos, to: pos + 1, path: [pos + 1], all: true, dbl: true });
+    }
   // luật đôi (dồn tổng): tổng không đi được con nào thì được đi 1 con xúc xắc
   if (o.dice === 2 && o.moveMode !== 'split' && s.dice[0] === s.dice[1] && !out.some(m => m.kind !== 'out'))
     for (let h = 0; h < HORSES; h++) if (!homeish(s, p.horses[h])) add(horseMove(s, p, h, s.dice[0]));

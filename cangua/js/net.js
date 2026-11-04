@@ -1,8 +1,8 @@
 // Lớp mạng Cờ cá ngựa: host giữ state (luật + xúc xắc do host quyết định), client chỉ gửi action.
 // Kết nối dùng chung shared/net/room.js (Firebase → PeerJS → MQTT), tự vào lại khi tải trang.
-import { createGame, applyAction, viewFor, actorOf, P } from './engine.js?v=1';
-import { botAction } from './bot.js?v=1';
-import { S } from './fx.js?v=1';
+import { createGame, applyAction, viewFor, actorOf, P } from './engine.js?v=2';
+import { botAction } from './bot.js?v=2';
+import { S } from './fx.js?v=2';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 const NS = 'bgvn-cangua', PREFIX = 'bgvn-cangua-', GAME = 'cangua', SNAP = 'bgvn-hostsnap-' + GAME;
@@ -28,7 +28,7 @@ export function animTime(evs) {
   }
   return ms * S();
 }
-const OPT_OK = { dice: [1, 2], moveMode: ['total', 'split'], exit2: ['d16', 'any6'], exit1: ['6', '16'], noJump: [true, false], homeRule: ['vn', 'count'], winRule: ['top4', 'home'], triple: [true, false], playOn: [true, false], turnTime: [0, 15, 30, 45], botLevel: ['easy', 'normal', 'hard'] };
+const OPT_OK = { dice: [1, 2], moveMode: ['total', 'split'], exit2: ['d16', 'any6'], exit1: ['6', '16'], noJump: [true, false], homeRule: ['vn', 'count'], dblUp: [true, false], winRule: ['top4', 'home'], triple: [true, false], playOn: [true, false], turnTime: [0, 15, 30, 45], botLevel: ['easy', 'normal', 'hard'] };
 
 export class Host {
   constructor(me, handlers, offline = false, restore = null) {
@@ -36,7 +36,7 @@ export class Host {
     this.players = [{ id: 'host', name: me.name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.timer = null; this.afk = null;
     this.lim = hostLimiter(); this.botReactAt = 0;
-    this.opts = { dice: 2, moveMode: 'total', exit2: 'd16', exit1: '6', noJump: true, homeRule: 'vn', winRule: 'top4', triple: false, playOn: false, turnTime: offline ? 0 : 30, botLevel: 'normal' };
+    this.opts = { dice: 2, moveMode: 'total', exit2: 'd16', exit1: '6', noJump: true, homeRule: 'vn', dblUp: true, winRule: 'top4', triple: false, playOn: false, turnTime: offline ? 0 : 30, botLevel: 'normal' };
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));
       this.state = restore.state; this.code = restore.code; this.opts = { ...this.opts, ...(restore.opts || {}) };

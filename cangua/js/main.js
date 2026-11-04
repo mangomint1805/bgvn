@@ -1,12 +1,12 @@
 // Cờ cá ngựa 3D – giao diện: trang chủ, sảnh, ván chơi 3D, hoạt ảnh sự kiện, nút đổ giữ-để-đổ.
-import { Host, Client, MAX, loadSnapshot, session, CANGUA_PHRASES } from './net.js?v=1';
+import { Host, Client, MAX, loadSnapshot, session, CANGUA_PHRASES } from './net.js?v=2';
 import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.js?v=2';
-import { COLOR_NAMES, GATE, HOME0, exitOk } from './engine.js?v=1';
-import { Board3D } from './scene3d.js?v=1';
-import * as fx from './fx.js?v=1';
-import { guideHTML } from './guide.js?v=1';
+import { COLOR_NAMES, GATE, HOME0, exitOk } from './engine.js?v=2';
+import { Board3D } from './scene3d.js?v=2';
+import * as fx from './fx.js?v=2';
+import { guideHTML } from './guide.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=101';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -103,6 +103,7 @@ const OPTS = [
   ['exit2', '🚪 Xuất chuồng', [['d16', 'Đôi hoặc 1+6'], ['any6', 'Đôi hoặc có con 6']], 'Đổ được thì cũng được đổ tiếp.', o => o.dice === 2],
   ['exit1', '🚪 Xuất chuồng', [['6', 'Chỉ 6'], ['16', '1 hoặc 6']], 'Đổ được thì cũng được đổ tiếp.', o => o.dice === 1],
   ['noJump', '🚧 Nhảy qua đầu ngựa', [[true, 'Không được'], [false, 'Được']], 'Không được: trên đường đi không vượt qua con ngựa nào.'],
+  ['dblUp', '🎲🎲 Đôi lên chuồng', [[true, 'Bật'], [false, 'Tắt']], 'Đổ đôi thì 1 ngựa ở cửa đích hoặc trên đích được lên thêm 1 bậc, bất kể số.'],
   ['homeRule', '🏁 Lên đích', [['vn', 'Đổ đúng số bậc'], ['count', 'Đếm bước']], 'Đúng số bậc: dừng ở cửa, ra n thì lên bậc n, bậc k lên k+1 phải ra đúng k+1.'],
   ['winRule', '🏆 Thắng khi', [['top4', 'Chiếm bậc 3-4-5-6'], ['home', 'Cả 4 lên đích']]],
   ['triple', '😵 3 lần thưởng liền', [[false, 'Không sao'], [true, 'Mất lượt']], 'Đổ đôi / 1+6 tới lần thứ 3 liên tiếp thì mất lượt.', o => o.dice === 2],
@@ -340,6 +341,7 @@ function moveLabel(v, m) {
   const c = cur(v), kick = m.kick ? ` · đá ${esc(nm(v, m.kick.pid))}! 🦶` : '';
   const use = v.opts.dice === 2 && (v.opts.moveMode === 'split' || m.v !== v.dice[0] + v.dice[1]) && m.v ? ` (dùng ${m.v})` : '';
   if (m.kind === 'out') return `🚪 Xuất chuồng${kick}`;
+  if (m.dbl) return `🎲🎲 Ngựa ${m.h + 1} → bậc ${m.to - GATE} (nhờ đôi)`;
   if (m.to > GATE) return `🏁 Ngựa ${m.h + 1} → bậc ${m.to - GATE}${use}`;
   if (m.to === GATE) return `🐎 Ngựa ${m.h + 1} về cửa đích${use}${kick}`;
   void c; return `🐎 Ngựa ${m.h + 1} đi ${m.to - m.from} ô${use}${kick}`;

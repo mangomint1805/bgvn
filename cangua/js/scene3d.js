@@ -3,7 +3,7 @@
 // vật liệu / hình học dùng chung.
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
-import { COLORS, GATE, HOME0, onTrack, absSq } from './engine.js?v=1';
+import { COLORS, GATE, HOME0, onTrack, absSq } from './engine.js?v=2';
 
 export const QUALITY = { low: { aa: false, pr: 1, shadow: 0, tex: 1024 }, med: { aa: true, pr: 1.5, shadow: 1024, tex: 1536 }, high: { aa: true, pr: 2, shadow: 2048, tex: 2048 } };
 const FONT = '"Be Vietnam Pro", system-ui, sans-serif', TITLE = '"Baloo 2", "Be Vietnam Pro", system-ui, sans-serif';

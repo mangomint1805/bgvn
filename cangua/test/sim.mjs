@@ -1,6 +1,6 @@
 // Mô phỏng hàng trăm ván toàn bot: đếm ván kẹt / lỗi / vi phạm bất biến. Chạy: node cangua/test/sim.mjs [số ván]
-import { createGame, applyAction, actorOf, setRandom, absSq, onTrack, legalMoves, GATE, TOP } from '../js/engine.js?v=1';
-import { botAction } from '../js/bot.js?v=1';
+import { createGame, applyAction, actorOf, setRandom, absSq, onTrack, legalMoves, GATE, TOP } from '../js/engine.js?v=2';
+import { botAction } from '../js/bot.js?v=2';
 const G = +process.argv[2] || 800;
 let seed = 4242; setRandom(() => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; });
 const variants = [{}, { noJump: false }, { homeRule: 'count' }, { winRule: 'home' }, { playOn: true }, { moveMode: 'split' }, { exit2: 'any6' }, { triple: true }, { dice: 1 }, { dice: 1, exit1: '16', homeRule: 'count' }, { moveMode: 'split', noJump: false, playOn: true }];

@@ -20,6 +20,7 @@ export function guideHTML() {
     <li>Ngựa đã lên đích thì an toàn, không ai đá được.</li></ul>
   <h3>🏁 Lên đích (bậc 1–6)</h3><ul>
     <li><b>Mặc định (kiểu Việt Nam)</b>: ngựa phải dừng <b>đúng ô cửa đích</b> (đổ dư thì đứng im). Từ cửa, đổ ra số <b>n</b> thì leo thẳng lên <b>bậc n</b>. Đang ở <b>bậc k</b> muốn lên bậc k+1 phải đổ đúng <b>k+1</b>.</li>
+    <li>🎲🎲 <b>Đổ đôi lên chuồng</b> (mặc định bật): đổ <b>đôi</b> thì 1 ngựa đang ở cửa đích hoặc trên đích được <b>lên thêm 1 bậc</b> bất kể số (dùng cả lần đổ, vẫn được đổ tiếp). Tắt trong sảnh nếu không chơi luật này.</li>
     <li>Trên đích được dùng <b>1 trong 2 xúc xắc hoặc tổng</b> để ra số cần (ví dụ ở bậc 3 cần 4: đổ 4-x, x-4, 1+3 hay 2+2 đều được).</li>
     <li>Không được vượt ngựa nhà đang đứng trên đích: muốn chiếm bậc 3-4-5-6 thì nên đưa con đầu lên bậc 6 trước.</li>
     <li><b>Tuỳ chọn "Đếm bước"</b>: ngựa đi xuyên qua cửa vào đích, đi đúng số bước, không được vượt quá bậc 6.</li></ul>

@@ -1,7 +1,7 @@
 import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, POKER_PHRASES } from './net.js?v=1';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=101';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
 import { OPT_CHOICES } from './engine.js?v=1';
 import { evaluate, preflopTier, TIER_TXT } from './eval.js?v=1';
 import * as fx from './pfx.js?v=1';

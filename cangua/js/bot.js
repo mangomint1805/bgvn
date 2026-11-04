@@ -1,5 +1,5 @@
 // Bot cờ cá ngựa: ưu tiên đá ngựa, xuất chuồng, lên đích, né chỗ nguy hiểm. 3 mức: easy / normal / hard.
-import { P, absSq, onTrack, inHome, GATE, HOME0, TRACK, occupant, exitOk } from './engine.js?v=1';
+import { P, absSq, onTrack, inHome, GATE, HOME0, TRACK, occupant, exitOk } from './engine.js?v=2';
 
 // xác suất (thô) 1 ô tuyệt đối bị ngựa đối thủ đá ở lượt sau
 function threat(s, me, sq, ignore = null) {
