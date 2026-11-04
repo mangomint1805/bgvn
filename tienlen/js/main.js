@@ -1,12 +1,12 @@
-import { Host, Client, MAX, loadSnapshot, session, TL_PHRASES, BEG_LIMIT } from './net.js?v=3';
+import { Host, Client, MAX, loadSnapshot, session, TL_PHRASES, BEG_LIMIT } from './net.js?v=4';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
-import { classify, legalPlays, badFinish, VE_HEO, comboName, comboKind, rankOf, HEO, BETS, TURN_TIMES, DEFAULT_OPTS, START_CHIPS, TOI_TRANG, isHang, cardName } from './engine.js?v=3';
-import { rankPlays, splitHand, LEVELS } from './bot.js?v=3';
-import { cardHTML } from './cards.js?v=3';
-import { guideHTML } from './guide.js?v=3';
-import * as fx from './tfx.js?v=3';
+import { classify, legalPlays, badFinish, VE_HEO, comboName, comboKind, rankOf, HEO, BETS, TURN_TIMES, DEFAULT_OPTS, START_CHIPS, TOI_TRANG, isHang, cardName } from './engine.js?v=4';
+import { rankPlays, splitHand, LEVELS } from './bot.js?v=4';
+import { cardHTML } from './cards.js?v=4';
+import { guideHTML } from './guide.js?v=4';
+import * as fx from './tfx.js?v=4';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];

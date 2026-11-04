@@ -83,7 +83,10 @@ export function comboName(c, ids = null) {
     case 'pair': return heo ? 'Đôi heo' : `Đôi ${R}`;
     case 'triple': return heo ? 'Sám heo' : `Sám ${R}`;
     case 'quad': return heo ? 'Tứ quý heo' : `Tứ quý ${R}`;
-    case 'straight': return `Sảnh ${RANKS[rankOf(c.top) - c.len + 1]}→${R}`;
+    case 'straight': { const lo = RANKS[rankOf(c.top) - c.len + 1];
+      if (c.len === 4 && lo === '3') return '3 năm 6 tháng có là chi 💔'; // sảnh 3-4-5-6
+      if (c.len === 4 && lo === '6') return 'Sống bằng tình cảm 🥹'; // sảnh 6-7-8-9
+      return `Sảnh ${c.len} lá ${lo}→${R}`; }
     case 'pairs': return `${c.len} đôi thông ${RANKS[rankOf(c.top) - c.len + 1]}→${R}`;
   }
   return '';

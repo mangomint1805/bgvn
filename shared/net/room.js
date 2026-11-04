@@ -64,6 +64,8 @@ export class RoomHost {
 }
 
 // ======================= NGƯỜI VÀO PHÒNG =======================
+// báo cho trang biết kết quả vào phòng (shared/net/joinlink.js nghe để xử lý link mời): welcome | fail | reject
+function emit(type, code, msg) { try { dispatchEvent(new CustomEvent('bgvn-room', { detail: { type, code, msg } })); } catch (e) {} }
 export class RoomClient {
   // opts: { ns, prefix, code, joinMsg(): object, onMsg(msg), onWelcome(id), onStatus(text, kind), onFail(text), onLost() }
   constructor(opts) {
@@ -94,7 +96,7 @@ export class RoomClient {
     const max = this.wasIn ? 12 : 2;
     if (++this.tries <= max) { this.status(this.wasIn ? `Mất kết nối – đang vào lại (${this.tries}/${max})…` : `Chưa thấy phòng, thử lại (${this.tries}/${max})…`); this.mi = 0; setTimeout(() => this.connect(), this.wasIn ? 3000 : 2000); return; }
     const msg = this.wasIn ? 'Không vào lại được phòng. Có thể chủ phòng đã thoát.' : `Không tìm thấy phòng ${this.code}. Kiểm tra lại mã – chủ phòng phải đang mở tab game.`;
-    this.status(msg, 'fail'); this.o.onFail && this.o.onFail(msg);
+    this.status(msg, 'fail'); this.o.onFail && this.o.onFail(msg); emit('fail', this.code, msg);
   }
   retryNow() { if (this.dead || this.id) return; this.tries = 0; this.mi = 0; this.connect(); }
   async connect() {
@@ -118,8 +120,9 @@ export class RoomClient {
       if (conn !== this.conn || !msg) return;
       this.lastSeen = Date.now();
       if (msg.t === '__hb') return;
-      if (msg.t === 'welcome') { clearTimeout(this.joinTimer); this.id = msg.id; this.tries = 0; this.wasIn = true; this.watch(conn, lost); this.status('Đã vào phòng', 'ok'); this.o.onWelcome && this.o.onWelcome(msg.id, msg); return; }
+      if (msg.t === 'welcome') { clearTimeout(this.joinTimer); this.id = msg.id; this.tries = 0; this.wasIn = true; this.watch(conn, lost); this.status('Đã vào phòng', 'ok'); this.o.onWelcome && this.o.onWelcome(msg.id, msg); emit('welcome', this.code); return; }
       this.o.onMsg(msg);
+      if (msg.t === 'error' && !this.id && !this.wasIn && !this.dead) emit('reject', this.code, msg.msg); // chủ phòng từ chối (đủ người, ván đang chơi…)
     });
     const lost = () => {
       if (conn !== this.conn || this.dead || conn._gone) return;

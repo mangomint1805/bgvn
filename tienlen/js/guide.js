@@ -1,6 +1,6 @@
 // Hướng dẫn luật Tiến Lên miền Nam (tiếng Việt, có ví dụ lá bài)
-import { cardHTML } from './cards.js?v=3';
-import { PAY, TOI_TRANG, DEFAULT_OPTS, VE_HEO } from './engine.js?v=3';
+import { cardHTML } from './cards.js?v=4';
+import { PAY, TOI_TRANG, DEFAULT_OPTS, VE_HEO } from './engine.js?v=4';
 
 const R = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'], SU = '♠♣♦♥';
 const ids = t => t.split(' ').map(x => R.indexOf(x.slice(0, -1)) * 4 + SU.indexOf(x.slice(-1)));
