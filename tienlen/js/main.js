@@ -1,7 +1,7 @@
 import { Host, Client, MAX, loadSnapshot, session, TL_PHRASES, BEG_LIMIT } from './net.js?v=1';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=100';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=101';
 import { classify, legalPlays, comboName, comboKind, rankOf, HEO, BETS, TURN_TIMES, DEFAULT_OPTS, START_CHIPS, TOI_TRANG, isHang, cardName } from './engine.js?v=1';
 import { rankPlays, splitHand, LEVELS } from './bot.js?v=1';
 import { cardHTML } from './cards.js?v=1';

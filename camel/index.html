@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Đua Lạc Đà 3D – BGVN</title>
+<meta name="description" content="Đua lạc đà 3D tiếng Việt: lạc đà chồng nhau, đoán con về nhất bằng xu ảo, chơi online cùng hội bạn hoặc với bot.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐪</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/camel.css?v=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+</head>
+<body>
+<div class="sky-bg"><i class="sun"></i><i class="dune d1"></i><i class="dune d2"></i><i class="dune d3"></i></div>
+
+<section id="screen-home" class="screen active">
+  <a class="back-hub" href="../">← Bàn chơi BGVN</a>
+  <div class="home-card">
+    <div class="hero" aria-hidden="true"><span class="cm r">🐪</span><span class="cm y">🐫</span><span class="cm b">🐪</span><span class="pyr">🔺</span></div>
+    <h1 class="logo">Đua Lạc Đà<small>3D · chồng nhau mà chạy</small></h1>
+    <p class="tag">Lạc đà cõng nhau chạy loạn quanh kim tự tháp – đoán đúng con về nhất để giàu to 🪙</p>
+    <label class="fld"><span>Tên của bạn</span><input id="name" maxlength="16" placeholder="Nhập tên…" autocomplete="off"></label>
+    <div class="btn-col">
+      <button class="btn big pri" id="btn-create">✨ Tạo phòng online</button>
+      <div class="join-row"><input id="join-code" maxlength="5" placeholder="MÃ PHÒNG" autocomplete="off" aria-label="Mã phòng"><button class="btn" id="btn-join">Vào</button></div>
+      <button class="btn big" id="btn-offline">🤖 Chơi với bot</button>
+    </div>
+    <div class="home-tools"><button class="chip" id="btn-guide-home">📖 Hướng dẫn</button><button class="chip" id="btn-settings-home">⚙️ Cài đặt</button><button class="chip" id="btn-news-home">📝 Có gì mới</button></div>
+    <p class="note">Chơi vui bằng xu ảo, không cá cược tiền thật · 2–8 người.<br>Bản fan-made phi thương mại cho hội bạn · tự vẽ 100% bằng code.</p>
+  </div>
+</section>
+
+<section id="screen-lobby" class="screen">
+  <div class="lobby">
+    <div class="lobby-head">
+      <button class="chip" id="btn-leave-lobby">← Thoát</button><button class="chip" id="btn-news-lobby">📝 Có gì mới</button>
+      <div class="code-box" id="code-box">Mã phòng <b id="room-code">…</b> <button class="chip sm" id="btn-copy">Sao chép link</button></div>
+    </div>
+    <div class="lobby-grid">
+      <div class="panel"><h3>Người chơi <small id="pcount"></small></h3><ul id="plist" class="plist"></ul>
+        <div class="row-btns"><button class="btn" id="btn-addbot">＋ Thêm bot</button></div>
+        <p class="note">Hay nhất 3–8 người. Mỗi người bắt đầu với 3 xu ảo.</p>
+      </div>
+      <div class="panel"><h3>Luật chơi</h3><div id="opts" class="opts"></div></div>
+    </div>
+    <button class="btn big pri" id="btn-start">▶ Bắt đầu đua</button>
+    <p class="wait" id="wait-msg">Đang chờ chủ phòng bắt đầu…</p>
+  </div>
+</section>
+
+<section id="screen-game" class="screen">
+  <header class="topbar">
+    <button class="chip ic" id="btn-leave" title="Rời ván" aria-label="Rời ván">←</button>
+    <div class="turn-tag" id="turn-tag"></div>
+    <div class="leg-tag" id="leg-tag"></div>
+    <div class="timer" id="timer" hidden></div>
+    <div class="tools">
+      <button class="chip ic" id="btn-follow" title="Camera theo lạc đà" aria-label="Camera theo lạc đà">🎯</button>
+      <button class="chip ic" id="btn-overview" title="Xem toàn đường đua" aria-label="Xem toàn đường đua">🗺️</button>
+      <button class="chip ic" id="btn-log" title="Nhật ký" aria-label="Nhật ký">📜</button>
+      <button class="chip ic" id="btn-settings" title="Cài đặt" aria-label="Cài đặt">⚙️</button>
+    </div>
+  </header>
+  <div class="game-body">
+    <div class="players" id="players"></div>
+    <div class="view3d" id="game3d"><div class="rank-strip" id="rank-strip"></div><div class="cam-hint" id="cam-hint" hidden>Kéo để xoay · chụm để phóng to</div></div>
+    <div class="act" id="panel"></div>
+  </div>
+  <aside class="log" id="log"><h4>Nhật ký <button class="chip sm" id="btn-log-close" aria-label="Đóng nhật ký">✕</button></h4><ol id="log-list"></ol></aside>
+</section>
+
+<div class="modal" id="modal"><div class="modal-box" id="modal-box"></div></div>
+<div class="toast" id="toast"></div>
+<div id="fx-layer"></div>
+<script type="module" src="js/main.js?v=1"></script>
+</body>
+</html>

@@ -3,9 +3,14 @@
 export const GAMES = {
   all: '🎲 BGVN', bang: '🤠 BANG!', uno: '🃏 UNO', typhu: '🏙️ Cờ Tỷ Phú', scribble: '🎨 Scribble it!',
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
-  xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa',
+  xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà',
 };
 export const NOTES = [
+  { id: '20261104-12', date: '04/11/2026', game: 'camel', title: 'Game mới: Đua Lạc Đà 3D!', items: [
+    '🐪 Lạc đà 3D chồng lên nhau, con dưới đi là cõng cả chồng. Mỗi lượt: lấy vé chặng, đặt thảm ốc đảo/ảo ảnh, lắc kim tự tháp, hoặc cược kín con về nhất/bét.',
+    '🤪 Lạc đà xỉn đen/trắng chạy ngược phá đám (tắt được). Vé hiện % về nhất chặng cho dễ chơi.',
+    '🪙 Chơi bằng xu ảo, ai giàu nhất thắng. Có bot, chơi online, thả emoji.',
+  ] },
   { id: '20261104-11', date: '04/11/2026', game: 'typhu', title: 'Đất thế chấp thành đất trống', items: [
     '🏦 Đất đang thế chấp giờ coi như ô trống: ai dừng ở đó cũng mua được với giá gốc, chủ cũ mất đất. Muốn giữ thì nhớ chuộc sớm!',
     '↩️ Bỏ luật cũ "mua lại đất thế chấp giá gấp đôi".',
