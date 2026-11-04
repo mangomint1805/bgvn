@@ -6,6 +6,10 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà',
 };
 export const NOTES = [
+  { id: '20261105-01', date: '05/11/2026', game: 'all', title: 'Bấm link là vào phòng, gợi ý chỉ khi chơi với bot', items: [
+    '🔗 Mở link phòng bạn gửi là vào thẳng sảnh (chưa có tên thì hỏi tên 1 lần). Phòng hết hạn thì báo và quay về trang đầu.',
+    '🙈 Có từ 2 người thật trong phòng thì tắt gợi ý / xác suất (Mèo Nổ % bom, Lạc Đà % vé, Poker 💡, Tiến Lên 💡 Gợi ý, Tam Quốc Sát thầy đồ, BANG! 🐣, Cờ tỷ phú tính lời lỗ giao dịch). Chơi với bot vẫn dùng được.',
+  ] },
   { id: '20261104-18', date: '04/11/2026', game: 'tienlen', title: 'Tên sảnh mới', items: [
     '🃏 Sảnh ghi rõ số lá (vd. "Sảnh 5 lá 6→10"). Sảnh 3-4-5-6 là "3 năm 6 tháng có là chi 💔", sảnh 6-7-8-9 là "Sống bằng tình cảm 🥹".',
   ] },

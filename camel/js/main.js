@@ -1,5 +1,7 @@
 // Đua Lạc Đà 3D – giao diện: trang chủ, sảnh, ván chơi (3D + bảng HUD 2D), hoạt ảnh sự kiện.
-import { Host, Client, MAX, loadSnapshot, session, CAMEL_PHRASES, setSpeedFn } from './net.js?v=1';
+import { hintsAllowed, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
+import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
+import { Host, Client, MAX, loadSnapshot, session, CAMEL_PHRASES, setSpeedFn } from './net.js?v=2';
 import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.js?v=2';
 import { CAMEL, RACERS, TRACK, LEG_ROLLS, OVERALL_PAY, legalTiles, ranking } from './engine.js?v=1';
 import { simLeg } from './bot.js?v=1';
@@ -49,7 +51,7 @@ function openSettings() {
     <div class="set-row"><b>🎵 Nhạc nền</b><div class="seg"><button class="${settings.musicOn ? 'on' : ''}" ${fnAttr('modal', () => { fx.musicToggle(!settings.musicOn); openSettings(); })}>${settings.musicOn ? 'Đang bật' : 'Đang tắt'}</button></div>
       <input type="range" min="0" max="1" step="0.05" value="${settings.music}" id="vol-music" aria-label="Âm lượng nhạc"></div>
     <div class="set-row"><b>🔊 Hiệu ứng âm thanh</b><input type="range" min="0" max="1" step="0.05" value="${settings.sfx}" id="vol-sfx" aria-label="Âm lượng hiệu ứng"></div>
-    <div class="set-row"><b>📊 % gợi ý trên vé</b>${seg('odds', [[true, 'Hiện'], [false, 'Ẩn']], () => shown && renderPanel())}</div>
+    <div class="set-row"><b>📊 % gợi ý trên vé</b>${oddsOk() ? seg('odds', [[true, 'Hiện'], [false, 'Ẩn']], () => shown && renderPanel()) : `<div class="seg"><button disabled>Hiện</button><button class="on" disabled>Ẩn</button></div><small style="flex-basis:100%;opacity:.75">🔒 ${BOT_ONLY_NOTE}</small>`}</div>
     <div class="set-row"><b>✨ Hiệu ứng hình ảnh</b>${seg('effects', [[true, 'Bật'], [false, 'Tắt']], v => B && B.setEffects(v))}</div>
     <div class="set-row"><b>🖥️ Chất lượng 3D</b>${seg('quality', [['low', 'Thấp'], ['med', 'Vừa'], ['high', 'Cao']], v => B && B.setQuality(v))}</div>
     <div class="set-row"><b>⏩ Tốc độ hoạt ảnh</b>${seg('speed', [['slow', 'Chậm'], ['normal', 'Vừa'], ['fast', 'Nhanh']])}</div>
@@ -92,12 +94,14 @@ $('#btn-join').onclick = () => {
   net = new Client(code, myName(), handlers); isHost = false; $('#code-box').style.display = '';
 };
 $('#join-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
-const qcode = new URLSearchParams(location.search).get('room'); if (qcode) $('#join-code').value = qcode.toUpperCase().slice(0, 5);
+// link mời ?room=MÃ (shared/net/joinlink.js): mở link là vào thẳng phòng
+const qcode = linkCode(); if (qcode) $('#join-code').value = qcode;
+function linkJoin(code) { $('#join-code').value = code; joinByLink({ code, toast: m => toast(m), join: n => { $('#name').value = n; $('#btn-join').click(); }, abort: () => leave() }); }
 function leave() { if (net) { try { net.leave(); } catch (e) {} } net = null; lobby = null; resetGame(); closeModal(); netStatus(''); show('screen-home'); }
 $('#btn-leave-lobby').onclick = leave;
 $('#btn-leave').onclick = () => openModal(`<h2>Rời ván?</h2><p style="text-align:center">${isHost ? 'Bạn là chủ phòng – rời đi sẽ kết thúc cuộc đua của mọi người.' : 'Bạn có thể vào lại bằng mã phòng (máy sẽ tạm chơi thay).'}</p>
   <div class="mbtns"><button class="btn ghost" data-close>Ở lại</button>${btn('modal', 'Rời ván', leave, 'red')}</div>`);
-$('#btn-copy').onclick = () => { const url = location.origin + location.pathname + '?room=' + $('#room-code').textContent.trim(); (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => toast('Đã chép link mời 📋'), () => toast(url)); };
+$('#btn-copy').onclick = () => { const url = inviteUrl($('#room-code').textContent.trim()); (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => toast('Đã chép link mời 📋'), () => toast(url)); };
 
 // ---------- sảnh ----------
 const OPTS = [
@@ -352,8 +356,10 @@ function send(a) {
   setTimeout(function chk() { if (!busy) return; if (pumping || queue.length) return setTimeout(chk, 1000); busy = false; renderPanel(); }, 5000);
 }
 let oddsKey = '', odds = null;
+// % gợi ý chỉ có khi chơi với bot: phòng có ≥ 2 người thật thì ẩn (theo danh sách người chơi hiện tại)
+function oddsOk() { return hintsAllowed(lobby || (shown && shown.players)); }
 function getOdds(v) {
-  if (!settings.odds || v.phase !== 'playing') return null;
+  if (!settings.odds || !oddsOk() || v.phase !== 'playing') return null;
   const key = v.leg + ':' + v.seq + ':' + v.rolled.length;
   if (key !== oddsKey) { oddsKey = key; try { odds = simLeg(v, 500); } catch (e) { odds = null; } }
   return odds;
@@ -454,6 +460,9 @@ function showEnd(v) {
 // ---------- tải lại trang: tự khôi phục phòng / tự vào lại ----------
 (function resume() {
   const snap = loadSnapshot(), ses = session.load(GAME);
+  const lk = linkCode(); // mở link mời phòng khác → vào thẳng phòng đó; link của chính phòng mình → vào lại như thường
+  if (lk && !(ses && ses.code === lk)) { linkJoin(lk); return; }
+  if (lk) clearLinkCode();
   if (snap && ses && ses.role === 'host') {
     fx.musicResumeIfOn();
     const hp = snap.players.find(p => p.id === 'host') || {};

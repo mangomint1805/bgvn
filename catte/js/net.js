@@ -1,7 +1,7 @@
 // Lớp mạng Cát tê: chủ phòng giữ state, người vào chỉ gửi action. Kết nối dùng chung shared/net/room.js
 import { createGame, applyAction, viewFor, waitingOn, nextHand, getPlayer, DEFAULT_OPTS, OPT_CHOICES, MAX_PLAYERS, CUT } from './engine.js?v=2';
 import { botAction } from './bot.js?v=2';
-import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 // Câu chọc cho bảng thả emoji (≤ 24 ký tự)
 export const CT_PHRASES = ['Đè nè cưng!', 'Úp cho lành 🙈', 'Chết chưa con!', 'Tới rồi nha 😎', 'Run chưa? 😏', 'Giữ Át nãy giờ', 'Cứu tui'];

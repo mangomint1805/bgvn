@@ -1,4 +1,5 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, CT_PHRASES, NEXT_MS } from './net.js?v=2';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, CT_PHRASES, NEXT_MS } from './net.js?v=3';
+import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
@@ -75,12 +76,14 @@ $('#btn-join').onclick = () => {
 };
 $('#join-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
 $('#join-code').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase(); });
-const qcode = new URLSearchParams(location.search).get('room'); if (qcode) $('#join-code').value = qcode.toUpperCase();
+// link mời ?room=MÃ (shared/net/joinlink.js): mở link là vào thẳng phòng
+const qcode = linkCode(); if (qcode) $('#join-code').value = qcode;
+function linkJoin(code) { $('#join-code').value = code; joinByLink({ code, toast: m => toast(m), join: n => { $('#name').value = n; $('#btn-join').click(); }, abort: () => leave() }); }
 function leave() { if (net) (net.leave ? net.leave() : net.destroy()); net = null; view = null; lobby = null; closeModal(); clearSd(); reacts.setVisible(false); show('screen-home'); }
 $('#btn-leave-lobby').onclick = leave;
 $('#btn-leave').onclick = () => openModal(`<h2>Rời bàn?</h2><p class="ctr">${isHost ? 'Bạn là chủ phòng – rời đi là giải tán bàn luôn đó.' : 'Bạn vào lại được bằng mã phòng (bot đánh giùm lúc vắng).'}</p><div class="btns"><button class="btn" onclick="__closeModal()">Ở lại</button><button class="btn red" id="m-leave">Rời bàn</button></div>`);
 document.addEventListener('click', e => { if (e.target.id === 'm-leave') leave(); });
-$('#btn-copy').onclick = () => { const url = location.origin + location.pathname + '?room=' + $('#room-code').textContent; navigator.clipboard?.writeText(url).then(() => toast('Đã chép link mời 📋'), () => toast(esc(url))); };
+$('#btn-copy').onclick = () => { const url = inviteUrl($('#room-code').textContent); navigator.clipboard?.writeText(url).then(() => toast('Đã chép link mời 📋'), () => toast(esc(url))); };
 
 // ---------- sảnh ----------
 const OPT_TXT = {
@@ -530,6 +533,9 @@ if (location.hash === '#debug') window.__dbg = () => ({ net, view, sel, hold, sd
 // ---------- tải lại trang: tự khôi phục phòng / vào lại ----------
 (function resume() {
   const snap = loadSnapshot(), ses = session.load(GAME);
+  const lk = linkCode(); // mở link mời phòng khác → vào thẳng phòng đó; link của chính phòng mình → vào lại như thường
+  if (lk && !(ses && ses.code === lk)) { linkJoin(lk); return; }
+  if (lk) clearLinkCode();
   if (snap && ses && ses.role === 'host') {
     fx.musicResumeIfOn();
     net = new Host((snap.players.find(p => p.id === 'host') || {}).name || myName(), handlers, !!snap.offline, snap); isHost = true; myId = 'host';

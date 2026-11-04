@@ -1,5 +1,7 @@
 // Cờ Tỷ Phú Sài Gòn – giao diện: trang chủ, tạo nhân vật, sảnh, ván chơi 3D, hoạt ảnh sự kiện.
-import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=49';
+import { hintsAllowed, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
+import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
+import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=50';
 import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.js?v=2';
 import {
   setData, TILES, GROUPS, GROUP_LIST, STATION_RENT, money, rentOf, canBuild, canSell, canMortgage, canUnmortgage, houseCost, mortgageValue,
@@ -195,7 +197,9 @@ $('#btn-join').onclick = () => {
   net = new Client(code, meProfile(), handlers); isHost = false; $('#code-box').style.display = '';
 };
 $('#join-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
-const qcode = new URLSearchParams(location.search).get('room'); if (qcode) $('#join-code').value = qcode.toUpperCase().slice(0, 5);
+// link mời ?room=MÃ (shared/net/joinlink.js): mở link là vào thẳng phòng
+const qcode = linkCode(); if (qcode) $('#join-code').value = qcode;
+function linkJoin(code) { $('#join-code').value = code; joinByLink({ code, toast: m => toast(m), join: n => { $('#name').value = n; $('#btn-join').click(); }, abort: () => leave() }); }
 function leave() {
   if (net) { try { net.leave(); } catch (e) {} } net = null; lobby = null; resetGame(); closeModal(); netStatus('');
   show('screen-home');
@@ -203,7 +207,7 @@ function leave() {
 $('#btn-leave-lobby').onclick = leave;
 $('#btn-leave').onclick = () => openModal(`<h2>Rời ván?</h2><p style="text-align:center">${isHost ? 'Bạn là chủ phòng – rời đi sẽ kết thúc ván của mọi người.' : 'Bạn có thể vào lại bằng mã phòng (máy sẽ tạm đánh thay).'}</p>
   <div class="mbtns"><button class="btn ghost" data-close>Ở lại</button>${btn('modal', 'Rời ván', leave, 'red')}</div>`);
-$('#btn-copy').onclick = () => { const url = location.origin + location.pathname + '?room=' + $('#room-code').textContent.trim(); (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => toast('Đã chép link mời 📋'), () => toast(url)); };
+$('#btn-copy').onclick = () => { const url = inviteUrl($('#room-code').textContent.trim()); (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => toast('Đã chép link mời 📋'), () => toast(url)); };
 
 // ---------- sảnh ----------
 const OPTS = [
@@ -772,9 +776,12 @@ function openOffer(v) {
 }
 
 // tổng giá trị mỗi bên + chênh lệch (asReceiver: người xem là người NHẬN lời đề nghị)
+// bảng tính lời/lỗ + cảnh báo kèo chỉ có khi chơi với bot: phòng có ≥ 2 người thật (online hoặc cùng máy) thì ẩn
+const adviceOk = () => hintsAllowed(lobby || (shown && shown.players));
 function tradeValues(v, t, viewer, asReceiver = false) {
   const empty = x => !x.cash && !x.tiles.length && !x.cards;
   if (empty(t.give) && empty(t.get)) return '';
+  if (!adviceOk()) return `<p class="note tr-note">⚖️ Bảng tính lời/lỗ của kèo: ${BOT_ONLY_NOTE}.</p>`;
   const vGive = tradeSideValue(v, t.give), vGet = tradeSideValue(v, t.get);
   const out = asReceiver ? vGet : vGive, inn = asReceiver ? vGive : vGet, d = inn - out;
   const you = multiLocal(v) && viewer ? esc(nm(v, viewer)) : 'Bạn';
@@ -785,6 +792,7 @@ function tradeValues(v, t, viewer, asReceiver = false) {
 }
 // cảnh báo nổi bật: kèo giúp ai gom đủ bộ màu / đủ 4 bến xe / thắng ngay / sắp thắng
 function tradeWarn(v, from, t, viewer, compact = false) {
+  if (!adviceOk()) return '';
   let imp; try { imp = tradeImpact(v, from, t); } catch (e) { return ''; }
   const who = pid => viewer && pid === viewer && !multiLocal(v) ? 'bạn' : esc(nm(v, pid));
   const msgs = [];
@@ -1020,6 +1028,9 @@ function showWin(v) {
 // ---------- tải lại trang: tự khôi phục phòng / tự vào lại ----------
 (function resume() {
   const snap = loadSnapshot(), ses = session.load('typhu');
+  const lk = linkCode(); // mở link mời phòng khác → vào thẳng phòng đó; link của chính phòng mình → vào lại như thường
+  if (lk && !(ses && ses.code === lk)) { linkJoin(lk); return; }
+  if (lk) clearLinkCode();
   if (snap && ses && ses.role === 'host') {
     fx.musicResumeIfOn();
     const hp = snap.players.find(p => p.id === 'host') || {};

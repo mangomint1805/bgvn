@@ -67,7 +67,7 @@ export async function joinByLink({ code, join, abort, toast }) {
     off(); clearLinkCode();
     try { abort && abort(); } catch (x) {}
     const ns = document.getElementById('net-status'); if (ns) ns.style.display = 'none';
-    const m = d.type === 'reject' && d.msg ? `😢 ${d.msg} (phòng ${code})` : `😢 Phòng ${code} không còn hoặc link đã hết hạn – nhờ chủ phòng gửi link mới nhé.`;
+    const m = d.type === 'reject' && d.msg ? `😢 ${d.msg} (phòng ${code})` : `😢 Phòng ${code} không còn – nhờ chủ phòng gửi link mới nhé.`;
     setTimeout(() => toast && toast(m), 30);
   };
   addEventListener('bgvn-room', on);

@@ -1,7 +1,9 @@
 // Giao diện Tam Quốc Sát + nối với lớp mạng (host-authoritative). Mọi hình vẽ tự làm bằng CSS/SVG/emoji.
+import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
+import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, SUIT_SYMBOL, SUIT_NAME, cardLabel, cardName, rankLabel, rolesFor, infoOf } from './cards.js?v=7';
 import { JUDGE_TEXT } from './engine.js?v=7';
-import { Host, Client, loadSnapshot, session, MAX, MIN, TQ_PHRASES } from './net.js?v=7';
+import { Host, Client, loadSnapshot, session, MAX, MIN, TQ_PHRASES } from './net.js?v=8';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=1';
@@ -44,7 +46,7 @@ function myName() { const n = $('#name').value.trim() || 'Bạn'; ls.set('bgvn-n
     + `<div class="hero-c">${cardHTML({ id: 'h1', type: 'sat', suit: 'S', rank: 7 }, 'sm')}</div><div class="hero-c r">${cardHTML({ id: 'h2', type: 'dao', suit: 'H', rank: 3 }, 'sm')}</div>`;
 })();
 const handlers = {
-  onLobby(info, code, started, opts) { lobby = info; if (opts) lobbyOpts = opts; $('#room-code').textContent = code; renderLobby(); if (!started) { if (view) { view = null; prev = null; } closeModal(); show('screen-lobby'); } },
+  onLobby(info, code, started, opts) { lobby = info; if (opts) lobbyOpts = opts; renderSettings(); $('#room-code').textContent = code; renderLobby(); if (!started) { if (view) { view = null; prev = null; } closeModal(); show('screen-lobby'); } },
   onState(v) { onState(v); },
   onError(m) { toast(m, 'bad'); fx.sfx.bad(); if (pending) { pending = false; if (view) render(); } },
   onJoined(id) { myId = id; },
@@ -73,14 +75,16 @@ $('#btn-join').onclick = () => {
   lobby = []; show('screen-lobby'); renderLobby(); $('#wait-msg').textContent = 'Đang kết nối…';
 };
 $('#join-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
-const qcode = new URLSearchParams(location.search).get('room'); if (qcode) $('#join-code').value = qcode.toUpperCase();
+// link mời ?room=MÃ (shared/net/joinlink.js): mở link là vào thẳng phòng
+const qcode = linkCode(); if (qcode) $('#join-code').value = qcode;
+function linkJoin(code) { $('#join-code').value = code; joinByLink({ code, toast: m => toast(m), join: n => { $('#name').value = n; $('#btn-join').click(); }, abort: () => leave() }); }
 function leave() { reacts.setVisible(false); if (net) (net.leave ? net.leave() : net.destroy()); net = null; view = null; prev = null; lobby = []; closeModal(); history.replaceState(null, '', location.pathname); show('screen-home'); }
 $('#btn-leave-lobby').onclick = leave;
 $('#btn-leave').onclick = () => {
   openModal(`<h2>Rời ván?</h2><p class="center-txt">${isHost ? 'Bạn là chủ phòng – rời đi sẽ kết thúc ván cho mọi người.' : 'Bot sẽ đánh thay bạn. Có thể vào lại bằng mã phòng.'}</p><div class="row"><button class="btn" id="m-stay">Ở lại</button><button class="btn red" id="m-leave">Rời ván</button></div>`);
   $('#m-stay').onclick = closeModal; $('#m-leave').onclick = leave;
 };
-$('#btn-copy').onclick = () => { const url = location.origin + location.pathname + '?room=' + $('#room-code').textContent; navigator.clipboard?.writeText(url).then(() => toast('Đã chép link mời 📋', 'ok'), () => toast(url)); };
+$('#btn-copy').onclick = () => { const url = inviteUrl($('#room-code').textContent); navigator.clipboard?.writeText(url).then(() => toast('Đã chép link mời 📋', 'ok'), () => toast(url)); };
 $('#btn-addbot').onclick = () => net && net.addBot && net.addBot();
 $('#opt-exp').onchange = $('#opt-gen').onchange = $('#opt-train').onchange = () => { if (isHost && net && net.setOpts) net.setOpts({ exp: $('#opt-exp').checked, expGen: $('#opt-gen').checked, training: $('#opt-train').checked }); };
 $('#btn-start').onclick = () => { musicResumeIfOn(); net && net.start && net.start(); };
@@ -96,7 +100,7 @@ function renderSettings() {
   $('#speed').innerHTML = opts; $('#speed-home').innerHTML = opts;
   const on = musicIsOn(); $('#btn-music-home').textContent = `🎵 Nhạc: ${on ? 'bật' : 'tắt'}`; $('#btn-music-home').classList.toggle('on', on); $('#btn-music').style.opacity = on ? 1 : .45;
   $('#btn-mute').textContent = fx.isMuted() ? '🔇' : '🔊';
-  const ho = hintsActive(); $('#btn-hint').classList.toggle('on', ho); $('#btn-hint').innerHTML = `💡<small>${ho ? 'Gợi ý: bật' : 'Gợi ý: tắt'}</small>`;
+  const ho = hintsActive(); $('#btn-hint').classList.toggle('on', ho); $('#btn-hint').innerHTML = `💡<small>${!hintOk() ? 'Gợi ý: chỉ khi chơi với bot' : ho ? 'Gợi ý: bật' : 'Gợi ý: tắt'}</small>`; lockToggle($('#btn-hint'), !hintOk());
 }
 $('#speed').onchange = $('#speed-home').onchange = e => { fx.setSpeed(e.target.value); renderSettings(); };
 $('#btn-music-home').onclick = $('#btn-music').onclick = () => { musicToggle(); renderSettings(); if (view) musicMood(view); };
@@ -105,8 +109,11 @@ $('#btn-mute').onclick = () => { fx.toggleMute(); renderSettings(); };
 // ---- gợi ý (💡): lựa chọn riêng mỗi người, nhớ trong trình duyệt; Tập chơi thì mặc định bật ----
 const HINT_KEY = 'bgvn-tq-hints';
 function hintPref() { const v = ls.get(HINT_KEY); return v === '1' ? true : v === '0' ? false : null; }
-function hintsActive() { const p = hintPref(); return p != null ? p : !!((view && view.opts && view.opts.training) || (!view && lobbyOpts.training)); }
+// gợi ý / thầy đồ chỉ có khi chơi với bot: phòng có ≥ 2 người thật thì tắt (chủ phòng cũng không tính gợi ý – xem net.js hintFor)
+const hintOk = () => hintsAllowed(lobby && lobby.length ? lobby : view && view.players);
+function hintsActive() { if (!hintOk()) return false; const p = hintPref(); return p != null ? p : !!((view && view.opts && view.opts.training) || (!view && lobbyOpts.training)); }
 $('#btn-hint').onclick = () => {
+  if (!hintOk()) { toast('💡 Gợi ý: ' + BOT_ONLY_NOTE, 'info'); return; }
   const on = !hintsActive(); ls.set(HINT_KEY, on ? '1' : '0');
   if (net) { if (isHost) net.setHints(myId, on); else if (net.setHints) net.setHints(on); }
   renderSettings(); toast(on ? '💡 Đã bật gợi ý: lá nên đánh sẽ sáng vàng kèm lý do' : 'Đã tắt gợi ý', 'info'); if (view) render();
@@ -1006,6 +1013,9 @@ window.addEventListener('beforeunload', e => { if (net && view && view.phase ===
 if (/debug/.test(location.hash)) window.__dbg = () => ({ net, view, ui });
 (function resume() {
   const snap = loadSnapshot(), ses = session.load(GAME);
+  const lk = linkCode(); // mở link mời phòng khác → vào thẳng phòng đó; link của chính phòng mình → vào lại như thường
+  if (lk && !(ses && ses.code === lk)) { linkJoin(lk); return; }
+  if (lk) clearLinkCode();
   if (snap && ses && ses.role === 'host') {
     musicResumeIfOn();
     net = new Host((snap.players.find(p => p.id === 'host') || {}).name || myName(), handlers, !!snap.offline, snap); isHost = true; myId = 'host';

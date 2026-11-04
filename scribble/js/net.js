@@ -1,7 +1,7 @@
 // Lớp mạng Scribble it!: chủ phòng giữ state + đồng hồ, máy khách gửi hành động & nét vẽ.
 // Nét vẽ đi riêng (tin 'draw' theo lô ~100ms, chủ phòng chuyển tiếp), người vào muộn nhận lại cả lịch sử ('canvas').
 import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, bookItems, shiftTime, cleanOpts, DEFAULT_OPTS, maxPlayers, MAX_CROWD, MAX_NORMAL, checkTease } from './engine.js?v=7';
-import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter } from '../../shared/ui/react.js?v=2';
 // Câu chọc cố định (bảng thả emoji – shared/ui/react.js). Không cho gõ tự do qua kênh này nên không thể lộ đáp án Đoán hình.
 export const PHRASES = ['Vẽ gì zậy trời', 'Picasso đây rồi', 'Đoán bừa đi!', 'Ủa alo?', 'Nét căng đét!', 'Hiểu chết liền'];

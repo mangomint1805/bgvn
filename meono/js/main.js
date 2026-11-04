@@ -1,4 +1,6 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, MEO_PHRASES } from './net.js?v=8';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, MEO_PHRASES } from './net.js?v=9';
+import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
+import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat, awards } from './engine.js?v=7';
@@ -17,6 +19,9 @@ const GAME = 'meono';
 let net = null, isHost = false, myId = null, lobby = null, view = null;
 let lastEv = 0, modalKey = null, sel = new Set(), clockEnd = 0, clockTotal = 1, landing = 0, holdUntil = 0, holdT = null;
 let probOn = ls.get('meono-prob2') === '1'; // gợi ý xác suất mặc định ẩn
+// xác suất bom chỉ có khi chơi với bot: phòng có ≥ 2 người thật thì ẩn (theo danh sách người chơi hiện tại)
+const probOk = () => hintsAllowed(lobby || (view && view.players));
+const probShown = () => probOn && probOk();
 let freshIds = new Set(), skipped = 0, skippedSeen = 0, landingAt = 0;
 
 // ---------- tiện ích ----------
@@ -83,7 +88,7 @@ $('#name').value = ls.get('bgvn-name') || '';
 $('#hero').innerHTML = ['cat1', 'attack', 'bomb', 'defuse', 'cat5'].map((t, i) => cardHTML({ t }, 'hero-card', `style="--r:${(i - 2) * 13}deg;--d:${i * 90}ms"`)).join('');
 function myName() { const n = $('#name').value.trim() || 'Bạn'; ls.set('bgvn-name', n); return n; }
 const handlers = {
-  onLobby(info, code, started) { lobby = info; $('#room-code').textContent = code; if (!started) { view = null; renderLobby(); if (!$('#screen-lobby').classList.contains('active')) { closeModal(); show('screen-lobby'); } } },
+  onLobby(info, code, started) { lobby = info; syncProb(); $('#room-code').textContent = code; if (!started) { view = null; renderLobby(); if (!$('#screen-lobby').classList.contains('active')) { closeModal(); show('screen-lobby'); } } },
   onState(v) { onState(v); },
   onError(m) { toast(m); fx.sfx.bad(); },
   onJoined(id) { myId = id; },
@@ -109,12 +114,14 @@ $('#btn-join').onclick = () => {
 };
 $('#join-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
 $('#join-code').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase(); });
-const qcode = new URLSearchParams(location.search).get('room'); if (qcode) $('#join-code').value = qcode.toUpperCase();
+// link mời ?room=MÃ (shared/net/joinlink.js): mở link là vào thẳng phòng
+const qcode = linkCode(); if (qcode) $('#join-code').value = qcode;
+function linkJoin(code) { $('#join-code').value = code; joinByLink({ code, toast: m => toast(m), join: n => { $('#name').value = n; $('#btn-join').click(); }, abort: () => leave() }); }
 function leave() { if (net) (net.leave ? net.leave() : net.destroy()); net = null; view = null; lobby = null; closeModal(); fx.setTension(0); reacts.setVisible(false); show('screen-home'); }
 $('#btn-leave-lobby').onclick = leave;
 $('#btn-leave').onclick = () => openModal(`<h2>Rời ván?</h2><p class="ctr">${isHost ? 'Bạn là chủ phòng – rời đi sẽ kết thúc ván cho mọi người.' : 'Bạn có thể vào lại bằng mã phòng.'}</p><div class="btns"><button class="btn" onclick="__closeModal()">Ở lại</button><button class="btn red" id="m-leave">Rời ván</button></div>`);
 document.addEventListener('click', e => { if (e.target.id === 'm-leave') leave(); });
-$('#btn-copy').onclick = () => { const url = location.origin + location.pathname + '?room=' + $('#room-code').textContent; navigator.clipboard?.writeText(url).then(() => toast('Đã chép link mời 📋'), () => toast(url)); };
+$('#btn-copy').onclick = () => { const url = inviteUrl($('#room-code').textContent); navigator.clipboard?.writeText(url).then(() => toast('Đã chép link mời 📋'), () => toast(url)); };
 
 // ---------- sảnh ----------
 function renderLobby() {
@@ -153,8 +160,8 @@ $('#btn-music').onclick = $('#btn-music-home').onclick = () => { fx.actx(); fx.m
 $('#vol').value = fx.musicVolume(); $('#vol').oninput = e => fx.musicVolume(+e.target.value);
 const syncMute = () => $('#btn-mute').textContent = fx.isMuted() ? '🔇' : '🔊';
 $('#btn-mute').onclick = () => { fx.toggleMute(); syncMute(); }; syncMute();
-const syncProb = () => $('#btn-prob').classList.toggle('on', probOn);
-$('#btn-prob').onclick = () => { probOn = !probOn; ls.set('meono-prob2', probOn ? '1' : '0'); syncProb(); toast(probOn ? '🎲 Đã bật gợi ý xác suất bom' : '🎲 Đã tắt gợi ý xác suất'); view && render(); }; syncProb();
+const syncProb = () => { $('#btn-prob').classList.toggle('on', probShown()); lockToggle($('#btn-prob'), !probOk()); };
+$('#btn-prob').onclick = () => { if (!probOk()) { toast('🎲 Xác suất bom: ' + BOT_ONLY_NOTE); return; } probOn = !probOn; ls.set('meono-prob2', probOn ? '1' : '0'); syncProb(); toast(probOn ? '🎲 Đã bật gợi ý xác suất bom' : '🎲 Đã tắt gợi ý xác suất'); view && render(); }; syncProb();
 $('#btn-guide').onclick = $('#btn-guide-home').onclick = () => openGuide(openModal);
 // 📝 Có gì mới (patch notes dùng chung): chấm đỏ khi có bản chưa xem
 for (const id of ['#btn-news', '#btn-news-home']) { newsBadge($(id), 'meono'); $(id).onclick = () => { openNews('meono'); $$('#btn-news, #btn-news-home').forEach(b => b.classList.toggle('bgvn-dot', false)); }; }
@@ -193,6 +200,7 @@ function onState(v) {
 // ---------- vẽ bàn ----------
 function render() {
   const v = view; if (!v) return;
+  syncProb();
   const meP = me();
   // đối thủ
   const n = v.players.length, myIdx = Math.max(0, v.players.findIndex(p => p.id === myId));
@@ -241,7 +249,7 @@ function renderMeter(v) {
     m.innerHTML = `<span class="lbl">🔮 Bạn biết lá trên cùng:</span><span class="pk">${pk.map((c, i) => `<span class="pki ${c.t === 'bomb' ? 'b' : ''}" title="${cardName(c.t)}">${i === 0 ? '' : '›'}${cardIcon(c.t)}</span>`).join('')}</span><b>${pk[0].t === 'bomb' ? (v.players[v.turn].id === myId ? 'BOM! Né gấp!' : 'BOM – chờ người ăn 😈') : 'An toàn ✅'}</b>`;
     return;
   }
-  if (!probOn) { m.className = 'meter off'; m.innerHTML = `<span class="lbl">💣 ${v.bombsLeft} Mèo Nổ đang nấp</span>`; return; }
+  if (!probShown()) { m.className = 'meter off'; m.innerHTML = `<span class="lbl">💣 ${v.bombsLeft} Mèo Nổ đang nấp</span>`; return; }
   const r = risk(v), pct = Math.round(r * 100);
   const lvl = r >= 0.34 ? 'hot' : r >= 0.15 ? 'warm' : 'cool';
   const word = r >= 0.5 ? 'Toang tới nơi 😱' : r >= 0.34 ? 'Nguy hiểm!' : r >= 0.15 ? 'Hơi run…' : 'Khá yên tâm';
@@ -288,7 +296,7 @@ function renderActions(v, meP) {
       if (same.length < 2) a.push(`<span class="mini-hint">Cần 2 ${CARD[cards[0].t].name} để đánh đôi</span>`);
     } else if (kind) a.push(`<button class="btn pri" data-play="1">${kind === 'pair' ? '🐾 Đánh đôi' : kind === 'triple' ? '🎯 Bộ ba' : `${cardIcon(kind)} Đánh ${CARD[kind].name}`}</button>`);
     else if (cards.length) a.push(`<span class="mini-hint">${cards.some(c => c.t === 'nope') ? 'ĐÉO! chỉ dùng khi ai đó vừa đánh' : cards.some(c => c.t === 'defuse') ? 'Gỡ Bom tự dùng khi bốc trúng bom' : 'Chọn 1 lá chức năng hoặc 2–3 mèo cùng loại'}</span>`);
-    a.unshift(`<button class="btn draw big" data-draw="1">🫳 Bốc bài${probOn && !(v.peek || []).length ? ` <small>${Math.round(risk(v) * 100)}%💣</small>` : ''}</button>`);
+    a.unshift(`<button class="btn draw big" data-draw="1">🫳 Bốc bài${probShown() && !(v.peek || []).length ? ` <small>${Math.round(risk(v) * 100)}%💣</small>` : ''}</button>`);
   }
   $('#actions').innerHTML = a.join('');
   const d = $('#actions [data-draw]'); if (d) d.onclick = doDraw;
@@ -558,6 +566,9 @@ if (location.hash === '#debug') window.__dbg = () => ({ net, view, sel: [...sel]
 // ---------- Tải lại trang: tự khôi phục phòng / tự vào lại ----------
 (function resume() {
   const snap = loadSnapshot(), ses = session.load(GAME);
+  const lk = linkCode(); // mở link mời phòng khác → vào thẳng phòng đó; link của chính phòng mình → vào lại như thường
+  if (lk && !(ses && ses.code === lk)) { linkJoin(lk); return; }
+  if (lk) clearLinkCode();
   if (snap && ses && ses.role === 'host') {
     fx.musicResumeIfOn();
     net = new Host((snap.players.find(p => p.id === 'host') || {}).name || myName(), handlers, !!snap.offline, snap); isHost = true; myId = 'host';

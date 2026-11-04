@@ -1,6 +1,8 @@
 // Giao diện + nối với lớp mạng
+import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
+import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { CARD_INFO, CHARACTERS, ROLES, SUIT_SYMBOL, rankLabel, cardLabel, suitify } from './cards.js';
-import { Host, Client, loadSnapshot, session, BANG_PHRASES } from './net.js?v=11';
+import { Host, Client, loadSnapshot, session, BANG_PHRASES } from './net.js?v=12';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
@@ -45,10 +47,14 @@ function lineActor(line) {
 // ---------- Chế độ Người mới (mẹo ngay trên bàn) – lưu riêng từng máy ----------
 const NB_KEY = 'bgvn-bang-newbie';
 let newbie = (() => { try { const x = localStorage.getItem(NB_KEY); return x === null ? true : x === '1'; } catch (e) { return true; } })();
-function setNewbie(on) { newbie = !!on; try { localStorage.setItem(NB_KEY, newbie ? '1' : '0'); } catch (e) {} renderNewbieUI(); if (view && $('#screen-game').classList.contains('active')) render(); }
+// 🐣 Người mới (mẹo nên đánh gì, đoán vai, cảnh báo bắn nhầm sếp) chỉ có khi chơi với bot: phòng có ≥ 2 người thật thì tắt
+const nbOk = () => hintsAllowed(lobby && lobby.length ? lobby : view && view.players);
+const nb = () => newbie && nbOk();
+function setNewbie(on) { if (!nbOk()) { toast('🐣 Chế độ Người mới: ' + BOT_ONLY_NOTE); return; } newbie = !!on; try { localStorage.setItem(NB_KEY, newbie ? '1' : '0'); } catch (e) {} renderNewbieUI(); if (view && $('#screen-game').classList.contains('active')) render(); }
 function renderNewbieUI() {
-  const b1 = $('#btn-newbie'); if (b1) { b1.innerHTML = `🐣 Chế độ Người mới: <b>${newbie ? 'BẬT' : 'tắt'}</b>`; b1.classList.toggle('on', newbie); b1.setAttribute('aria-pressed', newbie); }
-  const b2 = $('#btn-newbie-g'); if (b2) { b2.innerHTML = `🐣<span class="nb-lbl"> Người mới: ${newbie ? 'bật' : 'tắt'}</span>`; b2.style.opacity = newbie ? 1 : .5; b2.setAttribute('aria-pressed', newbie); b2.title = 'Chế độ Người mới: ' + (newbie ? 'bật' : 'tắt'); }
+  const ok = nbOk(), on = newbie && ok;
+  const b1 = $('#btn-newbie'); if (b1) { b1.innerHTML = `🐣 Chế độ Người mới: <b>${on ? 'BẬT' : 'tắt'}</b>${ok ? '' : ` <small>(${BOT_ONLY_NOTE})</small>`}`; b1.classList.toggle('on', on); b1.setAttribute('aria-pressed', on); lockToggle(b1, !ok); }
+  const b2 = $('#btn-newbie-g'); if (b2) { b2.innerHTML = `🐣<span class="nb-lbl"> Người mới: ${on ? 'bật' : 'tắt'}</span>`; b2.setAttribute('aria-pressed', on); b2.title = 'Chế độ Người mới: ' + (on ? 'bật' : 'tắt'); lockToggle(b2, !ok); b2.style.opacity = !ok ? .35 : on ? 1 : .5; }
 }
 let selectedCard = null;
 let sidMode = false, sidPick = [];
@@ -60,8 +66,14 @@ function toast(msg, info = false) { const t = $('#toast'); t.textContent = msg; 
 
 // ---------- Home ----------
 try { $('#inp-name').value = localStorage.getItem('bgvn-name') || localStorage.getItem('bangvn-name') || ''; } catch (e) {}
-const urlCode = new URLSearchParams(location.search).get('room');
-if (urlCode) $('#inp-code').value = urlCode.toUpperCase();
+// link mời ?room=MÃ (shared/net/joinlink.js): mở link là vào thẳng phòng
+const urlCode = linkCode();
+if (urlCode) $('#inp-code').value = urlCode;
+function linkJoin(code) {
+  $('#inp-code').value = code;
+  joinByLink({ code, toast: m => toast(m), join: n => { $('#inp-name').value = n; $('#btn-join').click(); },
+    abort: () => { net?.leave ? net.leave() : net?.destroy?.(); net = null; view = null; show('screen-home'); } });
+}
 
 function getName() {
   const n = $('#inp-name').value.trim();
@@ -70,7 +82,7 @@ function getName() {
   return n;
 }
 const handlers = {
-  onLobby(players, code, started) { lobby = players; renderLobby(code); if (!started && !view) show('screen-lobby'); },
+  onLobby(players, code, started) { lobby = players; renderNewbieUI(); renderLobby(code); if (!started && !view) show('screen-lobby'); },
   onState(v) { if (discardQueue.length) setTimeout(sendNextDiscard, 120); else if (!(v && v.prompt && v.prompt.type === 'discard')) discardSel.clear(); setTimer(v && v.phase === 'playing' ? v.timer : null); prevView = view; view = v; markFresh(prevView, v); if (!v) { prevView = null; show('screen-lobby'); return; } const first = !$('#screen-game').classList.contains('active'); show('screen-game'); render(); musicMood(v); if (first) dealAnimation(); else animateDiff(prevView, view); },
   onError(msg) { toast(msg); },
   onReact(msg) { reacts.show(msg); },
@@ -82,6 +94,9 @@ const handlers = {
 // ---------- Tải lại trang: tự khôi phục phòng / tự vào lại ----------
 function resume() {
   const snap = loadSnapshot(), ses = session.load('bang');
+  const lk = linkCode(); // mở link mời phòng khác → vào thẳng phòng đó; link của chính phòng mình → vào lại như thường
+  if (lk && !(ses && ses.code === lk)) { linkJoin(lk); return; }
+  if (lk) clearLinkCode();
   const name = (() => { try { return localStorage.getItem('bangvn-name') || localStorage.getItem('bgvn-name') || 'Bạn'; } catch (e) { return 'Bạn'; } })();
   if (snap && ses && ses.role === 'host') {
     isHost = true; myId = 'host';
@@ -123,7 +138,7 @@ $('#btn-join').onclick = () => {
 };
 $('#btn-copy').onclick = () => {
   const code = $('#lobby-code').textContent;
-  const url = location.origin + location.pathname + '?room=' + code;
+  const url = inviteUrl(code);
   navigator.clipboard?.writeText(url).then(() => toast('Đã sao chép link mời!', true), () => toast(url, true));
 };
 $('#btn-add-bot').onclick = () => net?.addBot();
@@ -489,14 +504,14 @@ function renderPrompt() {
     const cur = v.players[v.turn];
     if (v.phase === 'playing') {
       p.classList.add('quiet');
-      const inl = newbie && landCompact() ? coachTips() : null; // màn ngang thấp: mẹo Người mới gộp vào đây
+      const inl = nb() && landCompact() ? coachTips() : null; // màn ngang thấp: mẹo Người mới gộp vào đây
       const inlHTML = inl && inl.tip ? `<div class="co-inline">${inl.tip}</div>` : '';
       if (cur.id !== myId) { p.innerHTML = `⏳ Đang tới lượt <b>${esc(cur.name)}</b>…` + (inl ? `<div class="co-inline">${inl.role}</div>` : ''); return; }
       p.classList.add('hint');
       if (selectedCard && !me().hand.some(x => x.id === selectedCard)) selectedCard = null;
       if (selectedCard) { const c = me().hand.find(x => x.id === selectedCard); p.innerHTML = `👉 Bấm vào người <b>sáng viền đỏ</b> để dùng <b>${CARD_INFO[c.type].name}</b>. Người bị mờ là ở ngoài tầm.`; return; }
       const inRange = v.players.filter(q => q.alive && q.id !== myId && q.distance != null && q.distance <= me().gunRange).map(q => esc(q.name));
-      const shortHint = (newbie && innerWidth <= 760) || landCompact(); // mẹo Người mới đã nói cách chơi ở dưới: giữa bàn gọn lại
+      const shortHint = (nb() && innerWidth <= 760) || landCompact(); // mẹo Người mới đã nói cách chơi ở dưới: giữa bàn gọn lại
       p.innerHTML = `<b>Lượt của bạn!</b>${shortHint ? '' : ' Bấm các lá <b>sáng màu</b> để đánh, xong bấm <b>Kết thúc lượt</b>.'}<br><span class="inrange">🎯 Trong tầm bắn (≤ ${me().gunRange}): ${inRange.length ? inRange.join(', ') : 'chưa ai – cần súng tầm xa hơn'}</span>${inlHTML}`;
     }
     return;
@@ -575,7 +590,7 @@ function clickCard(c, o) {
 function chooseTarget(p, sure) {
   const o = view.myOptions[selectedCard];
   const mr = me().role, ct = me().hand.find(x => x.id === selectedCard)?.type;
-  if (newbie && !sure && p.role === 'sheriff' && (mr === 'deputy' || mr === 'renegade') && ['bang', 'missed', 'duel', 'jail', 'panic', 'catbalou'].includes(ct)) {
+  if (nb() && !sure && p.role === 'sheriff' && (mr === 'deputy' || mr === 'renegade') && ['bang', 'missed', 'duel', 'jail', 'panic', 'catbalou'].includes(ct)) {
     openModal(`<h3>🐣 Khoan đã!</h3><p>${mr === 'deputy' ? 'Bạn là <b>Phó cảnh sát</b> – bắn sếp ⭐ là đang giúp Tội phạm đó!' : 'Bạn là <b>Kẻ hai mặt</b> – sếp ⭐ chết sớm thì Tội phạm thắng, bạn cũng thua.'}</p><p class="muted">Vẫn muốn dùng <b>${CARD_INFO[ct].name}</b> lên ${esc(p.name)}?</p><div class="row" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn ghost" id="nb-no">Thôi, chọn người khác</button><button class="btn danger" id="nb-yes">Vẫn đánh</button></div>`);
     $('#nb-no').onclick = closeModal; $('#nb-yes').onclick = () => { closeModal(); chooseTarget(p, true); };
     return;
@@ -901,7 +916,7 @@ function renderCoach() {
   // máy tính: đặt trên khung thông tin của mình (cột trái còn trống) để bàn chơi không bị thấp đi; điện thoại: trên tay bài
   const home = innerWidth > 760 ? $('.me-left') : $('.me-mid');
   if (c.parentElement !== home) home.insertBefore(c, home.firstChild);
-  const t = newbie && view && !landCompact() ? coachTips() : null;
+  const t = nb() && view && !landCompact() ? coachTips() : null;
   c.classList.toggle('hidden', !t);
   if (!t) { c.innerHTML = ''; return; }
   c.innerHTML = `<span class="co-role">${t.role}</span>${t.tip ? `<span class="co-tip">${t.tip}</span>` : ''}`;

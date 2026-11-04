@@ -1,4 +1,6 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, POKER_PHRASES } from './net.js?v=1';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, POKER_PHRASES } from './net.js?v=2';
+import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
+import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
@@ -23,7 +25,10 @@ let dispBoard = 0, resultAt = 0, boardTimers = [], resultTimer = null, lastHand 
 let raiseOpen = false, raiseTo = 0, foldArmed = 0;
 let clockEnd = 0, clockTotal = 1, clockKind = null, clockPid = null, lastBeep = 0;
 let G = null, renderedBoard = 0; // hình học bàn lần vẽ gần nhất
-const hintOn = () => ls.get('poker-hint') !== '0';
+const hintPref = () => ls.get('poker-hint') !== '0';
+// gợi ý bài chỉ có khi chơi với bot: phòng có ≥ 2 người thật thì tắt (theo danh sách người chơi hiện tại)
+const hintOk = () => hintsAllowed(lobby || (view && view.players));
+const hintOn = () => hintPref() && hintOk();
 
 // ---------- lá bài ----------
 const SUIT_NAME = { s: 'bích', h: 'cơ', d: 'rô', c: 'chuồn' };
@@ -54,7 +59,7 @@ $('#name').value = ls.get('bgvn-name') || '';
 $('#hero').innerHTML = ['As', 'Kh', 'Qd', 'Jc', 'Ts'].map((c, i) => cardHTML(c, 'hero-c', `style="--i:${i - 2};animation-delay:${i * 90}ms"`)).join('') + '<div class="hero-chips"><i></i><i></i><i></i></div>';
 function myName() { const n = $('#name').value.trim() || 'Bạn'; ls.set('bgvn-name', n); return n; }
 const handlers = {
-  onLobby(info, code, started) { lobby = info; $('#room-code').textContent = code; if (!started) { view = null; prev = null; renderLobby(); if (!$('#screen-lobby').classList.contains('active')) { closeModal(); show('screen-lobby'); } } },
+  onLobby(info, code, started) { lobby = info; syncHint(); $('#room-code').textContent = code; if (!started) { view = null; prev = null; renderLobby(); if (!$('#screen-lobby').classList.contains('active')) { closeModal(); show('screen-lobby'); } } },
   onState(v) { if (!v) { view = null; prev = null; closeModal(); show('screen-lobby'); renderLobby(); return; } onView(v); },
   onError(m) { toast(m); fx.sfx.bad(); },
   onJoined(id) { myId = id; },
@@ -80,12 +85,14 @@ $('#btn-join').onclick = () => {
 };
 $('#join-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
 $('#join-code').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase(); });
-const qcode = new URLSearchParams(location.search).get('room'); if (qcode) $('#join-code').value = qcode.toUpperCase();
+// link mời ?room=MÃ (shared/net/joinlink.js): mở link là vào thẳng phòng
+const qcode = linkCode(); if (qcode) $('#join-code').value = qcode;
+function linkJoin(code) { $('#join-code').value = code; joinByLink({ code, toast: m => toast(m), join: n => { $('#name').value = n; $('#btn-join').click(); }, abort: () => leave() }); }
 function leave() { if (net) (net.leave ? net.leave() : net.destroy()); net = null; view = null; prev = null; lobby = null; closeModal(); reacts.setVisible(false); show('screen-home'); }
 $('#btn-leave-lobby').onclick = leave;
 function askLeave() { openModal(`<h2>Rời bàn?</h2><p class="center-t">${isHost ? 'Bạn là chủ phòng – rời đi sẽ kết thúc bàn cho mọi người.' : 'Bạn có thể vào lại bằng mã phòng.'}</p><div class="btns"><button class="btn" onclick="__closeModal()">Ở lại</button><button class="btn red" id="m-leave">Rời bàn</button></div>`); $('#m-leave').onclick = leave; }
 $('#btn-leave').onclick = askLeave;
-$('#btn-copy').onclick = () => { const url = location.origin + location.pathname + '?room=' + $('#room-code').textContent; navigator.clipboard?.writeText(url).then(() => toast('Đã chép link mời 📋'), () => toast(url)); };
+$('#btn-copy').onclick = () => { const url = inviteUrl($('#room-code').textContent); navigator.clipboard?.writeText(url).then(() => toast('Đã chép link mời 📋'), () => toast(url)); };
 
 // ---------- sảnh ----------
 const OPT_UI = {
@@ -120,8 +127,8 @@ $('#btn-guide-home').onclick = () => openGuide(openModal, cardHTML);
 const news = () => { openNews(GAME); $$('[data-news]').forEach(el => el.classList.remove('bgvn-dot')); };
 $('#btn-news-home').onclick = news;
 newsBadge($('#btn-news-home'), GAME); newsBadge($('#btn-menu'), GAME);
-const syncHint = () => $('#btn-hint').classList.toggle('on', hintOn());
-$('#btn-hint').onclick = () => { ls.set('poker-hint', hintOn() ? '0' : '1'); syncHint(); toast(hintOn() ? '💡 Bật gợi ý: hiện tên bài bạn đang có' : 'Đã tắt gợi ý bài'); render(); }; syncHint();
+const syncHint = () => { $('#btn-hint').classList.toggle('on', hintOn()); lockToggle($('#btn-hint'), !hintOk()); };
+$('#btn-hint').onclick = () => { if (!hintOk()) { toast('💡 Gợi ý bài: ' + BOT_ONLY_NOTE); return; } ls.set('poker-hint', hintPref() ? '0' : '1'); syncHint(); toast(hintOn() ? '💡 Bật gợi ý: hiện tên bài bạn đang có' : 'Đã tắt gợi ý bài'); render(); }; syncHint();
 $('#btn-log').onclick = () => $('#log').classList.toggle('open');
 $('#btn-log-close').onclick = () => $('#log').classList.remove('open');
 $('#btn-board').onclick = () => openBoard();
@@ -134,13 +141,13 @@ function openMenu() {
       <div class="m-row"><span>🔉 Âm lượng nhạc</span><input type="range" id="m-vol" min="0" max="1" step="0.05" value="${fx.musicVolume()}"></div>
       <div class="m-row"><span>🔊 Hiệu ứng âm thanh</span><button class="opt ${fx.isMuted() ? '' : 'on'}" id="m-mute">${fx.isMuted() ? 'Đang tắt' : 'Đang bật'}</button></div>
       <div class="m-row"><span>⚡ Tốc độ bot & hiệu ứng</span><div class="opt-btns">${sp}</div></div>
-      <div class="m-row"><span>💡 Gợi ý bài cho người mới</span><button class="opt ${hintOn() ? 'on' : ''}" id="m-hint">${hintOn() ? 'Đang bật' : 'Đang tắt'}</button></div>
+      <div class="m-row"><span>💡 Gợi ý bài cho người mới${hintOk() ? '' : `<br><small style="opacity:.7">🔒 ${BOT_ONLY_NOTE}</small>`}</span><button class="opt ${hintOn() ? 'on' : ''}" id="m-hint" ${hintOk() ? '' : 'disabled'}>${!hintOk() ? 'Đang tắt' : hintOn() ? 'Đang bật' : 'Đang tắt'}</button></div>
       <div class="m-btns"><button class="btn" id="m-guide">📖 Hướng dẫn</button><button class="btn" id="m-news">📝 Có gì mới</button><button class="btn red" id="m-quit">🚪 Rời bàn</button></div>
     </div>`, '', 'menu');
   $('#m-music').onclick = () => { fx.actx(); fx.musicToggle(); syncMusic(); openMenu(); };
   $('#m-vol').oninput = e => fx.musicVolume(+e.target.value);
   $('#m-mute').onclick = () => { fx.toggleMute(); openMenu(); };
-  $('#m-hint').onclick = () => { ls.set('poker-hint', hintOn() ? '0' : '1'); syncHint(); render(); openMenu(); };
+  $('#m-hint').onclick = () => { if (!hintOk()) return; ls.set('poker-hint', hintPref() ? '0' : '1'); syncHint(); render(); openMenu(); };
   $$('[data-sp]').forEach(b => b.onclick = () => { fx.setSpeed(b.dataset.sp); openMenu(); });
   $('#m-guide').onclick = () => openGuide(openModal, cardHTML);
   $('#m-news').onclick = () => { closeModal(); news(); };
@@ -248,6 +255,7 @@ function geometry(v) {
 const TAG = { sb: 'Mù nhỏ', bb: 'Mù lớn', fold: 'Bỏ bài', check: 'Xem', call: 'Theo', bet: 'Cược', raise: 'Tố', allin: 'TẤT TAY' };
 function render() {
   const v = view; if (!v || !$('#screen-game').classList.contains('active')) return;
+  syncHint();
   const g = G = geometry(v);
   const T = $('#table'); T.classList.toggle('big', g.big); T.style.setProperty('--pw', g.PW + 'px'); T.style.setProperty('--ph', g.PH + 'px'); T.style.setProperty('--mini', g.mini + 'px'); T.style.setProperty('--cw', g.cw + 'px');
   const felt = $('#felt'); Object.assign(felt.style, { left: g.cx - g.rx + 'px', top: g.cy - g.ry + 'px', width: 2 * g.rx + 'px', height: 2 * g.ry + 'px' });
@@ -538,6 +546,9 @@ if (location.hash === '#debug') window.__dbg = () => ({ net, view, G });
 // ---------- tải lại trang: tự khôi phục phòng / tự vào lại ----------
 (function resume() {
   const snap = loadSnapshot(), ses = session.load(GAME);
+  const lk = linkCode(); // mở link mời phòng khác → vào thẳng phòng đó; link của chính phòng mình → vào lại như thường
+  if (lk && !(ses && ses.code === lk)) { linkJoin(lk); return; }
+  if (lk) clearLinkCode();
   if (snap && ses && ses.role === 'host') {
     fx.musicResumeIfOn();
     net = new Host((snap.players.find(p => p.id === 'host') || {}).name || myName(), handlers, !!snap.offline, snap); isHost = true; myId = 'host';

@@ -1,7 +1,7 @@
 // Lớp mạng Mèo Nổ: chủ phòng giữ state, người vào chỉ gửi action. Kết nối dùng chung shared/net/room.js
 import { createGame, applyAction, viewFor, resolveWindow, waitingOn, getPlayer, DEFAULT_OPTS } from './engine.js?v=7';
 import { botAction, botNope } from './bot.js?v=7';
-import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 // Câu chọc kiểu mèo cho bảng thả emoji (shared/ui/react.js), mỗi câu ≤ 24 ký tự
 export const MEO_PHRASES = ['Bốc đi bé!', 'ĐÉO nhé!', 'Meo meo 😼', 'Bom đâu rồi?', 'Hú hồn 😮‍💨', 'Đổ vỏ nè!', 'Cứu tui'];

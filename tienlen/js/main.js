@@ -1,4 +1,6 @@
-import { Host, Client, MAX, loadSnapshot, session, TL_PHRASES, BEG_LIMIT } from './net.js?v=4';
+import { Host, Client, MAX, loadSnapshot, session, TL_PHRASES, BEG_LIMIT } from './net.js?v=5';
+import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
+import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
@@ -18,6 +20,8 @@ const clean = n => String(n || '').replace(' 🤖', '');
 
 let net = null, isHost = false, myId = null, lobby = null, view = null, prevView = null, modalKey = null;
 let sel = new Set(), hintList = [], hintIdx = -1, hintKey = '';
+// 💡 Gợi ý + gợi ý ghép bộ chỉ có khi chơi với bot: phòng có ≥ 2 người thật thì tắt (theo danh sách người chơi hiện tại)
+const hintOk = () => hintsAllowed(lobby || (view && view.players));
 let sortMode = ls.get('tl-sort') === 'combo' ? 'combo' : 'rank';
 let incoming = false; // đang có lá bay vào bàn
 
@@ -98,12 +102,14 @@ $('#btn-join').onclick = () => {
   net = new Client(code, myName(), handlers); isHost = false; $('#code-box').style.display = '';
 };
 $('#join-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
-const qcode = new URLSearchParams(location.search).get('room'); if (qcode) $('#join-code').value = qcode.toUpperCase().slice(0, 5);
+// link mời ?room=MÃ (shared/net/joinlink.js): mở link là vào thẳng phòng
+const qcode = linkCode(); if (qcode) $('#join-code').value = qcode;
+function linkJoin(code) { $('#join-code').value = code; joinByLink({ code, toast: m => toast(m), join: n => { $('#name').value = n; $('#btn-join').click(); }, abort: () => leave() }); }
 function leave() { if (net) (net.leave ? net.leave() : net.destroy()); net = null; view = null; lobby = null; closeModal(); show('screen-home'); reacts.setVisible(false); }
 $('#btn-leave-lobby').onclick = leave;
 $('#btn-leave').onclick = () => openModal(`<h2>Rời bàn?</h2><p class="center">${isHost ? (net && net.offline ? 'Ván với bot sẽ kết thúc.' : 'Bạn là chủ phòng – rời đi sẽ giải tán bàn của mọi người.') : 'Bạn có thể vào lại bằng mã phòng (máy sẽ đánh thay trong lúc vắng).'}</p><div class="btns"><button class="btn" onclick="__closeModal()">Ở lại</button><button class="btn red" id="m-leave">Rời bàn</button></div>`);
 document.addEventListener('click', e => { if (e.target.id === 'm-leave') leave(); });
-$('#btn-copy').onclick = () => { const url = location.origin + location.pathname + '?room=' + $('#room-code').textContent; navigator.clipboard?.writeText(url).then(() => toast('Đã chép link mời 📋'), () => toast(url)); };
+$('#btn-copy').onclick = () => { const url = inviteUrl($('#room-code').textContent); navigator.clipboard?.writeText(url).then(() => toast('Đã chép link mời 📋'), () => toast(url)); };
 
 // ---------- sảnh ----------
 const OPT_INFO = {
@@ -281,7 +287,7 @@ function renderHand(v, meP) {
   const legal = my ? legalNow() : [];
   const usable = new Set(legal.flat());
   // gợi ý theo lá đang chọn: các bộ hợp lệ chứa hết lá đã chọn
-  const sup = sel.size ? legal.filter(ids => [...sel].every(c => ids.includes(c))) : [];
+  const sup = sel.size && hintOk() ? legal.filter(ids => [...sel].every(c => ids.includes(c))) : [];
   const hl = new Set(sup.flat());
   hEl.innerHTML = sortedHand(hand).map(c => cardHTML(c, `${sel.has(c) ? 'sel' : ''} ${my && !usable.has(c) ? 'dim' : ''} ${my && sel.size && hl.has(c) && !sel.has(c) ? 'hl' : ''}`)).join('');
   fitHand();
@@ -331,6 +337,7 @@ function renderActions(v, meP) {
   if (selC && badFinish(myHand(), [...sel], v.opts.veHeo)) pb.innerHTML = '🚫 Cấm về heo';
   $('#btn-pass').disabled = !(my && v.table);
   $('#btn-hint').disabled = !my || !legal.length;
+  lockToggle($('#btn-hint'), !hintOk());
   $('#btn-sort').disabled = !myHand().length;
 }
 addEventListener('resize', () => { if (view) { $('#pile-top').dataset.k = ''; render(); } });
@@ -350,6 +357,7 @@ function doPlay() {
 }
 function doPass() { if (!isMyTurn() || !view.table) return; send({ type: 'pass' }); sel.clear(); hintIdx = -1; }
 function doHint() {
+  if (!hintOk()) { toast('💡 Gợi ý: ' + BOT_ONLY_NOTE); return; }
   if (!isMyTurn()) return;
   const key = view.logN + ':' + myHand().length;
   if (hintKey !== key) { hintKey = key; hintList = rankPlays(view, myId, 'normal').map(x => x.ids); hintIdx = -1; }
@@ -523,6 +531,9 @@ if (location.hash === '#debug') window.__dbg = () => ({ net, view, sel: [...sel]
 // ---------- tải lại trang: tự khôi phục phòng / tự vào lại ----------
 (function resume() {
   const snap = loadSnapshot(), ses = session.load('tienlen');
+  const lk = linkCode(); // mở link mời phòng khác → vào thẳng phòng đó; link của chính phòng mình → vào lại như thường
+  if (lk && !(ses && ses.code === lk)) { linkJoin(lk); return; }
+  if (lk) clearLinkCode();
   if (snap && ses && ses.role === 'host') {
     fx.musicResumeIfOn();
     net = new Host((snap.players.find(p => p.id === 'host') || {}).name || myName(), handlers, !!snap.offline, snap); isHost = true; myId = 'host';

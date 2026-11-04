@@ -3,7 +3,7 @@ import { createGame, applyAction, viewFor, top, getPlayer, NULL_TIME } from './e
 import { botAction } from './bot.js?v=7';
 import { coachHint } from './coach.js?v=7';
 import { S } from './fx.js?v=7';
-import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 export const TURN_TIME = 60, PROMPT_TIME = 20, PICK_TIME = 30; // giây: hết giờ thì máy tự đánh thay (chống treo máy)
 const NS = 'bgvn-tamquoc', PREFIX = 'bgvn-tamquoc-', GAME = 'tamquoc';
@@ -106,6 +106,7 @@ export class Host {
   hintFor(pid) {
     const p = this.players.find(x => x.id === pid); const s = this.state;
     if (!p || p.isBot || !s || s.phase !== 'playing' || !(p.hints || (this.opts.training && p.hints !== false))) return null;
+    if (this.players.filter(x => !x.isBot).length >= 2) return null; // gợi ý chỉ có khi chơi với bot (≥ 2 người thật thì tắt)
     const t = top(s); if (!t || !t.ask || !t.ask.players.includes(pid)) return null;
     const key = askKey(s, t) + '|' + s.seq;
     const c = this.hintCache[pid]; if (c && c.key === key) return c.hint;

@@ -1,7 +1,7 @@
 // Lớp mạng Xì dách: chủ phòng giữ state, người vào chỉ gửi action. Kết nối dùng chung shared/net/room.js
 import { createGame, applyAction, viewFor, waitingOn, nextRound, getP, cleanOpts, DEFAULT_OPTS, OPT_CHOICES, MAX_PLAYERS, canBeg } from './engine.js?v=1';
 import { botAction } from './bot.js?v=1';
-import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 // Câu chọc riêng của Xì dách (≤ 24 ký tự)
 export const XD_PHRASES = ['Xét tui đi cái ơi!', 'Non quá cái ơi 🍼', 'Quắc chưa? 😏', 'Dằn non hả 🤨', 'Hên thôi 😎', 'Tất tay luôn!', 'Toang rồi 😭', 'Cứu tui'];

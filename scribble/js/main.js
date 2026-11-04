@@ -1,4 +1,5 @@
-import { Host, Client, MAX, maxPlayers, loadSnapshot, session, PHRASES } from './net.js?v=8';
+import { Host, Client, MAX, maxPlayers, loadSnapshot, session, PHRASES } from './net.js?v=9';
+import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { Board, buildToolbar, opsToCanvas, W, H } from './draw.js?v=5';
@@ -145,7 +146,9 @@ $('#btn-join').onclick = () => {
   net = new Client(code, myName(), handlers); isHost = false; myId = null;
 };
 $('#join-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
-const qcode = new URLSearchParams(location.search).get('room'); if (qcode) $('#join-code').value = qcode.toUpperCase().slice(0, 5);
+// link mời ?room=MÃ (shared/net/joinlink.js): mở link là vào thẳng phòng
+const qcode = linkCode(); if (qcode) $('#join-code').value = qcode;
+function linkJoin(code) { $('#join-code').value = code; joinByLink({ code, toast: m => toast(m), join: n => { $('#name').value = n; $('#btn-join').click(); }, abort: () => leave() }); }
 function leave() {
   if (net) net.leave(); net = null; view = null; lobby = null; isHost = false; myId = null;
   closeModal(); netStatus(''); show('screen-home'); curTurn = null; tStepKey = null;
@@ -157,7 +160,7 @@ function askLeave() {
 }
 $('#g-leave').onclick = $('#t-leave').onclick = askLeave;
 $('#btn-copy').onclick = () => {
-  const url = location.origin + location.pathname + '?room=' + $('#room-code').textContent;
+  const url = inviteUrl($('#room-code').textContent);
   (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => toast('Đã chép link mời 📋'), () => toast(url));
 };
 
@@ -877,6 +880,9 @@ if (location.hash === '#debug') window.__dbg = () => ({ net, view, cv, myId, gBo
 // ---------- Tải lại trang: tự khôi phục phòng / tự vào lại ----------
 (function resume() {
   const snap = loadSnapshot(), ses = session.load('scribble');
+  const lk = linkCode(); // mở link mời phòng khác → vào thẳng phòng đó; link của chính phòng mình → vào lại như thường
+  if (lk && !(ses && ses.code === lk)) { linkJoin(lk); return; }
+  if (lk) clearLinkCode();
   if (snap && ses && ses.role === 'host') {
     fx.musicResumeIfOn();
     net = new Host((snap.players.find(p => p.id === 'host') || {}).name || myName(), handlers, snap); isHost = true; myId = 'host';

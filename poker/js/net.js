@@ -1,7 +1,7 @@
 // Lớp mạng Poker: chủ phòng giữ state (host-authoritative), người vào chỉ gửi action. Kết nối dùng chung shared/net/room.js
 import { createGame, applyAction, viewFor, nextHand, DEFAULT_OPTS, OPT_CHOICES, MAX_PLAYERS } from './engine.js?v=1';
 import { botAction } from './bot.js?v=1';
-import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js';
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 // Câu chọc kiểu Poker (≤ 24 ký tự)
 export const POKER_PHRASES = ['Tất tay đi!', 'Bluff đó 🤥', 'Theo không?', 'Bài rác nè', 'Ăn may thôi', 'Xin mẹ chip 🥺'];
