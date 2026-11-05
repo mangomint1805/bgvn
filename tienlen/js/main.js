@@ -9,6 +9,7 @@ import { rankPlays, splitHand, LEVELS } from './bot.js?v=4';
 import { cardHTML } from './cards.js?v=5';
 import { guideHTML } from './guide.js?v=6';
 import * as fx from './tfx.js?v=5';
+import { initHandDrag } from './handsort.js?v=1';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -70,7 +71,7 @@ const handlers = {
     if (!v) { view = null; prevView = null; if (modalKey === 'end') closeModal(); show('screen-lobby'); renderLobby(); return; }
     timerEnd = v.timer ? Date.now() + v.timer.ms : 0; timerPid = v.timer ? v.timer.pid : null; timerTotal = v.timer ? v.timer.total : 1;
     prevView = view; view = v;
-    if (!$('#screen-game').classList.contains('active')) { show('screen-game'); prevView = null; sel.clear(); }
+    if (!$('#screen-game').classList.contains('active')) { show('screen-game'); prevView = null; sel.clear(); if (!ls.get('tl-drag-tip')) { ls.set('tl-drag-tip', '1'); setTimeout(() => toast('✋ Mẹo: kéo lá sang trái/phải để tự xếp bài'), 1800); } }
     if (prevView && prevView.gameNo !== v.gameNo) { prevView = null; sel.clear(); }
     // bỏ chọn lá không còn trong tay
     const hand = myHand(); for (const c of [...sel]) if (!hand.includes(c)) sel.delete(c);
@@ -162,7 +163,12 @@ $$('#theme-seg [data-theme]').forEach(b => b.onclick = () => setTheme(b.dataset.
 $('#btn-theme').onclick = () => { const k = Object.keys(THEMES); setTheme(k[(k.indexOf(theme) + 1) % k.length], true); };
 $('#btn-log').onclick = () => $('#log').classList.toggle('open');
 $('#btn-log-close').onclick = () => $('#log').classList.remove('open');
-$('#btn-sort').onclick = () => { sortMode = sortMode === 'rank' ? 'combo' : 'rank'; ls.set('tl-sort', sortMode); toast(sortMode === 'rank' ? '🔃 Xếp theo số' : '🔃 Gom theo bộ'); render(); };
+$('#btn-sort').onclick = () => {
+  // đang tự xếp → bấm là xếp lại theo kiểu cũ; còn không thì đổi kiểu xếp
+  if (ownOrder()) { setOwnOrder(null); toast(sortMode === 'rank' ? '🔃 Xếp lại theo số' : '🔃 Gom lại theo bộ'); }
+  else { sortMode = sortMode === 'rank' ? 'combo' : 'rank'; ls.set('tl-sort', sortMode); toast(sortMode === 'rank' ? '🔃 Xếp theo số' : '🔃 Gom theo bộ'); }
+  render();
+};
 
 // ---------- trạng thái ----------
 function send(a) { if (!net) return; if (isHost) net.act('host', a); else net.act(a); }
@@ -193,6 +199,30 @@ function sortedHand(hand) {
   for (const r of pool) out.push(...r);
   return out;
 }
+
+// ---------- tự xếp (kéo lá) – chỉ ở máy mình, lưu theo phòng + ván ----------
+const ORDER_KEY = 'tl-order';
+let own = { k: null, ids: null };
+const dealKey = () => view ? `${$('#room-code').textContent || '-'}:${view.gameNo || 0}:${myId}` : null;
+function ownOrder() {
+  const k = dealKey(); if (!k) return null;
+  if (own.k !== k) { own = { k, ids: null }; try { const o = JSON.parse(ls.get(ORDER_KEY) || 'null'); if (o && o.k === k && Array.isArray(o.ids)) own.ids = o.ids; } catch (e) {} }
+  return own.ids;
+}
+function setOwnOrder(ids) { own = { k: dealKey(), ids }; ls.set(ORDER_KEY, JSON.stringify(own)); }
+function handOrder(hand) {
+  const o = ownOrder(); if (!o) return sortedHand(hand);
+  const hs = new Set(hand), out = o.filter(c => hs.has(c));
+  if (!out.length) return sortedHand(hand);
+  const os = new Set(out);
+  return out.concat(sortedHand(hand.filter(c => !os.has(c)))); // lá mới (nếu có) thêm vào cuối
+}
+const drag = initHandDrag($('#hand'), {
+  enabled: () => !!(view && myHand().length > 1),
+  selected: () => sel,
+  onStart: () => fx.sfx.snap(),
+  onDrop: ids => { if (ids) { setOwnOrder(ids); fx.sfx.snap(); } render(); },
+});
 
 // ---------- vẽ bàn ----------
 const POS = { 1: ['top'], 2: ['right', 'left'], 3: ['right', 'top', 'left'] };
@@ -291,9 +321,21 @@ function renderHand(v, meP) {
   // gợi ý theo lá đang chọn: các bộ hợp lệ chứa hết lá đã chọn
   const sup = sel.size && hintOk() ? legal.filter(ids => [...sel].every(c => ids.includes(c))) : [];
   const hl = new Set(sup.flat());
-  hEl.innerHTML = sortedHand(hand).map(c => cardHTML(c, `${sel.has(c) ? 'sel' : ''} ${my && !usable.has(c) ? 'dim' : ''} ${my && sel.size && hl.has(c) && !sel.has(c) ? 'hl' : ''}`)).join('');
+  const order = handOrder(hand);
+  // đang kéo dở: giữ nguyên DOM tay bài (trừ khi bài trên tay đã đổi – vd. hết giờ bị đánh hộ)
+  if (drag.active) { if (keyOf(order) !== keyOf([...hEl.querySelectorAll('.pc[data-c]')].map(x => +x.dataset.c))) drag.cancel(); else return renderSuggest(v, meP, legal, sup, my); }
+  hEl.innerHTML = order.map(c => cardHTML(c, `${sel.has(c) ? 'sel' : ''} ${my && !usable.has(c) ? 'dim' : ''} ${my && sel.size && hl.has(c) && !sel.has(c) ? 'hl' : ''}`)).join('');
   fitHand();
-  // hàng gợi ý
+  renderSuggest(v, meP, legal, sup, my);
+  $('#btn-sort').classList.toggle('own', !!ownOrder());
+  $('#btn-sort').title = ownOrder() ? 'Đang tự xếp – bấm để xếp lại tự động' : 'Đổi cách xếp bài (kéo lá để tự xếp)';
+}
+function renderSuggest(v, meP, legal, sup, my) {
+  suggestBody(v, meP, legal, sup, my);
+  // nhãn nhỏ khi tay bài đang theo thứ tự tự xếp
+  if (ownOrder() && myHand().length) $('#suggest').insertAdjacentHTML('afterbegin', '<span class="sg-own" title="Bài đang xếp theo ý bạn – bấm 🔃 để xếp lại">✋ Tự xếp</span>');
+}
+function suggestBody(v, meP, legal, sup, my) {
   const sg = $('#suggest');
   if (v.phase !== 'playing' || !meP || meP.out) { sg.innerHTML = `<span class="sg-txt">${meP && meP.out ? (meP.cong ? '🥶 Bạn bị cóng – ngồi xem tiếp nhé' : '😎 Bạn đã về – ngồi xem tiếp nhé') : ''}</span>`; return; }
   if (!my) { const cur = v.players[v.turn]; sg.innerHTML = `<span class="sg-txt">${meP.passed ? '🙅 Bạn đã bỏ – chờ vòng mới… · ' : ''}⏳ Chờ <b>${esc(nm(cur.id))}</b>…</span>`; return; }

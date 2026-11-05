@@ -86,7 +86,7 @@ input:focus{border-color:var(--acc)}
 .pc{width:var(--cw);height:var(--ch);border-radius:calc(var(--cw)*.09);position:relative;flex:none;box-shadow:0 1px 0 #fff inset,0 6px 12px -6px #1a0e0699,0 1px 2px #1a0e0633;user-select:none;-webkit-user-select:none;overflow:hidden}
 .pc.heo{box-shadow:0 0 0 1.5px #e8b94a inset,0 6px 12px -6px #1a0e0699}
 /* lá trên tay */
-.hand .pc{cursor:pointer;margin-left:var(--ov,0px);transition:transform .14s,box-shadow .14s,filter .14s}
+.hand .pc{cursor:pointer;margin-left:var(--ov,0px);transition:transform .14s,box-shadow .14s,filter .14s,translate .14s,opacity .14s;touch-action:none}
 .hand .pc:first-child{margin-left:0}
 .hand .pc:hover{transform:translateY(-4px)}
 .hand .pc.sel{transform:translateY(-18px);box-shadow:0 0 0 3px #ff7a3d,0 0 16px 3px #ffb02088,0 16px 22px -10px #000c;z-index:2}
@@ -426,3 +426,21 @@ body[data-tlt="go"] .lantern{display:none}
   *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 .tt-kind{display:block;font:700 15px "Be Vietnam Pro",sans-serif;color:var(--muted);margin-top:2px}
+
+/* tự xếp: kéo lá trong tay */
+.hand.dragging .pc{cursor:grabbing}
+.hand.dragging .pc:not(.sel):hover{transform:none}
+.hand .pc.dragsrc{opacity:.28;filter:grayscale(.6)}
+.hand-ghost{position:fixed;left:0;top:0;z-index:95;display:flex;pointer-events:none;will-change:transform;transform-origin:30% 80%}
+.hand-ghost .pc{margin-left:calc(var(--cw) * -.6);box-shadow:0 0 0 2.5px #ffd23f,0 18px 28px -10px #000d,0 0 18px 2px #ffb02077}
+.hand-ghost .pc:first-child{margin-left:0}
+.hand-mark{position:fixed;z-index:96;width:0;pointer-events:none}
+.hand-mark i{position:absolute;left:-3px;top:0;bottom:0;width:6px;border-radius:6px;background:linear-gradient(180deg,#fff3b0,#ffb020);box-shadow:0 0 0 1.5px #7a4a00,0 0 14px 3px #ffd23faa;animation:markPulse .8s ease-in-out infinite alternate}
+.hand-mark i::before,.hand-mark i::after{content:"";position:absolute;left:50%;margin-left:-7px;border:7px solid transparent}
+.hand-mark i::before{top:-12px;border-top-color:#ffd23f}
+.hand-mark i::after{bottom:-12px;border-bottom-color:#ffd23f}
+@keyframes markPulse{to{box-shadow:0 0 0 1.5px #7a4a00,0 0 22px 6px #ffd23fdd}}
+.sg-own{flex:none;font-size:12.5px;font-weight:800;color:#3a2300;background:linear-gradient(135deg,#ffe27a,#ffb020);border-radius:999px;padding:3px 10px;white-space:nowrap;box-shadow:0 2px 6px -2px #0006}
+#btn-sort.own{position:relative}
+#btn-sort.own::after{content:"✋";position:absolute;right:-5px;top:-7px;font-size:13px;line-height:20px;width:20px;height:20px;border-radius:50%;background:#ffd23f;box-shadow:0 0 0 1.5px #7a4a00}
+@media (prefers-reduced-motion:reduce){.hand-mark i{animation:none}}

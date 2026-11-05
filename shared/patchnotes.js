@@ -6,6 +6,9 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài',
 };
 export const NOTES = [
+  { id: '20261105-07', date: '05/11/2026', game: 'tienlen', title: 'Tự xếp bài trên tay', items: [
+    '✋ Kéo lá sang trái/phải để tự xếp bài (đang chọn nhiều lá thì kéo cả nhóm). Chạm nhẹ vẫn là chọn lá. Nút 🔃 xếp lại tự động. Tải lại trang vẫn giữ cách xếp.',
+  ] },
   { id: '20261105-06', date: '05/11/2026', game: 'cangua', title: 'Chốt luật mặc định', items: [
     '📏 Luật mặc định: mỗi lượt đi 1 ngựa; đổ đôi được đi cả hoặc nửa (3+3 đi 3 hay 6), không đôi thì đi đủ tổng; vào chuồng đếm thẳng từ ngoài, không cần dừng ở cửa; không nhảy qua đầu ngựa; chỉ còn 1 nước thì bắt buộc đi; thắng khi 4 ngựa chiếm bậc 3-4-5-6.',
     '🔄 Phòng/ván lưu từ bản cũ tự chuyển về luật mặc định mới ở ván sau.',
