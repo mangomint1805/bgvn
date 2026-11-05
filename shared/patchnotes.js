@@ -6,6 +6,10 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài',
 };
 export const NOTES = [
+  { id: '20261105-06', date: '05/11/2026', game: 'cangua', title: 'Chốt luật mặc định', items: [
+    '📏 Luật mặc định: mỗi lượt đi 1 ngựa; đổ đôi được đi cả hoặc nửa (3+3 đi 3 hay 6), không đôi thì đi đủ tổng; vào chuồng đếm thẳng từ ngoài, không cần dừng ở cửa; không nhảy qua đầu ngựa; chỉ còn 1 nước thì bắt buộc đi; thắng khi 4 ngựa chiếm bậc 3-4-5-6.',
+    '🔄 Phòng/ván lưu từ bản cũ tự chuyển về luật mặc định mới ở ván sau.',
+  ] },
   { id: '20261105-05', date: '05/11/2026', game: 'all', title: 'Chọn đối thủ ngay trên bàn', items: [
     '🎯 Mèo Nổ, UNO, BANG!, Tam Quốc Sát, Ma Sói: tới lúc chọn người thì ghế chọn được sáng lên có 🎯, chạm thẳng vào ghế là xong – ghế không chọn được mờ đi kèm lý do (hết bài, ngoài tầm…). Có nút ✕ Huỷ, phím Esc.',
   ] },

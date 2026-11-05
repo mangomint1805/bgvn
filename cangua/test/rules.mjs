@@ -149,5 +149,20 @@ t('ván cũ (đã lưu, opts luật vn, thiếu dblHalf) vẫn chạy theo luậ
   const s = G(2); s.opts = { ...s.opts, homeRule: 'vn' }; delete s.opts.dblHalf; s.players[0].horses = [5, -1, -1, -1];
   const old = JSON.parse(JSON.stringify(s)); roll(old, [3, 3]); eq(old.moves.filter(m => m.kind === 'track').map(m => m.to), [11], 'không có nửa');
 });
+t('luật mặc định 05/11: không đôi chỉ đi tổng, đôi đi cả/nửa, 1 ngựa/lượt', () => {
+  const s = G(2); s.players[0].horses = [10, 20, -1, -1]; roll(s, [2, 5]);
+  ok((s.moves || []).every(m => m.to - m.from === 7), 'không đôi chỉ đi 7'); 
+  const s2 = G(2); s2.players[0].horses = [10, 20, -1, -1]; roll(s2, [3, 3]);
+  const d = new Set((s2.moves || []).filter(m => m.kind === 'track').map(m => m.to - m.from)); ok(d.has(3) && d.has(6) && d.size === 2, 'đôi đi 3 hoặc 6');
+  const L = s2.moves.length; applyAction(s2, 'p0', { type: 'move', h: 0, to: 16 }); eq(s2.players[0].horses[1], 20, 'chỉ 1 ngựa đi'); ok(L > 1);
+});
+t('chỉ 1 nước (vào bậc 1) thì bắt buộc đi', () => {
+  const s = G(2); s.players[0].horses = [GATE - 2, HOME0 + 5, HOME0 + 4, HOME0 + 3]; roll(s, [1, 2]);
+  eq(s.players[0].horses[0], HOME0, 'tự đi vào bậc 1');
+});
+t('không nhảy qua đầu ngựa (cả lúc vào chuồng)', () => {
+  const s = G(2); s.players[0].horses = [GATE - 3, GATE - 1, -1, -1]; roll(s, [2, 5]);
+  ok(!(s.moves || []).some(m => m.h === 0), 'ngựa sau bị chặn bởi ngựa trước');
+});
 t('sai lượt / sai giai đoạn bị từ chối', () => { const s = G(); ok(!applyAction(s, 'p1', { type: 'roll' }).ok); ok(!applyAction(s, 'p0', { type: 'move', h: 0 }).ok); });
 console.log(`rules: ${pass} đạt, ${fail} lỗi`); if (fail) process.exit(1);

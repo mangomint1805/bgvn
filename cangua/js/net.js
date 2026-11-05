@@ -36,10 +36,12 @@ export class Host {
     this.players = [{ id: 'host', name: me.name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.timer = null; this.afk = null;
     this.lim = hostLimiter(); this.botReactAt = 0;
-    this.opts = { dice: 2, moveMode: 'total', exit2: 'd16', exit1: '6', noJump: true, homeRule: 'thru', dblHalf: true, dblUp: true, winRule: 'top4', triple: false, playOn: false, turnTime: offline ? 0 : 30, botLevel: 'normal' };
+    this.opts = { dice: 2, moveMode: 'total', exit2: 'd16', exit1: '6', noJump: true, homeRule: 'thru', dblHalf: true, dblUp: true, winRule: 'top4', triple: false, playOn: false, turnTime: offline ? 0 : 30, botLevel: 'normal', rulesV: 3 };
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));
-      this.state = restore.state; this.code = restore.code; this.opts = { ...this.opts, ...(restore.opts || {}) };
+      this.state = restore.state; this.code = restore.code;
+      // luật mặc định đổi (v3: 1 ngựa/lượt, đôi đi cả hoặc nửa, vào chuồng đếm thẳng, không nhảy qua đầu, thắng bậc 3-6): phòng lưu từ bản cũ thì về luật mặc định mới
+      const ro = restore.opts || {}; this.opts = ro.rulesV === 3 ? { ...this.opts, ...ro } : { ...this.opts, turnTime: ro.turnTime ?? this.opts.turnTime, botLevel: ro.botLevel || this.opts.botLevel };
       // phòng lưu từ trước bản luật nhà mới: ván đang chơi giữ luật cũ (state.opts), ván sau dùng mặc định mới
       if (restore.opts && !('dblHalf' in restore.opts)) Object.assign(this.opts, { homeRule: 'thru', dblHalf: true });
     }
