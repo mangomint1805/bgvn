@@ -19,7 +19,7 @@ export function setRandom(f) { rand = f || Math.random; }
 const d6 = () => 1 + Math.floor(rand() * 6);
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-export const DEFAULTS = { startMoney: 1500, maxRounds: 0, monopolyWin: true, auction: true, buyback: true, freeBuild: true, travel: true, turnTime: 0 };
+export const DEFAULTS = { startMoney: 1500, maxRounds: 0, monopolyWin: true, auction: true, buyback: true, freeBuild: true, travel: true, travelFee: 100, turnTime: 0 };
 export const SALARY = 200, JAIL_FINE = 50, MAX_TRADES = 3;
 export const houseCost = i => (GROUPS[TILES[i].group] || {}).house || 0;
 export const mortgageValue = i => Math.round(TILES[i].price / 2);
@@ -265,7 +265,9 @@ export function applyAction(s, pid, a) {
       if (a.type === 'stay') { log(s, `🅿️ ${p.name} ở lại nghỉ ngơi.`); finishLanding(s); return ok(); }
       const to = +a.tile;
       if (!travelOk(to)) return no('Không bay tới ô đó được');
-      log(s, `✈️ ${p.name} du lịch tới ${TILES[to].name}!`); moveTo(s, p, to, 'fly'); land(s, p); return ok();
+      const fee = +s.opts.travelFee || 0; if (p.cash < fee) return no(`Cần ${money(fee)} mới mua được vé máy bay`);
+      if (fee) p.cash -= fee;
+      log(s, `✈️ ${p.name} ${fee ? 'trả ' + money(fee) + ' vé máy bay, ' : ''}du lịch tới ${TILES[to].name}!`); moveTo(s, p, to, 'fly'); land(s, p); return ok();
     }
     case 'end': {
       if (s.stage !== 'end') return no('Chưa kết thúc lượt được');
@@ -329,6 +331,7 @@ function land(s, p) {
   if (t.type === 'tax') { log(s, `🧾 ${p.name} đóng ${t.name} ${money(t.amount)}.`); charge(s, p, [{ pid: null, amt: t.amount }], 'finish', 'tax'); return; }
   if (t.type === 'gotojail') { goJail(s, p); return; }
   if (t.type === 'parking' && s.noTravel) delete s.noTravel;
+  else if (t.type === 'parking' && s.opts.travel !== false && !p.inJail && p.cash < (+s.opts.travelFee || 0)) log(s, `🅿️ ${p.name} tới Bãi đậu xe nhưng không đủ ${money(+s.opts.travelFee)} mua vé máy bay – nghỉ chân thôi.`);
   else if (t.type === 'parking' && s.opts.travel !== false && !p.inJail) { s.stage = 'travel'; log(s, `✈️ ${p.name} tới Bãi đậu xe – được chọn 1 ô để du lịch tới!`); return; }
   if (t.type === 'chance' || t.type === 'chest') { drawCard(s, p, t.type); return; }
   finishLanding(s);
@@ -561,8 +564,12 @@ export function winCheckFor(s, pid) {
   if (!s.opts.monopolyWin) return null;
   if (groupsOwned(s, pid).length >= 3) return 'groups';
   if (countType(s, pid, 'station') >= STATIONS().length) return 'stations';
+  if (sideOwned(s, pid) != null) return 'side';
   return null;
 }
+// trọn 1 hàng: mọi ô mua được trên 1 cạnh bàn (đường, bến xe, công ty) đều của mình và không thế chấp
+export const SIDES = () => [0, 1, 2, 3].map(k => TILES.map((t, i) => i).filter(i => i > k * 10 && i < k * 10 + 10 && isProp(i)));
+export function sideOwned(s, pid) { const k = SIDES().findIndex(side => side.every(i => s.props[i] && s.props[i].owner === pid && !s.props[i].mort)); return k < 0 ? null : k; }
 function checkWin(s) {
   const al = alive(s);
   if (al.length <= 1) { endGame(s, al[0] ? al[0].id : null, 'last'); return true; }
@@ -574,7 +581,7 @@ function endGame(s, pid, reason) {
   s.auction = null; s.trade = null; s.debt = null; s.buyback = null;
   const rest = alive(s).filter(p => p.id !== pid).sort((a, b) => netWorth(s, b.id) - netWorth(s, a.id)).map(p => p.id);
   s.ranks = [pid, ...rest, ...s.ranks.filter(x => x !== pid && !rest.includes(x))].filter(Boolean);
-  const w = P(s, pid), why = { last: 'là người cuối cùng trụ lại', groups: 'sở hữu trọn 3 nhóm màu', stations: 'sở hữu cả 4 bến xe', rounds: 'giàu nhất khi hết giới hạn vòng' }[reason];
+  const w = P(s, pid), why = { last: 'là người cuối cùng trụ lại', groups: 'sở hữu trọn 3 nhóm màu', stations: 'sở hữu cả 4 bến xe', side: 'sở hữu trọn 1 hàng', rounds: 'giàu nhất khi hết giới hạn vòng' }[reason];
   ev(s, { t: 'win', pid, reason }); log(s, `🏆 ${w ? w.name : '?'} THẮNG – ${why}!`);
 }
 function nextTurn(s) {

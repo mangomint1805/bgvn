@@ -186,7 +186,7 @@ export class Board3D {
     const ctl = this.controls = new OrbitControls(this.camera, r.domElement);
     Object.assign(ctl, { enableDamping: true, dampingFactor: 0.09, minPolarAngle: 0.15, maxPolarAngle: 1.22, minDistance: 4, maxDistance: 40, enablePan: true, screenSpacePanning: false, zoomSpeed: 0.9, rotateSpeed: 0.7 });
     ctl.target.copy(this.cam.target);
-    ctl.addEventListener('start', () => { this.cam.mode = 'free'; this.cam.pinned = false; this.cam.lastUser = performance.now(); this.o.onCamera && this.o.onCamera('free'); });
+    ctl.addEventListener('start', () => { if (this.cam.map) { this.cam.mode = 'free'; this.cam.lastUser = performance.now(); return; } this.cam.mode = 'free'; this.cam.pinned = false; this.cam.lastUser = performance.now(); this.o.onCamera && this.o.onCamera('free'); });
     ctl.addEventListener('change', () => { if (this.cam.mode === 'free') this.cam.lastUser = performance.now(); });
     let down = null;
     r.domElement.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
@@ -400,8 +400,10 @@ export class Board3D {
   }
   // ---------- camera ----------
   follow(id) { this.cam.focus = id; if (this.cam.pinned) return; if (this.cam.mode === 'overview' || (this.cam.mode === 'free' && performance.now() - this.cam.lastUser > 2500)) this.cam.mode = 'follow'; if (this.cam.mode === 'follow') this.camFocusTile = this.pawnTile[id] ?? this.camFocusTile; }
-  home() { this.cam.pinned = false; this.cam.mode = 'follow'; if (this.cam.focus && this.pawnTile[this.cam.focus] != null) this.camFocusTile = this.pawnTile[this.cam.focus]; this.o.onCamera && this.o.onCamera('follow'); }
-  overview() { this.cam.pinned = true; this.cam.mode = 'overview'; this.o.onCamera && this.o.onCamera('overview'); }
+  // chế độ bản đồ 🗺️: không tự xoay/đi theo lượt; chuột trái kéo = di bản đồ, chuột phải = xoay (1 ngón kéo = di, 2 ngón = xoay/thu phóng)
+  setMapControls(on) { const c = this.controls; if (!c) return; c.mouseButtons = on ? { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE } : { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN }; c.touches = on ? { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE } : { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }; c.screenSpacePanning = false; }
+  home() { this.cam.map = false; this.setMapControls(false); this.cam.pinned = false; this.cam.mode = 'follow'; if (this.cam.focus && this.pawnTile[this.cam.focus] != null) this.camFocusTile = this.pawnTile[this.cam.focus]; this.o.onCamera && this.o.onCamera('follow'); }
+  overview() { const off = this.camera.position.clone().sub(this.controls.target), az = Math.atan2(off.x, off.z); this.cam.overAz = Math.round(az / (Math.PI / 2)) * (Math.PI / 2); this.cam.map = true; this.setMapControls(true); this.cam.pinned = true; this.cam.mode = 'overview'; this.o.onCamera && this.o.onCamera('overview'); }
   resize() {
     const w = this.el.clientWidth || 1, h = this.el.clientHeight || 1;
     this.renderer.setSize(w, h, false); this.renderer.domElement.style.width = w + 'px'; this.renderer.domElement.style.height = h + 'px';
@@ -423,7 +425,7 @@ export class Board3D {
     }
     const i = this.cam.focus && this.pawnTile[this.cam.focus] != null ? this.pawnTile[this.cam.focus] : 0;
     const side = Math.round(camAz(i) / (Math.PI / 2)) * (Math.PI / 2);
-    return { t: new THREE.Vector3(0, 0, 0), az: side, pol: portrait ? 0.32 : 0.6, dist: this.overDist };
+    return { t: new THREE.Vector3(0, 0, 0), az: c.map && c.overAz != null ? c.overAz : side, pol: portrait ? 0.32 : 0.6, dist: this.overDist };
   }
   snap() { this.updateCamera(1e6); }
   updateCamera(dt) {
@@ -515,7 +517,7 @@ export class Board3D {
   shake(a = 0.15) { if (this.fxOn) this.shakeAmt = Math.max(this.shakeAmt || 0, a); }
   sirens(ms = 2200) { if (!this.fxOn) return; const p = this.tileCenter(10); this.siren[0].position.set(p.x - 0.3, 1.2, p.z); this.siren[1].position.set(p.x + 0.3, 1.2, p.z); this.sirenUntil = performance.now() + ms; }
   celebrate(id) {
-    const g = this.pawns[id]; if (!g) return; this.follow(id); this.cam.mode = 'follow';
+    const g = this.pawns[id]; if (!g) return; this.follow(id); if (!this.cam.map) this.cam.mode = 'follow';
     this.tween(2600, t => { g.rotation.y += 0.18; g.userData.av.position.y = Math.abs(Math.sin(t * Math.PI * 5)) * 0.35; }).then(() => { g.userData.av.position.y = 0; });
     const i = this.pawnTile[id] ?? 0; this.fireworks(i, 8);
   }

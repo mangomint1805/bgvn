@@ -1,7 +1,7 @@
 // Lớp mạng Cờ Tỷ Phú: host giữ state (luật + xúc xắc do host quyết định), client chỉ gửi action.
 // Kết nối dùng chung shared/net/room.js (Firebase → PeerJS → MQTT), tự vào lại khi tải trang.
-import { createGame, applyAction, viewFor, actorOf, P } from './engine.js?v=49';
-import { botAction } from './bot.js?v=49';
+import { createGame, applyAction, viewFor, actorOf, P } from './engine.js?v=55';
+import { botAction } from './bot.js?v=55';
 import { S } from './fx.js?v=50';
 import { OPTIONS, PRESETS } from '../../shared/js/avatar3d.js';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
@@ -16,8 +16,8 @@ const BOT_POOLS = { attack: ['Trả tiền thuê đi!', 'Đất này của tui!'
 export const COLORS = ['#ff5a5f', '#3d8bff', '#2fc76f', '#ffb020', '#a259ff', '#ff7ac8', '#14c4c4', '#8d6e63'];
 // ⚙️ Luật mặc định khi tạo phòng mới (luat-mac-dinh.js ở gốc repo); turnTime chỉ cho phòng online, chơi với bot luôn 0
 const B2 = [true, false];
-const CFG = rulesFor('typhu', { startMoney: 1500, maxRounds: 0, monopolyWin: true, auction: true, buyback: true, freeBuild: true, travel: true, turnTime: 60 },
-  { startMoney: [1500, 2000, 2500], maxRounds: [0, 20, 30, 50], monopolyWin: B2, auction: B2, buyback: B2, freeBuild: [true, false, 'zing'], travel: B2, turnTime: [0, 30, 60, 90] });
+const CFG = rulesFor('typhu', { startMoney: 1500, maxRounds: 0, monopolyWin: true, auction: true, buyback: true, freeBuild: true, travel: true, travelFee: 100, turnTime: 60 },
+  { startMoney: [1500, 2000, 2500], maxRounds: [0, 20, 30, 50], monopolyWin: B2, auction: B2, buyback: B2, freeBuild: [true, false, 'zing'], travel: B2, travelFee: [0, 50, 100, 200], turnTime: [0, 30, 60, 90] });
 const BOT_NAMES = ['Tiến', 'Tuni', 'Thành', 'Khiêm', 'Thái', 'Minto', 'Bé Na', 'Chú Tư'];
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
 // chỉ nhận cấu hình nhân vật hợp lệ (không tin dữ liệu từ máy khác)

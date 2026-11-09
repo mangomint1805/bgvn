@@ -1,5 +1,5 @@
 // Hướng dẫn luật Cờ Tỷ Phú Sài Gòn (tiếng Việt)
-import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=49';
+import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=55';
 import { gp, ill } from '../../shared/ui/guidepics.js?v=1';
 import { GI, GV } from './guide-img.js?v=1';
 // ô bàn cờ thu nhỏ (tự vẽ bằng CSS) để minh hoạ các loại ô
@@ -20,8 +20,9 @@ export function guideHTML() {
   <h3>🎯 Thắng thế nào?</h3>${ill([[tile('#e53935', '🏙️', '×3 nhóm', ''), 'trọn 3 nhóm màu'], [tile('#555', '🚌', '×4 bến xe', ''), 'cả 4 bến'], [tile('', '💸', 'Phá sản hết', ''), 'còn mình bạn']])}<ul>
     <li>Làm cả bàn <b>phá sản</b>, chỉ còn mình bạn, <b>hoặc</b></li>
     <li>Sở hữu <b>trọn 3 nhóm màu</b> (đủ hết các ô của 3 màu), <b>hoặc</b></li>
-    <li>Sở hữu <b>cả 4 bến xe</b> (Miền Đông, Miền Tây, Chợ Lớn, An Sương).</li>
-    <li>Hai cách thắng nhanh trên tắt được trong sảnh (“Thắng độc quyền”). Nếu chủ phòng đặt <b>giới hạn vòng</b>: hết vòng, ai có <b>tài sản ròng</b> lớn nhất thắng.</li></ul>
+    <li>Sở hữu <b>cả 4 bến xe</b> (Miền Đông, Miền Tây, Chợ Lớn, An Sương), <b>hoặc</b></li>
+    <li>Sở hữu <b>trọn 1 hàng</b>: mọi ô mua được trên 1 cạnh bàn (đường, bến xe, công ty), không ô nào đang thế chấp.</li>
+    <li>Ba cách thắng nhanh trên tắt được trong sảnh (“Thắng độc quyền”). Nếu chủ phòng đặt <b>giới hạn vòng</b>: hết vòng, ai có <b>tài sản ròng</b> lớn nhất thắng.</li></ul>
   ${ill([[tile(GROUP_LIST[0].color, '🏙️', 'Đường', '60K–400K'), 'mua, xây nhà'], [tile('#555', '🚌', 'Bến xe', '200K'), 'có 4 bến'], [tile('#999', '⚡', 'Điện / Nước', '150K'), 'thu theo xúc xắc'], [tile('', '❓', 'Cơ hội', ''), 'rút thẻ đỏ'], [tile('', '💰', 'Khí vận', ''), 'rút thẻ vàng'], [tile('', '🧾', 'Thuế', ''), 'nộp tiền'], [tile('', '🚔', 'Vào tù', ''), ''], [tile('', '🅿️', 'Bãi đậu xe', ''), '✈️ du lịch']])}
   <h3>🎲 Một lượt chơi</h3><ul>
     <li>Đổ 2 xúc xắc, quân đi theo tổng số chấm.</li>
@@ -64,6 +65,7 @@ export function guideHTML() {
     <li>Thuế: ${taxes}.</li></ul>
   <h3>✈️ Bãi đậu xe = Du lịch</h3>${P.fig('travel', 'Tới Bãi đậu xe: nút Chọn ô và Ở lại', '① <b>Chọn ô</b> rồi chạm ô sáng trên bàn để bay tới · ② <b>Ở lại</b>.')}<ul>
     <li>Dừng ở <b>Bãi đậu xe</b> (do đổ xúc xắc) thì được chọn <b>1 ô bất kỳ</b> để bay tới ngay: bấm ô đang sáng trên bàn cờ hoặc nút <b>🗺️ Chọn ô</b>. Tới nơi thì xử lý như dừng bình thường (mua đất, trả thuê, rút thẻ…).</li>
+    <li>🎫 Bay phải mua <b>vé máy bay</b> (mặc định <b>100K</b>, chủ phòng chỉnh trong sảnh). Không đủ tiền mua vé thì chỉ được nghỉ chân.</li>
     <li>Không bay tới ô <b>Vào tù</b> được. Bay ngược qua <b>Bắt đầu</b> vẫn nhận 200K. Muốn thì bấm <b>🅿️ Ở lại</b>.</li>
     <li>Bị thẻ "Ngập đường" đẩy tới Bãi đậu xe thì không được du lịch. Tắt luật này trong sảnh (✈️ Bãi đậu xe → Chỉ nghỉ) thì ô này chỉ để nghỉ chân.</li></ul>
   <h3>😰 Hết tiền & phá sản</h3><ul>

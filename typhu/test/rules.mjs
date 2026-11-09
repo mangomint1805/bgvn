@@ -1,8 +1,8 @@
 // Unit test luật Cờ Tỷ Phú. Chạy: node typhu/test/rules.mjs
 import './load.mjs';
 import assert from 'assert/strict';
-import { createGame, applyAction, setRandom, TILES, CARDS, actorOf, rentOf, buybackPrice, netWorth, canBuild, tradeImpact, tradeSideValue, planRaise, raiseSummary } from '../js/engine.js?v=49';
-import { botAction, judgeTrade } from '../js/bot.js?v=49';
+import { SIDES, sideOwned, winCheckFor, createGame, applyAction, setRandom, TILES, CARDS, actorOf, rentOf, buybackPrice, netWorth, canBuild, tradeImpact, tradeSideValue, planRaise, raiseSummary } from '../js/engine.js?v=55';
+import { botAction, judgeTrade } from '../js/bot.js?v=55';
 
 let pass = 0, fail = 0;
 function test(name, fn) { try { fn(); pass++; console.log('  ✓ ' + name); } catch (e) { fail++; console.log('  ✗ ' + name + '\n    ' + (e.stack || e).toString().split('\n').slice(0, 3).join('\n    ')); } }
@@ -279,6 +279,21 @@ test('bot không nhận kèo làm đối phương thắng ngay dù trả rất n
   const s = game(); [5, 15, 25].forEach(i => own(s, 'p0', i)); own(s, 'p1', 35); P(s, 'p0').cash = 5000;
   act(s, 'p0', { type: 'trade', to: 'p1', give: { cash: 4000, tiles: [], cards: 0 }, get: { cash: 0, tiles: [35], cards: 0 } });
   assert.equal(judgeTrade(s, 'p1'), false);
+});
+
+test('trọn 1 hàng là thắng (không tính ô thế chấp)', () => {
+  const s = game(2); const side = SIDES()[1]; assert.ok(side.length >= 7);
+  side.forEach(i => own(s, 'p0', i)); assert.equal(sideOwned(s, 'p0'), 1); assert.equal(winCheckFor(s, 'p0'), 'side');
+  s.props[side[0]].mort = true; assert.equal(sideOwned(s, 'p0'), null);
+  const s2 = game(2, { monopolyWin: false }); SIDES()[1].forEach(i => own(s2, 'p0', i)); assert.equal(winCheckFor(s2, 'p0'), null);
+});
+test('du lịch tốn vé máy bay, không đủ tiền thì chỉ nghỉ', () => {
+  const s = game(2); const me = P(s, 'p0'); me.pos = 16; dice(2, 2, 6, 5);
+  act(s, 'p0', { type: 'roll' }); assert.equal(s.stage, 'travel');
+  const c0 = me.cash; act(s, 'p0', { type: 'travel', tile: 21 }); assert.equal(me.pos, 21); assert.ok(c0 - me.cash >= 100);
+  const s2 = game(2); const m2 = P(s2, 'p0'); m2.pos = 16; m2.cash = 50; dice(2, 2, 6, 5);
+  act(s2, 'p0', { type: 'roll' }); assert.notEqual(s2.stage, 'travel'); assert.equal(m2.pos, 20);
+  const s3 = game(2, { travelFee: 0 }); const m3 = P(s3, 'p0'); m3.pos = 16; m3.cash = 0; dice(2, 2, 6, 5); act(s3, 'p0', { type: 'roll' }); assert.equal(s3.stage, 'travel');
 });
 
 console.log(`\n${pass} đạt, ${fail} lỗi`);

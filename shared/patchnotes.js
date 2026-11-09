@@ -6,6 +6,11 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài',
 };
 export const NOTES = [
+  { id: '20261109-01', date: '09/11/2026', game: 'typhu', title: 'Thắng khi trọn 1 hàng, vé máy bay, bản đồ tự điều khiển', items: [
+    '🏆 Luật thắng mới: sở hữu trọn 1 hàng (mọi ô mua được trên 1 cạnh bàn, không thế chấp) là thắng luôn.',
+    '🎫 Du lịch từ Bãi đậu xe phải mua vé máy bay 100K (chỉnh được: miễn phí/50K/100K/200K). Không đủ tiền thì chỉ nghỉ.',
+    '🗺️ Chế độ bản đồ không còn tự xoay theo lượt: chuột trái kéo để di bản đồ, chuột phải kéo để xoay (điện thoại: 1 ngón di, 2 ngón xoay/thu phóng).',
+  ] },
   { id: '20261105-07', date: '05/11/2026', game: 'tienlen', title: 'Tự xếp bài trên tay', items: [
     '✋ Kéo lá sang trái/phải để tự xếp bài (đang chọn nhiều lá thì kéo cả nhóm). Chạm nhẹ vẫn là chọn lá. Nút 🔃 xếp lại tự động. Tải lại trang vẫn giữ cách xếp.',
   ] },

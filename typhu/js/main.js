@@ -1,16 +1,16 @@
 // Cờ Tỷ Phú Sài Gòn – giao diện: trang chủ, tạo nhân vật, sảnh, ván chơi 3D, hoạt ảnh sự kiện.
 import { hintsAllowed, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
-import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=52';
+import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=55';
 import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.js?v=2';
 import {
   setData, TILES, GROUPS, GROUP_LIST, STATION_RENT, money, rentOf, canBuild, canSell, canMortgage, canUnmortgage, houseCost, mortgageValue,
   unmortgageCost, travelOk, buildBlock, tradable, tradeError, buybackPrice, netWorth, tilesOf, ownsGroup, JAIL_FINE, MAX_TRADES, isProp,
   tradeImpact, tradeSideValue, planRaise, raiseSummary,
-} from './engine.js?v=49';
-import { Board3D, THEMES } from './scene3d.js?v=49';
+} from './engine.js?v=55';
+import { Board3D, THEMES } from './scene3d.js?v=54';
 import * as fx from './fx.js?v=50';
-import { guideHTML } from './guide.js?v=50';
+import { guideHTML } from './guide.js?v=55';
 import { OPTIONS, PRESETS, buildAvatar, portrait } from '../../shared/js/avatar3d.js';
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
@@ -77,7 +77,7 @@ function flyTo(i) { const pid = shown.actor; travelSel = null; setMark('move', i
 function openTravel() {
   const v = shown, me = v.actor;
   const row = i => `<div class="row" style="border-left:6px solid ${gColor(i)};padding-left:8px"><span class="nm" ${fnAttr('modal', () => { travelSel = i; closeModal(); renderPanel(); })}>${esc(tileName(i))} <small>${v.props[i] ? (v.props[i].owner === me ? '🙋 của mình ' : '👤 ' + esc(nm(v, v.props[i].owner)) + ' ') + statusOf(v, i) : isProp(i) ? '🏦 trống · ' + money(TILES[i].price) : ''}</small></span><button class="btn sm pri" ${fnAttr('modal', () => { closeModal(); flyTo(i); })}>✈️ Bay</button></div>`;
-  openModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>✈️ Du lịch tới đâu?</h2><p class="note">Mẹo: chạm thẳng vào ô trên bàn cờ cũng chọn được. Bay ngược qua <b>Bắt đầu</b> vẫn nhận 200K. Không bay tới Vào tù được.</p><div class="mg">${TILES.map((t, i) => i).filter(i => travelOk(i) && i !== v.players.find(p => p.id === me).pos).map(row).join('')}</div>`);
+  openModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>✈️ Du lịch tới đâu?</h2><p class="note">${+v.opts.travelFee ? `🎫 Vé máy bay: <b>${money(+v.opts.travelFee)}</b>. ` : ''}Mẹo: chạm thẳng vào ô trên bàn cờ cũng chọn được. Bay ngược qua <b>Bắt đầu</b> vẫn nhận 200K. Không bay tới Vào tù được.</p><div class="mg">${TILES.map((t, i) => i).filter(i => travelOk(i) && i !== v.players.find(p => p.id === me).pos).map(row).join('')}</div>`);
 }
 $('#modal').addEventListener('click', e => { if (e.target.id === 'modal' && modalKey !== 'lock') closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modal').classList.contains('open') && modalKey !== 'lock') closeModal(); });
@@ -218,11 +218,12 @@ $('#btn-copy').onclick = () => { const url = inviteUrl($('#room-code').textConte
 const OPTS = [
   ['startMoney', '💰 Tiền khởi đầu', [[1500, '1,5M'], [2000, '2M'], [2500, '2,5M']]],
   ['maxRounds', '⏱️ Giới hạn vòng', [[0, 'Không'], [20, '20'], [30, '30'], [50, '50']], 'Hết vòng thì ai nhiều tài sản nhất thắng.'],
-  ['monopolyWin', '🏆 Thắng độc quyền', [[true, 'Bật'], [false, 'Tắt']], 'Trọn 3 nhóm màu hoặc cả 4 bến xe là thắng luôn.'],
+  ['monopolyWin', '🏆 Thắng độc quyền', [[true, 'Bật'], [false, 'Tắt']], 'Trọn 3 nhóm màu, cả 4 bến xe hoặc trọn 1 hàng (mọi ô mua được trên 1 cạnh bàn, không thế chấp) là thắng luôn.'],
   ['auction', '🔨 Đấu giá', [[true, 'Bật'], [false, 'Tắt']], 'Không mua thì đem ô đó ra đấu giá.'],
   ['freeBuild', '🏗️ Xây nhà', [[true, 'Không cần đủ bộ'], [false, 'Phải đủ bộ màu'], ['zing', 'ZingPlay thật']], 'Không cần đủ bộ: đất mình là xây được, lúc nào cũng được. Phải đủ bộ: luật cổ điển. ZingPlay thật: chỉ xây ở ô vừa dừng – đứng lên đất mình là hỏi luôn “Xây mấy nhà?”.'],
   ['buyback', '💥 Mua lại đất', [[true, 'Bật'], [false, 'Tắt']], 'Trả thuê xong được mua lại đường đó với giá gấp đôi.'],
   ['travel', '✈️ Bãi đậu xe', [[true, 'Du lịch'], [false, 'Chỉ nghỉ']], 'Du lịch: dừng ở Bãi đậu xe được chọn 1 ô để bay tới ngay (kiểu ZingPlay).'],
+  ['travelFee', '🎫 Vé máy bay', [[0, 'Miễn phí'], [50, '50K'], [100, '100K'], [200, '200K']], 'Giá vé khi du lịch từ Bãi đậu xe. Không đủ tiền thì chỉ được nghỉ.'],
   ['turnTime', '⏳ Thời gian suy nghĩ', [[0, 'Không'], [30, '30s'], [60, '60s'], [90, '90s']], 'Hết giờ máy đánh giúp (chơi online).', true],
 ];
 function renderLobby() {
@@ -536,7 +537,7 @@ function renderLog() { if (logOpen) $('#log-list').innerHTML = shown.log.slice()
 $('#btn-log').onclick = () => { logOpen = !logOpen; $('#log').classList.toggle('open', logOpen); if (shown) renderLog(); };
 $('#btn-log-close').onclick = () => { logOpen = false; $('#log').classList.remove('open'); };
 $('#btn-home-cam').onclick = () => { fx.sfx.click(); B && B.home(); };
-$('#btn-overview').onclick = () => { fx.sfx.click(); if (!B) return; B.cam.mode === 'overview' ? B.home() : B.overview(); };
+$('#btn-overview').onclick = () => { fx.sfx.click(); if (!B) return; B.cam.map ? B.home() : B.overview(); };
 
 // ---------- bảng hành động ----------
 function send(pid, a) {
