@@ -36,7 +36,7 @@ document.addEventListener('click', e => {
   if (e.target.closest('[data-close]')) closeModal();
 });
 let modalKey = null, modalT = null;
-function openModal(html, cls = '', key = null) { clearTimeout(modalT); fns.modal = []; $('#modal-box').className = 'modal-box ' + cls; $('#modal-box').innerHTML = html; $('#modal').classList.add('open'); modalKey = key; $('#modal-box').scrollTop = 0; }
+function openModal(html, cls = '', key = null) { clearTimeout(modalT); $('#modal-box').className = 'modal-box ' + cls; $('#modal-box').innerHTML = html; $('#modal').classList.add('open'); modalKey = key; $('#modal-box').scrollTop = 0; }
 function closeModal() { clearTimeout(modalT); $('#modal').classList.remove('open'); modalKey = null; fns.modal = []; }
 $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modal').classList.contains('open')) closeModal(); });

@@ -6,6 +6,9 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài',
 };
 export const NOTES = [
+  { id: '20261109-05', date: '09/11/2026', game: 'camel', title: 'Sửa lỗi không rời ván được', items: [
+    '🔧 Nút "Rời ván" (và các nút trong hộp thoại như "Đua ván mới") bấm được lại bình thường.',
+  ] },
   { id: '20261109-04', date: '09/11/2026', game: 'typhu', title: 'Đổi luật mặc định', items: [
     '🏗️ Xây nhà kiểu ZingPlay thật (chỉ xây ở ô vừa dừng).',
     '🔨 Tắt đấu giá: không mua thì ô đó vẫn để trống.',
