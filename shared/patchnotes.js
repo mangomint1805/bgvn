@@ -6,6 +6,9 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài',
 };
 export const NOTES = [
+  { id: '20261109-02', date: '09/11/2026', game: 'tienlen', title: 'Thêm kiểu tới trắng', items: [
+    '⚡ Tới trắng thêm kiểu "cả bài không có lá người" (không có J, Q, K nào). Đủ bộ: sảnh rồng, tứ quý heo, 5 đôi thông, 6 đôi (tứ quý tính 2 đôi), đồng màu 13 lá, không lá người, tứ quý 3 ván đầu.',
+  ] },
   { id: '20261109-01', date: '09/11/2026', game: 'typhu', title: 'Thắng khi trọn 1 hàng, vé máy bay, bản đồ tự điều khiển', items: [
     '🏆 Luật thắng mới: sở hữu trọn 1 hàng (mọi ô mua được trên 1 cạnh bàn, không thế chấp) là thắng luôn.',
     '🎫 Du lịch từ Bãi đậu xe phải mua vé máy bay 100K (chỉnh được: miễn phí/50K/100K/200K). Không đủ tiền thì chỉ nghỉ.',

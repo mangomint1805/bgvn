@@ -30,7 +30,7 @@ export const VE_HEO = { heoHang: 'Cấm về heo + hàng', heo: 'Cấm về heo'
 export const PAY = { heoDen: 1, heoDo: 2, dt3: 3, tuQuy: 4, dt4: 5, cong: 2, toiTrang: 4 };
 // tiền theo hạng: [hạng trả, hạng nhận, số phần]
 export const PLACE_PAY = { 2: [[1, 0, 2]], 3: [[2, 0, 2], [1, 0, 1]], 4: [[3, 0, 2], [2, 1, 1]] };
-export const TOI_TRANG = { rong: 'Sảnh rồng 3→A', tq2: 'Tứ quý heo', dt5: '5 đôi thông', doi6: '6 đôi', mau: 'Đồng màu 13 lá', tq3: 'Tứ quý 3 (ván đầu)' };
+export const TOI_TRANG = { rong: 'Sảnh rồng 3→A', tq2: 'Tứ quý heo', dt5: '5 đôi thông', doi6: '6 đôi', mau: 'Đồng màu 13 lá', nguoi: 'Không có lá người (J, Q, K)', tq3: 'Tứ quý 3 (ván đầu)' };
 
 // ---------- nhận dạng bộ ----------
 // trả về { type: single|pair|triple|quad|straight|pairs, len, top } hoặc null
@@ -157,10 +157,11 @@ export function toiTrangOf(hand, firstGame = false) {
   let run = 0; for (let r = 0; r < 12; r++) { run = cnt[r] >= 2 ? run + 1 : 0; if (run >= 5) return 'dt5'; }
   if (cnt.reduce((t, x) => t + Math.floor(x / 2), 0) >= 6) return 'doi6';
   if (hand.every(isRed) || hand.every(c => !isRed(c))) return 'mau';
+  if (cnt[8] + cnt[9] + cnt[10] === 0) return 'nguoi'; // cả bài không có quân đầu người (J, Q, K)
   if (firstGame && cnt[0] === 4) return 'tq3';
   return null;
 }
-const TT_ORDER = ['rong', 'tq2', 'dt5', 'doi6', 'mau', 'tq3'];
+const TT_ORDER = ['rong', 'tq2', 'dt5', 'doi6', 'mau', 'nguoi', 'tq3'];
 
 // hàng còn trong tay (để tính thối): tứ quý trước, rồi các dây đôi thông ≥ 3
 export function hangInHand(hand) {

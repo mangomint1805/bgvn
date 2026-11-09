@@ -1,5 +1,5 @@
 // Lá bài Tây: dùng bộ bài SVG chung BGVN Deck (mặt cổ điển, lá nhỏ tự đổi kiểu compact)
-import { RANKS, SUITS, rankOf, suitOf, isRed, HEO } from './engine.js?v=4';
+import { RANKS, SUITS, rankOf, suitOf, isRed, HEO } from './engine.js?v=5';
 import { faceSVG, backSVG } from '../../shared/ui/deck/deck.js?v=1';
 
 // mặt lá vẽ bằng bộ bài SVG dùng chung (shared/ui/deck) – giữ nguyên class/data-c cũ để CSS & game không đổi

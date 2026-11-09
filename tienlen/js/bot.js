@@ -1,5 +1,5 @@
 // Bot Tiến Lên: 3 cấp – easy (🐣 Gà mờ), normal (🙂 Vừa), hard (😈 Cao thủ)
-import { classify, legalFor, rankOf, HEO, isHang, isHeoCombo, isChop, getPlayer, current } from './engine.js?v=4';
+import { classify, legalFor, rankOf, HEO, isHang, isHeoCombo, isChop, getPlayer, current } from './engine.js?v=5';
 
 export const LEVELS = { easy: '🐣 Gà mờ', normal: '🙂 Vừa', hard: '😈 Cao thủ' };
 

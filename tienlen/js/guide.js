@@ -1,6 +1,6 @@
 // Hướng dẫn luật Tiến Lên miền Nam (tiếng Việt, có ví dụ lá bài)
-import { cardHTML } from './cards.js?v=5';
-import { PAY, TOI_TRANG, DEFAULT_OPTS, VE_HEO } from './engine.js?v=4';
+import { cardHTML } from './cards.js?v=6';
+import { PAY, TOI_TRANG, DEFAULT_OPTS, VE_HEO } from './engine.js?v=5';
 import { gp } from '../../shared/ui/guidepics.js?v=1';
 import { GI, GV } from './guide-img.js?v=1';
 
