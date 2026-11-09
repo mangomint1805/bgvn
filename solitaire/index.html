@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='22' width='46' height='64' rx='8' fill='%231f9e8f' stroke='%23fff' stroke-width='4' transform='rotate(-14 33 54)'/><rect x='40' y='12' width='46' height='64' rx='8' fill='%23fff' stroke='%23e0263c' stroke-width='4' transform='rotate(8 63 44)'/><text x='63' y='58' font-size='34' text-anchor='middle' fill='%23e0263c' transform='rotate(8 63 44)'>♥</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/sol.css?v=2">
+<link rel="stylesheet" href="css/sol.css?v=3">
 </head>
 <body>
 <div id="app">
@@ -29,10 +29,12 @@
     </div>
   </header>
   <main id="felt"><div id="board" aria-label="Bàn xếp bài"></div></main>
+  <button class="solv" id="solv" type="button" hidden aria-live="polite" title="Ván này còn giải được không (máy tự tính)"><i>🧠</i><span>Đang tính…</span></button>
   <nav class="acts" id="acts">
     <button class="act" id="btn-undo" title="Hoàn tác (Ctrl+Z)"><i>↶</i><span>Hoàn tác</span></button>
     <button class="act" id="btn-redo" title="Làm lại (Ctrl+Y)"><i>↷</i><span>Làm lại</span></button>
     <button class="act" id="btn-hint" title="Gợi ý (H)"><i>💡</i><span>Gợi ý</span></button>
+    <button class="act" id="btn-safe" title="Đưa mọi lá an toàn lên đích (chuột phải / chạm 2 ngón / phím A)" hidden><i>⤴️</i><span>Lên đích</span></button>
     <button class="act hot" id="btn-finish" title="Tự xếp nốt (F)" hidden><i>✨</i><span>Tự xếp nốt</span></button>
     <button class="act" id="btn-new" title="Ván mới (N)"><i>🆕</i><span>Ván mới</span></button>
     <button class="act" id="btn-more" title="Thêm"><i>☰</i><span>Thêm</span></button>
@@ -41,6 +43,6 @@
 <div class="modal" id="modal"><div class="modal-box" id="modal-box" role="dialog" aria-modal="true"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <canvas id="win-canvas" hidden></canvas>
-<script type="module" src="js/main.js?v=4"></script>
+<script type="module" src="js/main.js?v=5"></script>
 </body>
 </html>

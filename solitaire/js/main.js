@@ -2,9 +2,9 @@
 import { VARIANTS, newGame, defaultOpts, optsKey, optsName, scoreStart, liveScore, timeBonus, passesLeft, SCORE_NONE, SCORE_VEGAS } from './variants.js?v=1';
 import { apply, canMove, legalMoves, autoMoves, greedyFinish, key, hintMove, idsOf, isSeq, isRed, cardName, top } from './core.js?v=1';
 import { solve } from './solver.js?v=1';
-import { faceHTML, BACK, drawCard } from './cards.js?v=2';
+import { faceHTML, backHTML, drawCard, THEMES, getTheme, setTheme, previewHTML, EGYPT_CREDIT } from './cards.js?v=3';
 import * as fx from './sfx.js?v=1';
-import { guideHTML } from './guide.js?v=2';
+import { guideHTML } from './guide.js?v=3';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
 import { rulesFor } from '../../shared/rules.js?v=1';
 // ⚙️ Mặc định cho máy CHƯA từng chơi (luat-mac-dinh.js ở gốc repo). Máy đã chơi thì nhớ tuỳ chọn ván gần nhất ('sol-opts')
@@ -41,6 +41,18 @@ function start(v, o = {}, seed = randSeed(), { record = true } = {}) {
   resetBoard(); render(); afterStep(true);
 }
 function restart() { if (busy) return; G.steps.length = 1; G.idx = 0; G.t = 0; G.won = false; G.final = null; G.assisted = false; G.counted = false; clearSel(); render(); afterStep(true); toast('🔁 Chơi lại ván #' + G.seed); }
+// chuột phải / nút ⤴️ / chạm 2 ngón: đưa MỌI lá an toàn lên đích (lặp tới khi hết), bay từng lá, hoàn tác 1 lần là về như cũ
+function safeUp() {
+  flushAuto();
+  if (busy || !G || G.won) return false;
+  const s = cur(), r = autoMoves(V, s, 1);
+  if (!r.moves.length) { fx.sfx.bad(); toast(autoOn() ? 'Không còn lá an toàn nào – máy đang tự đưa lên rồi 😉' : 'Chưa có lá nào an toàn để đưa lên đích 🤷', 'bad'); return false; }
+  clearSel(); pushStep([r.moves[0]], r.s, s); fx.sfx.found(); render(); updateHead(); runAuto();
+  return true;
+}
+const hasSafe = () => !!G && !G.won && !busy && V.safe && autoMoves(V, cur(), 1).moves.length > 0;
+// nút ⤴️ chỉ hiện khi TẮT tự đưa lên đích (bật thì máy làm sẵn rồi) và khi chưa có ✨ Tự xếp nốt
+function syncSafeBtn() { const b = $('#btn-safe'); b.hidden = autoOn() || !!finishMoves || !G || G.won; b.disabled = !hasSafe(); }
 function save() {
   if (!G) return;
   ls.put('sol-game', { v: G.v, o: G.o, seed: G.seed, steps: G.steps.slice(1).map(x => x.m), idx: G.idx, t: Math.round(G.t), won: G.won, assisted: G.assisted, counted: G.counted, final: G.final ?? null, bonus: G.bonus || 0 });
@@ -85,7 +97,7 @@ addEventListener('pagehide', save);
 // ---------------- bố cục + vẽ ----------------
 function compute() {
   const s = cur(), pad = 8;
-  const fw = felt.clientWidth, fh = felt.clientHeight, aw = fw - 2 * pad, ah = fh - 2 * pad;
+  const fw = felt.clientWidth, fh0 = felt.clientHeight, fh = fh0 - solvReserve(), aw = fw - 2 * pad, ah = fh - 2 * pad;
   let best = null;
   for (const wide of V.layout.length >= 2 ? [false, true] : [false]) {
     const L = V.layout(s, wide); const cwW = aw / L.W, cwH = ah / (L.H * 1.4);
@@ -115,14 +127,14 @@ function compute() {
     piles[p.id] = { p, x, y, pos, hit, order }; maxB = Math.max(maxB, hit.b);
   });
   for (const t of L.tags || []) maxB = Math.max(maxB, pad + (t.y + 0.4) * ch);
-  return { L, cw, ch, pad, offX, piles, H: Math.max(maxB + pad, fh), W: fw };
+  return { L, cw, ch, pad, offX, piles, H: Math.max(maxB + pad, fh0), W: fw };
 }
 function resetBoard() { board.innerHTML = ''; cardEl.clear(); slotEl.clear(); }
 function cardNode(c) {
   let el = cardEl.get(c);
   if (!el) {
     el = document.createElement('div'); el.className = 'pc ' + (isRed(c) ? 'red' : 'blk');
-    el.innerHTML = faceHTML(c) + BACK; el.dataset.c = c; board.appendChild(el); cardEl.set(c, el);
+    el.innerHTML = faceHTML(c) + backHTML(); el.dataset.c = c; board.appendChild(el); cardEl.set(c, el);
   }
   return el;
 }
@@ -243,9 +255,10 @@ function findFinish(s) {
 }
 function afterStep(initial = false) {
   const s = cur(); updateHead(); save();
-  if (V.won(s) && !G.won) { onWin(); return; }
+  if (V.won(s) && !G.won) { onWin(); solvSchedule(); syncSafeBtn(); return; }
   finishMoves = G.won ? null : findFinish(s);
   $('#btn-finish').hidden = !finishMoves;
+  solvSchedule(); syncSafeBtn();
   if (!initial && !G.won && !legalMoves(V, s).length) toast('Hết nước đi rồi 😵 Thử ↶ Hoàn tác hoặc 🆕 Ván mới nhé.', 'bad', 3800);
 }
 function undo() { flushAuto(); if (busy || G.idx === 0) return; G.idx--; G.won = false; G.final = null; clearSel(); fx.sfx.undo(); render(); afterStep(true); }
@@ -312,7 +325,7 @@ function markTarget(m) {
   if (el === tgtEl) return; tgtEl && tgtEl.classList.remove('tgt'); tgtEl = el; el && el.classList.add('tgt');
 }
 board.addEventListener('pointerdown', e => {
-  if (e.button > 0 || !G) return; fx.actx(); flushAuto();
+  if (e.button > 0 || !G || twoTap) return; fx.actx(); flushAuto();
   const el = e.target.closest('.pc,.slot');
   if (!el) { clearSel(); return; }
   let pid = el.dataset.p; if (pid == null) return;
@@ -343,12 +356,31 @@ addEventListener('pointermove', e => {
 }, { passive: false });
 addEventListener('pointerup', e => {
   const d = drag; if (!d || e.pointerId !== d.id) return; drag = null;
-  if (!d.on) { onTap(d.pid, d.i); return; }
+  if (!d.on) { if (!twoTap) onTap(d.pid, d.i); return; }
   markTarget(null); d.els.forEach(el => el.classList.remove('drag'));
   const m = dropTarget(d, e);
   if (!m || !userMove(m)) { render(); if (!m) fx.sfx.bad(); }
 });
 addEventListener('pointercancel', e => { const d = drag; if (!d || e.pointerId !== d.id) return; drag = null; if (d.on) { markTarget(null); d.els.forEach(el => el.classList.remove('drag')); render(); } });
+
+// ---------------- chuột phải (kiểu Solitaire Windows) + chạm 2 ngón ----------------
+felt.addEventListener('contextmenu', e => e.preventDefault());
+const touchPts = new Map(); let twoTap = null;
+felt.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse' && e.button === 2) { e.preventDefault(); fx.actx(); safeUp(); return; }
+  if (e.pointerType !== 'touch') return;
+  touchPts.set(e.pointerId, [e.clientX, e.clientY]);
+  if (touchPts.size === 2 && !(drag && drag.on)) { twoTap = { t: performance.now() }; drag = null; clearSel(); }
+  else if (touchPts.size > 2) twoTap = null;
+}, true);
+felt.addEventListener('pointermove', e => { const p = touchPts.get(e.pointerId); if (p && twoTap && Math.hypot(e.clientX - p[0], e.clientY - p[1]) > 14) twoTap = null; }, true);
+const touchEnd = (e, ok) => {
+  if (!touchPts.delete(e.pointerId)) return;
+  if (!ok) twoTap = null;
+  if (twoTap && !touchPts.size) { const q = twoTap; twoTap = null; drag = null; if (performance.now() - q.t < 450) safeUp(); }
+};
+addEventListener('pointerup', e => touchEnd(e, true), true);
+addEventListener('pointercancel', e => touchEnd(e, false), true);
 
 // ---------------- gợi ý ----------------
 function doHint() {
@@ -438,7 +470,9 @@ modal.addEventListener('click', e => {
     opts: () => optsBox(), deal: () => dealBox(), restart: () => { closeModal(); restart(); },
     solve: () => askSolver(), stats: () => showStats(), guide: () => openModal(guideHTML(V.id), 'wide'),
     news: () => { closeModal(); news(); },
-    auto: () => { ls.set('sol-auto', autoOn() ? '0' : '1'); moreMenu(); toast(autoOn() ? '✅ Bật tự đưa lá an toàn lên đích' : 'Tắt tự đưa lên đích'); },
+    auto: () => { ls.set('sol-auto', autoOn() ? '0' : '1'); moreMenu(); syncSafeBtn(); toast(autoOn() ? '✅ Bật tự đưa lá an toàn lên đích' : 'Tắt tự đưa lên đích – dùng ⤴️ Lên đích hoặc chuột phải'); },
+    solv: () => { ls.set('sol-solvable', solvOn() ? '0' : '1'); moreMenu(); render(); solvSchedule(); toast(solvOn() ? '🧠 Bật báo giải được hay không' : 'Tắt báo giải được hay không'); },
+    theme: () => themeBox(), settheme: () => { pickTheme(b.dataset.t); themeBox(); },
     music: () => { fx.actx(); fx.musicToggle(); syncAudio(); moreMenu(); }, mute: () => { fx.toggleMute(); syncAudio(); moreMenu(); },
     resetstats: () => { if (b.dataset.sure) { ls.put(STATS, {}); showStats(); toast('Đã xoá thống kê'); } else { b.dataset.sure = '1'; b.textContent = 'Chắc chưa? Bấm lần nữa để xoá'; } },
   }[a] || (() => {}))();
@@ -452,11 +486,14 @@ function moreMenu() {
     <button data-act="solve">🧠 Ván này giải được không?</button>
     <button data-act="stats">📊 Thống kê</button>
     <button data-act="auto" class="tg ${autoOn() ? 'on' : ''}">🪄 Tự đưa lá an toàn lên đích <em>${autoOn() ? 'BẬT' : 'TẮT'}</em></button>
+    <button data-act="solv" class="tg ${solvOn() ? 'on' : ''}">🧠 Báo giải được hay không (góc trái dưới) <em>${solvOn() ? 'BẬT' : 'TẮT'}</em></button>
+    <button data-act="theme">🎨 Giao diện bài <em>${THEMES[getTheme()].name}</em></button>
     <button data-act="music" class="tg ${fx.musicIsOn() ? 'on' : ''}">🎵 Nhạc nền <em>${fx.musicIsOn() ? 'BẬT' : 'TẮT'}</em></button>
     <button data-act="mute" class="tg ${fx.isMuted() ? '' : 'on'}">🔊 Âm thanh <em>${fx.isMuted() ? 'TẮT' : 'BẬT'}</em></button>
     <button data-act="guide">📖 Hướng dẫn</button>
     <button data-act="news">📝 Có gì mới</button>
-  </div><p class="note">Bản fan-made phi thương mại · Chơi một mình, không cần mạng.</p>`);
+  </div><p class="note">Bản fan-made phi thương mại · Chơi một mình, không cần mạng. Chuột phải lên bàn = đưa lá an toàn lên đích.</p>
+  ${getTheme() === 'egypt' ? `<p class="credit center">🏺 ${EGYPT_CREDIT}.</p>` : ''}`);
 }
 // tuỳ chọn ván: rút 1/3 + cách tính điểm (áp dụng từ ván mới)
 function optsBox(first = false) {
@@ -493,6 +530,62 @@ function showStats() {
   <p class="muted">Ván bỏ dở (đã đi ít nhất 1 nước) tính là thua. Ván có máy giải giúp không được tính. Điểm Vegas là điểm ảo cho vui.</p>
   ${rows.length ? '<div class="mrow"><button class="btn gray" data-act="resetstats">🗑 Xoá thống kê</button></div>' : ''}`, 'wide');
 }
+
+function themeBox() {
+  const t0 = getTheme();
+  openModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>🎨 Giao diện bài</h2>
+  <div class="th-pick">${Object.entries(THEMES).map(([id, T]) => `<button data-act="settheme" data-t="${id}" class="${id === t0 ? 'on' : ''}" aria-pressed="${id === t0}">${previewHTML(id)}<span>${T.name}</span><small>${T.desc}</small></button>`).join('')}</div>
+  <p class="credit">🏺 Theme Ai Cập dùng nguyên bộ bài và nền bàn của KDE (không vẽ lại): ${EGYPT_CREDIT}. Chi tiết, nguồn và toàn văn giấy phép: <a href="themes/ancientegypt/README.txt" target="_blank" rel="noopener">themes/ancientegypt/README.txt</a>.</p>
+  <div class="mrow"><button class="btn pri" data-close>Xong</button></div>`);
+}
+function pickTheme(t) {
+  if (t === getTheme() || !THEMES[t]) return;
+  setTheme(t); flushAuto(); resetBoard(); render();
+  toast(t === 'egypt' ? '🏺 Theme Ai Cập – bộ bài KDE Ancient Egyptians' : '🃏 Về bộ bài cổ điển');
+}
+
+// ---------------- 🧠 báo "giải được không" liên tục (như KPatience) ----------------
+// Chạy bộ giải trong Web Worker RIÊNG sau mỗi nước/hoàn tác/ván mới (chờ 300ms cho gọn), huỷ lượt cũ khi thế bài đổi,
+// mỗi lượt tối đa 4 giây. Chỉ để XEM – không tính là "có máy giúp" (chỉ "Cho máy giải luôn" mới tính).
+const solvEl = $('#solv');
+const solvOn = () => ls.get('sol-solvable') !== '0';
+const SOLV_TXT = { calc: ['🧠', 'Đang tính…'], win: ['✅', 'Giải được'], lose: ['❌', 'Hết đường'], unknown: ['🤔', 'Chưa chắc'] };
+const SOLV_TIP = { calc: 'Máy đang thử giải thế bài này…', win: '✅ Máy tìm được đường thắng từ thế bài này (máy biết cả lá úp).', lose: '❌ Máy đã thử hết mọi đường: thế bài này không thắng được nữa. Thử ↶ Hoàn tác!', unknown: '🤔 Máy chưa tìm ra đường thắng trong 4 giây – chưa chắc thua đâu, chơi tiếp đi!' };
+const SV = { w: null, busy: false, id: 0, t: 0, st: null, cache: new Map() };
+const solvBar = () => matchMedia('(min-width:1280px) and (min-height:600px)').matches;
+function solvReserve() { return solvOn() && G && !G.won && !solvBar() ? (innerWidth <= 420 ? 30 : 36) : 0; }
+function solvShow(st) {
+  SV.st = st;
+  solvEl.hidden = !st; if (st) { solvEl.className = 'solv ' + st; solvEl.firstElementChild.textContent = SOLV_TXT[st][0]; solvEl.lastElementChild.textContent = SOLV_TXT[st][1]; solvEl.title = SOLV_TIP[st]; }
+}
+function solvCancel() { SV.id++; clearTimeout(SV.t); if (SV.busy && SV.w) { SV.w.terminate(); SV.w = null; } SV.busy = false; }
+function solvCache(k, r) { SV.cache.set(k, r); if (SV.cache.size > 600) SV.cache.delete(SV.cache.keys().next().value); }
+function solvSchedule() {
+  solvCancel();
+  if (!solvOn() || !G || G.won) { solvShow(null); return; }
+  const s = cur(), k = key(V, s);
+  if (SV.cache.has(k)) { solvShow(SV.cache.get(k)); return; }
+  solvShow('calc');
+  const id = SV.id; SV.t = setTimeout(() => { if (id === SV.id) solvRun(s, k); }, 300);
+}
+function solvRun(s, k) {
+  const id = SV.id;
+  try { if (!SV.w) SV.w = new Worker(new URL('./worker.js?v=1', import.meta.url), { type: 'module' }); }
+  catch (e) { solvShow('unknown'); return; }
+  SV.busy = true;
+  SV.w.onmessage = e => {
+    const d = e.data; if (d.id !== id || d.progress != null) return;
+    SV.busy = false;
+    const r = d.res === 'win' || d.res === 'lose' ? d.res : 'unknown';
+    solvCache(k, r);
+    // có lời giải → mọi thế bài dọc theo lời giải cũng giải được (đi đúng đường thì báo ngay, khỏi tính lại)
+    if (r === 'win' && d.moves) { let x = s; for (const m of d.moves) { x = apply(V, x, m); if (!x) break; solvCache(key(V, x), 'win'); } }
+    if (id === SV.id && G && !G.won) solvShow(r);
+  };
+  SV.w.onerror = () => { SV.busy = false; SV.w = null; if (id === SV.id) solvShow('unknown'); };
+  SV.w.postMessage({ id, state: s, maxMs: 4000, maxNodes: 200000 });
+}
+solvEl.onclick = () => { if (SV.st) toast(SOLV_TIP[SV.st], SV.st === 'lose' ? 'bad' : '', 3200); };
 
 // ---------------- bộ giải (Web Worker) ----------------
 let worker = null, wid = 0;
@@ -536,7 +629,7 @@ let toastT = 0;
 function toast(msg, cls = '', ms = 2200) { const t = $('#toast'); t.textContent = msg; t.className = 'toast on ' + cls; clearTimeout(toastT); toastT = setTimeout(() => { t.className = 'toast ' + cls; }, ms); }
 function syncAudio() { $('#btn-music').classList.toggle('off', !fx.musicIsOn()); $('#btn-mute').textContent = fx.isMuted() ? '🔇' : '🔊'; }
 function news() { openNews('solitaire'); $('#btn-news').classList.remove('bgvn-dot'); }
-$('#btn-undo').onclick = undo; $('#btn-redo').onclick = redo; $('#btn-hint').onclick = doHint;
+$('#btn-undo').onclick = undo; $('#btn-redo').onclick = redo; $('#btn-hint').onclick = doHint; $('#btn-safe').onclick = () => safeUp();
 $('#btn-new').onclick = () => { if (busy) return; start(V.id, G.o); toast(`🆕 Ván #${G.seed}`); };
 $('#btn-more').onclick = moreMenu; $('#btn-variant').onclick = () => optsBox(); $('#btn-deal').onclick = dealBox;
 $('#btn-finish').onclick = () => { if (finishMoves && !busy) playSeq(finishMoves, 95); };
@@ -555,7 +648,7 @@ addEventListener('keydown', e => {
   if (mod && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
   else if (mod && k === 'y') { e.preventDefault(); redo(); }
   else if (!mod && !e.altKey) {
-    if (k === 'h') doHint(); else if (k === 'n') $('#btn-new').click(); else if (k === 'f') $('#btn-finish').click();
+    if (k === 'h') doHint(); else if (k === 'n') $('#btn-new').click(); else if (k === 'f') $('#btn-finish').click(); else if (k === 'a') safeUp();
     else if (k === ' ' || k === 'd') { e.preventDefault(); if (!busy && !G.won && V.canStock) doStock(); }
     else if (k === 'escape') clearSel(); else return;
   }
@@ -563,7 +656,8 @@ addEventListener('keydown', e => {
 
 // debug/test hook (dùng cho test tự động)
 window.__sol = { get G() { return G; }, get sel() { return sel; }, get busy() { return busy; }, get lastTap() { return lastTap; }, get V() { return V; }, start, render, cur, userMove, apply: m => apply(V, cur(), m), legal: () => legalMoves(V, cur()),
-  inject(s) { G.steps.length = G.idx + 1; G.steps.push({ m: [], s, sc: G.steps[G.idx].sc }); G.idx++; render(); afterStep(); }, geo: () => geo };
+  inject(s) { G.steps.length = G.idx + 1; G.steps.push({ m: [], s, sc: G.steps[G.idx].sc }); G.idx++; render(); afterStep(); }, geo: () => geo,
+  safeUp, undo, pickTheme, get solv() { return SV.st; }, get solvCache() { return SV.cache.size; } };
 
 // ---------------- khởi động ----------------
 if (load()) { render(); afterStep(true); if (G.won) $('#btn-finish').hidden = true; }

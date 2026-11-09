@@ -182,3 +182,45 @@ kbd{background:#fff;border:1px solid #d8cfe4;border-bottom-width:2px;border-radi
 .g-fig img{width:100%;height:auto;border-radius:12px;box-shadow:0 4px 14px -6px #0006;display:block;background:#1f8a5a}
 .g-fig figcaption{font-size:12.5px;color:var(--muted);margin-top:4px}
 .guide li:has(> .g-fig){list-style:none}
+
+/* ---------- 🧠 báo "giải được không" (góc trái dưới, kiểu KPatience) ---------- */
+.solv{grid-area:felt;align-self:end;justify-self:start;z-index:6;margin:0 0 8px 14px;display:inline-flex;align-items:center;gap:5px;
+  border:0;border-radius:999px;padding:3px 10px 3px 7px;min-height:26px;max-width:calc(100% - 28px);background:#241f36d9;color:#fff;
+  font:700 12.5px/1.2 "Be Vietnam Pro",system-ui,sans-serif;box-shadow:0 2px 8px #0005;cursor:pointer;white-space:nowrap;transition:background .2s}
+.solv[hidden]{display:none}
+.solv i{font-style:normal;font-size:14px;line-height:1}
+.solv.calc i{animation:solvPulse 1s ease-in-out infinite}
+.solv.win{background:#14704fe6}.solv.lose{background:#a3172ae6}.solv.unknown{background:#7a5a08e6}
+@keyframes solvPulse{50%{opacity:.35}}
+/* màn rộng: nằm ở góc trái thanh nút dưới cùng (không đè bàn) */
+@media (min-width:1280px) and (min-height:600px){ .solv{grid-area:acts;align-self:center;margin:0 0 0 14px;min-height:32px;font-size:14px;padding:4px 14px 4px 10px} .solv i{font-size:16px} }
+@media (max-width:420px){ .solv{font-size:11.5px;padding:2px 8px 2px 6px;min-height:22px;margin:0 0 6px 10px} .solv i{font-size:12.5px} }
+@media (prefers-reduced-motion:reduce){ .solv.calc i{animation:none} }
+
+/* ---------- theme 🏺 Ai Cập (bộ bài KDE Ancient Egyptians + nền KPatience Desert Sands) – ảnh chỉ tải khi bật ---------- */
+.pc .th-img{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none}
+html[data-sol-theme=egypt] #felt{background:#4a3f1a url("../themes/ancientegypt/table.jpg?v=1") center/cover no-repeat;box-shadow:inset 0 0 0 2px #e8c97a55,inset 0 8px 24px #0004,var(--shadow)}
+html[data-sol-theme=egypt] #felt::before{display:none}
+html[data-sol-theme=egypt] .pc{border:0;background:#efe6cf;border-radius:calc(var(--cw)*.045);box-shadow:0 1px 1px #0000002e,0 3px 8px -4px #0007}
+html[data-sol-theme=egypt] .pc .bk{background:transparent}
+html[data-sol-theme=egypt] .pc.sel{box-shadow:0 0 0 3px #ffd23f,0 8px 16px -6px #000a}
+html[data-sol-theme=egypt] .pc.tgt{box-shadow:0 0 0 3px #fff3c4,0 0 14px 4px #ffd23f}
+html[data-sol-theme=egypt] .slot{border:0;border-radius:calc(var(--cw)*.05);background:url("../themes/ancientegypt/pile.svg?v=1") center/100% 100% no-repeat;color:#f3e2aecc;text-shadow:0 1px 2px #0008}
+html[data-sol-theme=egypt] .slot.k-stock{background-image:url("../themes/ancientegypt/pile.svg?v=1")}
+html[data-sol-theme=egypt] .slot.tgt{background-image:url("../themes/ancientegypt/pile-hot.svg?v=1")}
+html[data-sol-theme=egypt] .g-fig img{background:#4a3f1a}
+.th-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.th-pick button{min-width:0;overflow:hidden;border:2px solid #e6dcc8;background:#fff;border-radius:16px;padding:10px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:800;min-height:44px}
+.th-pick button.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
+.th-pick small{font-weight:600;color:var(--muted);font-size:12px;text-align:center}
+.th-prev{display:flex;--cw:44px;--ch:62px;max-width:100%}
+.th-prev .pc{position:relative;cursor:default;flex:none;margin-right:-12px}.th-prev .pc:last-child{margin-right:0}
+.th-prev .pc.down .bk{display:block}
+.th-prev.eg .pc{border:0;border-radius:3px;box-shadow:0 1px 3px #0006}
+.th-prev.eg{background:#4a3f1a url("../themes/ancientegypt/table.jpg?v=1") center/cover;padding:6px;border-radius:10px}
+.th-prev.cl{background:radial-gradient(ellipse at 50% 30%,var(--felt1),var(--felt2) 90%);padding:6px;border-radius:10px}
+.credit{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.45}
+.credit a{color:inherit}
+.th-prev.cl .pc{border:1px solid #c3b8a5;background:linear-gradient(160deg,#fffefa 0%,#fbf7ee 55%,#f2ebdc 100%);border-radius:calc(var(--cw)*.08)}
+.th-prev.cl .pc .bk{background:#fbf7ee}
+@media (max-width:420px){ .th-prev{--cw:32px;--ch:45px} .th-prev .pc{margin-right:-9px} .th-pick button{padding:8px 4px} }

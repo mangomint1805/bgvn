@@ -6,6 +6,11 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261110-01', date: '10/11/2026', game: 'solitaire', title: 'Theme Ai Cập, chuột phải, báo giải được', items: [
+    '🏺 Theme Ai Cập: bộ bài "Ancient Egyptians" và nền "Desert Sands" gốc của KDE KPatience (tác giả Sean Wilson, giấy phép LGPL/GPL – xem themes/ancientegypt).',
+    '🖱️ Chuột trái kéo bài, chuột phải đưa hết lá an toàn lên ô A (như Solitaire Windows). Điện thoại: nút ⤴️ Lên đích hoặc chạm 2 ngón.',
+    '🧠 Góc trái dưới tự báo ván còn giải được không (✅ / ❌ / 🤔) sau mỗi nước đi – tắt được trong ☰ Thêm.',
+  ] },
   { id: '20261109-06', date: '09/11/2026', game: 'bacao', title: 'Game mới: Ba Cào!', items: [
     '👑 Ba Cào 2–8 người: 3 lá tính nút, ba tây (J/Q/K) và sáp (3 lá cùng số) là bài to. Có nhà cái hoặc chơi gà góp chung.',
     '🤏 Nặn bài: kéo lá úp để hé dần cho hồi hộp, hoặc Lật nhanh. Lật bài chung có trống dồn.',
