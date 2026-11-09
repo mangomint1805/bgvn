@@ -75,8 +75,8 @@ export default {
     startMoney: 1500, // Tiền khởi đầu — Tiền mỗi người lúc bắt đầu. · Chọn: 1500 = 1,5M | 2000 = 2M | 2500 = 2,5M
     maxRounds: 0, // Giới hạn vòng — Hết vòng thì ai nhiều tài sản nhất thắng. · Chọn: 0 = Không giới hạn | 20 = 20 vòng | 30 = 30 vòng | 50 = 50 vòng
     monopolyWin: true, // Thắng độc quyền — Trọn 3 nhóm màu, cả 4 bến xe hoặc trọn 1 hàng là thắng luôn. · Chọn: true = Bật | false = Tắt
-    auction: true, // Đấu giá — Không mua thì đem ô đó ra đấu giá. · Chọn: true = Bật | false = Tắt
-    freeBuild: true, // Xây nhà — Điều kiện được xây nhà. · Chọn: true = Không cần đủ bộ | false = Phải đủ bộ màu | 'zing' = ZingPlay thật (chỉ xây ở ô vừa dừng)
+    auction: false, // Đấu giá — Không mua thì đem ô đó ra đấu giá. · Chọn: true = Bật | false = Tắt
+    freeBuild: 'zing', // Xây nhà — Điều kiện được xây nhà. · Chọn: true = Không cần đủ bộ | false = Phải đủ bộ màu | 'zing' = ZingPlay thật (chỉ xây ở ô vừa dừng)
     buyback: true, // Mua lại đất — Trả thuê xong được mua lại đường đó với giá gấp đôi. · Chọn: true = Bật | false = Tắt
     travel: true, // Bãi đậu xe — Dừng ở Bãi đậu xe thì làm gì. · Chọn: true = Du lịch (bay tới 1 ô) | false = Chỉ nghỉ
     travelFee: 100, // Vé máy bay — Giá vé khi du lịch từ Bãi đậu xe (không đủ tiền thì chỉ nghỉ). · Chọn: 0 = Miễn phí | 50 = 50K | 100 = 100K | 200 = 200K

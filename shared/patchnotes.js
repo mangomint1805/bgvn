@@ -6,6 +6,10 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài',
 };
 export const NOTES = [
+  { id: '20261109-04', date: '09/11/2026', game: 'typhu', title: 'Đổi luật mặc định', items: [
+    '🏗️ Xây nhà kiểu ZingPlay thật (chỉ xây ở ô vừa dừng).',
+    '🔨 Tắt đấu giá: không mua thì ô đó vẫn để trống.',
+  ] },
   { id: '20261109-03', date: '09/11/2026', game: 'all', title: 'Đổi luật mặc định', items: [
     '🐴 Cờ cá ngựa: đổ đôi / 1+6 lần thứ 3 liên tiếp thì mất lượt.',
     '♠️ Poker: tăng mù sau mỗi 5 ván.',
