@@ -5,6 +5,7 @@ import { botAction } from './bot.js?v=3';
 import { S } from './fx.js?v=3';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
+import { rulesFor } from '../../shared/rules.js?v=1';
 const NS = 'bgvn-cangua', PREFIX = 'bgvn-cangua-', GAME = 'cangua', SNAP = 'bgvn-hostsnap-' + GAME;
 export { session };
 export const MAX = 4;
@@ -29,6 +30,8 @@ export function animTime(evs) {
   return ms * S();
 }
 const OPT_OK = { dice: [1, 2], moveMode: ['total', 'split'], exit2: ['d16', 'any6'], exit1: ['6', '16'], noJump: [true, false], homeRule: ['thru', 'vn', 'count'], dblHalf: [true, false], dblUp: [true, false], winRule: ['top4', 'home'], triple: [true, false], playOn: [true, false], turnTime: [0, 15, 30, 45], botLevel: ['easy', 'normal', 'hard'] };
+// ⚙️ Luật mặc định khi tạo phòng mới: lấy từ luat-mac-dinh.js (gốc repo); turnTime chỉ cho phòng online (chơi với bot luôn 0)
+const CFG = rulesFor('cangua', { dice: 2, moveMode: 'total', exit2: 'd16', exit1: '6', noJump: true, homeRule: 'thru', dblHalf: true, dblUp: true, winRule: 'top4', triple: false, playOn: false, turnTime: 30, botLevel: 'normal' }, OPT_OK);
 
 export class Host {
   constructor(me, handlers, offline = false, restore = null) {
@@ -36,14 +39,14 @@ export class Host {
     this.players = [{ id: 'host', name: me.name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.timer = null; this.afk = null;
     this.lim = hostLimiter(); this.botReactAt = 0;
-    this.opts = { dice: 2, moveMode: 'total', exit2: 'd16', exit1: '6', noJump: true, homeRule: 'thru', dblHalf: true, dblUp: true, winRule: 'top4', triple: false, playOn: false, turnTime: offline ? 0 : 30, botLevel: 'normal', rulesV: 3 };
+    this.opts = { ...CFG, turnTime: offline ? 0 : CFG.turnTime, rulesV: 3 };
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));
       this.state = restore.state; this.code = restore.code;
       // luật mặc định đổi (v3: 1 ngựa/lượt, đôi đi cả hoặc nửa, vào chuồng đếm thẳng, không nhảy qua đầu, thắng bậc 3-6): phòng lưu từ bản cũ thì về luật mặc định mới
       const ro = restore.opts || {}; this.opts = ro.rulesV === 3 ? { ...this.opts, ...ro } : { ...this.opts, turnTime: ro.turnTime ?? this.opts.turnTime, botLevel: ro.botLevel || this.opts.botLevel };
       // phòng lưu từ trước bản luật nhà mới: ván đang chơi giữ luật cũ (state.opts), ván sau dùng mặc định mới
-      if (restore.opts && !('dblHalf' in restore.opts)) Object.assign(this.opts, { homeRule: 'thru', dblHalf: true });
+      if (restore.opts && !('dblHalf' in restore.opts)) Object.assign(this.opts, { homeRule: CFG.homeRule, dblHalf: CFG.dblHalf });
     }
     if (offline) { this.code = 'OFFLINE'; setTimeout(() => { this.pushLobby(); if (this.state) { this.schedule(1500); this.broadcast(); } }, 0); return; }
     this.room = new RoomHost({ ns: NS, prefix: PREFIX, code: this.code, keepCode: !!restore, onConn: c => this.attach(c), onReady: code => { this.code = code; session.save(GAME, { role: 'host', code }); this.pushLobby(); }, onError: m => this.h.onError(m) });

@@ -3,6 +3,9 @@ import { createGame, applyAction, viewFor, waitingOn, nextRound, getP, cleanOpts
 import { botAction } from './bot.js?v=1';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
+import { rulesFor } from '../../shared/rules.js?v=1';
+// ⚙️ Luật mặc định khi tạo phòng mới: lấy từ luat-mac-dinh.js (gốc repo); giá trị sai/thiếu → giữ luật gốc trong code
+const CFG = rulesFor('xidach', (({ caiId, ...o }) => o)(DEFAULT_OPTS), { ...OPT_CHOICES });
 // Câu chọc riêng của Xì dách (≤ 24 ký tự)
 export const XD_PHRASES = ['Xét tui đi cái ơi!', 'Non quá cái ơi 🍼', 'Quắc chưa? 😏', 'Dằn non hả 🤨', 'Hên thôi 😎', 'Tất tay luôn!', 'Toang rồi 😭', 'Cứu tui'];
 const BOT_POOLS = { attack: ['Quắc chưa? 😏', 'Non quá cái ơi 🍼'], hurt: ['Toang rồi 😭', 'Cứu tui'], win: ['Hên thôi 😎'], reply: ['Quắc chưa? 😏', 'Hên thôi 😎', 'Dằn non hả 🤨'] };
@@ -27,7 +30,8 @@ export class Host {
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.timers = {}; this.clock = null; this.graceUntil = 0;
     this.hs = Math.random().toString(36).slice(2, 8);
-    this.opts = { ...DEFAULT_OPTS }; this.chips = {}; // chip giữ lại khi về sảnh rồi chơi tiếp
+    this.opts = { ...DEFAULT_OPTS, ...CFG, caiId: CFG.caiMode === 'fixed' ? 'host' : null }; this.chips = {}; // chip giữ lại khi về sảnh rồi chơi tiếp
+    if (!restore && CFG.caiMode === 'bot') { this.addBot(true); this.opts.caiId = this.players[this.players.length - 1].id; } // luật mặc định "bot làm cái": có sẵn 1 bot ngồi cái
     this.lim = hostLimiter(); this.botReactAt = 0;
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));

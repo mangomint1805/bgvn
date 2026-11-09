@@ -3,6 +3,9 @@ import { createGame, applyAction, viewFor, waitingOn, nextHand, getPlayer, DEFAU
 import { botAction } from './bot.js?v=2';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
+import { rulesFor } from '../../shared/rules.js?v=1';
+// ⚙️ Luật mặc định khi tạo phòng mới: lấy từ luat-mac-dinh.js (gốc repo); giá trị sai/thiếu → giữ luật gốc trong code
+const CFG = rulesFor('catte', DEFAULT_OPTS, { ...OPT_CHOICES });
 // Câu chọc cho bảng thả emoji (≤ 24 ký tự)
 export const CT_PHRASES = ['Đè nè cưng!', 'Úp cho lành 🙈', 'Chết chưa con!', 'Tới rồi nha 😎', 'Run chưa? 😏', 'Giữ Át nãy giờ', 'Cứu tui'];
 const BOT_POOLS = { attack: ['Đè nè cưng!', 'Run chưa? 😏'], hurt: ['Cứu tui', 'Úp cho lành 🙈'], win: ['Tới rồi nha 😎', 'Giữ Át nãy giờ'], reply: ['Run chưa? 😏', 'Chết chưa con!'], dead: ['Chết chưa con!'] };
@@ -41,7 +44,7 @@ export class Host {
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.timers = {}; this.clock = null; this.graceUntil = 0;
     this.hs = Math.random().toString(36).slice(2, 8);
-    this.opts = { ...DEFAULT_OPTS }; this.bank = {};
+    this.opts = { ...CFG }; this.bank = {};
     this.lim = hostLimiter(); this.botReactAt = 0;
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));

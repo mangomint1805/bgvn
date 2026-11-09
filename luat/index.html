@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Luật mặc định – BGVN</title>
+<meta name="description" content="Xem luật mặc định đang áp dụng cho các game BGVN (file luat-mac-dinh.js).">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#2a2340;--muted:#7b7391;--bg:#fff7ef;--card:#fff;--line:#efe4d6;--on:#2a2340;--ok:#1f9d55;--bad:#d63c3c;--chip:#f6efe6}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:600 16px/1.5 Nunito,system-ui,sans-serif;overflow-x:hidden}
+.blob{position:fixed;width:44vmax;height:44vmax;border-radius:50%;filter:blur(80px);opacity:.25;z-index:0;pointer-events:none}
+.b1{background:#ff4d5e;left:-14vmax;top:-14vmax}.b2{background:#ffc23d;right:-14vmax;top:-8vmax}.b3{background:#2fc76f;left:-8vmax;bottom:-18vmax}.b4{background:#3d8bff;right:-12vmax;bottom:-16vmax}
+main{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:20px 16px 40px}
+.back{display:inline-flex;align-items:center;min-height:40px;padding:6px 16px;border-radius:999px;background:#fff9;border:1.5px solid #ecdfd0;color:var(--ink);text-decoration:none;font-weight:800}
+h1{font-family:"Baloo 2";font-size:clamp(38px,8vw,60px);line-height:1.05;margin:18px 0 6px;text-align:center}
+h1 span{background:linear-gradient(90deg,#ff4d5e,#ff9a3d,#2fc76f,#3d8bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{text-align:center;color:var(--muted);margin:0 auto 18px;max-width:640px}
+.status{margin:0 auto 16px;max-width:760px;border-radius:18px;padding:12px 16px;font-weight:800;background:#e8f8ef;color:#145c34;border:1.5px solid #bfe9d0}
+.status.err{background:#fde9e9;color:#8a1d1d;border-color:#f5c2c2}
+.status small{display:block;font-weight:600;opacity:.85;word-break:break-word}
+details.how{margin:0 auto 22px;max-width:760px;background:#fff9;border:1.5px solid #ecdfd0;border-radius:18px;padding:10px 16px}
+details.how summary{cursor:pointer;font-weight:800;min-height:28px}
+details.how ol{margin:8px 0 4px;padding-left:22px}details.how li{margin:4px 0}
+code{background:var(--chip);border-radius:6px;padding:1px 6px;font-size:.92em;word-break:break-word}
+nav.jump{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:0 0 22px}
+nav.jump a{display:inline-flex;align-items:center;min-height:40px;padding:6px 14px;border-radius:999px;background:#fff;border:1.5px solid #ecdfd0;color:var(--ink);text-decoration:none;font-weight:800;font-size:14px}
+nav.jump a:hover{background:var(--ink);color:#fff}
+.game{background:var(--card);border-radius:24px;box-shadow:0 16px 34px -20px #2a234066;margin:0 0 22px;overflow:hidden;scroll-margin-top:12px}
+.game h2{margin:0;padding:14px 18px;font-family:"Baloo 2";font-size:28px;line-height:1.1;background:linear-gradient(90deg,#fff1e2,#fff);border-bottom:1.5px solid var(--line);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.game h2 small{font:800 13px Nunito,sans-serif;color:var(--muted)}
+.note{margin:0;padding:8px 18px;color:var(--muted);font-size:14px;border-bottom:1.5px solid var(--line)}
+.grp{padding:10px 18px 4px;font-weight:800;color:#8a5a2b;background:#fffaf3;border-bottom:1.5px solid var(--line);font-size:14px}
+.row{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr);gap:6px 18px;padding:12px 18px;border-bottom:1.5px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .nm b{display:block}
+.row .nm small{display:block;color:var(--muted);font-size:13px;line-height:1.4}
+.row .nm code{font-size:11px;color:var(--muted);background:none;padding:0}
+.vals{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+.ch{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:var(--chip);color:var(--muted);font-size:13px;font-weight:800;border:1.5px solid transparent}
+.ch.on{background:var(--on);color:#fff}
+.ch.on::before{content:"✓"}
+.rng{font-size:13px;color:var(--muted)}
+.bad{color:var(--bad);font-size:13px;font-weight:800;flex-basis:100%}
+.cur{display:inline-flex;align-items:center;padding:4px 12px;border-radius:999px;background:var(--on);color:#fff;font-size:14px;font-weight:800}
+footer{text-align:center;color:var(--muted);font-size:13px;margin-top:30px}
+footer a{color:inherit}
+.loading{text-align:center;color:var(--muted)}
+@media (max-width:640px){.row{grid-template-columns:1fr}.game h2{font-size:24px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div>
+<main>
+  <a class="back" href="../">← Bàn chơi BGVN</a>
+  <h1>⚙️ <span>Luật mặc định</span></h1>
+  <p class="sub">Tuỳ chọn được chọn sẵn khi tạo phòng mới ở từng game – đọc trực tiếp từ file <code>luat-mac-dinh.js</code>. Trang này chỉ để xem; trong sảnh chủ phòng vẫn đổi được như thường.</p>
+  <div class="status" id="status">⏳ Đang đọc file luật…</div>
+  <details class="how">
+    <summary>✏️ Cách đổi luật mặc định</summary>
+    <ol>
+      <li>Mở <a href="https://github.com/mangomint1805/bgvn/blob/main/luat-mac-dinh.js" target="_blank" rel="noopener">luat-mac-dinh.js trên GitHub</a> → bấm nút ✏️ (Edit).</li>
+      <li>Chỉ sửa giá trị sau dấu <code>:</code> – phải là một trong các lựa chọn ghi ở chú thích. Chữ giữ dấu nháy <code>'house'</code>, số không nháy <code>45</code>, bật/tắt là <code>true</code>/<code>false</code>.</li>
+      <li>Bấm <b>Commit changes</b>, đợi 1–10 phút rồi tải lại trang này để kiểm tra.</li>
+      <li>Giá trị sai sẽ bị bỏ qua (game dùng luật gốc) – trang này đánh dấu ⚠️. Luật mới chỉ áp dụng cho <b>phòng mới</b>.</li>
+    </ol>
+  </details>
+  <nav class="jump" id="jump"></nav>
+  <div id="games"><p class="loading">…</p></div>
+  <footer>Dự án fan-made phi thương mại · <a href="../">Về trang chủ BGVN</a></footer>
+</main>
+<script type="module">
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const t = Math.floor(Date.now() / 60000);
+const URL_ = `../luat-mac-dinh.js?t=${t}`;
+const lit = v => typeof v === 'string' ? `'${v}'` : String(v);
+// đọc giá trị literal trong file (chỉ dùng khi file lỗi, không import được)
+const parseLit = s => { s = s.trim(); if (/^'.*'$/.test(s) || /^".*"$/.test(s)) return s.slice(1, -1); if (s === 'true') return true; if (s === 'false') return false; if (s === 'null') return null; const n = Number(s); return Number.isFinite(n) && s !== '' ? n : s; };
+
+// Phân tích chú thích: "Tên — giải thích · Chọn: 'a' = A | 'b' = B" hoặc "· Khoảng: số nguyên từ X đến Y (bước S)"
+function parseComment(c) {
+  const out = { label: c, help: '', choices: null, range: null, rangeText: '' };
+  let [head, tail] = c.split(/ · (?=Chọn:|Khoảng:)/);
+  const m = head.split(' — '); out.label = m[0]; out.help = m.slice(1).join(' — ');
+  if (tail && tail.startsWith('Chọn:')) {
+    out.choices = tail.slice(5).split(' | ').map(x => { const i = x.indexOf(' = '); return i < 0 ? null : { v: parseLit(x.slice(0, i)), label: x.slice(i + 3).trim() }; }).filter(Boolean);
+  } else if (tail && tail.startsWith('Khoảng:')) {
+    out.rangeText = tail.slice(7).trim();
+    const r = tail.match(/từ (-?\d+) đến (-?\d+)(?: \(bước (\d+)\))?/);
+    if (r) out.range = { min: +r[1], max: +r[2], step: +(r[3] || 1) };
+  }
+  return out;
+}
+function parseFile(src) {
+  const games = [], stack = []; let pendTitle = null, pendNotes = [], g = null;
+  for (const line of src.split(/\r?\n/)) {
+    let m;
+    if ((m = line.match(/^\s*\/\/ ===== (.+?) =====\s*$/))) { pendTitle = m[1]; pendNotes = []; continue; }
+    if (pendTitle && !stack.length && (m = line.match(/^\s*\/\/\s?(.*)$/))) { pendNotes.push(m[1]); continue; }
+    if ((m = line.match(/^\s*([A-Za-z_$][\w$]*)\s*:\s*\{\s*(?:\/\/\s*(.*))?$/))) {
+      if (!stack.length) { g = { key: m[1], title: pendTitle || m[1], notes: pendNotes, rows: [] }; games.push(g); pendTitle = null; pendNotes = []; }
+      else g.rows.push({ group: true, depth: stack.length, text: m[2] || m[1] });
+      stack.push(m[1]); continue;
+    }
+    if (/^\s*\},?\s*$/.test(line)) { stack.pop(); continue; }
+    if (g && stack.length && (m = line.match(/^\s*([A-Za-z_$][\w$]*)\s*:\s*(.+?)\s*,\s*\/\/\s*(.*)$/))) {
+      g.rows.push({ path: [...stack, m[1]], raw: m[2], ...parseComment(m[3]) });
+    }
+  }
+  return games;
+}
+const get = (o, path) => path.reduce((x, k) => (x && typeof x === 'object' ? x[k] : undefined), o);
+function valid(r, v) {
+  if (r.choices) return r.choices.some(c => c.v === v);
+  if (r.range) { if (r.path.join('.') === 'scribble.frames' && v === 0) return true; return typeof v === 'number' && Number.isInteger(v) && v >= r.range.min && v <= r.range.max && (v - r.range.min) % r.range.step === 0 && !(r.path.join('.') === 'scribble.frames' && v > 0 && v < 4); }
+  return true;
+}
+function rowHTML(r, cfg, live) {
+  if (r.group) return `<div class="grp" style="padding-left:${18 + (r.depth - 1) * 12}px">${esc(r.text)}</div>`;
+  const v = live ? get(cfg, r.path) : parseLit(r.raw);
+  const ok = v !== undefined && valid(r, v);
+  let vals = '';
+  if (r.choices) vals = r.choices.map(c => `<span class="ch ${c.v === v ? 'on' : ''}" title="${esc(lit(c.v))}">${esc(c.label)}</span>`).join('');
+  else vals = `<span class="cur">${esc(v === undefined ? '(trống)' : String(v))}</span><span class="rng">${esc(r.rangeText)}</span>`;
+  if (!ok) vals += `<span class="bad">⚠️ Giá trị ${esc(v === undefined ? '(thiếu)' : lit(v))} không hợp lệ → game dùng luật gốc trong code.</span>`;
+  return `<div class="row"><div class="nm"><b>${esc(r.label)}</b>${r.help ? `<small>${esc(r.help)}</small>` : ''}<code>${esc(r.path.slice(1).join('.'))}</code></div><div class="vals">${vals}</div></div>`;
+}
+(async () => {
+  let src = '', cfg = null, err = null;
+  try { const res = await fetch(URL_, { cache: 'no-store' }); if (!res.ok) throw new Error('HTTP ' + res.status); src = await res.text(); }
+  catch (e) { $('#status').className = 'status err'; $('#status').innerHTML = `❌ Không tải được file luat-mac-dinh.js – các game đang dùng luật gốc trong code.<small>${esc(e.message || e)}</small>`; $('#games').innerHTML = ''; return; }
+  try { const m = await import(URL_); cfg = m.default; if (!cfg || typeof cfg !== 'object') throw new Error('file không có "export default { … }"'); }
+  catch (e) { err = e; }
+  const games = parseFile(src);
+  const st = $('#status');
+  if (err) { st.className = 'status err'; st.innerHTML = `❌ File luật đang LỖI (thường do thiếu dấu phẩy, ngoặc hoặc dấu nháy) → mọi game đang chạy bằng luật gốc trong code. Bảng dưới chỉ là nội dung file, CHƯA có hiệu lực.<small>${esc(err.message || err)}</small>`; }
+  else {
+    let bad = 0; for (const g of games) for (const r of g.rows) if (!r.group && !valid(r, get(cfg, r.path))) bad++;
+    const n = games.reduce((t, g) => t + g.rows.filter(r => !r.group).length, 0);
+    st.className = 'status' + (bad ? ' err' : '');
+    st.innerHTML = bad ? `⚠️ File đọc được, nhưng có ${bad} giá trị không hợp lệ (đánh dấu bên dưới) – các giá trị đó dùng luật gốc.<small>${games.length} game · ${n} tuỳ chọn</small>`
+      : `✅ File luật đang hoạt động: ${games.length} game · ${n} tuỳ chọn.<small>Vừa sửa trên GitHub mà chưa thấy đổi? Đợi thêm vài phút (GitHub Pages lưu bộ nhớ đệm ~10 phút) rồi tải lại.</small>`;
+  }
+  $('#jump').innerHTML = games.map(g => `<a href="#g-${esc(g.key)}">${esc(g.title)}</a>`).join('');
+  $('#games').innerHTML = games.map(g => `<section class="game" id="g-${esc(g.key)}"><h2>${esc(g.title)} <small>${g.rows.filter(r => !r.group).length} tuỳ chọn</small></h2>${g.notes.length ? `<p class="note">${esc(g.notes.join(' '))}</p>` : ''}${g.rows.map(r => rowHTML({ ...r, path: r.group ? r.path : [g.key, ...r.path.slice(1)] }, cfg, !err)).join('')}</section>`).join('') || '<p class="loading">Không đọc được nội dung nào.</p>';
+})();
+</script>
+</body>
+</html>

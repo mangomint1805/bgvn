@@ -1,8 +1,11 @@
 // Hiệu ứng: bài bay, rung, số sát thương, âm thanh tổng hợp (không cần file âm thanh)
 import { sfxVolStore } from '../../shared/audio/bgm.js?v=2';
+import { rulesFor } from '../../shared/rules.js?v=1';
 // Tốc độ hiệu ứng: hệ số nhân thời gian (lớn hơn = chậm hơn)
 export const SPEEDS = { slow: { k: 2.2, name: 'Chậm' }, normal: { k: 1.6, name: 'Vừa' }, fast: { k: 1, name: 'Nhanh' } };
-let speedKey = 'normal';
+// ⚙️ Mặc định cho máy CHƯA từng chọn (luat-mac-dinh.js ở gốc repo); máy đã bấm chọn thì giữ lựa chọn riêng (localStorage)
+export const BANG_DEFAULTS = rulesFor('bang', { speed: 'normal', newbie: true }, { speed: Object.keys(SPEEDS), newbie: [true, false] });
+let speedKey = BANG_DEFAULTS.speed;
 try { const v = localStorage.getItem('bangvn-speed'); if (SPEEDS[v]) speedKey = v; } catch (e) {}
 export function S() { return SPEEDS[speedKey].k; }
 export function getSpeed() { return speedKey; }

@@ -6,6 +6,7 @@ import { S } from './fx.js?v=50';
 import { OPTIONS, PRESETS } from '../../shared/js/avatar3d.js';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
+import { rulesFor } from '../../shared/rules.js?v=1';
 const NS = 'bgvn-typhu', PREFIX = 'bgvn-typhu-', GAME = 'typhu', SNAP = 'bgvn-hostsnap-' + GAME;
 export { session };
 export const MAX = 6;
@@ -13,6 +14,10 @@ export const MAX = 6;
 export const TYPHU_PHRASES = ['Trả tiền thuê đi!', 'Đất này của tui!', 'Vô tù chơi', 'Mua lại nè 💥', 'Đại gia là đây 😎', 'Nghèo rồi 😭', 'Cứu tui', 'Gà quá!'];
 const BOT_POOLS = { attack: ['Trả tiền thuê đi!', 'Đất này của tui!', 'Mua lại nè 💥'], hurt: ['Nghèo rồi 😭', 'Cứu tui'], win: ['Đại gia là đây 😎'], reply: ['Gà quá!', 'Vô tù chơi'] };
 export const COLORS = ['#ff5a5f', '#3d8bff', '#2fc76f', '#ffb020', '#a259ff', '#ff7ac8', '#14c4c4', '#8d6e63'];
+// ⚙️ Luật mặc định khi tạo phòng mới (luat-mac-dinh.js ở gốc repo); turnTime chỉ cho phòng online, chơi với bot luôn 0
+const B2 = [true, false];
+const CFG = rulesFor('typhu', { startMoney: 1500, maxRounds: 0, monopolyWin: true, auction: true, buyback: true, freeBuild: true, travel: true, turnTime: 60 },
+  { startMoney: [1500, 2000, 2500], maxRounds: [0, 20, 30, 50], monopolyWin: B2, auction: B2, buyback: B2, freeBuild: [true, false, 'zing'], travel: B2, turnTime: [0, 30, 60, 90] });
 const BOT_NAMES = ['Tiến', 'Tuni', 'Thành', 'Khiêm', 'Thái', 'Minto', 'Bé Na', 'Chú Tư'];
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
 // chỉ nhận cấu hình nhân vật hợp lệ (không tin dữ liệu từ máy khác)
@@ -49,7 +54,7 @@ export class Host {
     this.state = null; this.conns = new Map(); this.timer = null; this.afk = null;
     this.lim = hostLimiter(); this.botReactAt = 0;
     // freeBuild: true = không cần đủ bộ (mặc định) · false = phải đủ bộ màu · 'zing' = ZingPlay thật (chỉ xây ở ô vừa dừng)
-    this.opts = { startMoney: 1500, maxRounds: 0, monopolyWin: true, auction: true, buyback: true, freeBuild: true, travel: true, turnTime: offline ? 0 : 60 };
+    this.opts = { ...CFG, turnTime: offline ? 0 : CFG.turnTime };
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.local || p.id === 'host' }));
       this.state = restore.state; this.code = restore.code; this.opts = { ...this.opts, ...(restore.opts || {}) };

@@ -1,7 +1,7 @@
 // Nhạc nền Viễn Tây tự sinh – dùng bộ phát chung shared/audio/bgm.js (không file nhạc, không dính bản quyền).
 // Sảnh: harmonica + guitar điệu valse bên lửa trại · Trong ván: theo chủ đề bàn (sa mạc huýt sáo / đêm / quán rượu / hoàng hôn / mùa đông)
 // · Gay cấn (có người sắp chết, đấu súng, còn 2 người): trống ngựa phi + dây rền. Mặc định BẬT, ai tắt thì nhớ.
-import { actx } from './fx.js?v=1';
+import { actx } from './fx.js?v=2';
 import { createBGM } from '../../shared/audio/bgm.js?v=2';
 const VARS = ['desert', 'night', 'saloon', 'sunset', 'winter'];
 let legacy = null; try { legacy = localStorage.getItem('bangvn-music'); } catch (e) {}

@@ -3,6 +3,7 @@ import { createGame, applyAction, viewFor, actors, timeout, phaseMs, DEFAULT_OPT
 import { botAction, botDayPlan, botWolfLine, botGhostLine, botLastWords } from './bot.js?v=3';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
+import { rulesFor } from '../../shared/rules.js?v=1';
 // câu chọc riêng của Ma Sói (bảng thả emoji – shared/ui/react.js)
 export const MS_PHRASES = ['Sói là mày!', 'Tui là dân thật', 'Treo nó đi!', 'Oan quá trời', 'Nghi lắm nha', 'Khai lẹ đi!'];
 const BOT_POOLS = { attack: ['Sói là mày!', 'Treo nó đi!', 'Nghi lắm nha', 'Khai lẹ đi!'], hurt: ['Oan quá trời', 'Tui là dân thật'], win: ['GG'], reply: ['Nghi lắm nha', 'Tui là dân thật'] };
@@ -12,6 +13,20 @@ const NS = 'bgvn-masoi', PREFIX = 'bgvn-masoi-', GAME = 'masoi';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
 export { session };
+// ⚙️ Luật mặc định khi tạo phòng mới (luat-mac-dinh.js ở gốc repo). roles: bộ vai dùng khi tắt "Tự gợi ý"; vanTap: nút 🎓 Ván tập
+const ROLE_KEYS = ['wolf', 'alpha', 'cub', 'seer', 'guard', 'witch', 'hunter', 'cupid', 'elder', 'idiot', 'medium', 'thief', 'lunatic', 'tanner'];
+const DAY_T = [60, 90, 120, 180, 240, 300], VOTE_T = [20, 30, 40, 60, 90], NIGHT_T = [15, 20, 25, 30, 45], B2 = [true, false];
+const CFG = rulesFor('masoi', {
+  auto: DEFAULT_OPTS.auto, roles: Object.fromEntries(ROLE_KEYS.map(r => [r, +DEFAULT_OPTS.roles[r] || 0])),
+  reveal: DEFAULT_OPTS.reveal, voteMode: DEFAULT_OPTS.voteMode, tie: DEFAULT_OPTS.tie, doubleSave: DEFAULT_OPTS.doubleSave,
+  dayTime: DEFAULT_OPTS.dayTime, voteTime: DEFAULT_OPTS.voteTime, nightTime: DEFAULT_OPTS.nightTime,
+  vanTap: { reveal: true, dayTime: 180, voteTime: 60, nightTime: 45 },
+}, {
+  auto: B2, roles: Object.fromEntries(ROLE_KEYS.map(r => [r, r === 'wolf' ? { min: 0, max: 6 } : [0, 1]])),
+  reveal: B2, voteMode: ['open', 'secret'], tie: ['revote', 'none'], doubleSave: ['live', 'die'], dayTime: DAY_T, voteTime: VOTE_T, nightTime: NIGHT_T,
+  vanTap: { reveal: B2, dayTime: DAY_T, voteTime: VOTE_T, nightTime: NIGHT_T },
+});
+const cfgOpts = () => { const { vanTap, roles, ...o } = CFG; return { ...JSON.parse(JSON.stringify(DEFAULT_OPTS)), ...o, roles: Object.fromEntries(Object.entries(roles).filter(([, n]) => n > 0)) }; };
 const BOT_NAMES = ['Minto', 'Tiến', 'Tuni', 'Thành', 'Khiêm', 'Thái', 'Mochi', 'Bơ', 'Mít', 'Tôm', 'Bí', 'Cốm', 'Xoài', 'Ổi', 'Chè', 'Na'];
 export const MAX = MAX_PLAYERS, MIN = MIN_PLAYERS;
 const AWAY_MS = 8000;      // người rớt mạng: máy làm giùm sau 8 giây
@@ -22,7 +37,7 @@ export class Host {
     this.h = handlers; this.offline = offline;
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.timers = {}; this.botT = {}; this.curPk = null; this.deadline = 0; this.total = 1; this.lastChat = {};
-    this.opts = JSON.parse(JSON.stringify(DEFAULT_OPTS));
+    this.opts = cfgOpts();
     this.tut = { seen: [], off: false }; this.paused = null; this.replayAt = null;
     this.lim = hostLimiter(); this.botReactAt = 0;
     if (restore) {
@@ -135,7 +150,7 @@ export class Host {
     if (!this.offline) return;
     this.players = this.players.filter(p => p.id === 'host');
     this.addBot(5);
-    this.opts = { ...JSON.parse(JSON.stringify(DEFAULT_OPTS)), auto: false, roles: { wolf: 1, seer: 1, guard: 1, witch: 1 }, reveal: true, dayTime: 180, voteTime: 60, nightTime: 45, tutorial: true };
+    this.opts = { ...JSON.parse(JSON.stringify(DEFAULT_OPTS)), auto: false, roles: { wolf: 1, seer: 1, guard: 1, witch: 1 }, ...CFG.vanTap, tutorial: true };
     this.tut = { seen: [], off: false };
     const mine = ['seer', 'guard', 'witch', 'wolf'][Math.floor(Math.random() * 4)];
     this.start({ forceRole: { host: mine } });

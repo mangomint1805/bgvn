@@ -1,4 +1,4 @@
-import { Host, Client, MAX, maxPlayers, loadSnapshot, session, PHRASES } from './net.js?v=9';
+import { Host, Client, MAX, maxPlayers, loadSnapshot, session, PHRASES, SOLO_DEFAULT } from './net.js?v=10';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
@@ -117,7 +117,7 @@ $('#btn-create').onclick = startHost;
 // chọn số khung / thời gian / tốc độ phim rồi vẽ luôn (cũng dùng cho nút "Vẽ đoạn mới")
 function openSolo() {
   let pr = {}; try { pr = JSON.parse(ls.get('scribble-solo')) || {}; } catch (e) {}
-  let fr = clampN(+pr.frames || 5, FRAMES_SOLO[0], FRAMES_SOLO[1]), fps = clampN(+pr.fps || 4, 1, 12), dt = clampN(Math.round((+pr.drawTime || 80) / 10) * 10, 30, 180);
+  let fr = clampN(+pr.frames || SOLO_DEFAULT.frames, FRAMES_SOLO[0], FRAMES_SOLO[1]), fps = clampN(+pr.fps || SOLO_DEFAULT.fps, 1, 12), dt = clampN(Math.round((+pr.drawTime || SOLO_DEFAULT.drawTime) / 10) * 10, 30, 180);
   const per = d => Math.max(30, Math.round(d * 0.75));
   openModal(`<h2>🧑‍🎨 Hoạt hình một mình</h2><p class="center muted">Tự vẽ từng khung – khung trước hiện mờ để bạn nhích dần. Vẽ xong là thành phim, tải GIF được. Không cần mạng.</p>
     <div class="set row"><span>Số khung</span><div class="stepper"><button class="tb" id="so-m" aria-label="Bớt khung">−</button><b id="so-n">${fr}</b><button class="tb" id="so-p" aria-label="Thêm khung">+</button></div></div>

@@ -3,6 +3,10 @@ import { createGame, applyAction, viewFor, current, mustAutoPass, VE_HEO, DEFAUL
 import { botAction, LEVELS } from './bot.js?v=4';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
+import { rulesFor } from '../../shared/rules.js?v=1';
+// ⚙️ Luật mặc định khi tạo phòng mới: lấy từ luat-mac-dinh.js (gốc repo); giá trị sai/thiếu → giữ luật gốc trong code
+const B2 = [true, false];
+const CFG = rulesFor('tienlen', { ...DEFAULT_OPTS, botLevel: 'normal' }, { bet: BETS, toiTrang: B2, thoiHang: B2, chatChong: B2, spadeEvery: B2, turnTime: TURN_TIMES, veHeo: Object.keys(VE_HEO), botLevel: ['easy', 'normal', 'hard'] });
 const NS = 'bgvn-tienlen', PREFIX = 'bgvn-tienlen-', GAME = 'tienlen';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
@@ -21,7 +25,7 @@ export class Host {
     this.h = handlers; this.offline = offline;
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.botTimer = null;
-    this.opts = { ...DEFAULT_OPTS };
+    { const { botLevel, ...o } = CFG; this.opts = o; }
     this.chips = { host: START_CHIPS }; this.minted = 0; this.lastWinner = null; this.gameNo = 0; this.before = null;
     this.lim = hostLimiter(); this.botReactAt = 0;
     if (restore) {
@@ -95,7 +99,7 @@ export class Host {
     const used = this.players.map(p => p.name.replace(' 🤖', '').trim().toLowerCase());
     const nm = BOT_NAMES.find(n => !used.includes(n.toLowerCase())) || 'Bot' + this.players.length;
     const id = 'bot' + Math.random().toString(36).slice(2, 7);
-    this.players.push({ id, name: nm + ' 🤖', isBot: true, level: 'normal', token: null, conn: null, connected: true });
+    this.players.push({ id, name: nm + ' 🤖', isBot: true, level: CFG.botLevel, token: null, conn: null, connected: true });
     if (this.chips[id] == null) this.chips[id] = START_CHIPS;
     this.pushLobby();
   }

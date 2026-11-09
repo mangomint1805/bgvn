@@ -3,6 +3,25 @@
 import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, bookItems, shiftTime, cleanOpts, DEFAULT_OPTS, maxPlayers, MAX_CROWD, MAX_NORMAL, checkTease } from './engine.js?v=7';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter } from '../../shared/ui/react.js?v=2';
+import { CATS } from './words.js?v=5';
+import { GMODES, REVEAL_AUTO } from './engine.js?v=7';
+import { rulesFor } from '../../shared/rules.js?v=1';
+// ⚙️ Luật mặc định khi tạo phòng mới: lấy từ luat-mac-dinh.js (gốc repo); sai/thiếu → giữ luật gốc. cats: bật/tắt từng chủ đề
+// solo: mặc định của "Hoạt hình một mình" (máy đã từng chọn thì nhớ lựa chọn riêng – localStorage 'scribble-solo')
+const D = DEFAULT_OPTS, rng = (min, max, step = 1) => ({ min, max, step });
+const CFG = rulesFor('scribble', {
+  mode: D.mode, gmode: D.gmode, rounds: D.rounds, drawTime: D.drawTime, textTime: D.textTime, cSteps: D.cSteps, cTime: D.cTime,
+  revealAuto: D.revealAuto, frames: D.frames, fps: D.fps, gSize: D.gSize,
+  cats: Object.fromEntries(Object.keys(CATS).map(k => [k, D.cats.includes(k)])),
+  solo: { frames: 5, fps: 4, drawTime: 80 },
+}, {
+  mode: ['guess', 'gartic'], gmode: Object.keys(GMODES), rounds: rng(1, 10), drawTime: rng(30, 180, 10), textTime: rng(20, 90, 5), cSteps: rng(2, 20), cTime: rng(10, 180, 5),
+  revealAuto: REVEAL_AUTO, frames: v => v === 0 || (Number.isInteger(v) && v >= 4 && v <= 16), fps: rng(1, 12), gSize: rng(4, 8),
+  cats: Object.fromEntries(Object.keys(CATS).map(k => [k, [true, false]])),
+  solo: { frames: rng(3, 12), fps: rng(1, 12), drawTime: rng(30, 180, 10) },
+});
+const cfgOpts = () => { const { cats, solo, ...o } = CFG; return cleanOpts({ ...DEFAULT_OPTS, ...o, cats: Object.keys(cats).filter(k => cats[k]) }); };
+export const SOLO_DEFAULT = { ...CFG.solo };
 // Câu chọc cố định (bảng thả emoji – shared/ui/react.js). Không cho gõ tự do qua kênh này nên không thể lộ đáp án Đoán hình.
 export const PHRASES = ['Vẽ gì zậy trời', 'Picasso đây rồi', 'Đoán bừa đi!', 'Ủa alo?', 'Nét căng đét!', 'Hiểu chết liền'];
 const NS = 'bgvn-scribble', PREFIX = 'bgvn-scribble-', GAME = 'scribble';
@@ -24,7 +43,7 @@ export class Host {
   constructor(name, handlers, restore = null, offline = false) {
     this.h = handlers; this.isHost = true; this.offline = !!(offline || (restore && restore.offline));
     this.players = [{ id: 'host', name, token: token(), conn: null, connected: true }];
-    this.opts = { ...DEFAULT_OPTS }; this.state = null; this.conns = new Map(); this.lastGuess = {}; this.lim = hostLimiter();
+    this.opts = cfgOpts(); this.state = null; this.conns = new Map(); this.lastGuess = {}; this.lim = hostLimiter();
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.id === 'host' }));
       this.opts = cleanOpts(restore.opts || {}); this.state = restore.state || null; this.code = restore.code; this.bookSent = null;

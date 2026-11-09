@@ -3,7 +3,7 @@ import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, SUIT_SYMBOL, SUIT_NAME, cardLabel, cardName, rankLabel, rolesFor, infoOf } from './cards.js?v=7';
 import { JUDGE_TEXT } from './engine.js?v=7';
-import { Host, Client, loadSnapshot, session, MAX, MIN, TQ_PHRASES } from './net.js?v=9';
+import { Host, Client, loadSnapshot, session, MAX, MIN, TQ_PHRASES, TRAIN_OPTS } from './net.js?v=10';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=1';
@@ -59,7 +59,7 @@ function startHost(offline, training = false) {
   musicResumeIfOn();
   if (net && net.leave) net.leave();
   net = new Host(myName(), handlers, offline); isHost = true; myId = 'host';
-  if (training) net.setOpts({ exp: false, expGen: false, training: true });
+  if (training) net.setOpts(TRAIN_OPTS);
   if (hintPref() != null) net.setHints('host', hintPref());
   if (offline) { session.save(GAME, { role: 'host', code: 'OFFLINE' }); for (let i = 0; i < (training ? 3 : 4); i++) net.addBot(); }
   $('#code-box').style.display = offline ? 'none' : '';

@@ -2,16 +2,16 @@
 import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { CARD_INFO, CHARACTERS, ROLES, SUIT_SYMBOL, rankLabel, cardLabel, suitify } from './cards.js';
-import { Host, Client, loadSnapshot, session, BANG_PHRASES } from './net.js?v=13';
+import { Host, Client, loadSnapshot, session, BANG_PHRASES } from './net.js?v=14';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
 import { syncPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 import { imgTag, avatarTag } from './images.js';
-import { S, SPEEDS, getSpeed, setSpeed, sfx, cardSfx, gunSfx, fly, shake, flash, floatText, banner, toggleMute, isMuted, shoot, arrows, explode, sparkle, confetti, stamp, screenShake } from './fx.js?v=1';
+import { BANG_DEFAULTS, S, SPEEDS, getSpeed, setSpeed, sfx, cardSfx, gunSfx, fly, shake, flash, floatText, banner, toggleMute, isMuted, shoot, arrows, explode, sparkle, confetti, stamp, screenShake } from './fx.js?v=2';
 import { THEMES, getTheme, setTheme, onThemeChange } from './themes.js';
 import { openGuide } from './guide.js?v=14';
-import { musicSetTheme, musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=10';
+import { musicSetTheme, musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=11';
 
 const $ = s => document.querySelector(s);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
@@ -47,7 +47,7 @@ function lineActor(line) {
 
 // ---------- Chế độ Người mới (mẹo ngay trên bàn) – lưu riêng từng máy ----------
 const NB_KEY = 'bgvn-bang-newbie';
-let newbie = (() => { try { const x = localStorage.getItem(NB_KEY); return x === null ? true : x === '1'; } catch (e) { return true; } })();
+let newbie = (() => { try { const x = localStorage.getItem(NB_KEY); return x === null ? BANG_DEFAULTS.newbie : x === '1'; } catch (e) { return BANG_DEFAULTS.newbie; } })();
 // 🐣 Người mới (mẹo nên đánh gì, đoán vai, cảnh báo bắn nhầm sếp) chỉ có khi chơi với bot: phòng có ≥ 2 người thật thì tắt
 const nbOk = () => hintsAllowed(lobby && lobby.length ? lobby : view && view.players);
 const nb = () => newbie && nbOk();

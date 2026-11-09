@@ -3,6 +3,10 @@ import { createGame, applyAction, viewFor, resolveWindow, waitingOn, getPlayer, 
 import { botAction, botNope } from './bot.js?v=7';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
+import { rulesFor } from '../../shared/rules.js?v=1';
+// ⚙️ Luật mặc định khi tạo phòng mới: lấy từ luat-mac-dinh.js (gốc repo); giá trị sai/thiếu → giữ luật gốc trong code
+const B2 = [true, false];
+const CFG = rulesFor('meono', DEFAULT_OPTS, { turnTime: [30, 45, 60, 90], expansion: B2, chaos: B2 });
 // Câu chọc kiểu mèo cho bảng thả emoji (shared/ui/react.js), mỗi câu ≤ 24 ký tự
 export const MEO_PHRASES = ['Bốc đi bé!', 'ĐÉO nhé!', 'Meo meo 😼', 'Bom đâu rồi?', 'Hú hồn 😮‍💨', 'Đổ vỏ nè!', 'Cứu tui'];
 const BOT_POOLS = { attack: ['Bốc đi bé!', 'Đổ vỏ nè!', 'Meo meo 😼'], hurt: ['Cứu tui', 'Hú hồn 😮‍💨'], win: ['Meo meo 😼'], reply: ['Meo meo 😼', 'Bom đâu rồi?'], nope: ['ĐÉO nhé!'] };
@@ -29,7 +33,7 @@ export class Host {
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.timers = {}; this.clock = null; this.graceUntil = 0;
     this.hs = Math.random().toString(36).slice(2, 8); // mã phiên chủ phòng (đổi khi tải lại trang)
-    this.opts = { ...DEFAULT_OPTS };
+    this.opts = { ...CFG };
     this.lim = hostLimiter(); this.botReactAt = 0;
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));

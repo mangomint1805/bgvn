@@ -3,6 +3,9 @@ import { createGame, applyAction, viewFor, nextHand, DEFAULT_OPTS, OPT_CHOICES, 
 import { botAction } from './bot.js?v=1';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
+import { rulesFor } from '../../shared/rules.js?v=1';
+// ⚙️ Luật mặc định khi tạo phòng mới: lấy từ luat-mac-dinh.js (gốc repo); giá trị sai/thiếu → giữ luật gốc trong code
+const CFG = rulesFor('poker', { ...DEFAULT_OPTS, modeBlindUp: { cash: 0, tourn: 10 } }, { ...OPT_CHOICES, modeBlindUp: { cash: OPT_CHOICES.blindUp, tourn: OPT_CHOICES.blindUp } });
 // Câu chọc kiểu Poker (≤ 24 ký tự)
 export const POKER_PHRASES = ['Tất tay đi!', 'Bluff đó 🤥', 'Theo không?', 'Bài rác nè', 'Ăn may thôi', 'Xin mẹ chip 🥺'];
 const BOT_POOLS = { attack: ['Tất tay đi!', 'Theo không?'], hurt: ['Ăn may thôi', 'Xin mẹ chip 🥺', 'Bài rác nè'], win: ['Bluff đó 🤥', 'Theo không?'], reply: ['Bluff đó 🤥', 'Bài rác nè'] };
@@ -25,7 +28,7 @@ export class Host {
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.timers = {}; this.clock = null; this.graceUntil = 0;
     this.hs = Math.random().toString(36).slice(2, 8);
-    this.opts = { ...DEFAULT_OPTS };
+    { const { modeBlindUp, ...o } = CFG; this.opts = o; }
     this.lim = hostLimiter(); this.botReactAt = 0;
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));
@@ -89,7 +92,7 @@ export class Host {
     const val = typeof DEFAULT_OPTS[k] === 'number' ? +v : v;
     if (!OPT_CHOICES[k].includes(val)) return;
     this.opts[k] = val;
-    if (k === 'mode') this.opts.blindUp = val === 'tourn' ? 10 : 0; // giải đấu: mặc định mù tăng mỗi 10 ván
+    if (k === 'mode') this.opts.blindUp = CFG.modeBlindUp[val]; // giải đấu: mặc định mù tăng mỗi 10 ván (đổi trong luat-mac-dinh.js)
     this.pushLobby();
   }
   addBot() {

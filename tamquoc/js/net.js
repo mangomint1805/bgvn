@@ -5,7 +5,12 @@ import { coachHint } from './coach.js?v=7';
 import { S } from './fx.js?v=8';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
+import { rulesFor } from '../../shared/rules.js?v=1';
 export const TURN_TIME = 60, PROMPT_TIME = 20, PICK_TIME = 30; // giây: hết giờ thì máy tự đánh thay (chống treo máy)
+// ⚙️ Luật mặc định khi tạo phòng mới (luat-mac-dinh.js ở gốc repo); tapChoi = khi bấm nút 🎓 Tập chơi
+const B2 = [true, false];
+const CFG = rulesFor('tamquoc', { exp: true, expGen: true, training: false, tapChoi: { exp: false, expGen: false } }, { exp: B2, expGen: B2, training: B2, tapChoi: { exp: B2, expGen: B2 } });
+export const TRAIN_OPTS = { ...CFG.tapChoi, training: true };
 const NS = 'bgvn-tamquoc', PREFIX = 'bgvn-tamquoc-', GAME = 'tamquoc';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export const MAX = 8, MIN = 2;
@@ -30,7 +35,7 @@ export class Host {
   constructor(name, handlers, offline = false, restore = null) {
     this.h = handlers; this.offline = offline;
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
-    this.opts = { exp: true, expGen: true, training: false };
+    this.opts = { exp: CFG.exp, expGen: CFG.expGen, training: CFG.training };
     this.hintCache = {}; this.lim = hostLimiter(); this.botReactAt = 0;
     this.state = null; this.conns = new Map(); this.botTimer = null; this.dlTimer = null; this.deadline = null;
     if (restore) {

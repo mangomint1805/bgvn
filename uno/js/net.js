@@ -4,10 +4,16 @@ import { botAction, botCatch } from './bot.js?v=19';
 import { S } from './ufx.js?v=20';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
+import { rulesFor } from '../../shared/rules.js?v=1';
 const NS = 'bgvn-uno', PREFIX = 'bgvn-uno-', GAME = 'uno';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
 export { session };
+// ⚙️ Luật mặc định khi tạo phòng mới: lấy từ luat-mac-dinh.js (gốc repo), sai/thiếu thì dùng luật gốc ở đây
+const B2 = [true, false], RULE_OK = Object.fromEntries(Object.keys(MODES.classic.rules).map(k => [k, B2]));
+const CFG = rulesFor('uno', { mode: 'house', match: false, matchTarget: 500, modes: Object.fromEntries(Object.entries(MODES).map(([m, x]) => [m, { ...x.rules }])) },
+  { mode: Object.keys(MODES), match: B2, matchTarget: MATCH_TARGETS, modes: Object.fromEntries(Object.keys(MODES).map(m => [m, RULE_OK])) });
+const modeRules = m => ({ ...CFG.modes[m] });
 const BOT_NAMES = ['Mochi', 'Bơ', 'Kem', 'Su Su', 'Tôm', 'Bắp', 'Mít', 'Na', 'Xoài'];
 export const MAX = 10;
 export const PULL_CD = 1000; // giãn cách giữa 2 lần tự bốc phạt
@@ -21,8 +27,8 @@ export class Host {
     this.h = handlers; this.offline = offline;
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.botTimer = null; this.catchTimer = null;
-    this.mode = 'house'; this.rules = { ...MODES.house.rules };
-    this.match = newMatch(false, 500); // "Tính điểm tới 500": điểm từng người qua nhiều ván
+    this.mode = CFG.mode; this.rules = modeRules(CFG.mode);
+    this.match = newMatch(CFG.match, CFG.matchTarget); // "Tính điểm tới 500": điểm từng người qua nhiều ván
     this.lim = hostLimiter(); this.botReactAt = 0;
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));
@@ -76,10 +82,10 @@ export class Host {
     this.h.onLobby(info, this.code, !!this.state); this.saveSnap();
     for (const p of this.players) if (p.conn) try { p.conn.send({ t: 'lobby', info, code: this.code, started: !!this.state }); } catch (e) {}
   }
-  setMode(mode) { if (this.state || !MODES[mode]) return; this.mode = mode; this.rules = { ...MODES[mode].rules }; this.pushLobby(); }
+  setMode(mode) { if (this.state || !MODES[mode]) return; this.mode = mode; this.rules = modeRules(mode); this.pushLobby(); }
   setRule(k, v) { if (this.state || !(k in MODES.classic.rules)) return; this.rules[k] = !!v; this.pushLobby(); }
   // Tính điểm nhiều ván: đổi tuỳ chọn thì xoá bảng điểm cũ
-  setMatch(on, target = this.match.target) { if (this.state) return; if (!MATCH_TARGETS.includes(+target)) target = 500; this.match = newMatch(on, target); this.pushLobby(); }
+  setMatch(on, target = this.match.target) { if (this.state) return; if (!MATCH_TARGETS.includes(+target)) target = CFG.matchTarget; this.match = newMatch(on, target); this.pushLobby(); }
   resetMatch() { if (this.state) return; this.match = newMatch(this.match.on, this.match.target); this.pushLobby(); }
   addBot() {
     if (this.state || this.players.length >= MAX) return;

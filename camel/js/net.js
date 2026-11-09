@@ -3,6 +3,9 @@ import { createGame, applyAction, viewFor, DEFAULT_OPTS, MAX_PLAYERS, MIN_PLAYER
 import { botAction } from './bot.js?v=1';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=2';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
+import { rulesFor } from '../../shared/rules.js?v=1';
+// ⚙️ Luật mặc định khi tạo phòng mới: lấy từ luat-mac-dinh.js (gốc repo); giá trị sai/thiếu → giữ luật gốc trong code
+const CFG = rulesFor('camel', DEFAULT_OPTS, { crazy: [true, false] });
 // Câu chọc kiểu đua lạc đà (≤ 24 ký tự)
 export const CAMEL_PHRASES = ['Chạy đi con ơi!', 'Cõng ké hoài vậy', 'Về bét đi 😤', 'Ăn chắc rồi!', 'Ảo ảnh nè hehe', 'Lạc đà gì kỳ vậy'];
 const BOT_POOLS = { attack: ['Ảo ảnh nè hehe', 'Chạy đi con ơi!'], hurt: ['Lạc đà gì kỳ vậy', 'Cõng ké hoài vậy'], win: ['Ăn chắc rồi!'], reply: ['Về bét đi 😤', 'Cõng ké hoài vậy'] };
@@ -26,7 +29,7 @@ export class Host {
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.timers = {}; this.clock = null; this.graceUntil = 0;
     this.hs = Math.random().toString(36).slice(2, 8);
-    this.opts = { ...DEFAULT_OPTS };
+    this.opts = { ...CFG };
     this.lim = hostLimiter(); this.botReactAt = 0;
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));

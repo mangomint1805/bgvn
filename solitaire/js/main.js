@@ -6,6 +6,12 @@ import { faceHTML, BACK, drawCard } from './cards.js?v=2';
 import * as fx from './sfx.js?v=1';
 import { guideHTML } from './guide.js?v=2';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
+import { rulesFor } from '../../shared/rules.js?v=1';
+// ⚙️ Mặc định cho máy CHƯA từng chơi (luat-mac-dinh.js ở gốc repo). Máy đã chơi thì nhớ tuỳ chọn ván gần nhất ('sol-opts')
+// và nút tự đưa lên đích ('sol-auto') – lựa chọn riêng của máy thắng file luật.
+const SOL = rulesFor('solitaire', { draw: VARIANTS.klondike.opts.draw.def, score: VARIANTS.klondike.opts.score.def, autoFoundation: true },
+  { draw: VARIANTS.klondike.opts.draw.vals, score: VARIANTS.klondike.opts.score.vals, autoFoundation: [true, false] });
+VARIANTS.klondike.opts.draw.def = SOL.draw; VARIANTS.klondike.opts.score.def = SOL.score;
 
 const $ = s => document.querySelector(s);
 const ls = {
@@ -24,7 +30,7 @@ let G = null, V = null;          // ván hiện tại + biến thể
 let sel = null, busy = false, geo = null, finishMoves = null, drag = null;
 const cardEl = new Map(), slotEl = new Map();
 const cur = () => G.steps[G.idx].s;
-const autoOn = () => ls.get('sol-auto') !== '0';
+const autoOn = () => { const v = ls.get('sol-auto'); return v === null ? SOL.autoFoundation : v !== '0'; };
 
 // ---------------- ván chơi ----------------
 function start(v, o = {}, seed = randSeed(), { record = true } = {}) {
