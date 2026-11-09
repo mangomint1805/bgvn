@@ -256,4 +256,21 @@ export default {
     score: 1, // Tính điểm — Kiểu tính điểm. · Chọn: 1 = Tiêu chuẩn | 2 = Vegas | 0 = Không tính điểm
     autoFoundation: true, // Tự đưa lá an toàn lên đích — Tự đẩy lá chắc chắn an toàn lên ô đích. · Chọn: true = Bật | false = Tắt
   },
+
+  // ===== 🃏 Ba Cào =====
+  bacao: {
+    mode: 'cai', // Kiểu chơi — Có nhà cái ăn/đền từng người, hay chơi gà góp chung. · Chọn: 'cai' = Có nhà cái | 'pot' = Chơi gà (góp chung, bài to nhất hốt)
+    caiMode: 'rotate', // Ai làm cái — Cách chọn nhà cái (kiểu Có nhà cái). · Chọn: 'rotate' = Xoay vòng | 'fixed' = Cố định (chủ phòng làm cái) | 'bot' = Bot làm cái | 'batay' = Ai ba tây thì làm cái
+    startChips: 1000, // Vốn mỗi người — Chip ảo lúc vào bàn. · Chọn: 500 = 500 | 1000 = 1.000 | 2000 = 2.000 | 5000 = 5.000
+    minBet: 10, // Cược tối thiểu — Mức cược nhỏ nhất (kiểu Có nhà cái). · Chọn: 10 = 10 | 20 = 20 | 50 = 50
+    maxBet: 200, // Cược tối đa — Mức cược lớn nhất (kiểu Có nhà cái). · Chọn: 100 = 100 | 200 = 200 | 500 = 500 | 0 = Tất tay
+    ante: 20, // Tiền góp gà — Mỗi người góp mỗi ván (kiểu Chơi gà). · Chọn: 10 = 10 | 20 = 20 | 50 = 50 | 100 = 100
+    batay: true, // Ba tây — 3 lá J/Q/K là bài to, thắng mọi bài điểm. · Chọn: true = Tính | false = Không tính
+    sap: 'top', // Sáp (3 lá cùng số) — Có tính sáp không, xếp trên hay dưới ba tây. · Chọn: 'top' = Sáp > Ba tây | 'mid' = Ba tây > Sáp | 'off' = Không tính
+    tie: 'suit', // Bằng điểm thì — Cách phân thắng thua khi bằng nút. · Chọn: 'suit' = So chất lá to nhất (♦ > ♥ > ♠ > ♣) | 'rank' = So lá số to nhất (A > K > … > 2) | 'push' = Hoà
+    mBaTay: 2, // Ba tây ăn — Hệ số ăn/đền khi thắng bằng ba tây. · Chọn: 1 = ×1 | 2 = ×2 | 3 = ×3
+    mSap: 3, // Sáp ăn — Hệ số ăn/đền khi thắng bằng sáp. · Chọn: 1 = ×1 | 2 = ×2 | 3 = ×3 | 5 = ×5
+    nan: true, // Nặn bài — Tự kéo hé từng lá trước khi lật chung. · Chọn: true = Có | false = Không (lật luôn)
+    peekTime: 20, // Thời gian nặn — Hết giờ máy tự lật giùm. · Chọn: 10 = 10 giây | 20 = 20 giây | 30 = 30 giây
+  },
 };

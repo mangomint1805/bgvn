@@ -3,9 +3,14 @@
 export const GAMES = {
   all: '🎲 BGVN', bang: '🤠 BANG!', uno: '🃏 UNO', typhu: '🏙️ Cờ Tỷ Phú', scribble: '🎨 Scribble it!',
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
-  xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài',
+  xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261109-06', date: '09/11/2026', game: 'bacao', title: 'Game mới: Ba Cào!', items: [
+    '👑 Ba Cào 2–8 người: 3 lá tính nút, ba tây (J/Q/K) và sáp (3 lá cùng số) là bài to. Có nhà cái hoặc chơi gà góp chung.',
+    '🤏 Nặn bài: kéo lá úp để hé dần cho hồi hộp, hoặc Lật nhanh. Lật bài chung có trống dồn.',
+    '🪙 Chip ảo, hết thì xin mẹ. Có bot, chơi online, hướng dẫn có hình.',
+  ] },
   { id: '20261109-05', date: '09/11/2026', game: 'camel', title: 'Sửa lỗi không rời ván được', items: [
     '🔧 Nút "Rời ván" (và các nút trong hộp thoại như "Đua ván mới") bấm được lại bình thường.',
   ] },
