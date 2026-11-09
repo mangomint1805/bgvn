@@ -197,30 +197,131 @@ kbd{background:#fff;border:1px solid #d8cfe4;border-bottom-width:2px;border-radi
 @media (max-width:420px){ .solv{font-size:11.5px;padding:2px 8px 2px 6px;min-height:22px;margin:0 0 6px 10px} .solv i{font-size:12.5px} }
 @media (prefers-reduced-motion:reduce){ .solv.calc i{animation:none} }
 
-/* ---------- theme 🏺 Ai Cập (bộ bài KDE Ancient Egyptians + nền KPatience Desert Sands) – ảnh chỉ tải khi bật ---------- */
+/* ---------- theme bài – ảnh của mỗi theme chỉ tải khi bật (CSS chỉ tải ảnh nền khi selector khớp) ----------
+   Mỗi theme đặt ĐỦ: border, background, border-radius, box-shadow của .pc và nền .bk, để ô xem trước (.th-prev.tp-X, độ ưu tiên cao hơn)
+   không bị theme đang bật lấn sang. */
 .pc .th-img{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none}
+/* nhãn chỉ số BGVN phủ lên góc lá ảnh khi lá nhỏ (bộ bài KDE nét mảnh khó đọc trên điện thoại) */
+.pc .th-ix{display:none}
+#board.small .pc .th-ix,.th-prev .pc .th-ix{display:flex;align-items:baseline;gap:1px;position:absolute;left:0;top:0;z-index:1;padding:1px 3px 2px calc(var(--cw)*.05);
+  border-radius:calc(var(--cw)*.06) 0 calc(var(--cw)*.12) 0;background:#fff;color:#1b1a1f;font:800 calc(var(--cw)*.3)/1 "Baloo 2","Be Vietnam Pro",sans-serif;letter-spacing:-.04em;pointer-events:none}
+.pc.red .th-ix{color:#c4152f}
+.pc .th-ix i{font-style:normal;font-size:.86em;font-family:"Be Vietnam Pro","Segoe UI Symbol",sans-serif;font-variant-emoji:text}
+
+/* 🏺 Ai Cập (bộ bài KDE Ancient Egyptians + nền KPatience Desert Sands) */
 html[data-sol-theme=egypt] #felt{background:#4a3f1a url("../themes/ancientegypt/table.jpg?v=1") center/cover no-repeat;box-shadow:inset 0 0 0 2px #e8c97a55,inset 0 8px 24px #0004,var(--shadow)}
-html[data-sol-theme=egypt] #felt::before{display:none}
-html[data-sol-theme=egypt] .pc{border:0;background:#efe6cf;border-radius:calc(var(--cw)*.045);box-shadow:0 1px 1px #0000002e,0 3px 8px -4px #0007}
-html[data-sol-theme=egypt] .pc .bk{background:transparent}
-html[data-sol-theme=egypt] .pc.sel{box-shadow:0 0 0 3px #ffd23f,0 8px 16px -6px #000a}
-html[data-sol-theme=egypt] .pc.tgt{box-shadow:0 0 0 3px #fff3c4,0 0 14px 4px #ffd23f}
+html[data-sol-theme=egypt] .pc,.th-prev.tp-egypt .pc{border:0;background:#efe6cf;border-radius:calc(var(--cw)*.045);box-shadow:0 1px 1px #0000002e,0 3px 8px -4px #0007}
+html[data-sol-theme=egypt] .pc .bk,.th-prev.tp-egypt .pc .bk{background:transparent}
 html[data-sol-theme=egypt] .slot{border:0;border-radius:calc(var(--cw)*.05);background:url("../themes/ancientegypt/pile.svg?v=1") center/100% 100% no-repeat;color:#f3e2aecc;text-shadow:0 1px 2px #0008}
-html[data-sol-theme=egypt] .slot.k-stock{background-image:url("../themes/ancientegypt/pile.svg?v=1")}
 html[data-sol-theme=egypt] .slot.tgt{background-image:url("../themes/ancientegypt/pile-hot.svg?v=1")}
 html[data-sol-theme=egypt] .g-fig img{background:#4a3f1a}
+.th-prev.tp-egypt{background:#4a3f1a url("../themes/ancientegypt/table.jpg?v=1") center/cover}
+
+/* 🐧 Cánh cụt (bộ bài KDE Penguins) – nền băng tuyết BGVN tự vẽ */
+html[data-sol-theme=penguins] #felt,.th-prev.tp-penguins{background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='none' stroke='%23fff' stroke-opacity='.5' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M30 18v24M19.6 24l20.8 12M19.6 36l20.8-12M90 72v20M81.3 77l17.4 10M81.3 87l17.4-10'/%3E%3C/g%3E%3Cg fill='%23fff' fill-opacity='.55'%3E%3Ccircle cx='70' cy='30' r='2.2'/%3E%3Ccircle cx='20' cy='92' r='3'/%3E%3Ccircle cx='108' cy='14' r='1.6'/%3E%3Ccircle cx='52' cy='70' r='1.6'/%3E%3C/g%3E%3C/svg%3E"),
+  radial-gradient(ellipse 120% 60% at 50% 115%,#f4fbff 0 32%,transparent 33%),
+  linear-gradient(180deg,#8fd0f5 0%,#4fa3dc 55%,#2f78bd 100%)}
+html[data-sol-theme=penguins] #felt::before{display:none}
+html[data-sol-theme=penguins] .pc,.th-prev.tp-penguins .pc{border:0;background:#fff;border-radius:calc(var(--cw)*.07);box-shadow:0 0 0 1px #0002,0 3px 8px -4px #0b2a4a99}
+html[data-sol-theme=penguins] .pc .bk,.th-prev.tp-penguins .pc .bk{background:transparent}
+html[data-sol-theme=penguins] .slot{border-color:#ffffffcc;background:#ffffff2a;color:#fff}
+
+/* 👑 Tim hồng (bộ bài KDE Jolly Royal + nền KPatience Royal Hearts) */
+html[data-sol-theme=royal] #felt{background:#2b1760 url("../themes/royalhearts/table.svg?v=1") right bottom/cover no-repeat;box-shadow:inset 0 0 0 2px #c9a7ff44,inset 0 8px 24px #0005,var(--shadow)}
+html[data-sol-theme=royal] #felt::before{display:none}
+html[data-sol-theme=royal] .pc,.th-prev.tp-royal .pc{border:0;background:#fbfbfb;border-radius:calc(var(--cw)*.06);box-shadow:0 1px 1px #0003,0 3px 8px -4px #000a}
+html[data-sol-theme=royal] .pc .bk,.th-prev.tp-royal .pc .bk{background:transparent}
+html[data-sol-theme=royal] .pc .th-ix{background:#fbfbfb}
+html[data-sol-theme=royal] .slot{border:0;border-radius:calc(var(--cw)*.06);background:url("../themes/royalhearts/pile.svg?v=1") center/100% 100% no-repeat,#ffffff0d;color:#f3d9ffcc;text-shadow:0 1px 3px #000a}
+html[data-sol-theme=royal] .slot.tgt{background-image:url("../themes/royalhearts/pile-hot.svg?v=1");background-color:#ffd23f33}
+html[data-sol-theme=royal] .g-fig img{background:#2b1760}
+.th-prev.tp-royal{background:#2b1760 url("../themes/royalhearts/table.svg?v=1") right bottom/cover}
+
+/* 🐱 Mèo con – BGVN tự vẽ: mặt bài BGVN trên giấy hồng sữa, lưng mèo, bàn hồng – bạc hà có dấu chân */
+html[data-sol-theme=meo] #felt,.th-prev.tp-meo{background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cg fill='%23fff' fill-opacity='.55'%3E%3Cg transform='translate(24 26) rotate(-18)'%3E%3Cellipse cy='4' rx='6' ry='5'/%3E%3Ccircle cx='-6' cy='-4' r='2.4'/%3E%3Ccircle cx='-2' cy='-7.5' r='2.4'/%3E%3Ccircle cx='3' cy='-7.5' r='2.4'/%3E%3Ccircle cx='7' cy='-4' r='2.4'/%3E%3C/g%3E%3Cg transform='translate(70 70) rotate(16)'%3E%3Cellipse cy='4' rx='6' ry='5'/%3E%3Ccircle cx='-6' cy='-4' r='2.4'/%3E%3Ccircle cx='-2' cy='-7.5' r='2.4'/%3E%3Ccircle cx='3' cy='-7.5' r='2.4'/%3E%3Ccircle cx='7' cy='-4' r='2.4'/%3E%3C/g%3E%3C/g%3E%3Cpath d='M72 22c-2.4-2.4-5.6.5-3 3l3 3 3-3c2.6-2.5-.6-5.4-3-3z' fill='%23ff7fab' fill-opacity='.35'/%3E%3C/svg%3E"),
+  radial-gradient(ellipse at 20% 0%,#ffd6e7 0,transparent 60%),radial-gradient(ellipse at 100% 100%,#c9f1e4 0,transparent 65%),linear-gradient(160deg,#ffc2d9,#f3b8e0 50%,#b9e6dc)}
+html[data-sol-theme=meo] #felt{box-shadow:inset 0 0 0 3px #ffffff88,inset 0 8px 24px #c0457a22,var(--shadow)}
+html[data-sol-theme=meo] #felt::before{display:none}
+html[data-sol-theme=meo] .pc,.th-prev.tp-meo .pc{border:1px solid #efbfd2;background:linear-gradient(160deg,#fffdfe 0%,#fff6fa 60%,#ffeef5 100%);border-radius:calc(var(--cw)*.1);box-shadow:0 1px 1px #c0457a1f,0 3px 8px -4px #a0305f66}
+html[data-sol-theme=meo] .pc .bk,.th-prev.tp-meo .pc .bk{background:transparent}
+html[data-sol-theme=meo] .slot{border-color:#ffffffdd;background:#ffffff38;color:#d94f8a;border-radius:calc(var(--cw)*.12)}
+html[data-sol-theme=meo] .slot.k-found{border-color:#ffffff;background:#fff6}
+html[data-sol-theme=meo] .slot.tgt{background:#fffc;border-color:#ff7fab}
+html[data-sol-theme=meo] .g-fig img{background:#f3b8e0}
+
+/* ô chọn theme */
 .th-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
 .th-pick button{min-width:0;overflow:hidden;border:2px solid #e6dcc8;background:#fff;border-radius:16px;padding:10px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:800;min-height:44px}
 .th-pick button.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
 .th-pick small{font-weight:600;color:var(--muted);font-size:12px;text-align:center}
-.th-prev{display:flex;--cw:44px;--ch:62px;max-width:100%}
+.th-prev{display:flex;--cw:44px;--ch:62px;max-width:100%;padding:6px;border-radius:10px}
 .th-prev .pc{position:relative;cursor:default;flex:none;margin-right:-12px}.th-prev .pc:last-child{margin-right:0}
 .th-prev .pc.down .bk{display:block}
-.th-prev.eg .pc{border:0;border-radius:3px;box-shadow:0 1px 3px #0006}
-.th-prev.eg{background:#4a3f1a url("../themes/ancientegypt/table.jpg?v=1") center/cover;padding:6px;border-radius:10px}
-.th-prev.cl{background:radial-gradient(ellipse at 50% 30%,var(--felt1),var(--felt2) 90%);padding:6px;border-radius:10px}
+.th-prev.tp-classic{background:radial-gradient(ellipse at 50% 30%,var(--felt1),var(--felt2) 90%)}
+.th-prev.tp-classic .pc{border:1px solid #c3b8a5;background:linear-gradient(160deg,#fffefa 0%,#fbf7ee 55%,#f2ebdc 100%);border-radius:calc(var(--cw)*.08);box-shadow:0 1px 1px #0000001a,0 3px 8px -4px #0005}
+.th-prev.tp-classic .pc .bk{background:#fbf7ee}
 .credit{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.45}
+.credit p{margin:0 0 4px}.credit ul{margin:0;padding-left:16px}.credit li{margin:2px 0}
 .credit a{color:inherit}
-.th-prev.cl .pc{border:1px solid #c3b8a5;background:linear-gradient(160deg,#fffefa 0%,#fbf7ee 55%,#f2ebdc 100%);border-radius:calc(var(--cw)*.08)}
-.th-prev.cl .pc .bk{background:#fbf7ee}
 @media (max-width:420px){ .th-prev{--cw:32px;--ch:45px} .th-prev .pc{margin-right:-9px} .th-pick button{padding:8px 4px} }
+
+/* nút chọn sáng / tối trong ☰ Thêm */
+.menu .seg{display:flex;align-items:center;gap:4px;flex-wrap:wrap;background:#fff;border-radius:14px;padding:6px 8px 6px 14px;min-height:46px;box-shadow:0 2px 8px -4px #5a3a1a40;font-weight:700;font-size:15.5px}
+.menu .seg>span:first-child{margin-right:auto}
+.menu .seg .seg-b{display:flex;gap:4px;flex-wrap:nowrap;margin-left:auto}
+.menu .seg button{min-height:34px;padding:2px 11px;border-radius:999px;font-size:13px;box-shadow:none;border:1.5px solid #e6dcc8;background:#fff}
+.menu .seg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ================= 🌓 chế độ tối (html.dark – theo máy hoặc chọn tay) =================
+   Đổi toàn bộ khung giao diện; lá bài vẫn là giấy sáng; theme có nền riêng giữ nền, bàn Cổ điển tối hơn. */
+html.dark{
+  --ink:#eeeaf8;--muted:#aaa3c2;--bg:#16131e;--panel:#221d2eef;--line:#3a3350;--surf:#252032;--surf2:#2e283d;--chip:#2a2438;
+  --felt1:#1f7a4e;--felt2:#0a3f27;--shadow:0 10px 28px -12px #000c,0 2px 6px #0006;color-scheme:dark}
+html.dark body{background:var(--bg);color:var(--ink)}
+html.dark .back-hub,html.dark .vbtn,html.dark .chip,html.dark .act,html.dark .btn,html.dark .close-x,html.dark .menu button,html.dark .menu .seg,
+html.dark .win-st span,html.dark .g-var,html.dark .stats td,html.dark .th-pick button,html.dark .deal-form input{background:var(--chip);color:var(--ink)}
+html.dark .stat{background:#2a243899}
+html.dark .act:disabled{opacity:.4}
+html.dark .act.hot{background:linear-gradient(135deg,#ffd23f,#ff9a1f);color:#2a1a00}
+html.dark .btn.pri{background:linear-gradient(135deg,#ff5b3a,#ff9a1f);color:#fff}
+html.dark .btn.gray{background:#3a3350;color:#e6e1f3}
+html.dark .modal{background:#07050cbb}
+html.dark .modal-box{background:#1f1a2b;color:var(--ink);box-shadow:0 20px 50px #000a,0 0 0 1px #ffffff12}
+html.dark .menu button{box-shadow:0 0 0 1px #ffffff10}
+html.dark .menu button em{background:#3a3350;color:#d8d2ea}
+html.dark .menu button.tg.on em{background:#1f9e8f;color:#fff}
+html.dark .menu .seg button{background:#1f1a2b;border-color:#4a4262;color:var(--ink)}
+html.dark .menu .seg button.on,html.dark .vo.on{background:#ffd23f;color:#241a00;border-color:#ffd23f}
+html.dark .vo{background:#1f1a2b;border-color:#4a4262;color:var(--ink)}
+html.dark .opt-help{color:#cfc8e2}
+html.dark .deal-form input{border-color:#4a4262}
+html.dark .g-lead{background:#3a2f1c;color:#f5ead6}
+html.dark .g-tb td,html.dark .g-tb th{border-color:#3a3350}
+html.dark .g-tb th{background:#3a2f1c}
+html.dark kbd{background:#2e283d;border-color:#4a4262;color:var(--ink)}
+html.dark .sv-ok{background:#163c2b}html.dark .sv-bad{background:#4a1820}
+html.dark .sv-meh{background:#433610}
+html.dark .win-rec{background:#433610;color:#ffd98a}
+html.dark .spin{border-color:#4a3a30;border-top-color:var(--acc)}
+html.dark .toast{background:#3b3352;color:#fff;box-shadow:0 6px 20px #0008,0 0 0 1px #ffffff1a}
+html.dark .toast.bad{background:#b3172b}
+html.dark .badge{background:#eeeaf8;color:#1f1b2e}
+html.dark .badge.cnt{background:#0e0b14;color:#fff;box-shadow:0 0 0 1.5px #ffffff55,0 2px 6px #0008}
+html.dark .badge.hour{background:#ffd23f;color:#3a2300}
+html.dark .solv{box-shadow:0 2px 8px #0008,0 0 0 1px #ffffff26}
+html.dark #felt{box-shadow:inset 0 0 0 2px #ffffff22,inset 0 8px 24px #0006,var(--shadow)}
+html.dark .th-pick button{border-color:#4a4262}
+html.dark .th-pick button.on{border-color:#ffd23f;box-shadow:0 0 0 2px #ffd23f}
+html.dark .credit,html.dark .note,html.dark .muted{color:var(--muted)}
+html.dark .pc{box-shadow:0 1px 1px #0004,0 3px 8px -4px #000c}
+html.dark .pc.sel{box-shadow:0 0 0 3px #ffd23f,0 8px 16px -6px #000c}
+/* hộp "Có gì mới" (shared/ui/news.js) */
+html.dark .bgvn-news .bn-box{background:#1f1a2b;color:var(--ink)}
+html.dark .bgvn-news .bn-hd{background:linear-gradient(135deg,#3a2f1c,#3d2233);border-color:#3a3350}
+html.dark .bgvn-news .bn-x,html.dark .bgvn-news .bn-tabs button{background:#2a2438;color:var(--ink);border-color:#4a4262}
+html.dark .bgvn-news .bn-tabs button.on{background:#ffd23f;color:#241a00;border-color:#ffd23f}
+html.dark .bgvn-news .bn-it{border-color:#3a3350}
+html.dark .bgvn-news .bn-meta{color:var(--muted)}
+html.dark .bgvn-news .bn-tag{background:#3a2f5c;color:#d9ccff}

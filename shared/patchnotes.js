@@ -6,6 +6,11 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261110-02', date: '10/11/2026', game: 'solitaire', title: 'Theme mới, chế độ tối, chuột phải kiểu Windows', items: [
+    '🎀 Thêm theme: 🐱 Mèo con (BGVN tự vẽ), 🐧 Cánh cụt (bộ Penguins của KDE), 👑 Tim hồng (Jolly Royal + Royal Hearts của KDE). Bấm 🎨 để chọn.',
+    '🌙 Chế độ tối: tự theo máy, hoặc chọn Sáng/Tối trong ☰ Thêm.',
+    '🖱️ Chuột phải / nút ⤴️ Lên đích giờ đưa mọi lá lên được đích (như Solitaire Windows), hoàn tác 1 lần là về.',
+  ] },
   { id: '20261110-01', date: '10/11/2026', game: 'solitaire', title: 'Theme Ai Cập, chuột phải, báo giải được', items: [
     '🏺 Theme Ai Cập: bộ bài "Ancient Egyptians" và nền "Desert Sands" gốc của KDE KPatience (tác giả Sean Wilson, giấy phép LGPL/GPL – xem themes/ancientegypt).',
     '🖱️ Chuột trái kéo bài, chuột phải đưa hết lá an toàn lên ô A (như Solitaire Windows). Điện thoại: nút ⤴️ Lên đích hoặc chạm 2 ngón.',

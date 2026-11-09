@@ -2,9 +2,9 @@
 import { VARIANTS, newGame, defaultOpts, optsKey, optsName, scoreStart, liveScore, timeBonus, passesLeft, SCORE_NONE, SCORE_VEGAS } from './variants.js?v=1';
 import { apply, canMove, legalMoves, autoMoves, greedyFinish, key, hintMove, idsOf, isSeq, isRed, cardName, top } from './core.js?v=1';
 import { solve } from './solver.js?v=1';
-import { faceHTML, backHTML, drawCard, THEMES, getTheme, setTheme, previewHTML, EGYPT_CREDIT } from './cards.js?v=3';
+import { faceHTML, backHTML, drawCard, THEMES, getTheme, setTheme, previewHTML } from './cards.js?v=4';
 import * as fx from './sfx.js?v=1';
-import { guideHTML } from './guide.js?v=3';
+import { guideHTML } from './guide.js?v=4';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
 import { rulesFor } from '../../shared/rules.js?v=1';
 // ⚙️ Mặc định cho máy CHƯA từng chơi (luat-mac-dinh.js ở gốc repo). Máy đã chơi thì nhớ tuỳ chọn ván gần nhất ('sol-opts')
@@ -41,18 +41,31 @@ function start(v, o = {}, seed = randSeed(), { record = true } = {}) {
   resetBoard(); render(); afterStep(true);
 }
 function restart() { if (busy) return; G.steps.length = 1; G.idx = 0; G.t = 0; G.won = false; G.final = null; G.assisted = false; G.counted = false; clearSel(); render(); afterStep(true); toast('🔁 Chơi lại ván #' + G.seed); }
-// chuột phải / nút ⤴️ / chạm 2 ngón: đưa MỌI lá an toàn lên đích (lặp tới khi hết), bay từng lá, hoàn tác 1 lần là về như cũ
+// Kiểu Solitaire Windows: 1 nước lên đích bất kỳ (KỂ CẢ lá "không an toàn") từ lá trên cùng của cột / bãi.
+// Ưu tiên lá nhỏ nhất (A, 2… bay lên trước cho tự nhiên).
+function homeOne(s) {
+  let best = null, br = 99;
+  for (const f in s.p) {
+    const kf = s.k[f]; if (kf !== 'tab' && kf !== 'waste' && kf !== 'cell') continue;
+    const P = s.p[f]; if (!P.c.length || P.d >= P.c.length) continue;
+    const i = P.c.length - 1, r = P.c[i] % 13; if (r >= br) continue;
+    for (const t in s.p) if (s.k[t] === 'found') { const m = { f, i, t }; if (canMove(V, s, m)) { best = m; br = r; break; } }
+  }
+  return best;
+}
+// chuột phải / nút ⤴️ / chạm 2 ngón / phím A: y như Solitaire Windows – đưa MỌI lá lên được đích lên hết
+// (không chỉ lá an toàn), lặp tới khi hết, bay từng lá, hoàn tác 1 lần là về như cũ
 function safeUp() {
   flushAuto();
   if (busy || !G || G.won) return false;
-  const s = cur(), r = autoMoves(V, s, 1);
-  if (!r.moves.length) { fx.sfx.bad(); toast(autoOn() ? 'Không còn lá an toàn nào – máy đang tự đưa lên rồi 😉' : 'Chưa có lá nào an toàn để đưa lên đích 🤷', 'bad'); return false; }
-  clearSel(); pushStep([r.moves[0]], r.s, s); fx.sfx.found(); render(); updateHead(); runAuto();
+  const s = cur(), m = homeOne(s);
+  if (!m) { fx.sfx.bad(); toast('Chưa có lá nào lên đích được 🤷', 'bad'); return false; }
+  clearSel(); pushStep([m], apply(V, s, m), s); fx.sfx.found(); render(); updateHead(); runAuto(true);
   return true;
 }
-const hasSafe = () => !!G && !G.won && !busy && V.safe && autoMoves(V, cur(), 1).moves.length > 0;
-// nút ⤴️ chỉ hiện khi TẮT tự đưa lên đích (bật thì máy làm sẵn rồi) và khi chưa có ✨ Tự xếp nốt
-function syncSafeBtn() { const b = $('#btn-safe'); b.hidden = autoOn() || !!finishMoves || !G || G.won; b.disabled = !hasSafe(); }
+const hasHome = () => !!G && !G.won && !busy && !!homeOne(cur());
+// nút ⤴️ Lên đích luôn có (mờ đi khi không lá nào lên được); chỉ nhường chỗ cho ✨ Tự xếp nốt (nút đó làm hết luôn)
+function syncSafeBtn() { const b = $('#btn-safe'); b.hidden = !G || G.won || !!finishMoves; b.disabled = !hasHome(); }
 function save() {
   if (!G) return;
   ls.put('sol-game', { v: G.v, o: G.o, seed: G.seed, steps: G.steps.slice(1).map(x => x.m), idx: G.idx, t: Math.round(G.t), won: G.won, assisted: G.assisted, counted: G.counted, final: G.final ?? null, bonus: G.bonus || 0 });
@@ -141,7 +154,7 @@ function cardNode(c) {
 function render() {
   const s = cur(); geo = compute(); const { cw, ch, piles } = geo;
   board.style.setProperty('--cw', cw + 'px'); board.style.setProperty('--ch', ch + 'px');
-  board.style.height = geo.H + 'px'; board.classList.toggle('tiny', cw < 46); board.classList.toggle('mini', cw < 36);
+  board.style.height = geo.H + 'px'; board.classList.toggle('tiny', cw < 46); board.classList.toggle('mini', cw < 36); board.classList.toggle('small', cw < 64);
   board.querySelectorAll('.ptag,.badge,.deco').forEach(n => n.remove());
   for (const d of geo.L.deco || []) { const n = document.createElement('div'); n.className = 'deco ' + (d.cls || ''); Object.assign(n.style, { left: geo.offX + d.x * cw + 'px', top: geo.pad + d.y * ch + 'px', width: d.w * cw + 'px', height: d.h * ch + 'px' }); n.innerHTML = '<i></i><b></b>'; board.appendChild(n); }
   const seen = new Set();
@@ -212,16 +225,19 @@ function userMove(m) {
   if (autoOn() && V.safe) runAuto(); else afterStep();
   return true;
 }
-let autoT = 0, autoRun = false;
+// autoAll = true: đang chạy "lên đích hết" kiểu Windows (mọi lá lên được); false: chỉ lá an toàn
+let autoT = 0, autoRun = false, autoAll = false;
 function autoStep() {
-  const r = autoMoves(V, cur(), 1);
-  if (!r.moves.length || G.won) return false;
-  const stp = G.steps[G.idx]; stp.sc = addScore(V, stp.sc, stp.s, r.s, r.moves[0]); stp.m.push(r.moves[0]); stp.s = r.s; return true;
+  if (G.won) return false;
+  const s = cur(); let m, n;
+  if (autoAll) { m = homeOne(s); if (!m) return false; n = apply(V, s, m); }
+  else { const r = autoMoves(V, s, 1); if (!r.moves.length) return false; m = r.moves[0]; n = r.s; }
+  const stp = G.steps[G.idx]; stp.sc = addScore(V, stp.sc, stp.s, n, m); stp.m.push(m); stp.s = n; return true;
 }
-function runAuto() {
-  busy = true; autoRun = true;
+function runAuto(all = false) {
+  busy = true; autoRun = true; autoAll = all;
   const tick = () => {
-    if (!autoStep()) { busy = false; autoRun = false; afterStep(); return; }
+    if (!autoStep()) { busy = false; autoRun = false; autoAll = false; afterStep(); return; }
     fx.sfx.found(); render(); showScore();
     autoT = setTimeout(tick, reduced() ? 20 : 110);
   };
@@ -231,7 +247,7 @@ function runAuto() {
 function flushAuto() {
   if (!autoRun) return; clearTimeout(autoT);
   let n = 0; while (autoStep()) n++;
-  busy = false; autoRun = false; if (n) fx.sfx.found(); render(); afterStep();
+  busy = false; autoRun = false; autoAll = false; if (n) fx.sfx.found(); render(); afterStep();
 }
 function playSeq(moves, delay, done) {
   busy = true; clearSel(); let i = 0;
@@ -471,6 +487,7 @@ modal.addEventListener('click', e => {
     solve: () => askSolver(), stats: () => showStats(), guide: () => openModal(guideHTML(V.id), 'wide'),
     news: () => { closeModal(); news(); },
     auto: () => { ls.set('sol-auto', autoOn() ? '0' : '1'); moreMenu(); syncSafeBtn(); toast(autoOn() ? '✅ Bật tự đưa lá an toàn lên đích' : 'Tắt tự đưa lên đích – dùng ⤴️ Lên đích hoặc chuột phải'); },
+    dark: () => { setDark(b.dataset.m); moreMenu(); toast({ auto: '🌓 Sáng/tối theo máy', light: '☀️ Giao diện sáng', dark: '🌙 Giao diện tối' }[darkPref()]); },
     solv: () => { ls.set('sol-solvable', solvOn() ? '0' : '1'); moreMenu(); render(); solvSchedule(); toast(solvOn() ? '🧠 Bật báo giải được hay không' : 'Tắt báo giải được hay không'); },
     theme: () => themeBox(), settheme: () => { pickTheme(b.dataset.t); themeBox(); },
     music: () => { fx.actx(); fx.musicToggle(); syncAudio(); moreMenu(); }, mute: () => { fx.toggleMute(); syncAudio(); moreMenu(); },
@@ -488,12 +505,13 @@ function moreMenu() {
     <button data-act="auto" class="tg ${autoOn() ? 'on' : ''}">🪄 Tự đưa lá an toàn lên đích <em>${autoOn() ? 'BẬT' : 'TẮT'}</em></button>
     <button data-act="solv" class="tg ${solvOn() ? 'on' : ''}">🧠 Báo giải được hay không (góc trái dưới) <em>${solvOn() ? 'BẬT' : 'TẮT'}</em></button>
     <button data-act="theme">🎨 Giao diện bài <em>${THEMES[getTheme()].name}</em></button>
+    <div class="seg" role="group" aria-label="Chế độ sáng / tối"><span>🌓 Sáng / tối</span><span class="seg-b">${[['auto', 'Tự động'], ['light', 'Sáng'], ['dark', 'Tối']].map(([m, t]) => `<button data-act="dark" data-m="${m}" class="${darkPref() === m ? 'on' : ''}" aria-pressed="${darkPref() === m}">${t}</button>`).join('')}</span></div>
     <button data-act="music" class="tg ${fx.musicIsOn() ? 'on' : ''}">🎵 Nhạc nền <em>${fx.musicIsOn() ? 'BẬT' : 'TẮT'}</em></button>
     <button data-act="mute" class="tg ${fx.isMuted() ? '' : 'on'}">🔊 Âm thanh <em>${fx.isMuted() ? 'TẮT' : 'BẬT'}</em></button>
     <button data-act="guide">📖 Hướng dẫn</button>
     <button data-act="news">📝 Có gì mới</button>
-  </div><p class="note">Bản fan-made phi thương mại · Chơi một mình, không cần mạng. Chuột phải lên bàn = đưa lá an toàn lên đích.</p>
-  ${getTheme() === 'egypt' ? `<p class="credit center">🏺 ${EGYPT_CREDIT}.</p>` : ''}`);
+  </div><p class="note">Bản fan-made phi thương mại · Chơi một mình, không cần mạng. Chuột phải lên bàn = đưa mọi lá lên được lên đích (y như Windows).</p>
+  ${THEMES[getTheme()].credit ? `<p class="credit center">${THEMES[getTheme()].name.split(' ')[0]} ${THEMES[getTheme()].credit}.</p>` : ''}`);
 }
 // tuỳ chọn ván: rút 1/3 + cách tính điểm (áp dụng từ ván mới)
 function optsBox(first = false) {
@@ -535,13 +553,14 @@ function themeBox() {
   const t0 = getTheme();
   openModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><h2>🎨 Giao diện bài</h2>
   <div class="th-pick">${Object.entries(THEMES).map(([id, T]) => `<button data-act="settheme" data-t="${id}" class="${id === t0 ? 'on' : ''}" aria-pressed="${id === t0}">${previewHTML(id)}<span>${T.name}</span><small>${T.desc}</small></button>`).join('')}</div>
-  <p class="credit">🏺 Theme Ai Cập dùng nguyên bộ bài và nền bàn của KDE (không vẽ lại): ${EGYPT_CREDIT}. Chi tiết, nguồn và toàn văn giấy phép: <a href="themes/ancientegypt/README.txt" target="_blank" rel="noopener">themes/ancientegypt/README.txt</a>.</p>
+  <div class="credit"><p>Theme 🐧 👑 🏺 dùng nguyên bộ bài / nền bàn của dự án KDE (không vẽ lại, chỉ tách từng lá + nén). Nguồn, tác giả và toàn văn giấy phép ở README của từng theme:</p>
+  <ul>${Object.values(THEMES).filter(T => T.credit).map(T => `<li><b>${T.name}</b>: ${T.credit}. <a href="${T.readme}" target="_blank" rel="noopener">README</a></li>`).join('')}</ul></div>
   <div class="mrow"><button class="btn pri" data-close>Xong</button></div>`);
 }
 function pickTheme(t) {
   if (t === getTheme() || !THEMES[t]) return;
   setTheme(t); flushAuto(); resetBoard(); render();
-  toast(t === 'egypt' ? '🏺 Theme Ai Cập – bộ bài KDE Ancient Egyptians' : '🃏 Về bộ bài cổ điển');
+  toast({ classic: '🃏 Về bộ bài cổ điển', egypt: '🏺 Theme Ai Cập – bộ bài KDE Ancient Egyptians', penguins: '🐧 Theme Cánh cụt – bộ bài KDE Penguins', royal: '👑 Theme Tim hồng – bộ bài KDE Jolly Royal', meo: '🐱 Theme Mèo con – meo meo~' }[t] || THEMES[t].name);
 }
 
 // ---------------- 🧠 báo "giải được không" liên tục (như KPatience) ----------------
@@ -624,6 +643,19 @@ function showSolve(d, s) {
   if (p) p.onclick = () => { closeModal(); if (cur() !== s) return; G.assisted = true; playSeq(d.moves, 230); };
 }
 
+// ---------------- 🌓 sáng / tối: theo máy (mặc định) hoặc chọn tay, nhớ trong 'sol-dark' ----------------
+// (index.html có đoạn script nhỏ đặt class 'dark' ngay từ đầu để khỏi nháy trắng)
+const darkMQ = (() => { try { return matchMedia('(prefers-color-scheme: dark)'); } catch (e) { return null; } })();
+const darkPref = () => { const v = ls.get('sol-dark'); return v === 'light' || v === 'dark' ? v : 'auto'; };
+function applyDark() {
+  const p = darkPref(), on = p === 'dark' || (p === 'auto' && !!darkMQ && darkMQ.matches);
+  const h = document.documentElement; h.classList.toggle('dark', on); h.style.colorScheme = on ? 'dark' : 'light';
+  const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = on ? '#17141f' : '#fff6ea';
+}
+function setDark(m) { ls.set('sol-dark', m === 'light' || m === 'dark' ? m : 'auto'); applyDark(); }
+applyDark();
+if (darkMQ) { const f = () => applyDark(); darkMQ.addEventListener ? darkMQ.addEventListener('change', f) : darkMQ.addListener(f); }
+
 // ---------------- linh tinh ----------------
 let toastT = 0;
 function toast(msg, cls = '', ms = 2200) { const t = $('#toast'); t.textContent = msg; t.className = 'toast on ' + cls; clearTimeout(toastT); toastT = setTimeout(() => { t.className = 'toast ' + cls; }, ms); }
@@ -657,7 +689,7 @@ addEventListener('keydown', e => {
 // debug/test hook (dùng cho test tự động)
 window.__sol = { get G() { return G; }, get sel() { return sel; }, get busy() { return busy; }, get lastTap() { return lastTap; }, get V() { return V; }, start, render, cur, userMove, apply: m => apply(V, cur(), m), legal: () => legalMoves(V, cur()),
   inject(s) { G.steps.length = G.idx + 1; G.steps.push({ m: [], s, sc: G.steps[G.idx].sc }); G.idx++; render(); afterStep(); }, geo: () => geo,
-  safeUp, undo, pickTheme, get solv() { return SV.st; }, get solvCache() { return SV.cache.size; } };
+  safeUp, undo, pickTheme, setDark, homeOne: () => homeOne(cur()), get solv() { return SV.st; }, get solvCache() { return SV.cache.size; } };
 
 // ---------------- khởi động ----------------
 if (load()) { render(); afterStep(true); if (G.won) $('#btn-finish').hidden = true; }

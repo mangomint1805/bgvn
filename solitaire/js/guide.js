@@ -1,5 +1,5 @@
 // Hướng dẫn tiếng Việt: luật Xếp bài cổ điển (Klondike) + cách tính điểm + thao tác
-import { cardHTML, EGYPT_CREDIT } from './cards.js?v=3';
+import { cardHTML, THEMES } from './cards.js?v=4';
 import { RANKS, SUITS } from './core.js?v=1';
 
 const C = t => RANKS.indexOf(t.slice(0, -1)) + 13 * SUITS.indexOf(t.slice(-1));
@@ -45,19 +45,20 @@ ${img('goi-y.jpg', 600, 960, 'Điểm hiện trên thanh trên cùng; bấm 💡
 <ul>
 <li><b>Kéo-thả</b> lá (chuột hoặc ngón tay), hoặc <b>chạm chọn</b> lá rồi <b>chạm chỗ muốn đặt</b>.</li>
 <li><b>Chạm đúp / nhấp đúp</b> vào lá để đưa nhanh lên đích (không lên được thì tìm chỗ hợp lý trên cột).</li>
-<li><b>Chuột phải</b> vào bất kỳ đâu trên bàn (y như Solitaire Windows) = đưa <b>mọi lá an toàn</b> lên đích một lèo. Trên điện thoại: nút <b>⤴️ Lên đích</b> (hiện khi tắt "Tự đưa lá an toàn lên đích") hoặc <b>chạm 2 ngón</b> lên bàn; bàn phím: <kbd>A</kbd>. Hoàn tác 1 lần là về như cũ.</li>
-<li>Lá <b>an toàn</b> = lá mà không cột nào còn cần để hứng bài nữa (các lá khác màu nhỏ hơn 1 bậc đã lên đích hết), đưa lên không bao giờ làm hỏng ván.</li>
+<li><b>Chuột phải</b> vào bất kỳ đâu trên bàn – y hệt Solitaire Windows – = đưa <b>MỌI lá lên được đích</b> lên một lèo (lặp tới khi hết, kể cả lá chưa "an toàn"). Trên điện thoại: nút <b>⤴️ Lên đích</b> (luôn có ở thanh dưới, mờ đi khi chưa lá nào lên được) hoặc <b>chạm 2 ngón</b> lên bàn; bàn phím: <kbd>A</kbd>. Hoàn tác 1 lần là về như cũ – lỡ đẩy lên lá còn cần dùng thì ↶ là xong.</li>
+<li>Tuỳ chọn <b>🪄 Tự đưa lá an toàn lên đích</b> (☰ Thêm, mặc định BẬT) thì chỉ tự đẩy lá <b>an toàn</b> = lá mà không cột nào còn cần để hứng bài nữa (các lá khác màu nhỏ hơn 1 bậc đã lên đích hết), không bao giờ làm hỏng ván.</li>
 <li>↶ Hoàn tác / ↷ Làm lại không giới hạn. 💡 Gợi ý chỉ nước đáng đi.</li>
-<li><b>✨ Tự xếp nốt</b> hiện ra khi ván đã chắc thắng. Tuỳ chọn <b>Tự đưa lá an toàn lên đích</b> (trong ☰ Thêm) sẽ tự đẩy các lá không còn cần dùng lên đích.</li>
+<li><b>✨ Tự xếp nốt</b> hiện ra (thay chỗ nút ⤴️) khi ván đã chắc thắng.</li>
 <li>${img('tu-xep.jpg', 600, 825, 'Ván đã chắc thắng: nút ✨ Tự xếp nốt sáng lên')}</li>
 <li>🧠 <b>Ván này giải được không?</b> – máy thử giải trong ~10 giây. Xem máy giải thì ván đó không tính thống kê.</li>
 <li>Nhãn nhỏ ở <b>góc trái dưới</b> (giống KPatience) tự báo sau mỗi nước: 🧠 Đang tính… · ✅ Giải được · ❌ Hết đường · 🤔 Chưa chắc (máy chưa tìm ra trong 4 giây). Chỉ để xem, <b>không</b> bị tính là có máy giúp. Tắt/bật trong ☰ Thêm.</li>
-<li>🎨 <b>Giao diện bài</b> (☰ Thêm): 🃏 Cổ điển hoặc 🏺 Ai Cập (bộ bài + nền bàn của KDE KPatience).</li>
+<li>🎨 <b>Giao diện bài</b> (☰ Thêm): 🃏 Cổ điển · 🐱 Mèo con · 🐧 Cánh cụt · 👑 Tim hồng · 🏺 Ai Cập. Ảnh của theme chỉ tải khi chọn.</li>
+<li>🌓 <b>Sáng / tối</b> (☰ Thêm): Tự động (theo máy) · Sáng · Tối. Theme có nền riêng vẫn giữ nền, chỉ khung giao diện đổi màu.</li>
 <li>Mỗi ván có số riêng (<b>Ván #…</b>) – gửi số cho bạn bè để thi cùng một ván!</li>
 <li>Bàn phím: <kbd>Ctrl</kbd>+<kbd>Z</kbd> hoàn tác, <kbd>Ctrl</kbd>+<kbd>Y</kbd> làm lại, <kbd>H</kbd> gợi ý, <kbd>N</kbd> ván mới, <kbd>Space</kbd> lật nọc, <kbd>F</kbd> tự xếp nốt, <kbd>Esc</kbd> bỏ chọn.</li>
 <li>Ván đang chơi tự lưu – tải lại trang vẫn chơi tiếp. Thống kê lưu trên máy này.</li>
 </ul>
 <p class="g-note">Hình vẽ, lá bài (theme Cổ điển), âm thanh và chữ là bản tự làm của BGVN · Bản fan-made phi thương mại.</p>
-<p class="g-note">🏺 Theme Ai Cập: ${EGYPT_CREDIT}. Dùng nguyên tác phẩm gốc (chỉ tách từng lá + nén), nguồn và toàn văn giấy phép: <a href="themes/ancientegypt/README.txt" target="_blank" rel="noopener">themes/ancientegypt/README.txt</a>.</p>
+${Object.values(THEMES).filter(T => T.credit).map(T => `<p class="g-note">${T.name}: ${T.credit}. Nguồn và toàn văn giấy phép: <a href="${T.readme}" target="_blank" rel="noopener">${T.readme}</a>.</p>`).join('')}
 </div>`;
 }
