@@ -204,11 +204,11 @@ export default {
     minBet: 10, // Cược tối thiểu — Mức cược nhỏ nhất. · Chọn: 10 = 10 | 20 = 20 | 50 = 50
     maxBet: 200, // Cược tối đa — Mức cược lớn nhất. · Chọn: 100 = 100 | 200 = 200 | 500 = 500 | 0 = Tất tay
     minPts: 16, // Người chơi được dằn từ — Đủ điểm này mới được dằn. · Chọn: 15 = 15 điểm | 16 = 16 điểm
-    caiMin: 15, // Nhà cái được xét từ — Nhà cái đủ điểm này mới được xét bài. · Chọn: 15 = 15 điểm | 16 = 16 điểm
+    caiMin: 16, // Nhà cái được xét từ — Nhà cái đủ điểm này mới được xét bài. · Chọn: 15 = 15 điểm | 16 = 16 điểm
     mXiBan: 3, // Xì bàn ăn — Hệ số ăn/đền khi có xì bàn. · Chọn: 1 = ×1 | 2 = ×2 | 3 = ×3
     mXiDach: 2, // Xì dách ăn — Hệ số ăn/đền khi có xì dách. · Chọn: 1 = ×1 | 2 = ×2 | 3 = ×3
     mNguLinh: 2, // Ngũ linh ăn — Hệ số ăn/đền khi có ngũ linh. · Chọn: 1 = ×1 | 2 = ×2 | 3 = ×3
-    bothBust: 'cai', // Cùng quắc — Người chơi và nhà cái cùng quắc thì sao. · Chọn: 'cai' = Nhà cái ăn | 'hoa' = Hoà
+    bothBust: 'hoa', // Cùng quắc — Người chơi và nhà cái cùng quắc thì sao. · Chọn: 'cai' = Nhà cái ăn | 'hoa' = Hoà
     aceRule: 'vn', // Lá A — Cách tính điểm lá A. · Chọn: 'vn' = Kiểu Việt | 'flex' = Linh hoạt 1/11
     allowNon: false, // Dằn non — Cho dằn khi chưa đủ điểm (lật ra là thua). · Chọn: false = Không cho | true = Cho (lật ra thua)
     turnTime: 30, // Thời gian mỗi lượt — Treo máy quá thì máy làm giùm. · Chọn: 20 = 20 giây | 30 = 30 giây | 45 = 45 giây
@@ -219,7 +219,7 @@ export default {
     mode: 'cash', // Chế độ — Chế độ chọn sẵn. · Chọn: 'cash' = Chơi vui (hết chip xin thêm) | 'tourn' = Giải đấu (hết chip bị loại)
     chips: 1000, // Chip khởi điểm — Chip ảo mỗi người. · Chọn: 500 = 500 | 1000 = 1.000 | 2000 = 2.000 | 5000 = 5.000
     bb: 20, // Mù lớn — Mù nhỏ = một nửa. · Chọn: 10 = 5/10 | 20 = 10/20 | 50 = 25/50 | 100 = 50/100
-    blindUp: 0, // Tăng mù (lúc tạo phòng) — Tăng mù sau mỗi bao nhiêu ván. · Chọn: 0 = Không | 5 = Mỗi 5 ván | 10 = Mỗi 10 ván | 15 = Mỗi 15 ván
+    blindUp: 5, // Tăng mù (lúc tạo phòng) — Tăng mù sau mỗi bao nhiêu ván. · Chọn: 0 = Không | 5 = Mỗi 5 ván | 10 = Mỗi 10 ván | 15 = Mỗi 15 ván
     turnTime: 30, // Thời gian mỗi lượt (online) — Hết giờ máy đánh giùm. · Chọn: 20 = 20 giây | 30 = 30 giây | 45 = 45 giây
     modeBlindUp: { // Tăng mù tự đặt khi bấm đổi chế độ trong sảnh
       cash: 0, // Tăng mù khi chuyển sang Chơi vui — Bấm chọn chế độ Chơi vui trong sảnh thì Tăng mù về giá trị này. · Chọn: 0 = Không | 5 = Mỗi 5 ván | 10 = Mỗi 10 ván | 15 = Mỗi 15 ván
@@ -238,7 +238,7 @@ export default {
     dblUp: true, // Đôi lên chuồng — Đổ đôi thì 1 ngựa ở cửa/trên đích lên thêm 1 bậc (chỉ khi Vào chuồng = vn, 2 xúc xắc). · Chọn: true = Bật | false = Tắt
     dblHalf: true, // Đổ đôi — Đổ đôi được đi cả tổng hay nửa. · Chọn: true = Chọn đi cả hoặc nửa | false = Chỉ đi cả tổng
     winRule: 'top4', // Thắng khi — Điều kiện thắng. · Chọn: 'top4' = Chiếm bậc 3-4-5-6 | 'home' = Cả 4 lên đích
-    triple: false, // 3 lần thưởng liền — Đổ đôi / 1+6 lần thứ 3 liên tiếp thì sao. · Chọn: false = Không sao | true = Mất lượt
+    triple: true, // 3 lần thưởng liền — Đổ đôi / 1+6 lần thứ 3 liên tiếp thì sao. · Chọn: false = Không sao | true = Mất lượt
     playOn: false, // Đua tiếp tranh hạng — Có người về nhất rồi vẫn đua tiếp tranh hạng 2, 3. · Chọn: true = Bật | false = Tắt
     botLevel: 'normal', // Độ khó bot — Bot đi khôn cỡ nào. · Chọn: 'easy' = Dễ | 'normal' = Vừa | 'hard' = Khó
     turnTime: 30, // Thời gian suy nghĩ (online) — Hết giờ máy đi giúp. Chơi với bot luôn là Không. · Chọn: 0 = Không | 15 = 15 giây | 30 = 30 giây | 45 = 45 giây

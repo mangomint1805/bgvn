@@ -6,6 +6,11 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài',
 };
 export const NOTES = [
+  { id: '20261109-03', date: '09/11/2026', game: 'all', title: 'Đổi luật mặc định', items: [
+    '🐴 Cờ cá ngựa: đổ đôi / 1+6 lần thứ 3 liên tiếp thì mất lượt.',
+    '♠️ Poker: tăng mù sau mỗi 5 ván.',
+    '🃏 Xì dách: nhà cái đủ 16 điểm mới được xét bài; người chơi và nhà cái cùng quắc thì hoà.',
+  ] },
   { id: '20261109-02', date: '09/11/2026', game: 'tienlen', title: 'Thêm kiểu tới trắng', items: [
     '⚡ Tới trắng thêm kiểu "cả bài không có lá người" (không có J, Q, K nào). Đủ bộ: sảnh rồng, tứ quý heo, 5 đôi thông, 6 đôi (tứ quý tính 2 đôi), đồng màu 13 lá, không lá người, tứ quý 3 ván đầu.',
   ] },
