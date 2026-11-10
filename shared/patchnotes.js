@@ -6,6 +6,9 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261111-3', date: '11/11/2026', game: 'all', title: 'Báo khi máy chủ quá đông', items: [
+    '⚠️ Ngày nào BGVN đông quá làm máy chủ chính sắp/đã hết lượt miễn phí, web sẽ hiện thông báo – lúc đó vào phòng có thể chậm hơn, máy chủ mở lại lúc 7h sáng.',
+  ] },
   { id: '20261111-2', date: '11/11/2026', game: 'all', title: 'Vào xem phòng đang chơi', items: [
     '👀 Phòng đang chơi giờ vẫn vào được: bạn xem ván đang diễn ra, ván sau tự được vào chơi (12 game online).',
     '🃏 Xì dách, Ba Cào, Poker (chơi vui): người đang xem được ngồi vào bàn ngay ván kế, chủ phòng không cần về sảnh.',

@@ -12,6 +12,7 @@
 import { DurableObject } from 'cloudflare:workers';
 export { Users } from './users.js';
 export { Lobby } from './lobby.js';
+import { Meter, IDLE } from './meter.js';
 
 const ORIGINS = [/^https:\/\/(www\.)?boardgamevui\.com$/, /^https:\/\/mangomint1805\.github\.io$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/];
 const okOrigin = o => !o || ORIGINS.some(r => r.test(o)); // không có Origin (app/test) thì cho qua – chỉ chặn web lạ nhúng
@@ -73,6 +74,16 @@ export default {
       if (p[1] === 'rooms') return json({ ok: true, list: await L.rooms() }, 200, cors(origin));
       return json({ ok: false }, 404, cors(origin));
     }
+    if (p[0] === 'status') { // trạng thái hạn mức công khai (cache 60 giây)
+      const cache = caches.default, key = new Request('https://api.boardgamevui.com/status-cache');
+      let r = await cache.match(key);
+      if (!r) {
+        const s = await env.LOBBY.get(env.LOBBY.idFromName('main')).status(env.PLAN);
+        r = json({ ok: true, level: s.level, pct: s.pct, resetAt: s.resetAt, plan: s.plan }, 200, { 'Cache-Control': 'public, max-age=60' });
+        await cache.put(key, r.clone());
+      }
+      return new Response(r.body, { status: 200, headers: { ...Object.fromEntries(r.headers), ...cors(origin) } });
+    }
     if (p[0] === 'feedback' && req.method === 'POST') {
       if (!okOrigin(origin)) return json({ ok: false }, 403);
       const inbox = env.INBOX.get(env.INBOX.idFromName('main'));
@@ -95,6 +106,7 @@ export default {
           if (op === 'users') return json({ ok: true, users: await U.adminFind(d.q) }, 200, H);
           if (op === 'user') return json(await U.adminSet(d.id, d.patch || {}), 200, H);
           if (op === 'stats') return json({ ok: true, ...(await L.admin('stats')), ...(await U.stats()) }, 200, H);
+          if (op === 'usage') return json({ ok: true, ...(await L.status(env.PLAN, true)) }, 200, H);
           return json({ ok: true, ...(await L.admin(op, d)) }, 200, H);
         }
         const inbox = env.INBOX.get(env.INBOX.idFromName('main'));
@@ -112,12 +124,15 @@ export default {
 export class Room extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env); this.rate = new Map();
+    // đo thời gian thức + request để ước tính hạn mức (gửi về Sảnh mỗi phút)
+    this.m = new Meter((ms, req) => env.LOBBY.get(env.LOBBY.idFromName('main')).usage(ms, req + 1, ctx.id.toString(), ctx.getWebSockets().length));
     // "ping" → "pong" do Cloudflare tự trả lời, KHÔNG đánh thức Durable Object (không tốn thời gian chạy)
     ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'));
   }
   host() { return this.ctx.getWebSockets('host')[0] || null; }
   client(id) { return this.ctx.getWebSockets('c:' + id)[0] || null; }
   async fetch(req) {
+    await this.m.tick('req');
     const url = new URL(req.url), role = url.searchParams.get('role');
     const pair = new WebSocketPair(), [cli, srv] = Object.values(pair);
     if (role === 'host') {
@@ -158,9 +173,14 @@ export class Room extends DurableObject {
       const h = this.host(); if (!h) { try { ws.send('{"x":"gone"}'); ws.close(1000, 'gone'); } catch (e) {} return; }
       try { h.send(JSON.stringify({ f: a.id, s: msg })); } catch (e) {}
     }
+    await this.m.tick('msg');
   }
-  async webSocketClose(ws, code) { this.gone(ws); try { ws.close(code === 1005 ? 1000 : code, 'bye'); } catch (e) {} }
-  async webSocketError(ws) { this.gone(ws); }
+  async webSocketClose(ws, code) { this.gone(ws); try { ws.close(code === 1005 ? 1000 : code, 'bye'); } catch (e) {} await this.bye(ws); }
+  async webSocketError(ws) { this.gone(ws); await this.bye(ws); }
+  async bye(ws) { // phòng vắng hẳn → gửi nốt số đo (cộng ~10 giây chờ ngủ)
+    if (this.ctx.getWebSockets().some(w => w !== ws && w.readyState === 1)) return this.m.tick('msg');
+    await this.m.out(Date.now(), IDLE);
+  }
   gone(ws) {
     this.rate.delete(ws);
     const a = ws.deserializeAttachment() || {};

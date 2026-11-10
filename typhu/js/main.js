@@ -15,7 +15,7 @@ import { OPTIONS, PRESETS, buildAvatar, portrait } from '../../shared/js/avatar3
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=104';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=105';
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

@@ -2,6 +2,7 @@
 // 1 Durable Object duy nhất ("main"), WebSocket kiểu ngủ đông (hibernation) để đỡ tốn thời gian chạy.
 import { DurableObject } from 'cloudflare:workers';
 import { clean, cleanName } from './filter.js';
+import { Meter, LIMITS, GB } from './meter.js';
 
 const GAMES = ['bang', 'uno', 'typhu', 'tamquoc', 'meono', 'masoi', 'scribble', 'tienlen', 'poker', 'xidach', 'catte', 'bacao', 'cangua', 'camel'];
 const CHANNELS = new Set(['all', ...GAMES]);
@@ -16,7 +17,39 @@ export class Lobby extends DurableObject {
     this.sql.exec(`CREATE TABLE IF NOT EXISTS chat (id INTEGER PRIMARY KEY AUTOINCREMENT, ch TEXT, ts INTEGER, who TEXT, ipk TEXT, name TEXT, v INTEGER, text TEXT, hidden INTEGER DEFAULT 0)`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS bans (who TEXT PRIMARY KEY, until INTEGER, reason TEXT, by TEXT, ts INTEGER)`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS reports (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER, msg INTEGER, target TEXT, tname TEXT, text TEXT, reason TEXT, reporter TEXT, rname TEXT, done INTEGER DEFAULT 0)`);
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS usage10 (b INTEGER PRIMARY KEY, ms INTEGER, req INTEGER)`); // ước tính hạn mức theo khối 10 phút
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS live (id TEXT PRIMARY KEY, upd INTEGER, n INTEGER)`); // phòng đang có người
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS stat (k TEXT PRIMARY KEY, v INTEGER)`);
     this.last = new Map(); // ai → lúc gửi tin gần nhất (chống spam)
+    this.m = new Meter((ms, req) => this.addUsage(ms, req));
+  }
+  // ---------- hạn mức (ước tính) ----------
+  addUsage(ms, req, room, n) {
+    const b = Math.floor(now() / 600e3);
+    this.sql.exec('INSERT INTO usage10 (b, ms, req) VALUES (?,?,?) ON CONFLICT(b) DO UPDATE SET ms = ms + excluded.ms, req = req + excluded.req', b, Math.round(ms), Math.round(req));
+    if (room) this.sql.exec('INSERT OR REPLACE INTO live (id, upd, n) VALUES (?,?,?)', room, now(), +n || 0);
+    if (b % 36 === 0) { this.sql.exec('DELETE FROM usage10 WHERE b < ?', b - 6 * 24 * 40); this.sql.exec('DELETE FROM live WHERE upd < ?', now() - 3600e3); }
+  }
+  async usage(ms, req, room, n) { await this.m.tick('req'); this.addUsage(ms, req, room, n); }
+  status(plan, full = false) {
+    const P = LIMITS[plan === 'paid' ? 'paid' : 'free'], t = now(), d = new Date(t);
+    const start = P.per === 'day' ? Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) : Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
+    const resetAt = P.per === 'day' ? start + 864e5 : Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1);
+    const sum = (a, b) => this.sql.exec('SELECT COALESCE(SUM(ms),0) AS ms, COALESCE(SUM(req),0) AS req FROM usage10 WHERE b >= ? AND b < ?', Math.floor(a / 600e3), Math.ceil(b / 600e3)).one();
+    // tính cả phần đang đo dở của chính Sảnh
+    const u = sum(start, t + 600e3), gbs = u.ms / 1000 * GB, req = u.req;
+    const pct = Math.round(Math.max(gbs / P.gbs, req / P.req) * 1000) / 10;
+    const level = pct >= 100 ? 'full' : pct >= 85 ? 'warn' : 'ok';
+    const out = { plan: plan === 'paid' ? 'paid' : 'free', pct, level, resetAt };
+    if (!full) return out;
+    const r = sum(t - 30 * 60e3, t + 600e3), rate = r.ms / 1000 * GB * 2; // GB-s mỗi giờ (theo 30 phút gần nhất)
+    const left = P.gbs - gbs, eta = rate > 0 && left > 0 && t + left / rate * 3600e3 < resetAt ? t + left / rate * 3600e3 : null;
+    const live = this.sql.exec('SELECT COUNT(*) AS rooms, COALESCE(SUM(n),0) AS players FROM live WHERE upd > ?', t - 150e3).one();
+    const days = [];
+    for (let i = 6; i >= 0; i--) { const a = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - i), x = sum(a, a + 864e5); days.push({ day: a, gbs: Math.round(x.ms / 1000 * GB), req: x.req }); }
+    const peak = this.sql.exec('SELECT v FROM stat WHERE k = ?', 'peak:' + new Date(start).toISOString().slice(0, 10)).toArray()[0]?.v || 0;
+    return { ...out, per: P.per, gbs: Math.round(gbs), req, limGbs: P.gbs, limReq: P.req, rate: Math.round(rate), eta, roomHoursLeft: Math.max(0, Math.round(left / GB / 3600 * 10) / 10),
+      roomsLive: live.rooms, playersLive: live.players, online: this.online(), peak, days };
   }
   // ---------- phòng công khai ----------
   rooms() {
@@ -52,11 +85,14 @@ export class Lobby extends DurableObject {
     this.ctx.storage.setAlarm(now() + due + 50);
   }
   async alarm() {
-    this.pending = false; this.lastPush = now();
-    const m = JSON.stringify({ t: 'online', n: this.online() });
+    this.pending = false; this.lastPush = now(); await this.m.tick('req');
+    const n0 = this.online(), pk = 'peak:' + new Date().toISOString().slice(0, 10);
+    this.sql.exec('INSERT INTO stat (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = MAX(v, excluded.v)', pk, n0);
+    const m = JSON.stringify({ t: 'online', n: n0 });
     for (const ws of this.ctx.getWebSockets()) try { ws.send(m); } catch (e) {}
   }
   async fetch(req) {
+    await this.m.tick('req');
     if (this.ctx.getWebSockets().length >= MAX_SOCKS) return new Response('Sảnh đông quá', { status: 503 });
     if (new URL(req.url).pathname.endsWith('/presence')) {
       const pair = new WebSocketPair(), [cli, srv] = Object.values(pair);
@@ -77,6 +113,7 @@ export class Lobby extends DurableObject {
   }
   async webSocketMessage(ws, raw) {
     if (typeof raw !== 'string' || raw.length > 2000) return;
+    await this.m.tick('msg');
     let m; try { m = JSON.parse(raw); } catch (e) { return; }
     const a = ws.deserializeAttachment() || {};
     const send = o => { try { ws.send(JSON.stringify(o)); } catch (e) {} };
