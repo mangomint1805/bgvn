@@ -1,6 +1,6 @@
 // Bot Ba Cào: chỉ cần đặt cược hợp lý (bài chia sau khi cược nên không nhìn được gì) và nặn xong thì chốt.
 // Bot không nhìn trộm bộ bài hay bài người khác.
-import { getP, maxBetOf, canBeg, isPot, handInfo, compareCards, SUITS } from './engine.js?v=1';
+import { getP, maxBetOf, canBeg, isPot, handInfo, compareCards, SUITS } from './engine.js?v=2';
 
 const R = () => Math.random();
 // Cược: phần lớn nhỏ, vốn dày thì mạnh tay hơn, sắp cạn vốn thì rón rén; thỉnh thoảng "tất tay" cho vui

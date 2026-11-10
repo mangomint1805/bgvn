@@ -5,6 +5,7 @@ import { botAction } from './bot.js?v=55';
 import { S } from './fx.js?v=50';
 import { OPTIONS, PRESETS } from '../../shared/js/avatar3d.js';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=5';
+import { specBanner } from '../../shared/ui/spectate.js?v=1';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 const NS = 'bgvn-typhu', PREFIX = 'bgvn-typhu-', GAME = 'typhu', SNAP = 'bgvn-hostsnap-' + GAME;
@@ -77,7 +78,6 @@ export class Host {
       let p = this.players.find(x => x.token === msg.token && !x.isBot && !x.local && x.id !== 'host');
       if (p) { if (p.conn && p.conn !== conn) try { p.conn.close(); } catch (e) {} p.conn = conn; p.connected = true; if (!this.state) { p.name = String(msg.name || p.name).slice(0, 16); p.avatar = cleanAvatar(msg.avatar); } }
       else {
-        if (this.state) { conn.send({ t: 'error', msg: 'Ván đang diễn ra, không thể vào.' }); return; }
         if (this.players.length >= MAX) { conn.send({ t: 'error', msg: `Phòng đã đủ ${MAX} người.` }); return; }
         p = { id: 'p' + Math.random().toString(36).slice(2, 8), name: String(msg.name || 'Khách').slice(0, 16), avatar: cleanAvatar(msg.avatar), isBot: false, local: false, token: msg.token, conn, connected: true };
         this.players.push(p);
@@ -86,7 +86,7 @@ export class Host {
       conn.send({ t: 'welcome', id: p.id, code: this.code });
       this.pushLobby(); if (this.state) { this.schedule(1000); this.broadcast(); }
     } else if (msg.t === 'action') {
-      const p = this.conns.get(conn.peer); if (p) this.act(p.id, msg.a);
+      const p = this.conns.get(conn.peer); if (p) this.inGame(p.id) && this.act(p.id, msg.a);
     } else if (msg.t === 'react') {
       const p = this.conns.get(conn.peer); if (p) this.react(p.id, msg.e); // from do chủ phòng gán theo kết nối
     } else if (msg.t === 'profile' && !this.state) {
@@ -97,9 +97,10 @@ export class Host {
     const p = this.conns.get(conn.peer); if (!p) return;
     this.conns.delete(conn.peer);
     if (p.conn === conn) { p.conn = null; p.connected = false; }
-    if (!this.state) this.players = this.players.filter(x => x !== p);
+    if (!this.inGame(p.id)) this.players = this.players.filter(x => x !== p);
     this.pushLobby(); if (this.state) { this.schedule(); this.broadcast(); }
   }
+  inGame(id) { const s = this.state; return !s || !s.players || s.players.some(q => q.id === id); } // vào giữa ván: chỉ xem, ván sau mới chơi
   lobbyInfo() { return { players: this.players.map(p => ({ id: p.id, name: p.name, avatar: p.avatar, isBot: p.isBot, local: p.local, connected: p.connected })), opts: this.opts }; }
   pushLobby() {
     const info = this.lobbyInfo();
@@ -192,7 +193,7 @@ export class Host {
     const v = viewFor(this.state, 'host'); v.controlled = this.controlled();
     v.away = this.players.filter(p => !p.isBot && !p.local && p.id !== 'host' && !p.connected).map(p => p.id);
     this.h.onState(JSON.parse(JSON.stringify(v)), this.deadline());
-    for (const p of this.players) if (p.conn) { const pv = viewFor(this.state, p.id); pv.controlled = [p.id]; pv.away = v.away; try { p.conn.send({ t: 'state', view: pv, tmo: this.deadline() }); } catch (e) {} }
+    for (const p of this.players) if (p.conn) { const pv = viewFor(this.state, p.id); pv.controlled = [p.id]; if (!this.inGame(p.id)) pv.spec = true; pv.away = v.away; try { p.conn.send({ t: 'state', view: pv, tmo: this.deadline() }); } catch (e) {} }
   }
   schedule(wait = 0) {
     clearTimeout(this.timer); clearTimeout(this.afk); this.afkAt = 0;
@@ -220,7 +221,7 @@ export class Client {
       onLost: () => this.h.onDisconnect(),
       onMsg: msg => {
         if (msg.t === 'lobby') this.h.onLobby(msg.info, msg.code, msg.started);
-        else if (msg.t === 'state') this.h.onState(msg.view, msg.tmo);
+        else if (msg.t === 'state') { specBanner(!!(msg.view && msg.view.spec)); this.h.onState(msg.view, msg.tmo); }
         else if (msg.t === 'error') this.h.onError(msg.msg);
         else if (msg.t === 'react') this.h.onReact && this.h.onReact(msg);
         else if (msg.t === 'kicked') { this.h.onError('Bạn đã bị mời ra khỏi phòng.'); this.leave(); this.h.onFail && this.h.onFail(); }

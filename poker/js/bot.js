@@ -1,7 +1,7 @@
 // Bot Poker: chỉ nhìn góc nhìn của chính nó (viewFor) – không biết bài người khác, không biết bộ bài.
 // Ước lượng sức mạnh bài bằng mô phỏng Monte Carlo (đối thủ cầm bài ngẫu nhiên), so với tỉ lệ pot (pot odds),
 // thêm tính cách riêng từng bot (liều/nhát) và thỉnh thoảng tố bịp (bluff).
-import { viewFor, rnd } from './engine.js?v=1';
+import { viewFor, rnd } from './engine.js?v=2';
 import { evalCodes, toCode } from './eval.js?v=1';
 
 const ALL = []; for (let r = 2; r <= 14; r++) for (let s = 0; s < 4; s++) ALL.push((r << 2) | s);

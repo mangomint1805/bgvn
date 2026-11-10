@@ -1,10 +1,10 @@
-import { Host, Client, MAX, loadSnapshot, session, BC_PHRASES, setSpeedFn } from './net.js?v=2';
+import { Host, Client, MAX, loadSnapshot, session, BC_PHRASES, setSpeedFn } from './net.js?v=3';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=103';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=104';
 import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
-import { OPT_CHOICES, DEFAULT_OPTS, handInfo, handLabel, RANK_TXT } from './engine.js?v=1';
+import { OPT_CHOICES, DEFAULT_OPTS, handInfo, handLabel, RANK_TXT } from './engine.js?v=2';
 import { winChance } from './bot.js?v=1';
 import { cardHTML } from './cards.js?v=1';
 import * as fx from './bfx.js?v=1';

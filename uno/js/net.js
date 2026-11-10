@@ -5,6 +5,7 @@ import { S } from './ufx.js?v=20';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=5';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
+import { specBanner } from '../../shared/ui/spectate.js?v=1';
 const NS = 'bgvn-uno', PREFIX = 'bgvn-uno-', GAME = 'uno';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
@@ -54,17 +55,15 @@ export class Host {
       let p = this.players.find(x => x.token === msg.token && !x.isBot && x.id !== 'host');
       if (p) { if (p.conn && p.conn !== conn) try { p.conn.close(); } catch (e) {} p.conn = conn; p.connected = true; p.name = msg.name || p.name; }
       else {
-        if (this.state) { conn.send({ t: 'error', msg: 'Ván đang diễn ra, không thể vào.' }); return; }
         if (this.players.length >= MAX) { conn.send({ t: 'error', msg: `Phòng đã đủ ${MAX} người.` }); return; }
         p = { id: 'p' + Math.random().toString(36).slice(2, 8), name: String(msg.name || 'Khách').slice(0, 16), isBot: false, token: msg.token, conn, connected: true };
         this.players.push(p);
       }
       this.conns.set(conn.peer, p);
       conn.send({ t: 'welcome', id: p.id, code: this.code });
-      if (this.state) conn.send({ t: 'state', view: viewFor(this.state, p.id) });
-      this.pushLobby();
+      this.pushLobby(); this.broadcast();
     } else if (msg.t === 'action') {
-      const p = this.conns.get(conn.peer); if (p) this.act(p.id, msg.a);
+      const p = this.conns.get(conn.peer); if (p && this.inGame(p.id)) this.act(p.id, msg.a);
     } else if (msg.t === 'react') {
       const p = this.conns.get(conn.peer); if (p) this.react(p.id, msg.e);
     }
@@ -73,10 +72,11 @@ export class Host {
     const p = this.conns.get(conn.peer); if (!p) return;
     this.conns.delete(conn.peer);
     if (p.conn === conn) { p.conn = null; p.connected = false; }
-    if (!this.state) this.players = this.players.filter(x => x !== p);
+    if (!this.inGame(p.id)) this.players = this.players.filter(x => x !== p);
     this.pushLobby(); this.scheduleBots();
   }
-  lobbyInfo() { return { players: this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot, connected: p.connected })), mode: this.mode, rules: this.rules, match: this.match }; }
+  inGame(id) { return !this.state || this.state.players.some(q => q.id === id); } // người vào giữa ván: chỉ xem, ván sau mới chơi
+  lobbyInfo() { return { players: this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot, connected: p.connected, wait: !this.inGame(p.id) })), mode: this.mode, rules: this.rules, match: this.match }; }
   pushLobby() {
     const info = this.lobbyInfo();
     this.h.onLobby(info, this.code, !!this.state); this.saveSnap();
@@ -130,6 +130,7 @@ export class Host {
       const view = viewFor(this.state, p.id);
       if (this.deadline) view.timer = { pid: this.deadline.pid, ms: Math.max(0, this.deadline.end - Date.now()) };
       if (this.match.on) view.match = this.match;
+      if (!this.inGame(p.id)) view.spec = true;
       if (p.id === 'host') this.h.onState(JSON.parse(JSON.stringify(view)));
       else if (p.conn) try { p.conn.send({ t: 'state', view }); } catch (e) {}
     }
@@ -213,7 +214,7 @@ export class Client {
       onLost: () => this.h.onDisconnect(),
       onMsg: msg => {
         if (msg.t === 'lobby') this.h.onLobby(msg.info, msg.code, msg.started);
-        else if (msg.t === 'state') this.h.onState(msg.view);
+        else if (msg.t === 'state') { specBanner(!!(msg.view && msg.view.spec)); this.h.onState(msg.view); }
         else if (msg.t === 'error') this.h.onError(msg.msg);
         else if (msg.t === 'react') this.h.onReact && this.h.onReact(msg);
         else if (msg.t === 'kicked') { this.h.onError('Bạn đã bị mời ra khỏi phòng.'); this.leave(); }
@@ -222,6 +223,6 @@ export class Client {
   }
   act(a) { this.room.send({ t: 'action', a }); }
   react(e) { this.room.send({ t: 'react', e }); }
-  destroy() { this.room.destroy(); }
+  destroy() { specBanner(false); this.room.destroy(); }
   leave() { this.destroy(); session.clear(GAME); }
 }

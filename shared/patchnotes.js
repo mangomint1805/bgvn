@@ -6,6 +6,11 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261111-2', date: '11/11/2026', game: 'all', title: 'Vào xem phòng đang chơi', items: [
+    '👀 Phòng đang chơi giờ vẫn vào được: bạn xem ván đang diễn ra, ván sau tự được vào chơi (12 game online).',
+    '🃏 Xì dách, Ba Cào, Poker (chơi vui): người đang xem được ngồi vào bàn ngay ván kế, chủ phòng không cần về sảnh.',
+    '🗺️ Bỏ dòng chữ nhỏ trên bàn cờ Tỷ Phú và Cá Ngựa cho bàn gọn hơn.',
+  ] },
   { id: '20261111-1', date: '11/11/2026', game: 'all', title: 'Nút Cài đặt + công cụ quản trị', items: [
     '⚙️ Nút Cài đặt ngay góc trên trang chủ: đổi tên, tắt/bật nhạc mọi game, tự công khai phòng, ẩn số online, xoá dữ liệu trên máy.',
     '🛡️ Quản trị viên có trang Quản trị riêng (báo cáo chat, góp ý, cấm/bỏ cấm, tài khoản) và nút xử lý nhanh ngay trong chat Sảnh.',

@@ -131,7 +131,7 @@ function plazaCanvas(size) {
   c.font = `800 60px ${TITLE}`; c.lineWidth = 12; c.strokeText('SÀI GÒN', 0, 92); c.fillStyle = '#24314d'; c.fillText('SÀI GÒN', 0, 92); c.restore();
   const pad = (x, y, color, text) => { c.save(); c.translate(x, y); c.rotate(-Math.PI / 4); c.strokeStyle = color; c.lineWidth = 8; c.setLineDash([22, 14]); c.strokeRect(-120, -84, 240, 168); c.setLineDash([]); c.fillStyle = color; c.font = `800 46px ${TITLE}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, 0, text === 'CƠ HỘI' ? -118 : 124); c.restore(); };
   pad(250, 770, '#d81b2a', 'CƠ HỘI'); pad(775, 255, '#c58f00', 'KHÍ VẬN');
-  c.fillStyle = '#8a7a5a'; c.font = `700 22px ${FONT}`; c.textAlign = 'center'; c.fillText('Bản fan-made phi thương mại · BGVN', S / 2, S - 54);
+  // (dòng 'fan-made phi thương mại' đã chuyển sang trang Credits)
   return cv;
 }
 function cardCanvas(deck) {

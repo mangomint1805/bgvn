@@ -223,6 +223,15 @@ function showdown(s) {
   ev(s, { k: 'show', winners: s.winners, cai: s.caiId, caiDelta: s.caiId ? deltas[s.caiId] : 0, kinds: Object.fromEntries(Object.entries(hands).map(([k, v]) => [k, v.kind])) });
 }
 const fmtN = n => String(n);
+// người vào giữa ván (đang xem) được ngồi vào bàn ở ván sau
+export function seatPlayers(s, list) {
+  for (const p of list) {
+    if (s.players.length >= MAX_PLAYERS || getP(s, p.id)) continue;
+    const chips = Number.isFinite(p.chips) ? p.chips : s.opts.startChips;
+    s.players.push({ id: p.id, name: p.name, isBot: !!p.isBot, chips, granted: 0, cards: [], bet: 0, betDone: false, ready: false, res: null });
+    s.bank0 += chips; log(s, `👋 ${p.name} vào bàn.`);
+  }
+}
 export function nextRound(s) { if (s.phase !== 'end') return false; startRound(s); return true; }
 
 // ---------------- hành động ----------------

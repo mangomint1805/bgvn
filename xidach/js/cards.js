@@ -1,5 +1,5 @@
 // Lá bài Tây: dùng bộ bài SVG chung BGVN Deck (shared/ui/deck). Không dùng hình ảnh ngoài.
-import { RANK_TXT, SUIT_SYM } from './engine.js?v=1';
+import { RANK_TXT, SUIT_SYM } from './engine.js?v=2';
 import { faceSVG, backSVG } from '../../shared/ui/deck/deck.js?v=1';
 // c: {r, s} hoặc null (úp). cls: lớp thêm (mini, big…). Mặt/lưng vẽ bằng bộ bài SVG chung.
 export function cardHTML(c, cls = '', attrs = '') {

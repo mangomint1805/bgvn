@@ -1,10 +1,10 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, POKER_PHRASES } from './net.js?v=4';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, POKER_PHRASES } from './net.js?v=5';
 import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=103';
-import { OPT_CHOICES } from './engine.js?v=1';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=104';
+import { OPT_CHOICES } from './engine.js?v=2';
 import { evaluate, preflopTier, TIER_TXT } from './eval.js?v=1';
 import * as fx from './pfx.js?v=2';
 import { openGuide } from './guide.js?v=2';

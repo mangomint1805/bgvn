@@ -49,7 +49,7 @@ function boardCanvas(S) {
   c.fillStyle = '#0000001a'; for (let i = 0; i < 56; i++) { const [tc, tr] = trackCell(i); rrect(c, X(tc) + U * 0.06, X(tr) + U * 0.1, U * 0.92, U * 0.92, U * 0.16); c.fill(); }
   // chữ
   c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillStyle = '#8a6a3a'; c.font = `700 ${U * 0.28}px ${FONT}`; c.fillText('Bản fan-made phi thương mại · BGVN', S / 2, S - U * 0.15);
+  // (dòng 'fan-made phi thương mại' đã chuyển sang trang Credits)
   return cv;
 }
 function stepCanvas(color, n) {

@@ -2,6 +2,7 @@
 import { createGame, applyAction, viewFor, current, mustAutoPass, VE_HEO, DEFAULT_OPTS, BETS, TURN_TIMES, START_CHIPS } from './engine.js?v=5';
 import { botAction, LEVELS } from './bot.js?v=5';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=5';
+import { specBanner } from '../../shared/ui/spectate.js?v=1';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 // ⚙️ Luật mặc định khi tạo phòng mới: lấy từ luat-mac-dinh.js (gốc repo); giá trị sai/thiếu → giữ luật gốc trong code
@@ -54,7 +55,6 @@ export class Host {
       let p = this.players.find(x => x.token === msg.token && !x.isBot && x.id !== 'host');
       if (p) { if (p.conn && p.conn !== conn) try { p.conn.close(); } catch (e) {} p.conn = conn; p.connected = true; p.name = msg.name ? String(msg.name).slice(0, 16) : p.name; }
       else {
-        if (this.state) { conn.send({ t: 'error', msg: 'Ván đang diễn ra, chờ ván sau nhé.' }); return; }
         if (this.players.length >= MAX) { conn.send({ t: 'error', msg: `Phòng đã đủ ${MAX} người.` }); return; }
         p = { id: 'p' + Math.random().toString(36).slice(2, 8), name: String(msg.name || 'Khách').slice(0, 16), isBot: false, token: msg.token, conn, connected: true };
         this.players.push(p);
@@ -65,7 +65,7 @@ export class Host {
       if (this.state) { this.sendState(p); this.schedule(); }
       this.pushLobby();
     } else if (msg.t === 'action') {
-      const p = this.conns.get(conn); if (p && p.conn === conn) this.act(p.id, msg.a);
+      const p = this.conns.get(conn); if (p && p.conn === conn) this.inGame(p.id) && this.act(p.id, msg.a);
     } else if (msg.t === 'react') {
       const p = this.conns.get(conn); if (p && p.conn === conn) this.react(p.id, msg.e);
     } else if (msg.t === 'beg') {
@@ -77,9 +77,10 @@ export class Host {
     this.conns.delete(conn);
     if (p.conn !== conn) return; // kết nối cũ đóng sau khi người đó đã vào lại
     p.conn = null; p.connected = false;
-    if (!this.state) this.players = this.players.filter(x => x !== p);
+    if (!this.inGame(p.id)) this.players = this.players.filter(x => x !== p);
     this.pushLobby(); if (this.state) { this.schedule(); this.broadcast(); }
   }
+  inGame(id) { const s = this.state; return !s || !s.players || s.players.some(q => q.id === id); } // vào giữa ván: chỉ xem, ván sau mới chơi
   lobbyInfo() { return { players: this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot, level: p.level, connected: p.connected, chips: this.chips[p.id] ?? START_CHIPS })), opts: this.opts, gameNo: this.gameNo }; }
   pushLobby() {
     const info = this.lobbyInfo();
@@ -160,7 +161,7 @@ export class Host {
     this.schedule(); this.broadcast();
   }
   viewOf(pid) {
-    const v = viewFor(this.state, pid);
+    const v = viewFor(this.state, pid); if (!this.inGame(pid)) v.spec = true;
     if (this.deadline) v.timer = { pid: this.deadline.pid, ms: Math.max(0, this.deadline.end - Date.now()), total: this.deadline.total };
     v.before = this.before; v.chips = this.chips; v.settled = !!this.settled;
     v.levels = Object.fromEntries(this.players.filter(p => p.isBot).map(p => [p.id, p.level || 'normal']));
@@ -237,7 +238,7 @@ export class Client {
       onLost: () => this.h.onDisconnect(),
       onMsg: msg => {
         if (msg.t === 'lobby') this.h.onLobby(msg.info, msg.code, msg.started);
-        else if (msg.t === 'state') this.h.onState(msg.view);
+        else if (msg.t === 'state') { specBanner(!!(msg.view && msg.view.spec)); this.h.onState(msg.view); }
         else if (msg.t === 'error') this.h.onError(msg.msg);
         else if (msg.t === 'note') this.h.onNote(msg.msg);
         else if (msg.t === 'react') this.h.onReact && this.h.onReact(msg);

@@ -1,6 +1,6 @@
 // Hướng dẫn chơi Ba Cào (tiếng Việt, có ví dụ lá bài vẽ sẵn + ảnh chụp game). Nội dung đổi theo luật bàn hiện tại.
 import { row } from './cards.js?v=1';
-import { DEFAULT_OPTS } from './engine.js?v=1';
+import { DEFAULT_OPTS } from './engine.js?v=2';
 import { gp, ill } from '../../shared/ui/guidepics.js?v=1';
 import { GI, GV } from './guide-img.js?v=1';
 const H = (...cs) => `<span class="g-hand">${row(...cs)}</span>`;

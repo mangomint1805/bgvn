@@ -1,7 +1,8 @@
 // Lớp mạng Ba Cào: chủ phòng giữ state, người vào chỉ gửi action. Kết nối dùng chung shared/net/room.js
-import { createGame, applyAction, viewFor, waitingOn, nextRound, getP, cleanOpts, DEFAULT_OPTS, OPT_CHOICES, MAX_PLAYERS, canBeg } from './engine.js?v=1';
+import { createGame, applyAction, viewFor, waitingOn, nextRound, seatPlayers, getP, cleanOpts, DEFAULT_OPTS, OPT_CHOICES, MAX_PLAYERS, canBeg } from './engine.js?v=2';
 import { botAction } from './bot.js?v=1';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=5';
+import { specBanner } from '../../shared/ui/spectate.js?v=1';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 // ⚙️ Luật mặc định khi tạo phòng mới: lấy từ luat-mac-dinh.js (gốc repo); giá trị sai/thiếu → giữ luật gốc trong code
@@ -58,7 +59,6 @@ export class Host {
       let p = this.players.find(x => x.token === msg.token && !x.isBot && x.id !== 'host');
       if (p) { if (p.conn && p.conn !== conn) try { p.conn.close(); } catch (e) {} p.conn = conn; p.connected = true; }
       else {
-        if (this.state) { conn.send({ t: 'error', msg: 'Bàn đang chơi, chờ chủ phòng về sảnh rồi vào nhé.' }); return; }
         if (this.players.length >= MAX) { conn.send({ t: 'error', msg: `Phòng đã đủ ${MAX} người.` }); return; }
         p = { id: 'p' + Math.random().toString(36).slice(2, 8), name: String(msg.name || 'Khách').slice(0, 16), isBot: false, token: msg.token, conn, connected: true };
         this.players.push(p);
@@ -68,7 +68,7 @@ export class Host {
       this.pushLobby();
       if (this.state) { this.schedule(); this.broadcast(); }
     } else if (msg.t === 'action') {
-      const p = this.conns.get(conn); if (p && p.conn === conn) this.act(p.id, msg.a);
+      const p = this.conns.get(conn); if (p && p.conn === conn) this.inGame(p.id) && this.act(p.id, msg.a);
     } else if (msg.t === 'react') {
       const p = this.conns.get(conn); if (p && p.conn === conn) this.react(p.id, msg.e);
     } else if (msg.t === 'sync') {
@@ -81,9 +81,10 @@ export class Host {
     this.conns.delete(conn);
     if (p.conn !== conn) return;
     p.conn = null; p.connected = false;
-    if (!this.state) this.players = this.players.filter(x => x !== p);
+    if (!this.inGame(p.id)) this.players = this.players.filter(x => x !== p);
     this.pushLobby(); if (this.state) { this.schedule(); this.broadcast(); }
   }
+  inGame(id) { const s = this.state; return !s || !s.players || s.players.some(q => q.id === id); } // vào giữa ván: chỉ xem, ván sau mới chơi
   lobbyInfo() { return { players: this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot, connected: p.connected, chips: this.chips[p.id] })), opts: this.opts }; }
   pushLobby() {
     const info = this.lobbyInfo();
@@ -141,7 +142,7 @@ export class Host {
     for (const p of this.players) if (p.conn) this.sendRaw(p, null);
     this.h.onState(null);
   }
-  next() { const s = this.state; if (!s || s.phase !== 'end') return; const b = s.evN; nextRound(s); this.afterChange(b); }
+  next() { const s = this.state; if (!s || s.phase !== 'end') return; const b = s.evN; seatPlayers(s, this.players.filter(p => p.connected && !this.inGame(p.id)).map(p => ({ id: p.id, name: p.name, isBot: p.isBot, chips: this.chips[p.id] }))); nextRound(s); this.afterChange(b); this.pushLobby(); }
   act(pid, a) {
     const s = this.state; if (!s) return;
     if (a && a.type === 'next') { if (pid === 'host') this.next(); return; }
@@ -247,7 +248,7 @@ export class Host {
   }
   clockOut() { return this.clock ? { kind: this.clock.kind, pid: this.clock.pid, pids: this.clock.pids, ms: Math.max(0, this.clock.end - Date.now()), total: this.clock.total } : null; }
   viewOf(p, clock = this.clockOut()) {
-    const view = viewFor(this.state, p.id); view.clock = clock;
+    const view = viewFor(this.state, p.id); if (!this.inGame(p.id)) view.spec = true; view.clock = clock;
     view.away = this.players.filter(q => !q.isBot && !q.connected && q.id !== 'host').map(q => q.id);
     view.humans = this.players.filter(q => !q.isBot).length;
     return p.id === 'host' ? JSON.parse(JSON.stringify(view)) : view;
@@ -293,6 +294,7 @@ export class Client {
   onMsg(msg) {
     this.lastRx = Date.now();
     if (msg.t === 'state') {
+      specBanner(!!(msg.view && msg.view.spec));
       if (msg.hs && msg.hs === this.hs && msg.bc <= this.bc) return;
       if (msg.hs) { this.hs = msg.hs; this.bc = msg.bc; }
       this.h.onState(msg.view);

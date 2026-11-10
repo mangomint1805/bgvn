@@ -1,6 +1,6 @@
 // Bot Xì dách: rút/dằn theo ngưỡng hợp lý, nhà cái bot xét bài có tính toán.
 // Bot chỉ dùng thông tin công khai + bài của chính nó (không nhìn trộm bộ bài).
-import { handInfo, handValue, getP, maxBetOf, canBeg, MAX_CARDS, RANK_TXT } from './engine.js?v=1';
+import { handInfo, handValue, getP, maxBetOf, canBeg, MAX_CARDS, RANK_TXT } from './engine.js?v=2';
 
 const R = () => Math.random();
 // Xác suất quắc nếu rút thêm 1 lá (tính trên các lá mình chưa thấy)

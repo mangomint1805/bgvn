@@ -1,6 +1,6 @@
 // Hướng dẫn chơi Xì dách (tiếng Việt, có ví dụ). Nội dung lấy theo tuỳ chọn bàn hiện tại nếu có.
 import { row } from './cards.js?v=2';
-import { DEFAULT_OPTS } from './engine.js?v=1';
+import { DEFAULT_OPTS } from './engine.js?v=2';
 import { gp } from '../../shared/ui/guidepics.js?v=1';
 import { GI, GV } from './guide-img.js?v=1';
 const H = (...cs) => `<span class="g-hand">${row(...cs)}</span>`;

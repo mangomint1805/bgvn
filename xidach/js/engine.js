@@ -212,6 +212,15 @@ function endRound(s) {
   ev(s, { k: 'end', cai: s.caiId, caiDelta: cd });
   log(s, `🏁 Hết ván ${s.round}. Nhà cái ${nm(C)} ${cd > 0 ? `ăn +${cd}` : cd < 0 ? `đền −${-cd}` : 'huề vốn'}.`);
 }
+// người vào giữa ván (đang xem) được ngồi vào bàn ở ván sau
+export function seatPlayers(s, list) {
+  for (const p of list) {
+    if (s.players.length >= MAX_PLAYERS || getP(s, p.id)) continue;
+    const chips = Number.isFinite(p.chips) ? p.chips : s.opts.startChips;
+    s.players.push({ id: p.id, name: p.name, isBot: !!p.isBot, chips, granted: 0, cards: [], bet: 0, betDone: false, done: false, revealed: false, res: null });
+    s.bank0 += chips; log(s, `👋 ${p.name} vào bàn.`);
+  }
+}
 export function nextRound(s) { if (s.phase !== 'end') return false; startRound(s); return true; }
 
 // ---------------- hành động ----------------

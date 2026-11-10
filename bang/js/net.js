@@ -4,6 +4,7 @@ export const TURN_TIME = 60, PROMPT_TIME = 20; // giây: hết giờ thì máy t
 import { botAction } from './bot.js?v=2';
 import { S } from './fx.js?v=2';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=5';
+import { specBanner } from '../../shared/ui/spectate.js?v=1';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 // Câu chọc riêng của BANG! (bảng thả emoji – shared/ui/react.js), mỗi câu ≤ 24 ký tự
 export const BANG_PHRASES = ['Né đi cưng!', 'Bang bang 🔫', 'Uống Beer đi', 'Trật rồi nha!', 'Sếp ơi cứu!', 'Tui là Phó mà 😭', 'Gà quá!'];
@@ -49,18 +50,16 @@ export class Host {
         if (p.conn && p.conn !== conn) try { p.conn.close(); } catch (e) {}
         p.conn = conn; p.connected = true; p.name = msg.name || p.name;
       } else {
-        if (this.state) { conn.send({ t: 'error', msg: 'Ván đang diễn ra, không thể vào.' }); return; }
         if (this.players.length >= 7) { conn.send({ t: 'error', msg: 'Phòng đã đủ 7 người.' }); return; }
         p = { id: 'p' + Math.random().toString(36).slice(2, 8), name: msg.name.slice(0, 16), isBot: false, token: msg.token, conn, connected: true };
         this.players.push(p);
       }
       this.conns.set(conn.peer, p);
       conn.send({ t: 'welcome', id: p.id, code: this.code });
-      if (this.state) conn.send({ t: 'state', view: viewFor(this.state, p.id) });
-      this.pushLobby();
+      this.pushLobby(); this.broadcast();
     } else if (msg.t === 'action') {
       const p = this.conns.get(conn.peer); if (!p) return;
-      this.act(p.id, msg.a);
+      this.inGame(p.id) && this.act(p.id, msg.a);
     } else if (msg.t === 'react') {
       const p = this.conns.get(conn.peer); if (p) this.react(p.id, msg.e);
     } else if (msg.t === 'ping') conn.send({ t: 'pong' });
@@ -69,9 +68,10 @@ export class Host {
     const p = this.conns.get(conn.peer); if (!p) return;
     this.conns.delete(conn.peer);
     if (p.conn === conn) { p.conn = null; p.connected = false; }
-    if (!this.state) { this.players = this.players.filter(x => x !== p); }
+    if (!this.inGame(p.id)) this.players = this.players.filter(x => x !== p);
     this.pushLobby();
   }
+  inGame(id) { const s = this.state; return !s || !s.players || s.players.some(q => q.id === id); } // vào giữa ván: chỉ xem, ván sau mới chơi
   lobbyInfo() { return this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot, connected: p.connected })); }
   pushLobby() {
     const info = this.lobbyInfo();
@@ -110,7 +110,7 @@ export class Host {
     if (!this.state) return;
     this.saveSnap();
     for (const p of this.players) {
-      const view = viewFor(this.state, p.id);
+      const view = viewFor(this.state, p.id); if (!this.inGame(p.id)) view.spec = true;
       if (this.deadline) view.timer = { pid: this.deadline.pid, ms: Math.max(0, this.deadline.end - Date.now()) };
       if (p.id === 'host') this.h.onState(JSON.parse(JSON.stringify(view))); // bản sao: tránh dùng chung mảng với state
       else if (p.conn) try { p.conn.send({ t: 'state', view }); } catch (e) {}
@@ -186,7 +186,7 @@ export class Client {
       onLost: () => this.h.onDisconnect(),
       onMsg: msg => {
         if (msg.t === 'lobby') this.h.onLobby(msg.players, msg.code, msg.started);
-        else if (msg.t === 'state') this.h.onState(msg.view);
+        else if (msg.t === 'state') { specBanner(!!(msg.view && msg.view.spec)); this.h.onState(msg.view); }
         else if (msg.t === 'error') this.h.onError(msg.msg);
         else if (msg.t === 'react') this.h.onReact && this.h.onReact(msg);
         else if (msg.t === 'kicked') { this.h.onError('Bạn đã bị mời ra khỏi phòng.'); this.leave(); }

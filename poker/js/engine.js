@@ -274,6 +274,15 @@ function finishHand(s) {
 }
 
 // Bắt đầu ván kế (chủ phòng gọi sau khi xem kết quả). Trả về false nếu không thể.
+// người vào giữa ván (đang xem) được ngồi vào bàn ở ván sau – chỉ chế độ chơi vui (giải đấu thì chờ giải mới)
+export function seatPlayers(s, list) {
+  if (s.opts.mode !== 'cash') return;
+  for (const p of list) {
+    if (s.players.length >= MAX_PLAYERS || s.players.some(q => q.id === p.id)) continue;
+    s.players.push({ id: p.id, name: p.name, isBot: !!p.isBot, chips: s.opts.chips, hole: null, bet: 0, total: 0, folded: false, allIn: false, inHand: false, need: false, acted: false, seen: -1, last: null, busted: false, out: false, place: 0, rebuys: 0 });
+    s.bank += s.opts.chips; log(s, `👋 ${p.name} vào bàn.`);
+  }
+}
 export function nextHand(s) {
   if (s.phase !== 'handover') return false;
   if (s.opts.mode === 'cash') {
