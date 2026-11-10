@@ -67,6 +67,3 @@ Binh khí/trang bị trên lá bài là hình SVG do BGVN tự vẽ (`js/weapons
 | g-zhouyu.jpg | Chân dung Chu Du | [ZhouYu.jpg](https://commons.wikimedia.org/wiki/File:ZhouYu.jpg) | Không rõ tác giả (hoạ sĩ minh hoạ đời Thanh) | Đời Thanh | Public domain |
 | g-zhugeliang.jpg | Chân dung Gia Cát Lượng | [ZhugeLiang1.jpg](https://commons.wikimedia.org/wiki/File:ZhugeLiang1.jpg) | Không rõ tác giả (hoạ sĩ minh hoạ đời Thanh) | Đời Thanh | Public domain |
 
-
-## g-huangyueying.jpg – Chân dung Hoàng Nguyệt Anh
-BGVN tự vẽ (2026), mô phỏng phong cách tranh khắc gỗ đời Thanh; không dựa trên tranh có bản quyền nào. Nguồn vẽ: img/src/huangyueying.svg.
