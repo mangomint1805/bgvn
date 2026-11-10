@@ -268,7 +268,7 @@ function fitTitles(){document.querySelectorAll('.grid .tile .info h2').forEach(h
 addEventListener('load',fitTitles);addEventListener('resize',()=>{clearTimeout(fitTitles.t);fitTitles.t=setTimeout(fitTitles,120)});document.fonts&&document.fonts.ready.then(fitTitles);
 </script>
 <script type="module" src="shared/ui/feedback.js?v=4"></script>
-<script type="module">import { mountAccount } from "./shared/ui/account.js?v=2"; import { mountOnline } from "./shared/net/presence.js?v=2"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=1").then(m => m.openSettings());</script>
+<script type="module">import { mountAccount } from "./shared/ui/account.js?v=2"; import { mountOnline } from "./shared/net/presence.js?v=3"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=1").then(m => m.openSettings());</script>
 <script type="module">
 import { openNews, newsBadge } from './shared/ui/news.js?v=105';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };

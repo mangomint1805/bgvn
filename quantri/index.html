@@ -43,6 +43,7 @@ button{background:var(--ink);color:#fff;border:0;cursor:pointer;font-weight:800}
 <script type="module">
 import { auth, API } from '../shared/net/api.js?v=1';
 import { mountAccount, openLogin } from '../shared/ui/account.js?v=2';
+import '../shared/net/presence.js?v=3';
 mountAccount(document.getElementById('acct'));
 const $ = s => document.querySelector(s), esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const dt = t => new Date(t).toLocaleString('vi-VN'), T = { bug: '🐞 Lỗi', idea: '💡 Góp ý', other: '💬 Khác' };
@@ -70,6 +71,13 @@ async function stats() {
 // 📊 Hạn mức Cloudflare (ước tính, cập nhật mỗi phút)
 const CF_DASH = 'https://dash.cloudflare.com/?to=/:account';
 const hm = t => new Date(t).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+// 🎮 số đang chơi / online: nhận tức thì qua kết nối presence
+let LIVE = window.__bgvnLive || null;
+const drawLive = () => {
+  const el = document.getElementById('live-line'); if (el) el.innerHTML = LIVE ? `🔴 <b>LIVE</b> · 🎮 Đang chơi: <b>${LIVE.rooms}</b> phòng · <b>${LIVE.players}</b> người · 🟢 online <b>${LIVE.n}</b>` : '🎮 Đang kết nối…';
+  const s = document.querySelector('#stats .stat b'); if (s && LIVE) s.textContent = LIVE.n;
+};
+addEventListener('bgvn-live', e => { LIVE = e.detail; drawLive(); });
 async function usage() {
   const u = await api({ op: 'usage' }); if (!u.ok) { $('#use').innerHTML = '<p class="muted">Chưa đọc được hạn mức (máy chủ chưa cập nhật?)</p>'; return; }
   const pg = Math.min(100, u.gbs / u.limGbs * 100), pr = Math.min(100, u.req / u.limReq * 100), lv = p => p >= 100 ? 'full' : p >= 85 ? 'warn' : '';
@@ -82,10 +90,11 @@ async function usage() {
     <div><b>⏱️ Thời gian chạy phòng:</b> ${u.gbs.toLocaleString('vi-VN')} / ${u.limGbs.toLocaleString('vi-VN')} GB-s (${pg.toFixed(1)}%)<div class="bar ${lv(pg)}"><i style="width:${pg}%"></i></div>
     <small class="muted">Còn khoảng <b>${u.roomHoursLeft} giờ-phòng</b> (vd. ${Math.floor(u.roomHoursLeft)} phòng chơi liền 1 tiếng) · đang dùng ~${u.rate.toLocaleString('vi-VN')} GB-s/giờ</small></div>
     <div style="margin-top:8px"><b>📨 Lượt gọi máy chủ:</b> ${u.req.toLocaleString('vi-VN')} / ${u.limReq.toLocaleString('vi-VN')} (${pr.toFixed(1)}%)<div class="bar ${lv(pr)}"><i style="width:${pr}%"></i></div></div>
-    <p class="muted" style="margin:8px 0 0">🎮 Đang chơi: <b>${u.roomsLive}</b> phòng · <b>${u.playersLive}</b> người · 🟢 online ${u.online} · cao điểm hôm nay: ${u.peak} người · ${reset}</p>
+    <p class="muted" style="margin:8px 0 0"><span id="live-line"></span> · cao điểm hôm nay: ${u.peak} người · ${reset}</p>
     <div class="days">${u.days.map(d => `<div title="${d.gbs} GB-s · ${d.req} lượt"><span style="height:${Math.round(d.gbs / mx * 50)}px"></span>${new Date(d.day).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</div>`).join('')}</div>
     <div class="acts" style="margin-top:10px"><a class="cfl" href="${CF_DASH}/workers/services/view/bgvn-rooms/production/metrics" target="_blank" rel="noopener">📈 Số chính xác trên Cloudflare</a><a class="cfl" href="${CF_DASH}/workers/plans" target="_blank" rel="noopener">⬆️ Nâng gói Workers</a><a class="cfl" href="${CF_DASH}/workers/services/view/bgvn-rooms/production/settings" target="_blank" rel="noopener">⚙️ Cài đặt máy chủ</a></div>
-    <p class="muted" style="font-size:12px;margin:6px 0 0">Số ở trên do BGVN tự đo nên lệch chút ít – bấm nút để xem số chính xác (cần đăng nhập Cloudflare).</p>`;
+    <p class="muted" style="font-size:12px;margin:6px 0 0">"Đang chơi" cập nhật tức thì (chỉ tính phòng online, không tính chơi với bot trên máy). Số hạn mức do BGVN tự đo nên lệch chút ít – bấm nút để xem số chính xác (cần đăng nhập Cloudflare).</p>`;
+  drawLive();
 }
 async function go(t) {
   tab = t; document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
