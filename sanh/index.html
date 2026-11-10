@@ -43,7 +43,7 @@ h1 span{background:linear-gradient(90deg,#7b61ff,#3d8bff,#2fc76f);-webkit-backgr
 <script type="module">
 import { mountAccount } from '../shared/ui/account.js?v=2';
 import { mountLobby } from '../shared/ui/lobby.js?v=2';
-import { mountOnline } from '../shared/net/presence.js?v=3';
+import { mountOnline } from '../shared/net/presence.js?v=4';
 mountOnline(document.getElementById('online'));
 mountAccount(document.getElementById('acct'));
 const g = new URLSearchParams(location.search).get('game');

@@ -43,7 +43,7 @@ button{background:var(--ink);color:#fff;border:0;cursor:pointer;font-weight:800}
 <script type="module">
 import { auth, API } from '../shared/net/api.js?v=1';
 import { mountAccount, openLogin } from '../shared/ui/account.js?v=2';
-import '../shared/net/presence.js?v=3';
+import '../shared/net/presence.js?v=4';
 mountAccount(document.getElementById('acct'));
 const $ = s => document.querySelector(s), esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const dt = t => new Date(t).toLocaleString('vi-VN'), T = { bug: '🐞 Lỗi', idea: '💡 Góp ý', other: '💬 Khác' };

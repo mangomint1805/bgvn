@@ -3,7 +3,7 @@
 //   nút.onclick = () => openNews('uno');        // mở hộp, chỉ hiện bản của game đó + bản chung
 //   newsBadge(nút, 'uno');                       // gắn chấm đỏ "mới" nếu có bản chưa xem
 // Hộp tự có CSS riêng (không phụ thuộc theme game), đóng bằng nút ✕ / bấm nền / phím Esc.
-import { NOTES, GAMES, latestId } from '../patchnotes.js?v=64';
+import { NOTES, GAMES, latestId } from '../patchnotes.js?v=65';
 const KEY = g => 'bgvn-news-seen-' + (g || 'all');
 const ls = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

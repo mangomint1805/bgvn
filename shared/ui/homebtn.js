@@ -49,7 +49,7 @@ const GAME = location.pathname.replace(/\/+$/, '').split('/').pop();
   ft.before(b);
   const on = document.createElement('p'); on.hidden = true; on.style.cssText = 'text-align:center;margin:4px 0 8px;font:700 13px Nunito,system-ui,sans-serif;opacity:.85';
   b.after(on);
-  import('../net/presence.js?v=3').then(m => { let hide = false; try { hide = localStorage.getItem('bgvn-hide-online') === '1'; } catch (e) {} if (!hide) m.mountOnline(on); }).catch(() => {});
+  import('../net/presence.js?v=4').then(m => { let hide = false; try { hide = localStorage.getItem('bgvn-hide-online') === '1'; } catch (e) {} if (!hide) m.mountOnline(on); }).catch(() => {});
 })();
 
 // 🌐 Công khai phòng: hiện công tắc cạnh mã phòng (chỉ chủ phòng online)

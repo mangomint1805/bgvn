@@ -7,6 +7,7 @@ export const GAMES = {
 };
 export const NOTES = [
   { id: '20261111-3', date: '11/11/2026', game: 'all', title: 'Báo khi máy chủ quá đông', items: [
+    '🎮 Cạnh số người online giờ có thêm số người đang chơi và số phòng, cập nhật tức thì.',
     '⚠️ Ngày nào BGVN đông quá làm máy chủ chính sắp/đã hết lượt miễn phí, web sẽ hiện thông báo – lúc đó vào phòng có thể chậm hơn, máy chủ mở lại lúc 7h sáng.',
   ] },
   { id: '20261111-2', date: '11/11/2026', game: 'all', title: 'Vào xem phòng đang chơi', items: [

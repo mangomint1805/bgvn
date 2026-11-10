@@ -37,9 +37,11 @@ async function checkQuota() {
   document.body ? show() : addEventListener('DOMContentLoaded', show);
 }
 // hiển thị "🟢 N người đang online" vào phần tử el
-export function mountOnline(el, fmt = n => `<i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2fc76f;box-shadow:0 0 0 3px #2fc76f33;margin-right:6px;vertical-align:1px"></i><b>${n}</b> người đang online`) {
+const DOT = c => `<i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${c};box-shadow:0 0 0 3px ${c}33;margin-right:6px;vertical-align:1px"></i>`;
+// hiển thị "🟢 N người đang online · 🎮 M đang chơi" vào phần tử el (cập nhật tức thì)
+export function mountOnline(el, fmt = (n, lv) => `${DOT('#2fc76f')}<b>${n}</b> đang online` + (lv && lv.players ? `<span style="margin:0 8px;opacity:.45">·</span>🎮 <b>${lv.players}</b> đang chơi ở <b>${lv.rooms}</b> phòng` : '')) {
   startPresence();
-  const draw = n => { if (n == null) { el.hidden = true; return; } el.hidden = false; el.innerHTML = fmt(n); };
-  draw(window.__bgvnOnline); addEventListener('bgvn-online', e => draw(e.detail));
+  const draw = () => { const n = window.__bgvnOnline; if (n == null) { el.hidden = true; return; } el.hidden = false; el.innerHTML = fmt(n, window.__bgvnLive); };
+  draw(); addEventListener('bgvn-online', draw); addEventListener('bgvn-live', draw);
 }
 startPresence();
