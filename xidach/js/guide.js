@@ -57,7 +57,7 @@ export function openGuide(openModal, opts = DEFAULT_OPTS) {
         <li>Quá 21 là nhà cái <b>quắc</b>: lật hết, đền cho mọi người chưa quắc ${o.bothBust === 'hoa' ? '(người cũng quắc thì hoà)' : '(người cũng quắc thì vẫn thua nhà cái)'}.</li>
         <li>Nhà cái rút đủ 5 lá chưa quắc là <b>ngũ linh</b>, tự lật hết.</li></ul>
       <h3>Mẹo hay: xét sớm 👀</h3><p>Đủ ${o.caiMin} điểm rồi, nhà cái có thể bấm <b>Xét</b> trên ghế <b>từng người</b> – lật riêng người đó và tính tiền theo bài hiện tại của nhà cái – rồi <b>rút tiếp</b> để đấu với những người còn lại. Bấm <b>Xét hết</b> để lật cả bàn.</p>
-      <div class="g-ex"><span class="g-hand">${row(['9', 'C'], ['6', 'D'])}</span><span>Ví dụ: nhà cái 15 điểm. Tiến đã rút tới 4 lá (dễ quắc) → xét Tiến trước${o.bothBust === 'hoa' ? ' (nếu Tiến quắc thì ăn chắc, đỡ bị hoà khi lỡ mình quắc sau)' : ''}. Tuni dằn ngay với 2 lá (chắc ≥ 16) → nhà cái 15 thì thua chắc, nên <b>rút thêm</b> rồi mới xét Tuni.</span></div>
+      <div class="g-ex"><span class="g-hand">${row(['9', 'C'], ['6', 'D'])}</span><span>Ví dụ: nhà cái 15 điểm. An đã rút tới 4 lá (dễ quắc) → xét An trước${o.bothBust === 'hoa' ? ' (nếu An quắc thì ăn chắc, đỡ bị hoà khi lỡ mình quắc sau)' : ''}. Bình dằn ngay với 2 lá (chắc ≥ 16) → nhà cái 15 thì thua chắc, nên <b>rút thêm</b> rồi mới xét Bình.</span></div>
       <p>Đã xét ai thì kết quả người đó <b>giữ nguyên</b>, nhà cái rút thêm hay quắc sau cũng không đổi.</p>
       <h3>Ai làm cái?</h3>${P.fig('cai', 'Lựa chọn Ai làm cái trong phòng chờ, đang chọn Bot làm cái', 'Chủ phòng chọn trong phòng chờ (ở đây: 🤖 Bot làm cái).')}<ul>
         <li><b>🔄 Xoay vòng</b>: mỗi ván chuyển sang người kế tiếp.</li>

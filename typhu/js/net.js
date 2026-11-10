@@ -18,7 +18,7 @@ export const COLORS = ['#ff5a5f', '#3d8bff', '#2fc76f', '#ffb020', '#a259ff', '#
 const B2 = [true, false];
 const CFG = rulesFor('typhu', { startMoney: 1500, maxRounds: 0, monopolyWin: true, auction: true, buyback: true, freeBuild: true, travel: true, travelFee: 100, turnTime: 60 },
   { startMoney: [1500, 2000, 2500], maxRounds: [0, 20, 30, 50], monopolyWin: B2, auction: B2, buyback: B2, freeBuild: [true, false, 'zing'], travel: B2, travelFee: [0, 50, 100, 200], turnTime: [0, 30, 60, 90] });
-const BOT_NAMES = ['Tiến', 'Tuni', 'Thành', 'Khiêm', 'Thái', 'Minto', 'Bé Na', 'Chú Tư'];
+const BOT_NAMES = ['An', 'Bình', 'Chi', 'Dũng', 'Giang', 'Mai', 'Bé Na', 'Chú Tư'];
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
 // chỉ nhận cấu hình nhân vật hợp lệ (không tin dữ liệu từ máy khác)
 export function cleanAvatar(a) {

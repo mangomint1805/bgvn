@@ -11,7 +11,7 @@ const NS = 'bgvn-tienlen', PREFIX = 'bgvn-tienlen-', GAME = 'tienlen';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
 export { session };
-const BOT_NAMES = ['Minto', 'Tiến', 'Tuni', 'Thành', 'Khiêm', 'Thái'];
+const BOT_NAMES = ['Mai', 'An', 'Bình', 'Chi', 'Dũng', 'Giang'];
 export const MAX = 4;
 export const AWAY_MS = 6000;
 export const AUTO_PASS_MS = 800; // nhịp chờ trước khi tự bỏ lượt (người thật hết bài đè)   // người rớt mạng: máy đánh thay sau 6 giây

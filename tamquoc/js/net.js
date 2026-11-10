@@ -19,7 +19,7 @@ export { session };
 // câu chọc kiểu Tam Quốc (bảng thả emoji – shared/ui/react.js), mỗi câu ≤ 24 ký tự
 export const TQ_PHRASES = ['Ngươi dám!', 'Đỡ chiêu!', 'Xin tha mạng', 'Phản tặc là ngươi!', 'Trung thần đây 🛡️', 'Cứu giá!', 'Ta nhớ mặt ngươi'];
 const BOT_POOLS = { attack: ['Đỡ chiêu!', 'Ngươi dám!'], hurt: ['Xin tha mạng', 'Ta nhớ mặt ngươi', 'Cứu giá!'], win: ['Trung thần đây 🛡️'], reply: ['Phản tặc là ngươi!', 'Ngươi dám!'] };
-const BOT_NAMES = ['Tiến', 'Tuni', 'Thành', 'Khiêm', 'Thái', 'Minto', 'Mochi', 'Bắp', 'Su Su'];
+const BOT_NAMES = ['An', 'Bình', 'Chi', 'Dũng', 'Giang', 'Mai', 'Mochi', 'Bắp', 'Su Su'];
 
 // thời gian chờ người thật theo loại câu hỏi
 function askTime(ask) {

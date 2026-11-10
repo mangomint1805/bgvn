@@ -27,7 +27,7 @@ const CFG = rulesFor('masoi', {
   vanTap: { reveal: B2, dayTime: DAY_T, voteTime: VOTE_T, nightTime: NIGHT_T },
 });
 const cfgOpts = () => { const { vanTap, roles, ...o } = CFG; return { ...JSON.parse(JSON.stringify(DEFAULT_OPTS)), ...o, roles: Object.fromEntries(Object.entries(roles).filter(([, n]) => n > 0)) }; };
-const BOT_NAMES = ['Minto', 'Tiến', 'Tuni', 'Thành', 'Khiêm', 'Thái', 'Mochi', 'Bơ', 'Mít', 'Tôm', 'Bí', 'Cốm', 'Xoài', 'Ổi', 'Chè', 'Na'];
+const BOT_NAMES = ['Mai', 'An', 'Bình', 'Chi', 'Dũng', 'Giang', 'Mochi', 'Bơ', 'Mít', 'Tôm', 'Bí', 'Cốm', 'Xoài', 'Ổi', 'Chè', 'Na'];
 export const MAX = MAX_PLAYERS, MIN = MIN_PLAYERS;
 const AWAY_MS = 8000;      // người rớt mạng: máy làm giùm sau 8 giây
 const rnd = (a, b) => a + Math.random() * (b - a);

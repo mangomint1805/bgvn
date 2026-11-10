@@ -35,7 +35,7 @@ export function guideHTML() {
     </section>
     <section>
       <h3>📞 Tam sao thất bản</h3>
-      ${ill([[big('✍️'), 'Tiến viết câu'], '→', [big('🎨'), 'Tuni vẽ lại'], '→', [big('🤔'), 'Thành đoán thành câu'], '→', [big('🎨'), 'Khiêm vẽ tiếp…'], '→', [big('😂'), 'chiếu lại cả chuỗi']])}
+      ${ill([[big('✍️'), 'An viết câu'], '→', [big('🎨'), 'Bình vẽ lại'], '→', [big('🤔'), 'Chi đoán thành câu'], '→', [big('🎨'), 'Dũng vẽ tiếp…'], '→', [big('😂'), 'chiếu lại cả chuỗi']])}
       <ol>
         <li>Mỗi người <b>viết 1 câu</b> (bí ý tưởng thì bấm 🎲).</li>
         <li>Câu được chuyền cho người kế để <b>vẽ lại</b>.</li>

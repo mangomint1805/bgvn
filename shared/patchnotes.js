@@ -6,6 +6,9 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261110-07', date: '10/11/2026', game: 'all', title: 'Đổi tên bot', items: [
+    '🤖 Bot ở mọi game giờ dùng tên chung (An, Bình, Chi, Dũng, Giang, Mai, Mochi, Bơ…), ví dụ trong hướng dẫn cũng đổi theo.',
+  ] },
   { id: '20261110-06', date: '10/11/2026', game: 'solitaire', title: 'Theme mới: ✂️ Cắt dán', items: [
     '✂️ Bộ bài collage giấy cắt BGVN tự vẽ: mỗi lá là một bức cắt dán sticker, tem, băng keo khác nhau; J Q K là cáo, thỏ, gấu hoàng gia (chất đen tông tối).',
     '🟫 Bàn thảm nâu + lưng bài giấy kraft tem BGVN. Chọn ở nút tên game → Giao diện.',

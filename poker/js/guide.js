@@ -56,11 +56,11 @@ export function openGuide(openModal, cardHTML) {
   ${ill([[cards('Ah Kd'), 'Bạn A-K: đôi K, <b>phụ A</b> ✅'], [cards('Qs Kh'), 'Q-K: đôi K, phụ Q'], [cards('Kc 9h 5d 3s 2h'), 'Bàn K-9-5-3-2']])}
   <h3>💰 Pot phụ (side pot)</h3>
   <p>Ai tất tay chỉ được ăn tối đa phần mỗi người góp bằng số chip của mình. Phần cược dư của người khác thành <b>pot phụ</b>, chỉ những người góp vào pot phụ mới tranh.</p>
-  <p class="g-ex"><b>Ví dụ:</b> Tiến tất tay 100, Tuni tất tay 300, Minto theo 300.<br>
-  → <b>Pot chính</b> 300 (100 × 3): cả 3 tranh. <b>Pot phụ</b> 400 (200 × 2): chỉ Tuni và Minto tranh.<br>
-  Lật bài: Tiến mạnh nhất → ăn pot chính 300. Tuni mạnh hơn Minto → ăn pot phụ 400.<br>
+  <p class="g-ex"><b>Ví dụ:</b> An tất tay 100, Bình tất tay 300, Mai theo 300.<br>
+  → <b>Pot chính</b> 300 (100 × 3): cả 3 tranh. <b>Pot phụ</b> 400 (200 × 2): chỉ Bình và Mai tranh.<br>
+  Lật bài: An mạnh nhất → ăn pot chính 300. Bình mạnh hơn Mai → ăn pot phụ 400.<br>
   Phần cược không ai theo (vd. tố 500 mà người duy nhất còn lại chỉ có 300) được <b>trả lại</b>. Chia đều mà dư 1 chip lẻ thì người ngồi gần bên trái Dealer nhất được.</p>
-  ${ill([['<b style="font-size:20px">🥇 300</b>', 'Pot chính: Tiến · Tuni · Minto'], ['<b style="font-size:20px">🥈 400</b>', 'Pot phụ: Tuni · Minto']])}
+  ${ill([['<b style="font-size:20px">🥇 300</b>', 'Pot chính: An · Bình · Mai'], ['<b style="font-size:20px">🥈 400</b>', 'Pot phụ: Bình · Mai']])}
   <h3>⚙️ Tuỳ chọn trong sảnh</h3>
   <ul>
     <li><b>🎉 Chơi vui</b>: hết chip thì bấm <b>“🥺 Xin mẹ thêm chip”</b> để có lại số chip ban đầu (không giới hạn, bảng chip ghi số lần xin). Bot hết chip tự xin.</li>

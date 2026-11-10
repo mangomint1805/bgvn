@@ -14,7 +14,7 @@ const NS = 'bgvn-meono', PREFIX = 'bgvn-meono-', GAME = 'meono';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
 export { session };
-const BOT_NAMES = ['Minto', 'Tiến', 'Tuni', 'Thành', 'Khiêm', 'Thái', 'Mochi', 'Bơ'];
+const BOT_NAMES = ['Mai', 'An', 'Bình', 'Chi', 'Dũng', 'Giang', 'Mochi', 'Bơ'];
 export const MAX = 8;
 export const WINDOW_MS = 3000;     // cửa sổ ĐÉO! khi có người thật
 const WINDOW_BOT_MS = 1100;        // chỉ có bot quan tâm

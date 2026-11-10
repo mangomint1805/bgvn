@@ -52,7 +52,7 @@ export function guideHTML() {
     <li>🎲🎲 <b>Đã vào chuồng rồi thì chỉ lên được 1 bậc mỗi lần đổ đôi</b> (đôi nào cũng được, dùng cả lần đổ, vẫn được đổ tiếp). Không đôi thì ngựa trong chuồng đứng yên. (Chơi 1 xúc xắc: ra 6 thì lên 1 bậc.)</li>
     <li>Ngựa đã vào chuồng thì an toàn, không ai đá được.</li></ul>
   ${ill([[homeSVG(2, { 3: 'ok' }), 'Đổ <b>3</b>: 2 bước tới cửa + 1 → <b>bậc 1</b>'], [homeSVG(2, { 8: 'ok' }), 'Đổ <b>8</b>: 2 + 6 → <b>bậc 6</b> (đầu chuồng)'], [homeSVG(2, { 2: 'ok' }), 'Đổ <b>2</b>: đứng ở cửa'], [homeSVG(2, {}), 'Đổ <b>9+</b>: quá bậc 6 ❌ không đi được']])}
-  <div class="ex">Ví dụ (luật anh Minto): ngựa <b>đứng cách chuồng 2 ô</b> (đi 2 bước là tới ô cửa) → đổ <b>3</b> thì vào <b>bậc 1</b>; đổ <b>8</b> thì lên luôn <b>bậc 6 đầu chuồng</b>; đổ 2 thì đứng ở ô cửa; đổ 9 trở lên thì quá, không đi được. Đổ đôi 4-4 thì chọn 8 (bậc 6) hoặc 4 (bậc 2).</div>
+  <div class="ex">Ví dụ: ngựa <b>đứng cách chuồng 2 ô</b> (đi 2 bước là tới ô cửa) → đổ <b>3</b> thì vào <b>bậc 1</b>; đổ <b>8</b> thì lên luôn <b>bậc 6 đầu chuồng</b>; đổ 2 thì đứng ở ô cửa; đổ 9 trở lên thì quá, không đi được. Đổ đôi 4-4 thì chọn 8 (bậc 6) hoặc 4 (bậc 2).</div>
   <div class="ex">Ví dụ: ngựa ở bậc 4, đổ 5-5 → lên bậc 5. Đổ 2 + 3 thì đứng yên, phải đi con khác.</div>
   ${ill([[dice(5, 5), 'đổ đôi'], '→', [homeSVG(0, { 4: 'ok', 5: 'ok' }, 4), 'bậc 4 → <b>bậc 5</b> (1 bậc / lần đôi)'], [dice(2, 3), '❌ không đôi: đứng yên']])}
   ${P.fig('double', 'Đổ 4-4: bốn lựa chọn gồm xuất chuồng, đi cả 8, đi nửa 4, và ngựa trong chuồng lên 1 bậc nhờ đôi', 'Đổ 4-4: ① xuất chuồng · ② đi cả 8 · ③ đi nửa 4 · ④ ngựa trong chuồng <b>lên 1 bậc nhờ đôi</b>.')}
