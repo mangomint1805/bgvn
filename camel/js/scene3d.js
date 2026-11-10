@@ -98,6 +98,8 @@ export class Board3D {
     this.el.appendChild(r.domElement); r.domElement.style.touchAction = 'none';
     const ctl = this.controls = new OrbitControls(this.camera, r.domElement);
     Object.assign(ctl, { enableDamping: true, dampingFactor: 0.09, minPolarAngle: 0.08, maxPolarAngle: 1.25, minDistance: 5, maxDistance: 50, enablePan: true, screenSpacePanning: false, zoomSpeed: 0.9, rotateSpeed: 0.7 });
+    // chuột trái kéo = di bản đồ, chuột phải kéo = xoay, lăn = phóng to (cảm ứng giữ nguyên)
+    ctl.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE }; ctl.screenSpacePanning = false;
     ctl.target.copy(this.target);
     ctl.addEventListener('start', () => { this.cam.mode = 'free'; this.cam.lastUser = performance.now(); this.o.onCamera && this.o.onCamera('free'); });
     ctl.addEventListener('change', () => { if (this.cam.mode === 'free') this.cam.lastUser = performance.now(); });

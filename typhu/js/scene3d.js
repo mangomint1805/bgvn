@@ -183,7 +183,7 @@ export class Board3D {
     r.setPixelRatio(Math.min(Q.pr, devicePixelRatio || 1)); r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping;
     r.shadowMap.enabled = !!Q.shadow; r.shadowMap.type = Q.shadow > 1024 ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
     this.el.appendChild(r.domElement); r.domElement.style.touchAction = 'none';
-    const ctl = this.controls = new OrbitControls(this.camera, r.domElement);
+    const ctl = this.controls = new OrbitControls(this.camera, r.domElement); ctl.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
     Object.assign(ctl, { enableDamping: true, dampingFactor: 0.09, minPolarAngle: 0.15, maxPolarAngle: 1.22, minDistance: 4, maxDistance: 40, enablePan: true, screenSpacePanning: false, zoomSpeed: 0.9, rotateSpeed: 0.7 });
     ctl.target.copy(this.cam.target);
     ctl.addEventListener('start', () => { if (this.cam.map) { this.cam.mode = 'free'; this.cam.lastUser = performance.now(); return; } this.cam.mode = 'free'; this.cam.pinned = false; this.cam.lastUser = performance.now(); this.o.onCamera && this.o.onCamera('free'); });
@@ -401,7 +401,7 @@ export class Board3D {
   // ---------- camera ----------
   follow(id) { this.cam.focus = id; if (this.cam.pinned) return; if (this.cam.mode === 'overview' || (this.cam.mode === 'free' && performance.now() - this.cam.lastUser > 2500)) this.cam.mode = 'follow'; if (this.cam.mode === 'follow') this.camFocusTile = this.pawnTile[id] ?? this.camFocusTile; }
   // chế độ bản đồ 🗺️: không tự xoay/đi theo lượt; chuột trái kéo = di bản đồ, chuột phải = xoay (1 ngón kéo = di, 2 ngón = xoay/thu phóng)
-  setMapControls(on) { const c = this.controls; if (!c) return; c.mouseButtons = on ? { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE } : { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN }; c.touches = on ? { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE } : { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }; c.screenSpacePanning = false; }
+  setMapControls(on) { const c = this.controls; if (!c) return; c.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE }; /* mọi chế độ: trái di, phải xoay */ c.touches = on ? { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE } : { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }; c.screenSpacePanning = false; }
   home() { this.cam.map = false; this.setMapControls(false); this.cam.pinned = false; this.cam.mode = 'follow'; if (this.cam.focus && this.pawnTile[this.cam.focus] != null) this.camFocusTile = this.pawnTile[this.cam.focus]; this.o.onCamera && this.o.onCamera('follow'); }
   overview() { const off = this.camera.position.clone().sub(this.controls.target), az = Math.atan2(off.x, off.z); this.cam.overAz = Math.round(az / (Math.PI / 2)) * (Math.PI / 2); this.cam.map = true; this.setMapControls(true); this.cam.pinned = true; this.cam.mode = 'overview'; this.o.onCamera && this.o.onCamera('overview'); }
   resize() {

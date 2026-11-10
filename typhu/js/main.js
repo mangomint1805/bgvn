@@ -8,7 +8,7 @@ import {
   unmortgageCost, travelOk, buildBlock, tradable, tradeError, buybackPrice, netWorth, tilesOf, ownsGroup, JAIL_FINE, MAX_TRADES, isProp,
   tradeImpact, tradeSideValue, planRaise, raiseSummary,
 } from './engine.js?v=55';
-import { Board3D, THEMES } from './scene3d.js?v=54';
+import { Board3D, THEMES } from './scene3d.js?v=55';
 import * as fx from './fx.js?v=50';
 import { guideHTML } from './guide.js?v=55';
 import { OPTIONS, PRESETS, buildAvatar, portrait } from '../../shared/js/avatar3d.js';

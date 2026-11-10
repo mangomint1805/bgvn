@@ -5,7 +5,7 @@ import { Host, Client, MAX, loadSnapshot, session, CAMEL_PHRASES, setSpeedFn } f
 import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.js?v=2';
 import { CAMEL, RACERS, TRACK, LEG_ROLLS, OVERALL_PAY, legalTiles, ranking } from './engine.js?v=1';
 import { simLeg } from './bot.js?v=1';
-import { Board3D, DIE_COLORS } from './scene3d.js?v=1';
+import { Board3D, DIE_COLORS } from './scene3d.js?v=2';
 import * as fx from './fx.js?v=2';
 import { guideHTML } from './guide.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';

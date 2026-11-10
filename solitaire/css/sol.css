@@ -238,13 +238,13 @@ html[data-sol-theme=royal] .slot.tgt{background-image:url("../themes/royalhearts
 html[data-sol-theme=royal] .g-fig img{background:#2b1760}
 .th-prev.tp-royal{background:#2b1760 url("../themes/royalhearts/table.svg?v=1") right bottom/cover}
 
-/* 🐱 Mèo con – BGVN tự vẽ: mặt bài BGVN trên giấy hồng sữa, lưng mèo, bàn hồng – bạc hà có dấu chân */
+/* 🐱 Mèo con – BGVN tự vẽ: 52 mặt mèo (ảnh SVG, giấy hồng sữa vẽ sẵn trong ảnh), lưng mèo, bàn hồng – bạc hà có dấu chân */
 html[data-sol-theme=meo] #felt,.th-prev.tp-meo{background:
   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cg fill='%23fff' fill-opacity='.55'%3E%3Cg transform='translate(24 26) rotate(-18)'%3E%3Cellipse cy='4' rx='6' ry='5'/%3E%3Ccircle cx='-6' cy='-4' r='2.4'/%3E%3Ccircle cx='-2' cy='-7.5' r='2.4'/%3E%3Ccircle cx='3' cy='-7.5' r='2.4'/%3E%3Ccircle cx='7' cy='-4' r='2.4'/%3E%3C/g%3E%3Cg transform='translate(70 70) rotate(16)'%3E%3Cellipse cy='4' rx='6' ry='5'/%3E%3Ccircle cx='-6' cy='-4' r='2.4'/%3E%3Ccircle cx='-2' cy='-7.5' r='2.4'/%3E%3Ccircle cx='3' cy='-7.5' r='2.4'/%3E%3Ccircle cx='7' cy='-4' r='2.4'/%3E%3C/g%3E%3C/g%3E%3Cpath d='M72 22c-2.4-2.4-5.6.5-3 3l3 3 3-3c2.6-2.5-.6-5.4-3-3z' fill='%23ff7fab' fill-opacity='.35'/%3E%3C/svg%3E"),
   radial-gradient(ellipse at 20% 0%,#ffd6e7 0,transparent 60%),radial-gradient(ellipse at 100% 100%,#c9f1e4 0,transparent 65%),linear-gradient(160deg,#ffc2d9,#f3b8e0 50%,#b9e6dc)}
 html[data-sol-theme=meo] #felt{box-shadow:inset 0 0 0 3px #ffffff88,inset 0 8px 24px #c0457a22,var(--shadow)}
 html[data-sol-theme=meo] #felt::before{display:none}
-html[data-sol-theme=meo] .pc,.th-prev.tp-meo .pc{border:1px solid #efbfd2;background:linear-gradient(160deg,#fffdfe 0%,#fff6fa 60%,#ffeef5 100%);border-radius:calc(var(--cw)*.1);box-shadow:0 1px 1px #c0457a1f,0 3px 8px -4px #a0305f66}
+html[data-sol-theme=meo] .pc,.th-prev.tp-meo .pc{border:0;background:#fff7fa;border-radius:calc(var(--cw)*.08);box-shadow:0 1px 1px #c0457a1f,0 3px 8px -4px #a0305f66}
 html[data-sol-theme=meo] .pc .bk,.th-prev.tp-meo .pc .bk{background:transparent}
 html[data-sol-theme=meo] .slot{border-color:#ffffffdd;background:#ffffff38;color:#d94f8a;border-radius:calc(var(--cw)*.12)}
 html[data-sol-theme=meo] .slot.k-found{border-color:#ffffff;background:#fff6}

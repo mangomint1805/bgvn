@@ -4,7 +4,8 @@
 //   🏺 Ai Cập: bộ bài KDE "Ancient Egyptians" (LGPL-2.0) + nền KPatience "Desert Sands" (GPL-2.0+)
 //   🐧 Cánh cụt: bộ bài KDE "Penguins" (GPL-3.0+, Tux của Larry Ewing…) + nền băng tuyết BGVN tự vẽ
 //   👑 Tim hồng: bộ bài KDE "Jolly Royal" (LGPL-2.0) + nền KPatience "Royal Hearts" (GPL-2.0+)
-//   🐱 Mèo con: mặt bài BGVN + lưng mèo pastel BGVN tự vẽ
+//   🐱 Mèo con: BGVN tự vẽ cả bộ – 52 mặt mèo hồng pastel (themes/meocon/make-cards.mjs sinh ra; lá nhỏ tự đổi kiểu compact
+//      bằng @media bên trong SVG) + lưng mèo tam thể
 import { RANKS, SUITS, rk, st, isRed } from './core.js?v=1';
 import { faceSVG, backSVG, faceImage } from '../../shared/ui/deck/deck.js?v=1';
 
@@ -12,8 +13,8 @@ export const EGYPT_CREDIT = 'Bộ bài Ancient Egyptians (Sean Wilson) – KDE l
 // dir: thư mục ảnh (có cards/<hạng>_<chất>.svg + back.svg); r: bo góc / bề rộng; ix: phủ nhãn chỉ số dễ đọc khi lá nhỏ
 export const THEMES = {
   classic: { name: '🃏 Cổ điển', desc: 'Bộ bài BGVN tự vẽ, bàn nỉ xanh' },
-  meo: { name: '🐱 Mèo con', desc: 'Lưng mèo tam thể pastel, bàn hồng dấu chân – BGVN tự vẽ', back: 'themes/meocon/back.svg?v=1', r: 0.08,
-    credit: 'Lưng bài và nền bàn Mèo con do BGVN tự vẽ', readme: 'themes/meocon/README.txt' },
+  meo: { name: '🐱 Mèo con', desc: 'Cả bộ bài mèo hồng pastel – J Q K là 12 bé mèo hoàng gia, BGVN tự vẽ', dir: 'themes/meocon/', back: 'themes/meocon/back.svg?v=1', r: 0.08,
+    credit: 'Mặt bài, lưng bài và nền bàn Mèo con: BGVN tự vẽ', readme: 'themes/meocon/README.txt' },
   penguins: { name: '🐧 Cánh cụt', desc: 'Bộ bài Penguins của KDE – J Q K là chim cánh cụt Tux', dir: 'themes/penguins/', r: 0.07, ix: true,
     credit: 'Bộ bài Penguins (Matthew Woehlke 2009, dựa trên Ace of Penguins của DJ Delorie & Markus Oberhumer; Original Tux artwork created by Larry Ewing, Simon Budig and Anja Gerwinski) – KDE libkdegames, giấy phép GNU GPL 3.0 trở lên · Nền băng tuyết: BGVN tự vẽ',
     readme: 'themes/penguins/README.txt' },

@@ -6,6 +6,12 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261110-05', date: '10/11/2026', game: 'all', title: 'Bản đồ 3D: chuột trái kéo, chuột phải xoay', items: [
+    '🖱️ Cờ Tỷ Phú, Cờ cá ngựa, Đua Lạc Đà: giữ chuột trái kéo để di bản đồ, giữ chuột phải để xoay, lăn chuột để phóng to. Điện thoại vẫn như cũ.',
+  ] },
+  { id: '20261110-04', date: '10/11/2026', game: 'solitaire', title: 'Bộ bài mèo hồng pastel', items: [
+    '🐱 Theme Mèo con giờ có bộ mặt bài riêng BGVN tự vẽ: chất bài là mèo, Át mỗi chất một bé mèo, J/Q/K là 12 bé mèo đội mũ/vương miện khác nhau.',
+  ] },
   { id: '20261110-03', date: '10/11/2026', game: 'solitaire', title: 'Bỏ thông báo khi chuột phải không có lá', items: [
     '🔇 Chuột phải mà không có lá nào lên đích được thì chỉ kêu một tiếng, không hiện thanh thông báo nữa.',
   ] },
