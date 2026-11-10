@@ -57,7 +57,11 @@ export default {
 
 // ======================= PHÒNG CHƠI =======================
 export class Room extends DurableObject {
-  constructor(ctx, env) { super(ctx, env); this.rate = new Map(); }
+  constructor(ctx, env) {
+    super(ctx, env); this.rate = new Map();
+    // "ping" → "pong" do Cloudflare tự trả lời, KHÔNG đánh thức Durable Object (không tốn thời gian chạy)
+    ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'));
+  }
   host() { return this.ctx.getWebSockets('host')[0] || null; }
   client(id) { return this.ctx.getWebSockets('c:' + id)[0] || null; }
   async fetch(req) {

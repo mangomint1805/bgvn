@@ -3,7 +3,7 @@
 import { createGame, applyAction, viewFor, actorOf, P } from './engine.js?v=3';
 import { botAction } from './bot.js?v=3';
 import { S } from './fx.js?v=3';
-import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=3';
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=4';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 const NS = 'bgvn-cangua', PREFIX = 'bgvn-cangua-', GAME = 'cangua', SNAP = 'bgvn-hostsnap-' + GAME;

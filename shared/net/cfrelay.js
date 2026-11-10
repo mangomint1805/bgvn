@@ -36,8 +36,9 @@ export class CfHost {
     if (this.dead) return;
     let ws; try { ws = new WebSocket(wsUrl(this.ns, this.code, `role=host&k=${this.k}`)); } catch (e) { this.retry(); return; }
     this.ws = ws;
-    ws.onopen = () => { this.wait = 1000; };
+    ws.onopen = () => { this.wait = 1000; this.lastPong = Date.now(); clearInterval(this.ka); this.ka = setInterval(() => this.keep(ws), 15000); };
     ws.onmessage = ev => {
+      if (ev.data === 'pong') { this.lastPong = Date.now(); return; }
       const m = dec(ev.data); if (!m) return;
       if (m.x === 'taken') { this.taken = true; return; } // trùng mã với phòng khác đang mở – đường này bỏ, còn Firebase/PeerJS
       if (!m.f) return;
@@ -64,8 +65,13 @@ export class CfHost {
     };
     ws.onerror = () => {};
   }
+  keep(ws) { // giữ kết nối: ping 15s/lần (máy chủ tự trả "pong" miễn phí); 40s không có pong thì nối lại
+    if (ws !== this.ws || ws.readyState !== 1) return;
+    if (Date.now() - this.lastPong > 40000) { try { ws.close(); } catch (e) {} return; }
+    try { ws.send('ping'); } catch (e) {}
+  }
   retry() { if (this.dead) return; clearTimeout(this.rt); this.rt = setTimeout(() => this.open(), this.wait); this.wait = Math.min(this.wait * 2, 15000); }
-  destroy() { this.dead = true; clearTimeout(this.rt); try { this.ws && this.ws.close(1000, 'bye'); } catch (e) {} }
+  destroy() { this.dead = true; clearTimeout(this.rt); clearInterval(this.ka); try { this.ws && this.ws.close(1000, 'bye'); } catch (e) {} }
 }
 
 // ---- người vào phòng ----
@@ -76,16 +82,19 @@ export function cfConnect(ns, code) {
   conn.open = false;
   const fail = () => { if (!alive) return; alive = false; conn.open = false; try { ws && ws.close(); } catch (e) {} conn.emit('close'); };
   try { ws = new WebSocket(wsUrl(ns, code, `role=c&id=${me}`)); } catch (e) { setTimeout(fail, 0); return conn; }
-  ws.onopen = () => { if (!alive) return; conn.open = true; conn.emit('open'); };
+  let lastPong = Date.now(), ka = null;
+  ws.onopen = () => { if (!alive) return; conn.open = true; conn.emit('open'); lastPong = Date.now();
+    ka = setInterval(() => { if (!alive) { clearInterval(ka); return; } if (Date.now() - lastPong > 30000) { clearInterval(ka); fail(); return; } try { ws.send('ping'); } catch (e) {} }, 10000); };
   ws.onmessage = ev => {
     if (!alive) return;
+    lastPong = Date.now(); if (ev.data === 'pong') return;
     const d = dec(ev.data); if (!d) return;
     if (d.x) { if (d.x === 'nf') conn.notFound = true; fail(); return; }
     if (d.t === '__bye') { fail(); return; }
     conn.emit('data', d);
   };
-  ws.onclose = () => fail();
+  ws.onclose = () => { clearInterval(ka); fail(); };
   ws.onerror = () => {};
-  conn.close = () => { if (!alive) return; alive = false; conn.open = false; try { ws.close(1000, 'bye'); } catch (e) {} };
+  conn.close = () => { clearInterval(ka); if (!alive) return; alive = false; conn.open = false; try { ws.close(1000, 'bye'); } catch (e) {} };
   return conn;
 }

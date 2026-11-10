@@ -7,7 +7,7 @@
 import { peerOptions, keepAlive } from './ice.js';
 import { RelayHost, relayConnect } from './relay.js';
 import { FbHost, fbConnect, fbEnabled } from './fbrelay.js';
-import { CfHost, cfConnect, cfEnabled } from './cfrelay.js';
+import { CfHost, cfConnect, cfEnabled } from './cfrelay.js?v=2';
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export function makeCode() { let s = ''; for (let i = 0; i < 5; i++) s += ALPHABET[Math.floor(Math.random() * ALPHABET.length)]; return s; }
@@ -36,7 +36,7 @@ export class RoomHost {
     this.open();
     this.stopKeep = keepAlive(() => this.peer);
     // nhịp tim: người chơi không nghe gì 8 giây thì tự vào lại (rớt mạng âm thầm, chủ phòng đã đóng chỗ…)
-    this.hb = setInterval(() => { for (const c of this.conns) if (c.open) try { c.send({ t: '__hb' }); } catch (e) {} }, 2500);
+    this.hb = setInterval(() => { for (const c of this.conns) if (c.open && !String(c.peer || '').startsWith('cf:')) try { c.send({ t: '__hb' }); } catch (e) {} }, 2500); // đường Cloudflare tự giữ kết nối bằng ping/pong miễn phí
   }
   startRelays() {
     if (this.relayCode === this.code) return;
