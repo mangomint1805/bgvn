@@ -13,7 +13,7 @@ const NS = 'bgvn-camel', PREFIX = 'bgvn-camel-', GAME = 'camel';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
 export { session };
-const BOT_NAMES = ['Kẹo', 'Bánh Bao', 'Bông', 'Đậu', 'Mây', 'Sữa', 'Mochi', 'Bơ'];
+const BOT_NAMES = ['Kẹo', 'Xôi', 'Gấu Bông', 'Đậu', 'Nấm', 'Sữa', 'Mochi', 'Pudding'];
 export const MAX = MAX_PLAYERS, MIN = MIN_PLAYERS;
 export const TURN_TIME = 45;      // giây: người thật treo máy quá lâu thì máy đi thay
 const AWAY_MS = 6000;             // người rớt mạng: máy đi thay sau 6 giây

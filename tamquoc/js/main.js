@@ -511,7 +511,7 @@ function maybeReveal(v) {
 function showReveal(v) {
   const ps = seatOrder(); const m = me(); const lord = ps.find(p => p.role === 'lord');
   const box = $('#reveal'); revealT.forEach(clearTimeout); revealT = [];
-  const slip = (p, i) => `<div class="slip${p.id === myId ? ' me' : ''}${p.role === 'lord' ? ' lord' : ''}" style="--i:${i}" data-pid="${p.id}"><div class="slip-in"><div class="slip-f sb"><i></i><span>?</span></div><div class="slip-f sf r-${p.role || 'hidden'}">${p.role ? `<b>${ROLES[p.role].name}</b><i class="ss">${SEAL[p.role]}</i>` : ''}</div></div><small>${esc(p.id === myId ? 'Bạn' : p.name.replace(' 🤖', ''))}</small></div>`;
+  const slip = (p, i) => `<div class="slip${p.id === myId ? ' mine' : ''}${p.role === 'lord' ? ' lord' : ''}" style="--i:${i}" data-pid="${p.id}"><div class="slip-in"><div class="slip-f sb"><i></i><span>?</span></div><div class="slip-f sf r-${p.role || 'hidden'}">${p.role ? `<b>${ROLES[p.role].name}</b><i class="ss">${SEAL[p.role]}</i>` : ''}</div></div><small>${esc(p.id === myId ? 'Bạn' : p.name.replace(' 🤖', ''))}</small></div>`;
   box.innerHTML = `<div class="rv-box" style="--n:${ps.length}"><div class="rv-kick"><span class="han">身分</span> Bốc thẻ thân phận</div>
     <div class="rv-slips">${ps.map(slip).join('')}</div>
     <div class="rv-msg" id="rv-msg"><p class="muted">Mỗi người bốc 1 thẻ tre – chỉ mình bạn thấy thẻ của bạn…</p></div>
@@ -530,7 +530,7 @@ function showReveal(v) {
   at(() => { flip(myId, 'flip'); fx.sfx.judge(); }, 1500);
   at(() => { flip(myId, 'stamp'); fx.sfx.equip(); msg.innerHTML = mineTxt(); }, 2000);
   if (lord && lord.id !== myId) { at(() => { flip(lord.id, 'up'); }, 3100); at(() => { flip(lord.id, 'flip'); fx.sfx.myturn(); }, 3400); at(() => { flip(lord.id, 'stamp'); msg.insertAdjacentHTML('beforeend', lordTxt()); }, 3800); }
-  else at(() => { msg.insertAdjacentHTML('beforeend', lordTxt()); box.querySelectorAll('.slip:not(.me) .slip-in').forEach(e => e.classList.add('bow')); fx.sfx.myturn(); }, 3200);
+  else at(() => { msg.insertAdjacentHTML('beforeend', lordTxt()); box.querySelectorAll('.slip:not(.mine) .slip-in').forEach(e => e.classList.add('bow')); fx.sfx.myturn(); }, 3200);
   at(() => { const b = $('#rv-skip'); if (b) { b.textContent = 'Vào chọn tướng ⚔️'; b.className = 'btn pri'; } }, 4300);
   at(close, 9500);
 }

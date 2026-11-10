@@ -143,7 +143,7 @@ ${Object.keys(KINGDOMS).map(k => byK(k, true).length ? `<h4 class="g-kd" style="
 
 <section id="g-learn"><h3>🎓 Tập chơi &amp; gợi ý cho người mới</h3><ul>
 <li><b>Trang chủ → "🎓 Tập chơi":</b> ván 4 người với 3 bot, bộ bài cơ bản (dễ nhớ), <b>không bấm giờ</b>, bot đánh chậm hơn cho dễ theo dõi. Chủ phòng online cũng có thể bật ô <b>"🎓 Tập chơi"</b> trong sảnh: cả phòng có gợi ý và gấp đôi thời gian suy nghĩ.</li>
-<li><b>Gợi ý 💡:</b> khi tới lượt bạn, "thầy" cho biết nên làm gì và <b>vì sao</b> (VD: <i>Sát Bánh Bao – đang trong tầm, Bánh Bao có thể là Phản tặc</i>). Lá được gợi ý sáng viền vàng có số thứ tự, ghế mục tiêu có cờ 💡. Bấm <b>"👉 Làm theo"</b> (trên điện thoại: bấm vào khung gợi ý giữa bàn) để làm đúng nước đó, hoặc cứ tự đánh.</li>
+<li><b>Gợi ý 💡:</b> khi tới lượt bạn, "thầy" cho biết nên làm gì và <b>vì sao</b> (VD: <i>Sát Xôi – đang trong tầm, Xôi có thể là Phản tặc</i>). Lá được gợi ý sáng viền vàng có số thứ tự, ghế mục tiêu có cờ 💡. Bấm <b>"👉 Làm theo"</b> (trên điện thoại: bấm vào khung gợi ý giữa bàn) để làm đúng nước đó, hoặc cứ tự đánh.</li>
 <li>Khi bị hỏi đáp trả (bị Sát, Nam man, Vô giải, cứu người hấp hối…) thầy giải thích tình huống và nên đỡ hay chịu. Bấm <b>?</b> để xem giải thích đầy đủ + 6 pha của một lượt; bấm vào thanh pha (Đầu · Phán · Rút · Ra bài · Bỏ · Cuối) cũng xem được.</li>
 <li>Gợi ý chỉ dùng <b>thông tin công khai</b> (ai từng đánh/cứu ai) và vai của chính bạn – không nhìn trộm bài hay vai người khác. Bật/tắt bất cứ lúc nào bằng nút <b>💡</b> trong ⚙️ (cả ván thường).</li>
 <li><b>Kỹ năng:</b> bấm tên kỹ năng (chữ đỏ gạch chân, hoặc nút kỹ năng ở khu của bạn; nút kỹ năng trong pha Ra bài thì bấm giữ) để xem bảng chi tiết: tự động hay chủ động, khi nào dùng, cách bấm, 1 ví dụ.</li>

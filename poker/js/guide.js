@@ -56,11 +56,11 @@ export function openGuide(openModal, cardHTML) {
   ${ill([[cards('Ah Kd'), 'Bạn A-K: đôi K, <b>phụ A</b> ✅'], [cards('Qs Kh'), 'Q-K: đôi K, phụ Q'], [cards('Kc 9h 5d 3s 2h'), 'Bàn K-9-5-3-2']])}
   <h3>💰 Pot phụ (side pot)</h3>
   <p>Ai tất tay chỉ được ăn tối đa phần mỗi người góp bằng số chip của mình. Phần cược dư của người khác thành <b>pot phụ</b>, chỉ những người góp vào pot phụ mới tranh.</p>
-  <p class="g-ex"><b>Ví dụ:</b> Bánh Bao tất tay 100, Bông tất tay 300, Kẹo theo 300.<br>
-  → <b>Pot chính</b> 300 (100 × 3): cả 3 tranh. <b>Pot phụ</b> 400 (200 × 2): chỉ Bông và Kẹo tranh.<br>
-  Lật bài: Bánh Bao mạnh nhất → ăn pot chính 300. Bông mạnh hơn Kẹo → ăn pot phụ 400.<br>
+  <p class="g-ex"><b>Ví dụ:</b> Xôi tất tay 100, Gấu Bông tất tay 300, Kẹo theo 300.<br>
+  → <b>Pot chính</b> 300 (100 × 3): cả 3 tranh. <b>Pot phụ</b> 400 (200 × 2): chỉ Gấu Bông và Kẹo tranh.<br>
+  Lật bài: Xôi mạnh nhất → ăn pot chính 300. Gấu Bông mạnh hơn Kẹo → ăn pot phụ 400.<br>
   Phần cược không ai theo (vd. tố 500 mà người duy nhất còn lại chỉ có 300) được <b>trả lại</b>. Chia đều mà dư 1 chip lẻ thì người ngồi gần bên trái Dealer nhất được.</p>
-  ${ill([['<b style="font-size:20px">🥇 300</b>', 'Pot chính: Bánh Bao · Bông · Kẹo'], ['<b style="font-size:20px">🥈 400</b>', 'Pot phụ: Bông · Kẹo']])}
+  ${ill([['<b style="font-size:20px">🥇 300</b>', 'Pot chính: Xôi · Gấu Bông · Kẹo'], ['<b style="font-size:20px">🥈 400</b>', 'Pot phụ: Gấu Bông · Kẹo']])}
   <h3>⚙️ Tuỳ chọn trong sảnh</h3>
   <ul>
     <li><b>🎉 Chơi vui</b>: hết chip thì bấm <b>“🥺 Xin mẹ thêm chip”</b> để có lại số chip ban đầu (không giới hạn, bảng chip ghi số lần xin). Bot hết chip tự xin.</li>

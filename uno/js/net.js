@@ -14,7 +14,7 @@ const B2 = [true, false], RULE_OK = Object.fromEntries(Object.keys(MODES.classic
 const CFG = rulesFor('uno', { mode: 'house', match: false, matchTarget: 500, modes: Object.fromEntries(Object.entries(MODES).map(([m, x]) => [m, { ...x.rules }])) },
   { mode: Object.keys(MODES), match: B2, matchTarget: MATCH_TARGETS, modes: Object.fromEntries(Object.keys(MODES).map(m => [m, RULE_OK])) });
 const modeRules = m => ({ ...CFG.modes[m] });
-const BOT_NAMES = ['Mochi', 'Bơ', 'Kem', 'Su Su', 'Tôm', 'Bắp', 'Mít', 'Na', 'Xoài'];
+const BOT_NAMES = ['Mochi', 'Pudding', 'Kem', 'Su Su', 'Tôm', 'Bắp', 'Mít', 'Na', 'Xoài'];
 export const MAX = 10;
 export const PULL_CD = 1000; // giãn cách giữa 2 lần tự bốc phạt
 export const TURN_TIME = 40, OWE_TIME = 20; // giây: người thật treo máy quá lâu thì máy đánh thay

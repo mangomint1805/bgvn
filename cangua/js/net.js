@@ -12,7 +12,7 @@ export const MAX = 4;
 // Câu chọc (shared/ui/react.js, mỗi câu ≤ 24 ký tự)
 export const CANGUA_PHRASES = ['Về chuồng đi cưng 🐴💨', 'Đá nè! 🦶', 'Xin cái đôi 🙏', 'Né ra coi!', 'Đừng đá tui 😭', 'Ngựa tui về đích!', 'Gà quá!', 'GG'];
 const BOT_POOLS = { attack: ['Về chuồng đi cưng 🐴💨', 'Đá nè! 🦶'], hurt: ['Đừng đá tui 😭', 'Cứu tui'], win: ['Ngựa tui về đích!'], reply: ['Gà quá!', 'Né ra coi!', 'Xin cái đôi 🙏'] };
-const BOT_NAMES = ['Bánh Bao', 'Bông', 'Đậu', 'Mây', 'Sữa', 'Kẹo'];
+const BOT_NAMES = ['Xôi', 'Gấu Bông', 'Đậu', 'Nấm', 'Sữa', 'Kẹo'];
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
 // thời gian hoạt ảnh ước lượng (để bot / đồng hồ chờ người xem kịp)
 export function animTime(evs) {

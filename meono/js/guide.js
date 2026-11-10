@@ -50,7 +50,7 @@ export function openGuide(openModal) {
         <li><b>BỘ BA</b> (3 mèo cùng loại): chọn 1 người và <b>gọi tên 1 lá</b> (vd. Gỡ Bom). Họ có thì phải đưa, không có thì hụt.</li></ul>
       ${row([['cat2', 'đủ 2 lá cùng loại → <b>Đánh đôi</b>.']])}
       ${P.fig('pair', 'Chạm lá Mèo Mướp, nút Đánh đôi hiện ra', 'Chạm 1 lá mèo là hiện nút <b>🐾 Đánh đôi</b> / <b>Bộ ba</b> nếu bạn có đủ.')}
-      <h3>ĐÉO! 🙅</h3>${P.fig('nope', 'Bánh Bao vừa đánh Đổ Vỏ, thanh đếm ngược và nút ĐÉO! màu đỏ', '① Bánh Bao vừa đánh Đổ Vỏ → ② thanh đếm ngược ~3 giây, ai có lá ĐÉO! thấy nút đỏ để huỷ.')}<ul>
+      <h3>ĐÉO! 🙅</h3>${P.fig('nope', 'Xôi vừa đánh Đổ Vỏ, thanh đếm ngược và nút ĐÉO! màu đỏ', '① Xôi vừa đánh Đổ Vỏ → ② thanh đếm ngược ~3 giây, ai có lá ĐÉO! thấy nút đỏ để huỷ.')}<ul>
         <li>Sau <b>mỗi hành động</b> (lá chức năng hoặc combo), có <b>~3 giây</b> để mọi người phản ứng – thanh đếm ngược hiện cho cả bàn.</li>
         <li>Ai cầm lá <b>ĐÉO!</b> sẽ thấy nút <b>ĐÉO!</b> to đỏ. Bấm là huỷ hành động đó (lá đã đánh vẫn mất).</li>
         <li>Có người ĐÉO! thì cửa sổ <b>mở lại từ đầu</b>: người khác có thể ĐÉO! cái ĐÉO! đó để hành động có hiệu lực trở lại. Cứ thế chồng tiếp – số ĐÉO! lẻ là bị huỷ, chẵn là được.</li>

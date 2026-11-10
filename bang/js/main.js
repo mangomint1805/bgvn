@@ -145,6 +145,7 @@ $('#btn-copy').onclick = () => {
 $('#btn-add-bot').onclick = () => net?.addBot();
 $('#btn-start').onclick = () => net?.start();
 $('#btn-leave').onclick = () => { net?.leave ? net.leave() : net?.destroy(); location.href = location.pathname; };
+$('#btn-home-g').onclick = () => { if (!confirm('Rời ván và về trang chủ BGVN?')) return; try { net?.leave ? net.leave() : net?.destroy(); } catch (e) {} setTimeout(() => { location.href = '../'; }, 200); };
 $('#btn-log-toggle').onclick = () => $('#log').classList.toggle('hidden');
 $('#btn-recap').onclick = $('#btn-recap-log').onclick = () => showRecap();
 $('#btn-newbie').onclick = () => setNewbie(!newbie);

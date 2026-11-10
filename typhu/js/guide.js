@@ -76,7 +76,7 @@ export function guideHTML() {
     <li>Kéo để xoay bàn, chụm/cuộn để phóng to. Camera tự bám người đang đi; bấm <b>🎯</b> để về góc nhìn, <b>🗺️</b> để xem toàn bàn.</li>
     <li>Bấm vào một ô bất kỳ để xem bảng giá. Bấm vào thẻ người chơi để xem tài sản của họ.</li>
     <li>Lần đầu vào ván có <b>chỉ dẫn từng bước</b> (bong bóng chỉ vào từng nút). Muốn xem lại: <b>⚙️ → 🧭 Xem lại hướng dẫn</b>.</li>
-    <li>Sau lượt của người khác, góc trên bàn cờ hiện thẻ <b>📣 tóm tắt lượt vừa rồi</b> (vd. “Bánh Bao đổ 4+3 → Bùi Viện, trả bạn 950K”). Bấm để xem chi tiết các lượt, ✕ để ẩn. Nhật ký đầy đủ vẫn ở nút 📜.</li>
+    <li>Sau lượt của người khác, góc trên bàn cờ hiện thẻ <b>📣 tóm tắt lượt vừa rồi</b> (vd. “Xôi đổ 4+3 → Bùi Viện, trả bạn 950K”). Bấm để xem chi tiết các lượt, ✕ để ẩn. Nhật ký đầy đủ vẫn ở nút 📜.</li>
     <li>Chơi online: ai treo máy quá giờ thì máy đánh giúp; rớt mạng thì máy tạm đánh thay, tải lại trang là vào lại đúng ván.</li></ul>
   <p class="note">Bản fan-made phi thương mại cho hội bạn – không liên kết với nhà phát hành nào.</p></div>`;
 }

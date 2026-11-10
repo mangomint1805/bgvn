@@ -85,7 +85,7 @@ ${pair(ex('3♠ 4♦ 5♣ 6♥ 7♠ 8♦ 9♣ 10♥ J♠ Q♦ K♣ A♥', '<b>S�
 <li>Chọn trong sảnh: <b>Cấm về heo + hàng</b> (mặc định) · <b>Cấm về heo</b> · <b>Cho phép</b>.</li>
 </ul>
 ${pair(ex('2♥ 9♠', 'Đậu bét, trên tay còn 2♥ → bị <b>thối heo</b>'))}
-<p>Ví dụ 4 người, cược ${b}: Bánh Bao về nhất, Đậu bét còn 2♥ → Đậu trả Bánh Bao ${2 * b} (hạng) + ${PAY.heoDo * b} (thối heo cơ) = <b>${(2 + PAY.heoDo) * b} chip</b>.</p>
+<p>Ví dụ 4 người, cược ${b}: Xôi về nhất, Đậu bét còn 2♥ → Đậu trả Xôi ${2 * b} (hạng) + ${PAY.heoDo * b} (thối heo cơ) = <b>${(2 + PAY.heoDo) * b} chip</b>.</p>
 
 <h3>8. Chip ảo 🪙</h3>
 <p>Mỗi người bắt đầu với 1000 chip. Mức cược (1 phần) chọn trong sảnh: 10 / 20 / 50. Hết chip thì bấm <b>"🥺 Xin mẹ thêm chip"</b> – mẹ cho 1000, không ai bị loại.</p>

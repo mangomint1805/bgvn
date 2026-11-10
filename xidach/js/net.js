@@ -13,7 +13,7 @@ const NS = 'bgvn-xidach', PREFIX = 'bgvn-xidach-', GAME = 'xidach';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
 export { session };
-const BOT_NAMES = ['Kẹo', 'Bánh Bao', 'Bông', 'Đậu', 'Mây', 'Sữa', 'Mochi', 'Bơ'];
+const BOT_NAMES = ['Kẹo', 'Xôi', 'Gấu Bông', 'Đậu', 'Nấm', 'Sữa', 'Mochi', 'Pudding'];
 export const MAX = MAX_PLAYERS;
 export const BET_TIME = 25;   // giây đặt cược
 const AWAY_MS = 6000;         // người rớt mạng: máy làm thay sau 6 giây
