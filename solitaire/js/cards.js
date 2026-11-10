@@ -15,6 +15,8 @@ export const THEMES = {
   classic: { name: '🃏 Cổ điển', desc: 'Bộ bài BGVN tự vẽ, bàn nỉ xanh' },
   meo: { name: '🐱 Mèo con', desc: 'Cả bộ bài mèo hồng pastel – J Q K là 12 bé mèo hoàng gia, BGVN tự vẽ', dir: 'themes/meocon/', back: 'themes/meocon/back.svg?v=1', r: 0.08,
     credit: 'Mặt bài, lưng bài và nền bàn Mèo con: BGVN tự vẽ', readme: 'themes/meocon/README.txt' },
+  catdan: { name: '✂️ Cắt dán', desc: 'Bộ bài collage giấy cắt – sticker, tem, băng keo; J Q K là gấu, thỏ, cáo hoàng gia. BGVN tự vẽ', dir: 'themes/catdan/', back: 'themes/catdan/back.svg?v=1', r: 0.06,
+    credit: 'Mặt bài, lưng bài và nền bàn Cắt dán: BGVN tự vẽ', readme: 'themes/catdan/README.txt' },
   penguins: { name: '🐧 Cánh cụt', desc: 'Bộ bài Penguins của KDE – J Q K là chim cánh cụt Tux', dir: 'themes/penguins/', r: 0.07, ix: true,
     credit: 'Bộ bài Penguins (Matthew Woehlke 2009, dựa trên Ace of Penguins của DJ Delorie & Markus Oberhumer; Original Tux artwork created by Larry Ewing, Simon Budig and Anja Gerwinski) – KDE libkdegames, giấy phép GNU GPL 3.0 trở lên · Nền băng tuyết: BGVN tự vẽ',
     readme: 'themes/penguins/README.txt' },

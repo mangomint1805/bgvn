@@ -6,6 +6,10 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261110-06', date: '10/11/2026', game: 'solitaire', title: 'Theme mới: ✂️ Cắt dán', items: [
+    '✂️ Bộ bài collage giấy cắt BGVN tự vẽ: mỗi lá là một bức cắt dán sticker, tem, băng keo khác nhau; J Q K là cáo, thỏ, gấu hoàng gia (chất đen tông tối).',
+    '🟫 Bàn thảm nâu + lưng bài giấy kraft tem BGVN. Chọn ở nút tên game → Giao diện.',
+  ] },
   { id: '20261110-05', date: '10/11/2026', game: 'all', title: 'Bản đồ 3D: chuột trái kéo, chuột phải xoay', items: [
     '🖱️ Cờ Tỷ Phú, Cờ cá ngựa, Đua Lạc Đà: giữ chuột trái kéo để di bản đồ, giữ chuột phải để xoay, lăn chuột để phóng to. Điện thoại vẫn như cũ.',
   ] },

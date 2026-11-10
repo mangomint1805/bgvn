@@ -2,9 +2,9 @@
 import { VARIANTS, newGame, defaultOpts, optsKey, optsName, scoreStart, liveScore, timeBonus, passesLeft, SCORE_NONE, SCORE_VEGAS } from './variants.js?v=1';
 import { apply, canMove, legalMoves, autoMoves, greedyFinish, key, hintMove, idsOf, isSeq, isRed, cardName, top } from './core.js?v=1';
 import { solve } from './solver.js?v=1';
-import { faceHTML, backHTML, drawCard, THEMES, getTheme, setTheme, previewHTML } from './cards.js?v=5';
+import { faceHTML, backHTML, drawCard, THEMES, getTheme, setTheme, previewHTML } from './cards.js?v=6';
 import * as fx from './sfx.js?v=1';
-import { guideHTML } from './guide.js?v=5';
+import { guideHTML } from './guide.js?v=6';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';
 import { rulesFor } from '../../shared/rules.js?v=1';
 // ⚙️ Mặc định cho máy CHƯA từng chơi (luat-mac-dinh.js ở gốc repo). Máy đã chơi thì nhớ tuỳ chọn ván gần nhất ('sol-opts')
