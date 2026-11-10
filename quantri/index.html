@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quản trị – BGVN</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#2a2340;--muted:#7b7391;--bg:#fff7ef;--line:#ecdfd0}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:600 15px/1.5 Nunito,system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:16px 16px 48px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.back{display:inline-flex;align-items:center;min-height:42px;padding:6px 16px;border-radius:999px;background:#fff;border:1.5px solid var(--line);color:var(--ink);text-decoration:none;font-weight:800}
+h1{font:800 clamp(28px,6vw,38px) "Baloo 2",Nunito,sans-serif;margin:0;flex:1;text-align:center}
+.card{background:#fff;border-radius:20px;padding:16px;margin:14px 0;box-shadow:0 12px 28px -20px #2a234066}
+input,button,select{font:inherit;padding:9px 12px;border-radius:12px;border:1.5px solid #e2d4c4}
+button{background:var(--ink);color:#fff;border:0;cursor:pointer;font-weight:800}button.sm{padding:5px 11px;font-size:13px;border-radius:999px}button.red{background:#e0384a}button.gray{background:#8a7f96}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:12px 0;scrollbar-width:none}.tabs button{flex:none;background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:999px}.tabs button.on{background:var(--ink);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}.stat{background:#fff;border-radius:16px;padding:12px;text-align:center;box-shadow:0 8px 20px -16px #2a234066}.stat b{display:block;font:800 30px "Baloo 2",Nunito}.stat small{color:var(--muted)}
+.it{background:#fff;border-radius:16px;padding:12px 14px;margin:10px 0;box-shadow:0 2px 10px #0001}.meta{font-size:12.5px;color:#7a6f88;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tag{padding:2px 8px;border-radius:999px;background:#eee;font-weight:800}.bug{background:#ffd9dc}.idea{background:#dff5e6}.adm{background:#e6e0ff}
+.msg{white-space:pre-wrap;margin:6px 0;word-break:break-word}.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.r{margin-left:auto}
+.muted{color:var(--muted)}#st{min-height:22px;color:#c0263b;font-weight:700}
+</style>
+</head>
+<body><main>
+  <div class="top"><a class="back" href="../">← Trang chủ</a><h1>🛠️ Quản trị BGVN</h1><span id="acct"></span></div>
+  <div id="gate" class="card" hidden></div>
+  <div id="panel" hidden>
+    <div class="stats" id="stats"></div>
+    <div class="tabs" id="tabs"><button data-t="rp" class="on">🚩 Báo cáo chat</button><button data-t="fb">💌 Góp ý</button><button data-t="bn">⛔ Đang cấm</button><button data-t="us">👤 Tài khoản</button></div>
+    <p id="st"></p><div id="l"></div>
+  </div>
+</main>
+<script type="module">
+import { auth, API } from '../shared/net/api.js?v=1';
+import { mountAccount, openLogin } from '../shared/ui/account.js?v=2';
+mountAccount(document.getElementById('acct'));
+const $ = s => document.querySelector(s), esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const dt = t => new Date(t).toLocaleString('vi-VN'), T = { bug: '🐞 Lỗi', idea: '💡 Góp ý', other: '💬 Khác' };
+let tab = 'rp';
+async function api(body) {
+  try { const r = await fetch(API() + '/admin/list', { method: 'POST', headers: { 'content-type': 'application/json', Authorization: 'Bearer ' + auth.token() }, body: JSON.stringify(body || {}) }); return await r.json(); }
+  catch (e) { return { ok: false, msg: 'Không kết nối được máy chủ' }; }
+}
+async function gate() {
+  const u = auth.user();
+  if (u && u.admin) { $('#gate').hidden = true; $('#panel').hidden = false; go(tab); stats(); return; }
+  $('#panel').hidden = true; $('#gate').hidden = false;
+  if (!u) { $('#gate').innerHTML = '<h2 style="margin-top:0">Đăng nhập trước nha</h2><p>Trang này chỉ dành cho quản trị viên BGVN. Đăng nhập (Google hoặc tên đăng nhập) bằng tài khoản quản trị.</p><button id="g-login">👤 Đăng nhập</button>'; $('#g-login').onclick = () => openLogin(); return; }
+  $('#gate').innerHTML = `<h2 style="margin-top:0">Kích hoạt quyền quản trị</h2><p>Bạn đang đăng nhập là <b>${esc(u.name)}</b>. Nhập mật khẩu quản trị (<code>ADMIN_KEY</code> đặt trên Cloudflare) <b>một lần</b> để cấp quyền cho tài khoản này. Lần sau chỉ cần đăng nhập là vào được.</p>
+    <form id="g-f" style="display:flex;gap:8px;flex-wrap:wrap"><input id="g-k" type="password" placeholder="Mật khẩu quản trị" autocomplete="off" autocapitalize="off" spellcheck="false" style="flex:1;min-width:200px"><button>Kích hoạt</button></form><p id="g-e" style="color:#c0263b;font-weight:700"></p>`;
+  $('#g-f').onsubmit = async e => { e.preventDefault(); const r = await fetch(API() + '/auth/claim-admin', { method: 'POST', headers: { 'content-type': 'application/json', Authorization: 'Bearer ' + auth.token() }, body: JSON.stringify({ key: $('#g-k').value }) }).then(r => r.json()).catch(() => ({ ok: false, msg: 'Lỗi mạng' }));
+    if (r.ok) { localStorage.setItem('bgvn-auth', JSON.stringify({ token: auth.token(), user: r.user })); gate(); } else $('#g-e').textContent = r.msg; };
+}
+auth.onChange(() => gate()); auth.refresh().then(() => gate());
+async function stats() {
+  const s = await api({ op: 'stats' }); if (!s.ok) return;
+  const on = await fetch(API() + '/presence').then(r => r.json()).catch(() => ({}));
+  $('#stats').innerHTML = [[on.n ?? '–', '🟢 Đang online'], [s.online, '💬 Đang ở sảnh/web'], [s.rooms, '🚪 Phòng công khai'], [s.users, '🧑 Tài khoản']].map(([n, t]) => `<div class="stat"><b>${n}</b><small>${t}</small></div>`).join('');
+}
+async function go(t) {
+  tab = t; document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  $('#st').textContent = ''; $('#l').innerHTML = '<p class="muted">Đang tải…</p>';
+  const d = await api(t === 'fb' ? {} : t === 'us' ? { op: 'users', q: $('#uq')?.value || '' } : { op: 'reports' });
+  if (!d.ok) { $('#st').textContent = d.msg || 'Lỗi'; $('#l').innerHTML = ''; return; }
+  if (t === 'fb') $('#l').innerHTML = (d.items || []).map(i => `<div class="it"><div class="meta"><span class="tag ${i.t}">${T[i.t]}</span><b>${esc(i.game || 'chung')}</b><span>${dt(i.ts)}</span>${i.contact ? '<span>📮 ' + esc(i.contact) + '</span>' : ''}<button class="sm red r" data-del="${i.id}">Xoá</button></div><div class="msg">${esc(i.msg)}</div><div class="meta">${esc(i.page)} · ${esc(i.ua)}</div></div>`).join('') || '<p class="muted">Chưa có góp ý.</p>';
+  if (t === 'rp') $('#l').innerHTML = (d.reports || []).map(r => `<div class="it"><div class="meta"><b>${esc(r.tname)}</b><span>${esc(r.target)}</span><span>${dt(r.ts)}</span><span class="r">báo bởi ${esc(r.rname)}</span></div><div class="msg">“${esc(r.text)}”${r.reason ? '\n<i>Lý do: ' + esc(r.reason) + '</i>' : ''}</div><div class="acts"><button class="sm" data-op="hide" data-msg="${r.msg}">🙈 Ẩn tin</button><button class="sm red" data-ban="${esc(r.target)}" data-h="24">Cấm 24h</button><button class="sm red" data-ban="${esc(r.target)}" data-h="168">Cấm 7 ngày</button><button class="sm red" data-ban="${esc(r.target)}" data-h="87600">Cấm vĩnh viễn</button><button class="sm gray" data-op="dismiss" data-id="${r.id}">Bỏ qua</button></div></div>`).join('') || '<p class="muted">Không có báo cáo nào 🎉</p>';
+  if (t === 'bn') $('#l').innerHTML = (d.bans || []).map(b => `<div class="it"><div class="meta"><b>${esc(b.who)}</b><span>đến ${dt(b.until)}</span><span>${esc(b.reason)}</span><button class="sm r" data-unban="${esc(b.who)}">Gỡ cấm</button></div></div>`).join('') || '<p class="muted">Không ai bị cấm.</p>';
+  if (t === 'us') { const q = $('#uq')?.value || ''; $('#l').innerHTML = `<form id="uf" style="display:flex;gap:8px"><input id="uq" placeholder="Tìm tên đăng nhập / tên / id" style="flex:1" value="${esc(q)}"><button>Tìm</button></form>` + (d.users || []).map(u => `<div class="it"><div class="meta"><b>${esc(u.name)}</b><span>@${esc(u.username || '(Google)')}</span><span>id ${u.id}</span><span>${dt(u.created)}</span>${u.admin ? '<span class="tag adm">🛠️ quản trị</span>' : ''}${u.banned ? '<span class="tag bug">bị khoá</span>' : ''}<span class="r"></span></div><div class="acts"><button class="sm ${u.banned ? '' : 'red'}" data-ub="${u.id}" data-v="${u.banned ? 0 : 1}">${u.banned ? 'Mở khoá' : 'Khoá tài khoản'}</button>${u.username ? `<button class="sm gray" data-pw="${u.id}">Đặt lại mật khẩu</button>` : ''}<button class="sm gray" data-adm="${u.id}" data-v="${u.admin ? 0 : 1}">${u.admin ? 'Bỏ quyền quản trị' : 'Cấp quyền quản trị'}</button></div></div>`).join(''); $('#uf').onsubmit = e => { e.preventDefault(); go('us'); }; }
+}
+$('#tabs').onclick = e => { const b = e.target.closest('button'); if (b) go(b.dataset.t); };
+$('#l').onclick = async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.del && confirm('Xoá góp ý này?')) { await api({ del: b.dataset.del }); return go(tab); }
+  if (b.dataset.op) { await api({ op: b.dataset.op, msg: b.dataset.msg, id: b.dataset.id }); return go(tab); }
+  if (b.dataset.ban) { const reason = prompt('Lý do cấm (tuỳ chọn):') ?? ''; await api({ op: 'ban', who: b.dataset.ban, hours: +b.dataset.h, reason }); return go(tab); }
+  if (b.dataset.unban) { await api({ op: 'unban', who: b.dataset.unban }); return go(tab); }
+  if (b.dataset.ub && confirm('Chắc chưa?')) { await api({ op: 'user', id: b.dataset.ub, patch: { banned: b.dataset.v === '1' } }); return go('us'); }
+  if (b.dataset.adm && confirm(b.dataset.v === '1' ? 'Cấp quyền quản trị cho người này?' : 'Bỏ quyền quản trị của người này?')) { await api({ op: 'user', id: b.dataset.adm, patch: { admin: b.dataset.v === '1' } }); return go('us'); }
+  if (b.dataset.pw) { const pw = prompt('Mật khẩu mới cho tài khoản này (≥ 6 ký tự):'); if (pw && pw.length >= 6) { await api({ op: 'user', id: b.dataset.pw, patch: { password: pw } }); alert('Đã đặt lại – nhắn người đó mật khẩu mới.'); } }
+};
+</script>
+</body></html>

@@ -6,6 +6,10 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261111-1', date: '11/11/2026', game: 'all', title: 'Nút Cài đặt + công cụ quản trị', items: [
+    '⚙️ Nút Cài đặt ngay góc trên trang chủ: đổi tên, tắt/bật nhạc mọi game, tự công khai phòng, ẩn số online, xoá dữ liệu trên máy.',
+    '🛡️ Quản trị viên có trang Quản trị riêng (báo cáo chat, góp ý, cấm/bỏ cấm, tài khoản) và nút xử lý nhanh ngay trong chat Sảnh.',
+  ] },
   { id: '20261110-15', date: '10/11/2026', game: 'all', title: 'Số người online + tên game thẳng hàng', items: [
     '🟢 Trang chủ, Sảnh chung và màn hình đầu mỗi game hiện số người đang online trên BGVN.',
     '📐 Tên game trên trang chủ giờ thẳng hàng, cùng cỡ chữ; mô tả gọn tối đa 3 dòng.',

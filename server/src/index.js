@@ -51,6 +51,7 @@ export default {
       else if (p[1] === 'logout') r = await U.logout(bearer());
       else if (p[1] === 'rename') r = await U.rename(bearer(), d.name);
       else if (p[1] === 'password') r = await U.changePassword(bearer(), d.old, d.new);
+      else if (p[1] === 'claim-admin') r = await U.claimAdmin(bearer(), d.key, env.ADMIN_KEY);
       else return json({ ok: false }, 404, H);
       return json(r, 200, H);
     }
@@ -82,18 +83,23 @@ export default {
       if (p[1] === 'list' && req.method === 'POST') {
         const { key, del, op, ...d } = await req.json().catch(() => ({}));
         const want = String(env.ADMIN_KEY || '').trim();
-        if (!want) return json({ ok: false, msg: 'Máy chủ chưa có ADMIN_KEY – vào Cloudflare → bgvn-rooms → Settings → Variables and Secrets (KHÔNG phải mục Build) để thêm' }, 503);
-        if (String(key || '').trim() !== want) return json({ ok: false, msg: 'Sai mật khẩu' }, 401);
+        const H = cors(origin);
+        // vào bằng mật khẩu ADMIN_KEY, hoặc bằng tài khoản đã được cấp quyền quản trị
+        const byToken = bearer() ? await env.USERS.get(env.USERS.idFromName('main')).isAdmin(bearer()) : false;
+        if (!byToken) {
+          if (!want) return json({ ok: false, msg: 'Máy chủ chưa có ADMIN_KEY – vào Cloudflare → bgvn-rooms → Settings → Variables and Secrets (KHÔNG phải mục Build) để thêm' }, 503, H);
+          if (String(key || '').trim() !== want) return json({ ok: false, msg: 'Sai mật khẩu' }, 401, H);
+        }
         if (op) { // báo cáo, cấm chat, tài khoản
           const L = env.LOBBY.get(env.LOBBY.idFromName('main')), U = env.USERS.get(env.USERS.idFromName('main'));
-          if (op === 'users') return json({ ok: true, users: await U.adminFind(d.q) });
-          if (op === 'user') return json(await U.adminSet(d.id, d.patch || {}));
-          if (op === 'stats') return json({ ok: true, ...(await L.admin('stats')), ...(await U.stats()) });
-          return json({ ok: true, ...(await L.admin(op, d)) });
+          if (op === 'users') return json({ ok: true, users: await U.adminFind(d.q) }, 200, H);
+          if (op === 'user') return json(await U.adminSet(d.id, d.patch || {}), 200, H);
+          if (op === 'stats') return json({ ok: true, ...(await L.admin('stats')), ...(await U.stats()) }, 200, H);
+          return json({ ok: true, ...(await L.admin(op, d)) }, 200, H);
         }
         const inbox = env.INBOX.get(env.INBOX.idFromName('main'));
         if (del) await inbox.remove(del);
-        return json({ ok: true, items: await inbox.list() });
+        return json({ ok: true, items: await inbox.list() }, 200, H);
       }
       return new Response(ADMIN_HTML, { headers: { 'content-type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
     }

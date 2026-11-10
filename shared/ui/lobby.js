@@ -2,7 +2,7 @@
 // mountLobby(el, { game }) – game = null: sảnh tổng (mọi game, kênh chat "Chung" + kênh game đang lọc)
 // openLobby(game) – mở dạng hộp nổi (dùng trong trang game)
 import { WS, auth, guestId, myName } from '../net/api.js?v=1';
-import { openLogin } from './account.js?v=1';
+import { openLogin } from './account.js?v=2';
 
 const ROOT = new URL('../../', import.meta.url).href;
 export const GAME_INFO = {
@@ -90,7 +90,7 @@ export function mountLobby(el, { game = null } = {}) {
   };
   const drawChans = () => { const cs = chans(); $('.lb-cf').innerHTML = cs.map(c => `<button data-c="${c}" aria-pressed="${c === ch}">${c === 'all' ? '🌐 Chung' : (GAME_INFO[c]?.[0] + ' ' + GAME_INFO[c]?.[1])}</button>`).join(''); $('.lb-cf').hidden = cs.length < 2; };
   $('.lb-cf').onclick = e => { const b = e.target.closest('button'); if (!b) return; ch = b.dataset.c; drawChans(); drawMsgs(); };
-  const msgHTML = m => { const mine = !!me && m.who === me.who; return `<div class="lb-m${mine ? ' me' : ''}" data-id="${m.id}"><span class="lb-av" style="background:${colorOf(m.name)}">${esc([...m.name][0] || '?').toUpperCase()}</span><div class="lb-b"><div class="lb-n">${esc(m.name)}${m.v ? ' <span class="v" title="Đã đăng nhập">✓</span>' : ''}<time>${hhmm(m.ts)}</time></div>${esc(m.text)}</div>${mine ? '' : '<button class="lb-rp" title="Báo cáo tin này" aria-label="Báo cáo">🚩</button>'}</div>`; };
+  const msgHTML = m => { const mine = !!me && m.who === me.who; return `<div class="lb-m${mine ? ' me' : ''}" data-id="${m.id}"><span class="lb-av" style="background:${colorOf(m.name)}">${esc([...m.name][0] || '?').toUpperCase()}</span><div class="lb-b"><div class="lb-n">${esc(m.name)}${m.v ? ' <span class="v" title="Đã đăng nhập">✓</span>' : ''}<time>${hhmm(m.ts)}</time></div>${esc(m.text)}</div>${mine ? '' : (me && me.admin ? '<button class="lb-rp lb-adm" title="Quản trị: ẩn tin / cấm chat" aria-label="Quản trị">🛡️</button>' : '') + '<button class="lb-rp" title="Báo cáo tin này" aria-label="Báo cáo">🚩</button>'}</div>`; };
   const scrollEnd = () => { const b = $('.lb-msgs'); b.scrollTop = b.scrollHeight; };
   const drawMsgs = () => { const l = msgs[ch] || []; $('.lb-msgs').innerHTML = l.length ? l.map(msgHTML).join('') : '<div class="lb-empty">Chưa ai nói gì… mở lời trước đi nè 👋</div>'; scrollEnd(); };
   const drawWho = () => {
@@ -102,6 +102,12 @@ export function mountLobby(el, { game = null } = {}) {
   $('.lb-msgs').onclick = e => {
     const b = e.target.closest('.lb-rp'); if (!b) return;
     const id = +b.closest('.lb-m').dataset.id;
+    if (b.classList.contains("lb-adm")) {
+      const c = prompt('🛡️ Quản trị tin này – gõ số:\n1 = Ẩn tin\n2 = Cấm chat 24 giờ\n3 = Cấm chat 7 ngày\n4 = Cấm chat vĩnh viễn'); if (!c) return;
+      const hours = { 2: 24, 3: 168, 4: 87600 }[c.trim()];
+      if (c.trim() === '1') send({ t: 'mod', op: 'hide', id }); else if (hours) send({ t: 'mod', op: 'ban', id, hours, reason: 'Quản trị viên xử lý trong chat' });
+      return;
+    }
     const reason = prompt('Báo cáo tin nhắn này vì sao? (chửi bậy, quấy rối, spam, lừa đảo…)'); if (reason === null) return;
     send({ t: 'report', id, reason });
   };

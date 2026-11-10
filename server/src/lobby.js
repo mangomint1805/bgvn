@@ -81,14 +81,14 @@ export class Lobby extends DurableObject {
     const a = ws.deserializeAttachment() || {};
     const send = o => { try { ws.send(JSON.stringify(o)); } catch (e) {} };
     if (m.t === 'hello') {
-      let who = null, name = cleanName(m.name) || 'Khách', v = 0;
-      if (m.token) { const u = await this.env.USERS.get(this.env.USERS.idFromName('main')).whoami(String(m.token)); if (u && !u.banned) { who = 'u:' + u.id; name = u.name; v = 1; } }
+      let who = null, name = cleanName(m.name) || 'Khách', v = 0, admin = 0;
+      if (m.token) { const u = await this.env.USERS.get(this.env.USERS.idFromName('main')).whoami(String(m.token)); if (u && !u.banned) { who = 'u:' + u.id; name = u.name; v = 1; admin = u.admin ? 1 : 0; } }
       if (!who) { const g = String(m.guest || '').replace(/[^a-z0-9]/g, '').slice(0, 24); who = g.length >= 8 ? 'g:' + g : 'g:' + a.ipk; }
       if (name.includes('*')) name = 'Khách';
       const chs = (Array.isArray(m.chs) ? m.chs : ['all']).filter(c => CHANNELS.has(c)).slice(0, 3);
       if (!chs.length) chs.push('all');
-      ws.serializeAttachment({ ...a, who, name, v, chs });
-      send({ t: 'me', name, v, who: who.startsWith('u:') ? who : who.slice(0, 9) });
+      ws.serializeAttachment({ ...a, who, name, v, chs, admin });
+      send({ t: 'me', name, v, admin: !!admin, who: who.startsWith('u:') ? who : who.slice(0, 9) });
       send({ t: 'online', n: this.online() });
       send({ t: 'rooms', list: this.rooms() });
       for (const ch of chs) send({ t: 'hist', ch, msgs: this.hist(ch) });
@@ -121,6 +121,13 @@ export class Lobby extends DurableObject {
       const n = this.sql.exec('SELECT COUNT(DISTINCT reporter) AS n FROM reports WHERE msg = ?', row.id).one().n;
       if (n >= 3) this.hide(row.id);
       send({ t: 'ok', msg: 'Đã gửi báo cáo – cảm ơn bạn 💖' });
+      return;
+    }
+    if (m.t === 'mod' && a.admin) { // công cụ quản trị ngay trong chat
+      const row = this.sql.exec('SELECT * FROM chat WHERE id = ?', +m.id || 0).toArray()[0]; if (!row) return;
+      if (m.op === 'hide') this.hide(row.id);
+      else if (m.op === 'ban') { await this.admin('ban', { who: row.who, hours: Math.max(1, Math.min(87600, +m.hours || 24)), reason: String(m.reason || '').slice(0, 200) }); this.hide(row.id); }
+      send({ t: 'ok', msg: m.op === 'ban' ? '⛔ Đã cấm chat ' + row.name : '🙈 Đã ẩn tin' });
       return;
     }
     if (m.t === 'join') { // đổi kênh (vd. vào sảnh của game khác)

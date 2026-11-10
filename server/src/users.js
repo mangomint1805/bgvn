@@ -22,8 +22,9 @@ export class Users extends DurableObject {
     super(ctx, env); this.sql = ctx.storage.sql; this.fails = new Map();
     this.sql.exec(`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, name TEXT, pw TEXT, salt TEXT, google TEXT UNIQUE, email TEXT, created INTEGER, banned INTEGER DEFAULT 0)`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS sessions (tok TEXT PRIMARY KEY, uid INTEGER, exp INTEGER)`);
+    try { this.sql.exec('ALTER TABLE users ADD COLUMN admin INTEGER DEFAULT 0'); } catch (e) {} // cột quản trị (bản 11/2026)
   }
-  pub(u) { return u && { id: u.id, username: u.username || null, name: u.name, google: !!u.google, banned: !!u.banned }; }
+  pub(u) { return u && { id: u.id, username: u.username || null, name: u.name, google: !!u.google, banned: !!u.banned, admin: !!u.admin }; }
   one(q, ...a) { const r = this.sql.exec(q, ...a).toArray(); return r[0] || null; }
   async session(uid) {
     const tok = rand(32), now = Date.now();
@@ -96,8 +97,16 @@ export class Users extends DurableObject {
     return { ok: true };
   }
   // ---- quản trị ----
-  async adminFind(q) { q = String(q || '').trim().toLowerCase(); return this.sql.exec('SELECT id, username, name, google IS NOT NULL AS g, created, banned FROM users WHERE username LIKE ? OR lower(name) LIKE ? OR id = ? ORDER BY id DESC LIMIT 50', `%${q}%`, `%${q}%`, +q || -1).toArray(); }
+  async claimAdmin(token, key, want) { // tài khoản đang đăng nhập + đúng ADMIN_KEY → thành quản trị viên
+    const u = await this.whoami(token); if (!u) return { ok: false, msg: 'Đăng nhập trước đã nha' };
+    want = String(want || '').trim(); if (!want || String(key || '').trim() !== want) return { ok: false, msg: 'Sai mật khẩu quản trị' };
+    this.sql.exec('UPDATE users SET admin = 1 WHERE id = ?', u.id);
+    return { ok: true, user: this.pub(this.one('SELECT * FROM users WHERE id = ?', u.id)) };
+  }
+  async isAdmin(token) { const u = await this.whoami(token); return !!(u && u.admin && !u.banned); }
+  async adminFind(q) { q = String(q || '').trim().toLowerCase(); return this.sql.exec('SELECT id, username, name, google IS NOT NULL AS g, created, banned, admin FROM users WHERE username LIKE ? OR lower(name) LIKE ? OR id = ? ORDER BY id DESC LIMIT 50', `%${q}%`, `%${q}%`, +q || -1).toArray(); }
   async adminSet(id, patch) {
+    if ('admin' in patch) this.sql.exec('UPDATE users SET admin = ? WHERE id = ?', patch.admin ? 1 : 0, +id);
     if ('banned' in patch) { this.sql.exec('UPDATE users SET banned = ? WHERE id = ?', patch.banned ? 1 : 0, +id); if (patch.banned) this.sql.exec('DELETE FROM sessions WHERE uid = ?', +id); }
     if (patch.password) { const salt = rand(16); this.sql.exec('UPDATE users SET pw = ?, salt = ? WHERE id = ? AND username IS NOT NULL', await hashPw(String(patch.password), salt), salt, +id); }
     return { ok: true };
