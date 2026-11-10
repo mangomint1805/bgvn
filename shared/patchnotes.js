@@ -6,6 +6,10 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261110-09', date: '10/11/2026', game: 'all', title: 'Góp ý & Ủng hộ', items: [
+    '💌 Nút Góp ý / Báo lỗi ở trang chủ và chân trang mỗi game – gửi thẳng cho chủ web.',
+    '☕ Nút Ủng hộ: mời chủ web ly cà phê qua mã QR (tự nguyện, không đổi được gì trong game).',
+  ] },
   { id: '20261110-08', date: '10/11/2026', game: 'all', title: 'Nút về trang chủ + sửa lặt vặt', items: [
     '🏠 Hộp "Rời ván?" ở mọi game có thêm nút Về trang chủ BGVN (Bang!: trong ⚙️).',
     '🎴 Tam Quốc Sát: màn bốc thẻ thân phận – chữ trên thẻ tre không còn bị vỡ dấu/cắt chữ, nền che kín, chữ "Bạn là …" dễ đọc.',
