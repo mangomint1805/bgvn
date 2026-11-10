@@ -59,7 +59,7 @@ function safeUp() {
   flushAuto();
   if (busy || !G || G.won) return false;
   const s = cur(), m = homeOne(s);
-  if (!m) { fx.sfx.bad(); toast('Chưa có lá nào lên đích được 🤷', 'bad'); return false; }
+  if (!m) { fx.sfx.bad(); return false; }
   clearSel(); pushStep([m], apply(V, s, m), s); fx.sfx.found(); render(); updateHead(); runAuto(true);
   return true;
 }

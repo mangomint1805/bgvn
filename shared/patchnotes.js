@@ -6,6 +6,9 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261110-03', date: '10/11/2026', game: 'solitaire', title: 'Bỏ thông báo khi chuột phải không có lá', items: [
+    '🔇 Chuột phải mà không có lá nào lên đích được thì chỉ kêu một tiếng, không hiện thanh thông báo nữa.',
+  ] },
   { id: '20261110-02', date: '10/11/2026', game: 'solitaire', title: 'Theme mới, chế độ tối, chuột phải kiểu Windows', items: [
     '🎀 Thêm theme: 🐱 Mèo con (BGVN tự vẽ), 🐧 Cánh cụt (bộ Penguins của KDE), 👑 Tim hồng (Jolly Royal + Royal Hearts của KDE). Bấm 🎨 để chọn.',
     '🌙 Chế độ tối: tự theo máy, hoặc chọn Sáng/Tối trong ☰ Thêm.',
