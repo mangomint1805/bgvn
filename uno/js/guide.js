@@ -84,7 +84,7 @@ export function openGuide(openModal, cardHTML) {
       <h3>🎴 Cổ điển</h3><p>Luật chuẩn. Bị +2/+4 thì rút luôn, không được chồng.</p>
       <h3>🔥 Luật rừng</h3><ul>
         <li><b>Cộng dồn</b>: bị +2 thì đánh +2 hoặc +4 đẩy sang người kế, tổng phạt cộng dồn. <b>+2 và +4 chồng lẫn nhau thoải mái</b> (+2 lên +4 cũng được).
-          ${ill([[K(C('B', 'd2')), 'An đánh +2'], '→', [K(C('G', 'd2')), 'Bình chồng +2'], '→', [K(C('W', 'wd4')), 'Chi chồng +4'], '→', ['<b style="font-size:26px">+8</b>', 'người kế không chồng được thì <b>rút 8</b>']])}</li>
+          ${ill([[K(C('B', 'd2')), 'Bánh Bao đánh +2'], '→', [K(C('G', 'd2')), 'Bông chồng +2'], '→', [K(C('W', 'wd4')), 'Đậu chồng +4'], '→', ['<b style="font-size:26px">+8</b>', 'người kế không chồng được thì <b>rút 8</b>']])}</li>
         <li><b>Khoá mõm chồng Khoá mõm</b>: bị khoá mõm mà có lá Khoá mõm thì đánh để chuyền cho người kế.</li>
         <li><b>Bốc thử khi bị dồn</b>: bị dồn +2/+4 mà không có lá chồng thì được bốc thử 1 lá – trúng lá cộng, Khiên hoặc No U thì đánh chồng tiếp ngay (+? không tính), không trúng thì chịu phạt.</li>
         <li><b>Tự bốc phạt</b>: bị cộng bao nhiêu lá thì tự bấm bốc từng lá, mỗi lá cách nhau 1 giây. Cho thấm 😈</li>

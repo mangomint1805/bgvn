@@ -35,7 +35,7 @@ export function askName(code) {
     wrap.innerHTML = `<form style="background:#fff;color:#1d2433;border-radius:20px;padding:20px 18px 16px;width:min(340px,100%);box-shadow:0 18px 50px -12px rgba(0,0,0,.5);font-family:'Be Vietnam Pro',system-ui,sans-serif;text-align:center">
       <div style="font:800 20px/1.25 'Baloo 2','Be Vietnam Pro',system-ui,sans-serif;margin-bottom:4px">🎟️ Vào phòng ${code}</div>
       <label for="bgvn-askname-in" style="display:block;font-weight:700;margin:6px 0 8px">Tên của bạn</label>
-      <input id="bgvn-askname-in" maxlength="16" autocomplete="nickname" enterkeyhint="go" placeholder="VD: Mai" style="width:100%;box-sizing:border-box;font:600 17px 'Be Vietnam Pro',system-ui,sans-serif;padding:11px 14px;border:2px solid #d5dbe8;border-radius:14px;outline:none;text-align:center">
+      <input id="bgvn-askname-in" maxlength="16" autocomplete="nickname" enterkeyhint="go" placeholder="VD: Kẹo" style="width:100%;box-sizing:border-box;font:600 17px 'Be Vietnam Pro',system-ui,sans-serif;padding:11px 14px;border:2px solid #d5dbe8;border-radius:14px;outline:none;text-align:center">
       <div style="display:flex;gap:8px;margin-top:12px">
         <button type="button" data-x style="flex:1;min-height:44px;border:0;border-radius:14px;background:#eef1f7;color:#4a5570;font:700 15px 'Be Vietnam Pro',system-ui,sans-serif;cursor:pointer">Huỷ</button>
         <button type="submit" style="flex:2;min-height:44px;border:0;border-radius:14px;background:#2f7bef;color:#fff;font:800 15px 'Be Vietnam Pro',system-ui,sans-serif;cursor:pointer">Vào phòng 🚀</button>

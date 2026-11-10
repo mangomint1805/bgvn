@@ -13,7 +13,7 @@ const NS = 'bgvn-catte', PREFIX = 'bgvn-catte-', GAME = 'catte';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
 export { session };
-const BOT_NAMES = ['Mai', 'An', 'Bình', 'Chi', 'Dũng', 'Giang'];
+const BOT_NAMES = ['Kẹo', 'Bánh Bao', 'Bông', 'Đậu', 'Mây', 'Sữa'];
 export const MAX = MAX_PLAYERS;
 const AWAY_MS = 6000;     // người rớt mạng: bot đánh thay sau 6 giây
 export const NEXT_MS = 9000; // hết ván: tự chia ván mới sau 9 giây

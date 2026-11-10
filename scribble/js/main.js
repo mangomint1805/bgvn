@@ -203,7 +203,7 @@ function renderSettings() {
     h += slider('s-draw', 'Thời gian vẽ', o.drawTime, 30, 180, 10);
     h += `<h4>Chủ đề <small>(${buildPool(o).length} từ)</small></h4><div class="cats">${CAT_KEYS.map(k => `<button class="cat ${o.cats.includes(k) ? 'on' : ''}" data-cat="${k}" ${dis}>${CATS[k].name} <small>${CATS[k].words.length}</small></button>`).join('')}</div>`;
     h += `<h4>Từ riêng của hội <small>(${o.custom.length} từ)</small></h4>`;
-    h += isHost ? `<textarea id="s-custom" rows="4" placeholder="Mỗi dòng 1 từ, ví dụ:&#10;Mai ngủ gật&#10;cà phê muối&#10;xe buýt số 19">${esc(o.custom.join('\n'))}</textarea>` : `<p class="hint-txt">${o.custom.length ? esc(o.custom.length + ' từ bí mật do chủ phòng thêm 🤫') : 'Chủ phòng chưa thêm từ riêng.'}</p>`;
+    h += isHost ? `<textarea id="s-custom" rows="4" placeholder="Mỗi dòng 1 từ, ví dụ:&#10;Kẹo ngủ gật&#10;cà phê muối&#10;xe buýt số 19">${esc(o.custom.join('\n'))}</textarea>` : `<p class="hint-txt">${o.custom.length ? esc(o.custom.length + ' từ bí mật do chủ phòng thêm 🤫') : 'Chủ phòng chưa thêm từ riêng.'}</p>`;
     h += `<label class="check"><input type="checkbox" id="s-only" ${o.onlyCustom ? 'checked' : ''} ${isHost && o.custom.length >= 3 ? '' : 'disabled'}><span>Chỉ dùng từ riêng <small>(cần ≥ 3 từ)</small></span></label>`;
   } else {
     const g = GMODES[o.gmode] || GMODES.normal;

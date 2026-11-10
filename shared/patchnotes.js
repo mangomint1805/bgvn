@@ -7,7 +7,7 @@ export const GAMES = {
 };
 export const NOTES = [
   { id: '20261110-07', date: '10/11/2026', game: 'all', title: 'Đổi tên bot', items: [
-    '🤖 Bot ở mọi game giờ dùng tên chung (An, Bình, Chi, Dũng, Giang, Mai, Mochi, Bơ…), ví dụ trong hướng dẫn cũng đổi theo.',
+    '🤖 Bot ở mọi game giờ có tên cute: Bánh Bao, Bông, Đậu, Mây, Sữa, Kẹo, Mochi, Bơ… – ví dụ trong hướng dẫn cũng đổi theo.',
   ] },
   { id: '20261110-06', date: '10/11/2026', game: 'solitaire', title: 'Theme mới: ✂️ Cắt dán', items: [
     '✂️ Bộ bài collage giấy cắt BGVN tự vẽ: mỗi lá là một bức cắt dán sticker, tem, băng keo khác nhau; J Q K là cáo, thỏ, gấu hoàng gia (chất đen tông tối).',

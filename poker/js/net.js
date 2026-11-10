@@ -13,7 +13,7 @@ const NS = 'bgvn-poker', PREFIX = 'bgvn-poker-', GAME = 'poker';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
 export { session };
-const BOT_NAMES = ['Mai', 'An', 'Bình', 'Chi', 'Dũng', 'Giang', 'Mochi', 'Bơ', 'Kem'];
+const BOT_NAMES = ['Kẹo', 'Bánh Bao', 'Bông', 'Đậu', 'Mây', 'Sữa', 'Mochi', 'Bơ', 'Kem'];
 export const MAX = MAX_PLAYERS;
 const AWAY_MS = 6000;      // người rớt mạng: máy đánh thay sau 6 giây
 const HB_MS = 2500, STALL_MS = 8000;
