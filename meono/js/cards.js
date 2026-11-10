@@ -1,5 +1,5 @@
 // Vẽ lá bài Mèo Nổ: mỗi lá là 1 chú mèo hoạt hình đang làm hành động của lá (SVG tự vẽ, nét mực đậm). Không dùng hình của game gốc.
-import { CARD } from './engine.js?v=7';
+import { CARD } from './engine.js?v=8';
 
 let uid = 0;
 const K = '#2d2a32';
@@ -156,9 +156,9 @@ const ART = {
   // Móc Đáy: mèo nằm rạp, lè lưỡi, thò tay móc lá dưới đáy chồng bài
   bottom: () => { const f = '#ffcf99'; return `<g>${[0, 1, 2, 3].map(i => `<rect x="${26 + (i % 2) * 2}" y="${36 + i * 11}" width="34" height="13" rx="3" fill="#e6b376" ${S(2.4)}/>`).join('')}</g><rect x="44" y="80" width="34" height="13" rx="3" fill="#fff" ${S(2.4)}/><text x="61" y="90.5" text-anchor="middle" font-size="9">🐾</text>` +
     `<path d="M24 84 h-6 M24 89 h-8" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>` + L('M92 92 q4 -16 -6 -20', f, 6) + body(84, 82, 14, 11, f, 'tabby', '#e08a3c') + face({ x: 80, y: 60, s: .62, fur: f, inner: '#ffb3c1', pat: 'tabby', pc: '#e08a3c', eyes: 'smug', mouth: 'tongue' }) + L('M74 84 Q66 88 56 87', f, 6) + `<path d="M34 28 l2 -6 M42 26 v-7 M50 28 l-2 -6" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>`; },
-  // ĐÉO!: mèo cau có giơ bàn chân chặn + cầm biển "ĐÉO!"
+  // HUỶ KÈO!: mèo cau có giơ bàn chân chặn + cầm biển "HUỶ KÈO!"
   nope: () => { const f = '#fff3e6'; return `<path d="M70 48 V86" stroke="${K}" stroke-width="6.5" stroke-linecap="round"/><path d="M70 48 V86" stroke="#c9a46b" stroke-width="3" stroke-linecap="round"/>
-    <g transform="rotate(8 72 28)"><path d="M62 6 h20 l14 14 v18 l-14 14 h-20 l-14 -14 v-18 z" fill="#fff" ${S(3)}/><path d="M63.5 10 h17 l11.5 11.5 v15 l-11.5 11.5 h-17 l-11.5 -11.5 v-15 z" fill="#be123c"/><text x="72" y="34" text-anchor="middle" font-family="Baloo 2,sans-serif" font-weight="800" font-size="15" fill="#fff" stroke="${K}" stroke-width="1" paint-order="stroke">ĐÉO!</text></g>` +
+    <g transform="rotate(8 72 28)"><path d="M62 6 h20 l14 14 v18 l-14 14 h-20 l-14 -14 v-18 z" fill="#fff" ${S(3)}/><path d="M63.5 10 h17 l11.5 11.5 v15 l-11.5 11.5 h-17 l-11.5 -11.5 v-15 z" fill="#be123c"/><text x="72" text-anchor="middle" font-family="Baloo 2,sans-serif" font-weight="800" font-size="12.5" fill="#fff" stroke="${K}" stroke-width="1" paint-order="stroke"><tspan x="72" y="27">HUỶ</tspan><tspan x="72" y="41">KÈO!</tspan></text></g>` +
     body(48, 84, 19, 13, f, 'belly') + face({ x: 46, y: 58, s: .76, fur: f, inner: '#ffb3c1', pat: 'tabby', pc: '#e8a25a', eyes: 'angry', mouth: 'yell' }) + paw(70, 74, f, 5.2) +
     L('M34 80 q-8 -4 -10 -16', f, 6.5) + `<g transform="translate(22 58)"><ellipse cx="0" cy="2" rx="9" ry="8" fill="${f}" ${S(2.6)}/><ellipse cx="0" cy="4.5" rx="4.2" ry="3.4" fill="#ff9eb5"/><circle cx="-5" cy="-2.5" r="1.8" fill="#ff9eb5"/><circle cx="0" cy="-4" r="1.8" fill="#ff9eb5"/><circle cx="5" cy="-2.5" r="1.8" fill="#ff9eb5"/></g>`; },
 };
@@ -170,7 +170,7 @@ const SHORT = {
   cat3: 'Đôi: cướp bừa · Ba: gọi tên', cat4: 'Đôi: cướp bừa · Ba: gọi tên', cat5: 'Đôi: cướp bừa · Ba: gọi tên',
 };
 // chữ viết tắt ở góc trên trái – lá xếp chồng chỉ lộ mép trái vẫn đọc được
-const ABBR = { bomb: 'NỔ', defuse: 'GỠ', attack: 'ĐỔ', skip: 'NÉ', shuffle: 'XÀO', future: 'SOI', alter: 'CẢI', favor: 'XIN', bottom: 'MÓC', nope: 'ĐÉO', cat1: 'Ú', cat2: 'MƯỚP', cat3: 'TAM', cat4: 'XIÊM', cat5: 'BÔNG' };
+const ABBR = { bomb: 'NỔ', defuse: 'GỠ', attack: 'ĐỔ', skip: 'NÉ', shuffle: 'XÀO', future: 'SOI', alter: 'CẢI', favor: 'XIN', bottom: 'MÓC', nope: 'HUỶ', cat1: 'Ú', cat2: 'MƯỚP', cat3: 'TAM', cat4: 'XIÊM', cat5: 'BÔNG' };
 const PAW_COL = { cat1: '#b45309', cat2: '#334155', cat3: '#c2410c', cat4: '#4a2c1d', cat5: '#7e22ce' };
 const pawIcon = (c, cls = '') => `<svg viewBox="0 0 24 24" class="${cls}" aria-hidden="true"><g fill="${c}"><ellipse cx="12" cy="15.5" rx="5.6" ry="4.6"/><circle cx="5.4" cy="9.6" r="2.3"/><circle cx="9.4" cy="5.8" r="2.3"/><circle cx="14.6" cy="5.8" r="2.3"/><circle cx="18.6" cy="9.6" r="2.3"/></g></svg>`;
 function artFor(t, opt = {}) {

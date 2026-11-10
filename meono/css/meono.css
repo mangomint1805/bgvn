@@ -150,7 +150,7 @@ input#name:focus,.join-row input:focus{border-color:var(--pri)}
 .pk{display:flex;gap:2px;font-size:18px}.pki.b{animation:pulse .6s infinite}
 .meter.off{justify-content:center}
 
-/* thanh trạng thái / cửa sổ ĐÉO! */
+/* thanh trạng thái / cửa sổ HUỶ KÈO! */
 .strip{height:64px;flex:none;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 10px;position:relative;z-index:3}
 .strip .hint{background:#fff;border-radius:16px;padding:6px 14px;font-size:14px;text-align:center;box-shadow:0 3px 10px -6px #0005;max-width:640px;line-height:1.3}
 .strip .hint.mine{background:#fff1e6;box-shadow:0 0 0 2px var(--pri)}
@@ -528,10 +528,10 @@ input#name,.join-row input,.opt select{border:2.5px solid var(--ink)}
 .card-detail .mcard .mc-desc,.card-detail .mcard .mc-en{display:none}
 .is-act.lg .mc-desc,.is-act.md .mc-desc,.is-act.lg .mc-en,.is-act.md .mc-en,.t-bomb.lg .mc-desc{color:#fff;text-shadow:0 1px 2px #000c}
 
-/* ===== nâng cấp 11/2026: lá nào cũng có mèo, dấu mộc ĐÉO!, huy hiệu cuối ván ===== */
+/* ===== nâng cấp 11/2026: lá nào cũng có mèo, dấu mộc HUỶ KÈO!, huy hiệu cuối ván ===== */
 .bomb-art .spark-g{transform-origin:90px 32px}
 .mc-art .art{overflow:visible}
-/* con dấu ĐÉO! giữa bàn: mỗi lần ĐÉO! thêm 1 dấu lệch góc */
+/* con dấu HUỶ KÈO! giữa bàn: mỗi lần HUỶ KÈO! thêm 1 dấu lệch góc */
 .nope-stack{position:fixed;left:50%;top:42%;width:0;height:0;z-index:2;transition:opacity .4s}
 .nope-stack.bye{opacity:0}
 .stamp{position:absolute;left:0;top:0;transform:translate(-50%,-50%) translate(var(--dx),var(--dy)) rotate(var(--r));display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -545,6 +545,7 @@ input#name,.join-row input,.opt select{border:2.5px solid var(--ink)}
 /* giữ đủ dấu tiếng Việt: chừa chỗ trên cho dấu, không cắt dòng nhỏ theo chiều dọc, vân mực nhẹ hơn để dấu nhỏ không bị ăn mất */
 .stamp{padding:12px 12px 10px}
 .stamp b{line-height:1.12;padding-top:.08em}
+.stamp b{font-size:clamp(30px,min(10.5vw,14vh),80px);white-space:nowrap} /* "HUỶ KÈO!" dài hơn "ĐÉO!" */
 .stamp small{line-height:1.45;padding:2px 2px 0;overflow:visible;text-overflow:clip;white-space:normal;text-align:center}
 .stamp{-webkit-mask-size:220px 220px;mask-size:220px 220px}
 .stamp .lv{position:absolute;right:8px;top:4px;font-style:normal;font-weight:800;font-size:clamp(18px,5vw,26px)}

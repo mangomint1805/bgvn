@@ -1,12 +1,12 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, MEO_PHRASES } from './net.js?v=11';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, MEO_PHRASES } from './net.js?v=12';
 import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
-import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat, awards } from './engine.js?v=7';
-import { cardHTML, catSVG, bombSVG, cardIcon, mascotSVG, tint } from './cards.js?v=7';
-import * as fx from './mfx.js?v=8';
-import { openGuide } from './guide.js?v=9';
+import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat, awards } from './engine.js?v=8';
+import { cardHTML, catSVG, bombSVG, cardIcon, mascotSVG, tint } from './cards.js?v=8';
+import * as fx from './mfx.js?v=9';
+import { openGuide } from './guide.js?v=10';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=4';
 import { startPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 setSpeedFn(fx.S);
@@ -67,7 +67,7 @@ const reacts = createReactions({
   nameOf: id => { const p = view && view.players.find(x => x.id === id); return p ? clean(p.name) : ''; },
   mount: $('#center'), place: 'right:6px;bottom:6px',
   phrases: MEO_PHRASES,
-  onShow: msg => { if (/^Meo|^Bốc|^ĐÉO/.test(msg.e || '')) fx.sfx.meow(0, 1.2 + Math.random() * 0.3, 0.05); else fx.sfx.flip(); },
+  onShow: msg => { if (/^Meo|^Bốc|^HUỶ KÈO|^Huỷ/.test(msg.e || '')) fx.sfx.meow(0, 1.2 + Math.random() * 0.3, 0.05); else fx.sfx.flip(); },
 });
 reacts.setVisible(false);
 // màn ngang thấp (điện thoại xoay ngang): hộp bài bị ép dẹt → chuyển nút 😂 lên khoảng trống trên thanh công cụ
@@ -137,11 +137,11 @@ function renderLobby() {
     <label class="opt"><span><b>⏱ Đồng hồ mỗi lượt</b><small>Hết giờ máy tự bốc giùm.</small></span>
       <select data-opt="turnTime" ${dis}>${[30, 45, 60, 90].map(n => `<option value="${n}" ${+o.turnTime === n ? 'selected' : ''}>${n} giây</option>`).join('')}</select></label>
     <label class="opt"><input type="checkbox" data-opt="expansion" ${o.expansion ? 'checked' : ''} ${dis}><span><b>🪄 Thêm Cải Mệnh & Móc Đáy</b><small>Tắt để chơi bộ cơ bản.</small></span></label>
-    <label class="opt ${o.chaos ? 'hot' : ''}"><input type="checkbox" data-opt="chaos" ${o.chaos ? 'checked' : ''} ${dis}><span><b>🌀 Bộ bài Hỗn loạn</b><small>Gấp đôi Đổ Vỏ${o.expansion ? ', Móc Đáy' : ''}, nhiều ĐÉO! & Xào Bài hơn, thêm 1 Gỡ Bom. Bớt mèo thường.</small></span></label>`;
+    <label class="opt ${o.chaos ? 'hot' : ''}"><input type="checkbox" data-opt="chaos" ${o.chaos ? 'checked' : ''} ${dis}><span><b>🌀 Bộ bài Hỗn loạn</b><small>Gấp đôi Đổ Vỏ${o.expansion ? ', Móc Đáy' : ''}, nhiều HUỶ KÈO! & Xào Bài hơn, thêm 1 Gỡ Bom. Bớt mèo thường.</small></span></label>`;
   $$('#opts [data-opt]').forEach(i => i.onchange = () => net.setOpt(i.dataset.opt, i.type === 'checkbox' ? i.checked : i.value));
   const n = Math.max(2, ps.length), plan = deckPlan(n, o);
   const total = Object.values(plan).reduce((a, b) => a + b, 0);
-  $('#deck-info').innerHTML = `🃏 ${n} người${o.chaos ? ' · <b>🌀 Hỗn loạn</b>' : ''}: bộ ${total} lá, <b>${plan.bomb} Mèo Nổ</b>, ${plan.defuse} Gỡ Bom, ${plan.attack} Đổ Vỏ, ${plan.nope} ĐÉO!. Mỗi người 1 Gỡ Bom + 7 lá.`;
+  $('#deck-info').innerHTML = `🃏 ${n} người${o.chaos ? ' · <b>🌀 Hỗn loạn</b>' : ''}: bộ ${total} lá, <b>${plan.bomb} Mèo Nổ</b>, ${plan.defuse} Gỡ Bom, ${plan.attack} Đổ Vỏ, ${plan.nope} HUỶ KÈO!. Mỗi người 1 Gỡ Bom + 7 lá.`;
   $('#btn-start').style.display = isHost ? '' : 'none';
   $('#wait-msg').style.display = isHost ? 'none' : '';
 }
@@ -269,7 +269,7 @@ function renderStrip(v, meP) {
       st.dataset.key = key; st.className = 'strip window ' + (cancelled ? 'cancelled' : '');
       st.innerHTML = `<div class="wbox"><div class="wtxt">${w.actor === myId ? 'Bạn' : `<b>${esc(pname(w.actor))}</b>`} đánh <b class="k">${what}</b>${w.target ? ` → ${w.target === myId ? '<b class="you">BẠN</b>' : esc(pname(w.target))}` : ''}${w.named ? ` (đòi ${cardName(w.named)})` : ''} ${nopeTxt}</div>
         <div class="wprog"><i id="wprog"></i></div></div>
-        ${w.canNope ? `<button class="btn nope-btn" id="btn-nope">🙅 ĐÉO!</button>` : `<span class="wwait">${meP && !meP.out ? 'Chờ phản ứng…' : ''}</span>`}`;
+        ${w.canNope ? `<button class="btn nope-btn" id="btn-nope">🙅 HUỶ KÈO!</button>` : `<span class="wwait">${meP && !meP.out ? 'Chờ phản ứng…' : ''}</span>`}`;
       const b = $('#btn-nope'); if (b) b.onclick = () => { send({ type: 'nope' }); b.disabled = true; };
     }
     return;
@@ -296,7 +296,7 @@ function renderActions(v, meP) {
       if (same.length >= 3) a.push(`<button class="btn pri" data-combo="3">🎯 Bộ ba</button>`);
       if (same.length < 2) a.push(`<span class="mini-hint">Cần 2 ${CARD[cards[0].t].name} để đánh đôi</span>`);
     } else if (kind) a.push(`<button class="btn pri" data-play="1">${kind === 'pair' ? '🐾 Đánh đôi' : kind === 'triple' ? '🎯 Bộ ba' : `${cardIcon(kind)} Đánh ${CARD[kind].name}`}</button>`);
-    else if (cards.length) a.push(`<span class="mini-hint">${cards.some(c => c.t === 'nope') ? 'ĐÉO! chỉ dùng khi ai đó vừa đánh' : cards.some(c => c.t === 'defuse') ? 'Gỡ Bom tự dùng khi bốc trúng bom' : 'Chọn 1 lá chức năng hoặc 2–3 mèo cùng loại'}</span>`);
+    else if (cards.length) a.push(`<span class="mini-hint">${cards.some(c => c.t === 'nope') ? 'HUỶ KÈO! chỉ dùng khi ai đó vừa đánh' : cards.some(c => c.t === 'defuse') ? 'Gỡ Bom tự dùng khi bốc trúng bom' : 'Chọn 1 lá chức năng hoặc 2–3 mèo cùng loại'}</span>`);
     a.unshift(`<button class="btn draw big" data-draw="1">🫳 Bốc bài${probShown() && !(v.peek || []).length ? ` <small>${Math.round(risk(v) * 100)}%💣</small>` : ''}</button>`);
   }
   $('#actions').innerHTML = a.join('');
@@ -357,7 +357,7 @@ function onCardClick(id) {
     sel.add(id);
   }
   fx.sfx.flip();
-  if (!isMyTurn() && sel.size) { const hint = c.t === 'nope' ? 'ĐÉO! dùng khi ai đó vừa đánh lá' : 'Chưa tới lượt bạn – chọn trước cũng được 😉'; toast(hint); }
+  if (!isMyTurn() && sel.size) { const hint = c.t === 'nope' ? 'HUỶ KÈO! dùng khi ai đó vừa đánh lá' : 'Chưa tới lượt bạn – chọn trước cũng được 😉'; toast(hint); }
   render();
 }
 function doDraw() {
@@ -450,7 +450,7 @@ function showWin(v) {
   const aw = awards(v).slice(0, 8);
   const badges = aw.length ? `<h3 class="aw-h">🏅 Huy hiệu ván này</h3><div class="awards">${aw.map((a, i) => `<div class="aw" style="--d:${i * 110}ms"><span class="aw-i">${a.icon}</span><span class="aw-t"><b class="aw-n">${a.title}</b><span>${a.ids.map(who).join(' & ')}</span><small>${a.desc}</small></span></div>`).join('')}</div>` : '';
   const st = id => (v.stats || {})[id] || {};
-  const table = `<table class="stt"><thead><tr><th></th><th class="nm">Mèo</th><th title="Số lá đã bốc">🃏</th><th title="Bốc trúng Mèo Nổ (số lần gỡ được)">💣</th><th title="ĐÉO! người khác">🙅</th><th title="Bị Đổ Vỏ">🎒</th></tr></thead><tbody>${rank.map(p => { const s = st(p.id); return `<tr class="${p.id === myId ? 'mine' : ''}"><td>${p.place === 1 ? '👑' : '💥'}</td><td class="nm">${esc(clean(p.name))}${p.id === myId ? ' <small>(bạn)</small>' : ''}</td><td>${s.draws || 0}</td><td>${s.bombs || 0}${s.defused ? `<small> ✂️${s.defused}</small>` : ''}</td><td>${s.nopes || 0}</td><td>${s.attacked || 0}</td></tr>`; }).join('')}</tbody></table><p class="stt-key">🃏 lá đã bốc · 💣 trúng bom (✂️ gỡ được) · 🙅 ĐÉO! người khác · 🎒 bị Đổ Vỏ</p>`;
+  const table = `<table class="stt"><thead><tr><th></th><th class="nm">Mèo</th><th title="Số lá đã bốc">🃏</th><th title="Bốc trúng Mèo Nổ (số lần gỡ được)">💣</th><th title="HUỶ KÈO! người khác">🙅</th><th title="Bị Đổ Vỏ">🎒</th></tr></thead><tbody>${rank.map(p => { const s = st(p.id); return `<tr class="${p.id === myId ? 'mine' : ''}"><td>${p.place === 1 ? '👑' : '💥'}</td><td class="nm">${esc(clean(p.name))}${p.id === myId ? ' <small>(bạn)</small>' : ''}</td><td>${s.draws || 0}</td><td>${s.bombs || 0}${s.defused ? `<small> ✂️${s.defused}</small>` : ''}</td><td>${s.nopes || 0}</td><td>${s.attacked || 0}</td></tr>`; }).join('')}</tbody></table><p class="stt-key">🃏 lá đã bốc · 💣 trúng bom (✂️ gỡ được) · 🙅 HUỶ KÈO! người khác · 🎒 bị Đổ Vỏ</p>`;
   setTimeout(() => {
     if (!view || view.phase !== 'ended' || modalKey === 'win') return;
     openModal(`<div class="win"><div class="big">${meWin ? '🏆' : '😼'}</div><h2>${meWin ? 'Bạn là con mèo sống sót cuối cùng!' : esc(pname(v.winner)) + ' thắng!'}</h2>
@@ -522,7 +522,7 @@ function playEvents(evs, prev) {
         const lv = e.nopes || 1; fx.sfx.stamp(lv);
         fx.stamp({ level: lv, who: e.by === myId ? 'Bạn' : pname(e.by), cancel: lv % 2 === 1, at: fx.ctr($('#center')) });
       }); t += 250 * S; break;
-      case 'noped': run(() => { fx.sfx.denied(); fx.floatText(seatEl(e.by), '❌ Bị ĐÉO!', 'bad'); }); break;
+      case 'noped': run(() => { fx.sfx.denied(); fx.floatText(seatEl(e.by), '❌ Bị HUỶ KÈO!', 'bad'); }); break;
       case 'resolve': run(() => {
         if (e.kind === 'shuffle') { fx.sfx.shuffle(); fx.pop($('#deck'), 'shuffling'); }
         if (e.kind === 'attack') { fx.sfx.attack(); }

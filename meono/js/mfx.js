@@ -102,7 +102,7 @@ export const sfx = {
   meow, purr, hiss, chirp,
   pet() { const r = Math.random(); if (r < 0.4) purr(1, 0.5); else if (r < 0.75) meow(0, 1.1 + Math.random() * 0.4, 0.08); else chirp(0, 1.1, 0.08); },
   win() { arp([523, 659, 784, 1047, 784, 1047, 1319], 0.11, 'triangle', 0.1); meow(0.8, 1.2, 0.07); },
-  // ĐÉO!: tiếng con dấu đóng "cộp" + mèo rít; ĐÉO! chồng càng nhiều càng rít cao
+  // HUỶ KÈO!: tiếng con dấu đóng "cộp" + mèo rít; HUỶ KÈO! chồng càng nhiều càng rít cao
   stamp(level = 1) {
     const k = Math.min(6, level - 1);
     tone(120, 0.22, 'sine', 0.55, -80); noise(0.12, 420, 1.1, 0, 'lowpass', 0.8); noise(0.05, 2400, 0.35, 0.004, 'bandpass', 0.7);
@@ -209,7 +209,7 @@ export function confetti() {
     layer().appendChild(d); setTimeout(() => d.remove(), 4200);
   }
 }
-// ---------- con dấu ĐÉO! đóng giữa màn hình: mỗi lần ĐÉO! thêm 1 dấu, lệch góc khác nhau ----------
+// ---------- con dấu HUỶ KÈO! đóng giữa màn hình: mỗi lần HUỶ KÈO! thêm 1 dấu, lệch góc khác nhau ----------
 const ST_ROT = [-11, 9, -4, 15, -17, 6, -8, 13], ST_DX = [0, 16, -14, 9, -18, 20, -6, 12], ST_DY = [0, -12, 12, -4, 8, -14, 16, -8];
 export function stamp({ level = 1, who = '', cancel = true, at = null } = {}) {
   const L = layer(); let box = L.querySelector('.nope-stack');
@@ -222,7 +222,7 @@ export function stamp({ level = 1, who = '', cancel = true, at = null } = {}) {
   n.className = 'stamp ' + (cancel ? 'cancel' : 'save');
   n.style.setProperty('--r', ST_ROT[i] + 'deg'); n.style.setProperty('--dx', ST_DX[i] + 'px'); n.style.setProperty('--dy', ST_DY[i] + 'px');
   n.style.animationDuration = Math.round(520 * S()) + 'ms';
-  n.innerHTML = `<b>ĐÉO!</b><small>${level > 1 ? `#${level} · ` : ''}${who ? who + ' · ' : ''}${cancel ? 'HUỶ!' : 'cứu lại!'}</small>`;
+  n.innerHTML = `<b>HUỶ KÈO!</b><small>${level > 1 ? `#${level} · ` : ''}${who ? who + ' · ' : ''}${cancel ? 'HUỶ!' : 'cứu lại!'}</small>`;
   box.appendChild(n);
   while (box.children.length > 6) box.firstChild.remove();
   // tự dọn nếu không ai gọi clearStamps (vd. mất state)

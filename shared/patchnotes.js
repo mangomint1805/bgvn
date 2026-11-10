@@ -6,6 +6,9 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261110-13', date: '10/11/2026', game: 'meono', title: 'Lá "ĐÉO!" đổi tên thành "HUỶ KÈO!"', items: [
+    '🙅 Lá chặn đổi tên thành HUỶ KÈO! cho thân thiện hơn – công dụng y như cũ (huỷ 1 hành động, chồng được). Con dấu, nút bấm, hướng dẫn, danh hiệu cuối ván đổi theo.',
+  ] },
   { id: '20261110-12', date: '10/11/2026', game: 'all', title: 'Đổi tên + ảnh xem trước khi share', items: [
     '🤠 BANG! đổi tên thành CÀ ĐÙNG!, 🃏 UNO đổi thành UNÔ (luật và nội dung giữ nguyên).',
     '🔤 CÀ ĐÙNG!: logo, lưng bài và mặt bàn đổi sang phông có đủ dấu tiếng Việt (chữ Đ không còn bị lệch phông). Chơi với bot không cần nhập tên nữa.',

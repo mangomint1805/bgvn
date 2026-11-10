@@ -1,6 +1,6 @@
 // Lớp mạng Mèo Nổ: chủ phòng giữ state, người vào chỉ gửi action. Kết nối dùng chung shared/net/room.js
-import { createGame, applyAction, viewFor, resolveWindow, waitingOn, getPlayer, DEFAULT_OPTS } from './engine.js?v=7';
-import { botAction, botNope } from './bot.js?v=7';
+import { createGame, applyAction, viewFor, resolveWindow, waitingOn, getPlayer, DEFAULT_OPTS } from './engine.js?v=8';
+import { botAction, botNope } from './bot.js?v=8';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=4';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
@@ -8,15 +8,15 @@ import { rulesFor } from '../../shared/rules.js?v=1';
 const B2 = [true, false];
 const CFG = rulesFor('meono', DEFAULT_OPTS, { turnTime: [30, 45, 60, 90], expansion: B2, chaos: B2 });
 // Câu chọc kiểu mèo cho bảng thả emoji (shared/ui/react.js), mỗi câu ≤ 24 ký tự
-export const MEO_PHRASES = ['Bốc đi bé!', 'ĐÉO nhé!', 'Meo meo 😼', 'Bom đâu rồi?', 'Hú hồn 😮‍💨', 'Đổ vỏ nè!', 'Cứu tui'];
-const BOT_POOLS = { attack: ['Bốc đi bé!', 'Đổ vỏ nè!', 'Meo meo 😼'], hurt: ['Cứu tui', 'Hú hồn 😮‍💨'], win: ['Meo meo 😼'], reply: ['Meo meo 😼', 'Bom đâu rồi?'], nope: ['ĐÉO nhé!'] };
+export const MEO_PHRASES = ['Bốc đi bé!', 'Huỷ kèo nha!', 'Meo meo 😼', 'Bom đâu rồi?', 'Hú hồn 😮‍💨', 'Đổ vỏ nè!', 'Cứu tui'];
+const BOT_POOLS = { attack: ['Bốc đi bé!', 'Đổ vỏ nè!', 'Meo meo 😼'], hurt: ['Cứu tui', 'Hú hồn 😮‍💨'], win: ['Meo meo 😼'], reply: ['Meo meo 😼', 'Bom đâu rồi?'], nope: ['Huỷ kèo nha!'] };
 const NS = 'bgvn-meono', PREFIX = 'bgvn-meono-', GAME = 'meono';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
 export { session };
 const BOT_NAMES = ['Kẹo', 'Xôi', 'Gấu Bông', 'Đậu', 'Nấm', 'Sữa', 'Mochi', 'Pudding'];
 export const MAX = 8;
-export const WINDOW_MS = 3000;     // cửa sổ ĐÉO! khi có người thật
+export const WINDOW_MS = 3000;     // cửa sổ HUỶ KÈO! khi có người thật
 const WINDOW_BOT_MS = 1100;        // chỉ có bot quan tâm
 const PENDING_MS = 25000;          // chọn chỗ nhét bom / chọn lá cho / xếp lại
 const AWAY_MS = 7000;              // người rớt mạng: bot đánh thay sau 7 giây
@@ -165,7 +165,7 @@ export class Host {
   isAuto(pid) { const p = this.players.find(x => x.id === pid); return !p || p.isBot; }
   isAway(pid) { const p = this.players.find(x => x.id === pid); return p && !p.isBot && !p.connected && pid !== 'host'; }
   humansWatching(s) { return s.players.filter(q => !q.out && !this.isAuto(q.id) && !this.isAway(q.id)); }
-  // trung tâm hẹn giờ: cửa sổ ĐÉO!, bot, đồng hồ AFK
+  // trung tâm hẹn giờ: cửa sổ HUỶ KÈO!, bot, đồng hồ AFK
   schedule() {
     this.clearTimers(); this.clock = null;
     const s = this.state; if (!s || s.phase !== 'playing') return;
@@ -177,7 +177,7 @@ export class Host {
       this.clock = { kind: 'window', id: w.id, end: now + grace + len, total: len };
       const wid = w.id;
       this.timers.win = setTimeout(() => { if (this.state && this.state.window && this.state.window.id === wid) { const b = this.state.evN; resolveWindow(this.state); this.afterChange(b); } }, grace + len);
-      // bot cân nhắc ĐÉO!
+      // bot cân nhắc HUỶ KÈO!
       const bots = s.players.filter(q => !q.out && (this.isAuto(q.id) || this.isAway(q.id)) && botNope(s, q.id));
       if (bots.length) {
         const b = bots[Math.floor(Math.random() * bots.length)];
