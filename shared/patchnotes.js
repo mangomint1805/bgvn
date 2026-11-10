@@ -6,6 +6,9 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261110-10', date: '10/11/2026', game: 'all', title: 'Máy chủ phòng chơi mới', items: [
+    '⚡ Phòng online chạy qua máy chủ riêng của BGVN trên Cloudflare: vào phòng nhanh hơn, chịu được nhiều người hơn. Firebase/PeerJS vẫn giữ làm dự phòng.',
+  ] },
   { id: '20261110-09', date: '10/11/2026', game: 'all', title: 'Góp ý & Ủng hộ', items: [
     '💌 Nút Góp ý / Báo lỗi ở trang chủ và chân trang mỗi game – gửi thẳng cho chủ web.',
     '☕ Nút Ủng hộ: mời chủ web ly cà phê qua mã QR (tự nguyện, không đổi được gì trong game).',

@@ -1,0 +1,15 @@
+{
+  // Máy chủ phòng chơi BGVN – Cloudflare Workers + Durable Objects (gói Free, SQLite)
+  "name": "bgvn-rooms",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  "routes": [{ "pattern": "api.boardgamevui.com", "custom_domain": true }],
+  "durable_objects": {
+    "bindings": [
+      { "name": "ROOM", "class_name": "Room" },
+      { "name": "INBOX", "class_name": "Inbox" }
+    ]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room", "Inbox"] }],
+  "observability": { "enabled": true }
+}

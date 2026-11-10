@@ -1,4 +1,4 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, POKER_PHRASES } from './net.js?v=3';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, POKER_PHRASES } from './net.js?v=4';
 import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';

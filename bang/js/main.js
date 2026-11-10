@@ -2,7 +2,7 @@
 import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { CARD_INFO, CHARACTERS, ROLES, SUIT_SYMBOL, rankLabel, cardLabel, suitify } from './cards.js';
-import { Host, Client, loadSnapshot, session, BANG_PHRASES } from './net.js?v=14';
+import { Host, Client, loadSnapshot, session, BANG_PHRASES } from './net.js?v=15';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=102';

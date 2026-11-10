@@ -1,6 +1,9 @@
 // 💌 Góp ý / báo lỗi + ☕ Ủng hộ chủ web – dùng chung cho trang chủ và các game.
-// Góp ý lưu vào Firebase: feedback/<id> = { t, msg, game, contact, page, ua, ts } (chỉ ghi, không ai đọc được từ web; chủ web xem trong Firebase Console).
+// Góp ý gửi tới máy chủ BGVN trên Cloudflare (POST /feedback, chủ web đọc ở https://api.boardgamevui.com/admin).
+// Không tới được Cloudflare thì gửi dự phòng vào Firebase: feedback/<id>.
 import { FIREBASE } from '../net/fbrelay.js';
+import { cfHttp } from '../net/cfrelay.js';
+const apiBase = () => cfHttp();
 
 const V = '10.12.2';
 const ROOT = new URL('../../', import.meta.url).href; // gốc web (dù đang ở trang game nào)
@@ -73,16 +76,23 @@ export function openFeedback(game = curGame()) {
     if (Date.now() - last < 60000) { s.textContent = 'Đợi 1 phút rồi gửi tiếp nha ⏳'; return; }
     s.disabled = true; s.textContent = 'Đang gửi…';
     try {
-      const F = await fb();
-      await Promise.race([
-        F.push(F.ref(F.db, 'feedback'), { t, msg: msg.slice(0, 2000), game: box.querySelector('#fb-g').value, contact: box.querySelector('#fb-ct').value.trim().slice(0, 100), page: location.pathname.slice(0, 200), ua: navigator.userAgent.slice(0, 300), ts: F.serverTimestamp() }),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000)),
-      ]);
+      const data = { t, msg: msg.slice(0, 2000), game: box.querySelector('#fb-g').value, contact: box.querySelector('#fb-ct').value.trim().slice(0, 100), page: location.pathname.slice(0, 200) };
+      const timeout = ms => new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
+      let sent = false;
+      try {
+        const r = await Promise.race([fetch(apiBase() + '/feedback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) }), timeout(8000)]);
+        const j = await r.json().catch(() => ({}));
+        if (j.ok) sent = true; else if (r.status === 400) throw Object.assign(new Error(j.msg || 'bad'), { user: j.msg });
+      } catch (e) { if (e.user) throw e; }
+      if (!sent) { // dự phòng: Firebase
+        const F = await fb();
+        await Promise.race([F.push(F.ref(F.db, 'feedback'), { ...data, ua: navigator.userAgent.slice(0, 300), ts: F.serverTimestamp() }), timeout(12000)]);
+      }
       try { localStorage.setItem(LAST, String(Date.now())); } catch (e) {}
       box.innerHTML = `<button class="fb-x" aria-label="Đóng">✕</button><div class="fb-ok"><b>💖</b><h2 style="margin:6px 0">Gửi rồi nè!</h2><p>Cảm ơn bạn nhiều nha, chủ web sẽ đọc và sửa sớm 🛠️</p></div>`;
     } catch (e) {
       s.disabled = false; s.textContent = 'Gửi lại 💌';
-      box.querySelector('.fb-note').innerHTML = '😣 Chưa gửi được (mạng yếu hoặc máy chủ bận). Bạn thử lại sau chút nha.';
+      box.querySelector('.fb-note').textContent = e && e.user ? '😅 ' + e.user : '😣 Chưa gửi được (mạng yếu hoặc máy chủ bận). Bạn thử lại sau chút nha.';
     }
   };
 }

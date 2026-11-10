@@ -1,11 +1,13 @@
-// Phòng chơi dùng chung cho mọi game: chủ phòng nghe trên 3 đường, người vào thử lần lượt.
-//   1) Firebase Realtime Database (máy chủ Google – đường chính, mạng nào cũng qua)
-//   2) PeerJS (nối thẳng máy với máy)
-//   3) MQTT công cộng (dự phòng)
+// Phòng chơi dùng chung cho mọi game: chủ phòng nghe trên 4 đường, người vào thử lần lượt.
+//   1) Máy chủ BGVN trên Cloudflare (server/ – đường chính)
+//   2) Firebase Realtime Database (máy chủ Google – dự phòng)
+//   3) PeerJS (nối thẳng máy với máy)
+//   4) MQTT công cộng (dự phòng cuối)
 // Tin nhắn là object JSON; game tự xử lý nội dung, lớp này chỉ lo kết nối, vào lại, báo trạng thái.
 import { peerOptions, keepAlive } from './ice.js';
 import { RelayHost, relayConnect } from './relay.js';
 import { FbHost, fbConnect, fbEnabled } from './fbrelay.js';
+import { CfHost, cfConnect, cfEnabled } from './cfrelay.js';
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export function makeCode() { let s = ''; for (let i = 0; i < 5; i++) s += ALPHABET[Math.floor(Math.random() * ALPHABET.length)]; return s; }
@@ -38,8 +40,9 @@ export class RoomHost {
   }
   startRelays() {
     if (this.relayCode === this.code) return;
-    this.relay && this.relay.destroy(); this.fb && this.fb.destroy();
+    this.relay && this.relay.destroy(); this.fb && this.fb.destroy(); this.cf && this.cf.destroy();
     this.relayCode = this.code;
+    this.cf = new CfHost(this.o.ns, this.code, c => this.o.onConn(c));
     this.fb = new FbHost(this.o.ns, this.code, c => this.o.onConn(c));
     this.relay = new RelayHost(this.o.ns, this.code, c => this.o.onConn(c));
     this.o.onReady && this.o.onReady(this.code);
@@ -60,7 +63,7 @@ export class RoomHost {
       } else if (!['network', 'server-error', 'socket-error', 'socket-closed', 'disconnected', 'peer-unavailable'].includes(e.type)) this.o.onError && this.o.onError('Lỗi mạng: ' + e.type);
     });
   }
-  destroy() { this.dead = true; clearInterval(this.hb); this.stopKeep && this.stopKeep(); this.relay && this.relay.destroy(); this.fb && this.fb.destroy(); try { this.peer && this.peer.destroy(); } catch (e) {} }
+  destroy() { this.dead = true; clearInterval(this.hb); this.stopKeep && this.stopKeep(); this.relay && this.relay.destroy(); this.fb && this.fb.destroy(); this.cf && this.cf.destroy(); try { this.peer && this.peer.destroy(); } catch (e) {} }
 }
 
 // ======================= NGƯỜI VÀO PHÒNG =======================
@@ -70,7 +73,7 @@ export class RoomClient {
   // opts: { ns, prefix, code, joinMsg(): object, onMsg(msg), onWelcome(id), onStatus(text, kind), onFail(text), onLost() }
   constructor(opts) {
     this.o = opts; this.code = opts.code.toUpperCase().trim(); this.id = null; this.tries = 0; this.wasIn = false;
-    this.modes = /[?&]relay=1/.test(location.search) ? ['mqtt'] : /[?&]p2p=1/.test(location.search) ? ['p2p'] : (fbEnabled() ? ['fb', 'p2p', 'mqtt'] : ['p2p', 'mqtt']);
+    this.modes = /[?&]relay=1/.test(location.search) ? ['mqtt'] : /[?&]p2p=1/.test(location.search) ? ['p2p'] : [...(cfEnabled() ? ['cf'] : []), ...(fbEnabled() ? ['fb'] : []), 'p2p', 'mqtt'];
     this.mi = 0;
     if (this.modes.includes('p2p')) this.initPeer();
     this.connect();
@@ -110,11 +113,12 @@ export class RoomClient {
       const ok = await this.peerOpen; if (this.dead || this.id) return;
       if (!ok || !this.peer || this.peer.disconnected) { this.next(); return; }
       conn = this.peer.connect(this.o.prefix + this.code, { reliable: true });
-    } else if (mode === 'fb') conn = fbConnect(this.o.ns, this.code);
+    } else if (mode === 'cf') conn = cfConnect(this.o.ns, this.code);
+    else if (mode === 'fb') conn = fbConnect(this.o.ns, this.code);
     else conn = relayConnect(this.o.ns, this.code);
     this.conn = conn;
     clearTimeout(this.joinTimer);
-    this.joinTimer = setTimeout(() => { if (!this.id && conn === this.conn) this.next(); }, mode === 'p2p' ? 7000 : 12000);
+    this.joinTimer = setTimeout(() => { if (!this.id && conn === this.conn) this.next(); }, mode === 'p2p' ? 7000 : mode === 'cf' ? 8000 : 12000);
     conn.on('open', () => { if (conn === this.conn) conn.send({ t: 'join', token: token(), ...this.o.joinMsg() }); });
     conn.on('data', msg => {
       if (conn !== this.conn || !msg) return;
