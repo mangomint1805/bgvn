@@ -52,7 +52,7 @@ body { font-family: 'Nunito', system-ui, sans-serif; color: var(--on); backgroun
 .muted { color: var(--muted); }
 .screen { display: none; min-height: 100vh; }
 .screen.active { display: block; }
-.logo { font-family: 'Rye', serif; font-size: 68px; margin: 0; color: var(--on); letter-spacing: 2px; text-shadow: 3px 3px 0 var(--accent); }
+.logo { font-family: 'Bevan', 'Rye', serif; font-size: clamp(40px, 12vw, 62px); margin: 0; color: var(--on); letter-spacing: 2px; text-shadow: 3px 3px 0 var(--accent); }
 .logo.small { font-size: 22px; text-shadow: 2px 2px 0 var(--accent); }
 .btn { font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 16px; letter-spacing: .5px; padding: 9px 18px; border-radius: 10px; border: 2px solid var(--on); background: var(--surface); color: var(--on); cursor: pointer; box-shadow: 0 3px 0 var(--on); transition: transform .06s, box-shadow .06s, filter .15s; }
 .btn:hover { filter: brightness(1.06); }
@@ -128,7 +128,7 @@ label { display: block; font-weight: 700; margin: 12px 0 4px; text-align: left; 
 .pcard.back { background: #8f2e22; display: block; padding: 0; }
 .pcard.back .back-inner { position: absolute; inset: calc(var(--w) * .07); border: 2px solid rgba(251,246,234,.8); border-radius: calc(var(--w) * .05);
   background: repeating-linear-gradient(45deg, rgba(255,255,255,.06) 0 6px, transparent 6px 12px), radial-gradient(circle, #a8392b, #6e2018); display: flex; align-items: center; justify-content: center; }
-.pcard.back span { font-family: 'Rye', serif; color: #fbf6ea; font-size: calc(var(--w) * .2); transform: rotate(-12deg); text-shadow: 0 2px 0 rgba(0,0,0,.4); }
+.pcard.back span { font-family: 'Bevan', 'Rye', serif; color: #fbf6ea; font-size: calc(var(--w) * .13); white-space: nowrap; text-align: center; transform: rotate(-12deg); text-shadow: 0 2px 0 rgba(0,0,0,.4); }
 
 /* ================= BÀN CHƠI ================= */
 #screen-game { display: none; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
@@ -144,7 +144,7 @@ label { display: block; font-weight: 700; margin: 12px 0 4px; text-align: left; 
   background: radial-gradient(ellipse at 50% 40%, var(--felt1) 0%, var(--felt2) 100%);
   box-shadow: 0 0 0 14px var(--wood), 0 0 0 17px var(--wood2), 0 18px 40px rgba(var(--shadow-c),.4), inset 0 0 50px rgba(0,0,0,.18); transition: background .5s; }
 .felt::before { content: ''; position: absolute; inset: -14px; border-radius: 50%; background: repeating-linear-gradient(100deg, rgba(255,255,255,.05) 0 3px, transparent 3px 9px); pointer-events: none; mask: radial-gradient(farthest-side, transparent calc(100% - 14px), #000 calc(100% - 14px)); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 14px), #000 calc(100% - 14px)); }
-.felt::after { content: 'BANG!'; position: absolute; left: 50%; top: 80%; transform: translate(-50%, -50%); font-family: 'Rye', serif; font-size: 40px; color: var(--felt-mark); letter-spacing: 6px; }
+.felt::after { content: 'CÀ ĐÙNG!'; position: absolute; left: 50%; top: 80%; transform: translate(-50%, -50%); font-family: 'Bevan', 'Rye', serif; font-size: 40px; color: var(--felt-mark); letter-spacing: 6px; }
 .center { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -52%); display: flex; flex-direction: column; align-items: center; gap: 10px; width: min(440px, 52%); z-index: 2; }
 .piles { display: flex; gap: 24px; align-items: center; }
 .pile { position: relative; width: 72px; height: 102px; }

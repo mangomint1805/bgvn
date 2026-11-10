@@ -76,8 +76,8 @@ function linkJoin(code) {
     abort: () => { net?.leave ? net.leave() : net?.destroy?.(); net = null; view = null; show('screen-home'); } });
 }
 
-function getName() {
-  const n = $('#inp-name').value.trim();
+function getName(fallback) {
+  const n = $('#inp-name').value.trim() || fallback || '';
   if (!n) { toast('Nhập tên trước đã!'); $('#inp-name').focus(); return null; }
   try { localStorage.setItem('bgvn-name', n); } catch (e) {}
   return n;
@@ -121,7 +121,7 @@ $('#btn-create').onclick = () => {
   show('screen-lobby'); $('#lobby-code').textContent = '…';
 };
 $('#btn-offline').onclick = () => {
-  const n = getName(); if (!n) return;
+  const n = getName('Bạn'); if (!n) return; // chơi với bot: chưa nhập tên thì gọi là "Bạn"
   isHost = true; myId = 'host'; net?.leave?.();
   net = new Host(n, handlers, true); session.save('bang', { role: 'host', code: 'OFFLINE' });
   if (location.hash === '#debug') window.__net = net;
@@ -257,7 +257,7 @@ export function cardEl(c, size = '') {
   d.dataset.cid = c.id;
   return d;
 }
-function backHTML(size = '') { return `<div class="pcard back ${size}"><div class="back-inner"><span>BANG!</span></div></div>`; }
+function backHTML(size = '') { return `<div class="pcard back ${size}"><div class="back-inner"><span>CÀ ĐÙNG!</span></div></div>`; }
 function roleCardHTML(role, size = '') {
   const r = ROLES[role];
   return `<div class="pcard role ${size}"><div class="ctop"><span class="ktag">Vai trò</span></div><div class="art">${imgTag(role)}</div><div class="cname">${r.name}</div>${size === 'lg' ? `<div class="cdesc">${r.desc}</div>` : ''}</div>`;

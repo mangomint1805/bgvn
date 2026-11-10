@@ -8,6 +8,7 @@ export const GAMES = {
 export const NOTES = [
   { id: '20261110-12', date: '10/11/2026', game: 'all', title: 'Đổi tên + ảnh xem trước khi share', items: [
     '🤠 BANG! đổi tên thành CÀ ĐÙNG!, 🃏 UNO đổi thành UNÔ (luật và nội dung giữ nguyên).',
+    '🔤 CÀ ĐÙNG!: logo, lưng bài và mặt bàn đổi sang phông có đủ dấu tiếng Việt (chữ Đ không còn bị lệch phông). Chơi với bot không cần nhập tên nữa.',
     '🖼️ Share link game hay link mời vào phòng lên Facebook/Zalo giờ hiện ảnh xem trước riêng của từng game.',
   ] },
   { id: '20261110-11', date: '10/11/2026', game: 'all', title: 'Trang Credits', items: [
