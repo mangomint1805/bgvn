@@ -83,7 +83,7 @@ footer a{color:inherit}
 .bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 14px;margin:-18px 0 26px}
 .news{position:relative;border:0;cursor:pointer;font:800 16px "Baloo 2",Nunito,sans-serif;color:#fff;background:linear-gradient(90deg,#ff4d5e,#ff9a3d);border-radius:999px;padding:8px 18px;min-height:44px;box-shadow:0 8px 18px -8px #ff4d5ecc}
 .news:hover{filter:brightness(1.06)}
-.news.alt{background:linear-gradient(90deg,#7b61ff,#3d8bff)}.news.alt2{background:linear-gradient(90deg,#2fc76f,#20b2aa)}
+.news.alt{background:linear-gradient(90deg,#7b61ff,#3d8bff)}.news.alt3{background:#fff;color:var(--ink);box-shadow:0 0 0 1.5px #ecdfd0,0 8px 18px -10px #2a234066;text-decoration:none;display:inline-flex;align-items:center}.news.alt2{background:linear-gradient(90deg,#2fc76f,#20b2aa)}
 .bgvn-dot{position:relative}
 .news.bgvn-dot::after{content:"MỚI";position:absolute;top:-8px;right:-6px;background:#2a2340;color:#fff;font:800 10px/1 Nunito,sans-serif;padding:3px 6px;border-radius:999px;box-shadow:0 0 0 2px #fff;width:auto;height:auto}
 .filter{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;background:#fff9;border:1.5px solid #ecdfd0;border-radius:999px;padding:4px}
@@ -98,6 +98,9 @@ footer a{color:inherit}
 .play.resume{background:#2fc76f;color:#fff;box-shadow:0 0 0 3px #fff,0 8px 18px #0004;animation:rz 1.6s ease-in-out infinite}
 .play.resume small{display:block;font:700 11px/1.1 Nunito,sans-serif;opacity:.95;text-align:center}
 @keyframes rz{50%{transform:scale(1.05)}}
+.acts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.news{justify-content:center}
+@media (max-width:560px){.bar{flex-direction:column;align-items:stretch}.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}.acts .news{width:100%;padding:8px 10px}.filter{align-self:center}}
 @media (max-width:420px){.bar{margin-top:-24px}.filter button{padding:6px 10px;font-size:13px}.news{font-size:15px}}
 @media (prefers-reduced-motion:reduce){.play.resume{animation:none}}
 </style>
@@ -108,9 +111,12 @@ footer a{color:inherit}
   <h1>🎲 <span>BGVN</span></h1>
   <p class="sub">Board game tiếng Việt – mở link là chơi cùng hội bạn, không cần cài đặt</p>
   <div class="bar">
+    <div class="acts">
     <button class="news" id="btn-news" type="button">📝 Có gì mới</button>
     <button class="news alt" type="button" data-feedback="">💌 Góp ý</button>
     <button class="news alt2" type="button" data-donate>☕ Ủng hộ</button>
+    <a class="news alt3" href="credits/">📜 Credits</a>
+    </div>
     <div class="filter" role="group" aria-label="Lọc theo số người chơi">
       <button type="button" data-f="all" aria-pressed="true">Tất cả</button><button type="button" data-f="1" aria-pressed="false">1 người</button><button type="button" data-f="2" aria-pressed="false">2 người</button><button type="button" data-f="4-7" aria-pressed="false">4–7</button><button type="button" data-f="8+" aria-pressed="false">8+</button>
     </div>
@@ -229,7 +235,7 @@ footer a{color:inherit}
     <p class="empty-filter" id="empty-filter">Không có game nào hợp số người này.</p>
     <div class="tile soon"><div><b style="font-size:22px">Sắp có thêm…</b><br>Góp ý game tiếp theo nhé 💌</div></div>
   </div>
-  <footer>Dự án fan-made phi thương mại · Ảnh minh hoạ BANG! là tranh thuộc phạm vi công cộng (Wikimedia Commons) · Game bài chỉ chơi bằng chip ảo, không cá cược tiền thật · Không liên kết với dV Giochi, Mattel, VNG/ZingPlay, Yoka Games hay Exploding Kittens · <a href="https://github.com/mangomint1805/bgvn">Mã nguồn</a> · <a href="luat/">⚙️ Luật mặc định</a> · <a href="#" data-feedback="">💌 Góp ý / báo lỗi</a> · <a href="#" data-donate>☕ Ủng hộ</a></footer>
+  <footer>Dự án fan-made phi thương mại · Ảnh minh hoạ BANG! là tranh thuộc phạm vi công cộng (Wikimedia Commons) · Game bài chỉ chơi bằng chip ảo, không cá cược tiền thật · Không liên kết với dV Giochi, Mattel, VNG/ZingPlay, Yoka Games hay Exploding Kittens · <a href="https://github.com/mangomint1805/bgvn">Mã nguồn</a> · <a href="luat/">⚙️ Luật mặc định</a> · <a href="credits/">📜 Credits</a> · <a href="#" data-feedback="">💌 Góp ý / báo lỗi</a> · <a href="#" data-donate>☕ Ủng hộ</a></footer>
 </main>
 <script type="module" src="shared/ui/feedback.js?v=2"></script>
 <script type="module">

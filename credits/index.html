@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Credits – BGVN</title>
+<meta name="description" content="Nguồn tranh, phông chữ, thư viện và lời cảm ơn của BGVN – board game tiếng Việt chơi online.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#2a2340;--muted:#7b7391;--bg:#fff7ef;--line:#efe4d6;--chip:#f6efe6}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:600 16px/1.55 Nunito,system-ui,sans-serif;overflow-x:hidden}
+.blob{position:fixed;width:44vmax;height:44vmax;border-radius:50%;filter:blur(80px);opacity:.22;z-index:0;pointer-events:none}
+.b1{background:#ff4d5e;left:-14vmax;top:-14vmax}.b2{background:#ffc23d;right:-14vmax;top:-8vmax}.b3{background:#2fc76f;left:-8vmax;bottom:-18vmax}.b4{background:#3d8bff;right:-12vmax;bottom:-16vmax}
+main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 16px 48px}
+.back{display:inline-flex;align-items:center;min-height:44px;padding:6px 16px;border-radius:999px;background:#fff9;border:1.5px solid #ecdfd0;color:var(--ink);text-decoration:none;font-weight:800}
+h1{font-family:"Baloo 2";font-size:clamp(38px,8vw,60px);line-height:1.05;margin:18px 0 6px;text-align:center}
+h1 span{background:linear-gradient(90deg,#ff4d5e,#ff9a3d,#2fc76f,#3d8bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{text-align:center;color:var(--muted);margin:0 auto 18px;max-width:620px}
+nav.jump{position:sticky;top:0;z-index:5;display:flex;gap:6px;overflow-x:auto;padding:8px 2px;margin:0 -2px 14px;background:var(--bg);box-shadow:0 8px 12px -10px #2a234033;scrollbar-width:none}
+nav.jump::-webkit-scrollbar{display:none}
+nav.jump a{flex:none;display:inline-flex;align-items:center;min-height:40px;padding:6px 14px;border-radius:999px;background:#fff;border:1.5px solid #ecdfd0;color:var(--ink);text-decoration:none;font-weight:800;white-space:nowrap}
+nav.jump a:hover,nav.jump a:focus-visible{background:var(--ink);color:#fff}
+section{background:#fff;border-radius:24px;box-shadow:0 16px 34px -20px #2a234066;margin:0 0 20px;overflow:hidden;scroll-margin-top:64px}
+section h2{margin:0;padding:14px 18px;font-family:"Baloo 2";font-size:26px;line-height:1.15;background:linear-gradient(90deg,#fff1e2,#fff);border-bottom:1.5px solid var(--line)}
+.body{padding:6px 18px 14px}
+h3{font-size:17px;margin:14px 0 4px}
+p{margin:6px 0}
+ul{margin:6px 0;padding-left:20px}li{margin:4px 0}
+a{color:#2f5fd0;word-break:break-word}
+.muted{color:var(--muted);font-size:14px}
+.pill{display:inline-block;font-size:12px;font-weight:800;border-radius:999px;padding:1px 9px;background:var(--chip);color:#6b5a48;margin-left:4px;vertical-align:1px}
+.pill.pd{background:#e3f6ea;color:#17683a}.pill.own{background:#ffe6ec;color:#a3264b}.pill.oss{background:#e7efff;color:#244c9e}
+details{border-top:1.5px solid var(--line);margin:10px -18px 0;padding:10px 18px 0}
+details summary{cursor:pointer;font-weight:800;min-height:32px;list-style-position:inside}
+.imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:10px 0 4px}
+.it{display:flex;gap:10px;align-items:flex-start;background:#fffaf3;border:1.5px solid var(--line);border-radius:14px;padding:8px;font-size:13.5px;line-height:1.4}
+.it img{width:56px;height:56px;border-radius:10px;object-fit:cover;flex:none;background:#eee}
+.it b{display:block;font-size:14px}
+.thanks{text-align:center;font-size:17px}
+footer{text-align:center;color:var(--muted);font-size:13px;margin-top:26px}
+@media (max-width:420px){section h2{font-size:22px}.imgs{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="blob b4"></i>
+<main>
+  <a class="back" href="../">← Bàn chơi BGVN</a>
+  <h1>📜 <span>Credits</span></h1>
+  <p class="sub">BGVN là dự án fan-made phi thương mại. Trang này ghi nguồn mọi tranh, phông chữ, thư viện mà web dùng, và cảm ơn những người đã chia sẻ chúng 💖</p>
+
+  <nav class="jump" aria-label="Mục lục">
+    <a href="#tranh">🎨 Tranh & hình</a><a href="#bai">🃏 Bộ bài</a><a href="#nhac">🎵 Nhạc</a><a href="#font">🔤 Phông chữ</a><a href="#code">🧰 Thư viện</a><a href="#game">🎲 Luật & thương hiệu</a><a href="#cam-on">💖 Cảm ơn</a>
+  </nav>
+
+  <section id="tranh"><h2>🎨 Tranh & hình minh hoạ</h2><div class="body">
+    <h3>BANG! <span class="pill pd">Phạm vi công cộng</span></h3>
+    <p>Tranh trên lá bài, vai trò, nhân vật là tranh miền Tây nước Mỹ của <b>Frederic Remington</b> (1861–1909) và <b>Charles M. Russell</b> (1864–1926), đã hết bản quyền, lấy từ <a href="https://commons.wikimedia.org/" target="_blank" rel="noopener">Wikimedia Commons</a>.</p>
+
+    <h3>Tam Quốc Sát <span class="pill pd">Phạm vi công cộng</span></h3>
+    <p>Chân dung tướng là tranh khắc minh hoạ Tam Quốc diễn nghĩa đời Thanh; tranh trên lá bài là tranh cổ Trung Hoa và tranh khắc gỗ Nhật (Utagawa Kuniyoshi…), đều đã hết bản quyền (Wikimedia Commons, Bảo tàng Anh, Bảo tàng Nghệ thuật Cleveland – CC0).</p>
+    <details><summary>Xem nguồn từng tranh (<span id="tq-n">…</span>)</summary><div class="imgs" id="tq-list"><p class="muted">Đang tải…</p></div></details>
+
+    <h3>Các game khác <span class="pill own">BGVN tự vẽ</span></h3>
+    <p>UNO, Cờ Tỷ Phú 3D (bàn cờ, toà nhà Sài Gòn, nhân vật), Mèo Nổ, Ma Sói, Scribble, Cờ Cá Ngựa 3D, Đua Lạc Đà 3D, Tiến Lên, Poker, Xì Dách, Cát Tê, Ba Cào: lá bài, quân cờ, biểu tượng và hiệu ứng đều do BGVN tự vẽ bằng code (CSS/SVG/3D). Ảnh đại diện người chơi tự tạo từ các mảnh hình BGVN vẽ.</p>
+  </div></section>
+
+  <section id="bai"><h2>🃏 Bộ bài Xếp bài (Solitaire)</h2><div class="body">
+    <h3>🏺 Ai Cập <span class="pill oss">KDE · LGPL / GPL</span></h3>
+    <p>Bộ bài <b>Ancient Egyptians</b> (Sean Wilson) – KDE libkdegames, giấy phép GNU LGPL 2.0 · Nền bàn <b>Desert Sands</b> (Sean Wilson) – KDE KPatience, giấy phép GNU GPL 2.0 trở lên.
+      <a href="../solitaire/themes/ancientegypt/README.txt">Chi tiết</a> · <a href="../solitaire/themes/ancientegypt/LICENSE-LGPL-2.0-only.txt">LGPL 2.0</a> · <a href="../solitaire/themes/ancientegypt/LICENSE-GPL-2.0-or-later.txt">GPL 2.0+</a></p>
+    <h3>🐧 Cánh cụt <span class="pill oss">KDE · GPL 3.0+</span></h3>
+    <p>Bộ bài <b>Penguins</b> (Matthew Woehlke 2009, dựa trên Ace of Penguins của DJ Delorie & Markus Oberhumer; Original Tux artwork created by Larry Ewing, Simon Budig and Anja Gerwinski) – KDE libkdegames, giấy phép GNU GPL 3.0 trở lên. Nền băng tuyết: BGVN tự vẽ.
+      <a href="../solitaire/themes/penguins/README.txt">Chi tiết</a> · <a href="../solitaire/themes/penguins/LICENSE-GPL-3.0-or-later.txt">GPL 3.0+</a></p>
+    <h3>👑 Tim hồng <span class="pill oss">KDE · LGPL / GPL</span></h3>
+    <p>Bộ bài <b>Jolly Royal</b> (Sean Wilson) – KDE libkdegames, giấy phép GNU LGPL 2.0 · Nền bàn <b>Royal Hearts</b> (Sean Wilson & Eugene Trounev) – KDE KPatience, giấy phép GNU GPL 2.0 trở lên.
+      <a href="../solitaire/themes/royalhearts/README.txt">Chi tiết</a> · <a href="../solitaire/themes/royalhearts/LICENSE-LGPL-2.0-only.txt">LGPL 2.0</a> · <a href="../solitaire/themes/royalhearts/LICENSE-GPL-2.0-or-later.txt">GPL 2.0+</a></p>
+    <h3>🐱 Mèo con · ✂️ Cắt dán · bộ bài Tây mặc định <span class="pill own">BGVN tự vẽ</span></h3>
+    <p>Mặt bài, lưng bài và nền bàn do BGVN tự vẽ bằng SVG. <a href="../solitaire/themes/meocon/README.txt">Mèo con</a> · <a href="../solitaire/themes/catdan/README.txt">Cắt dán</a></p>
+  </div></section>
+
+  <section id="nhac"><h2>🎵 Nhạc nền & hiệu ứng âm thanh</h2><div class="body">
+    <p>Toàn bộ nhạc nền và tiếng động (xúc xắc, chia bài, pháo hoa…) được <b>tổng hợp trực tiếp trong trình duyệt</b> bằng Web Audio, giai điệu sinh theo thuật toán do BGVN viết – không dùng file nhạc hay giai điệu có bản quyền của ai. <span class="pill own">BGVN tự làm</span></p>
+  </div></section>
+
+  <section id="font"><h2>🔤 Phông chữ</h2><div class="body">
+    <p>Tải từ <a href="https://fonts.google.com/" target="_blank" rel="noopener">Google Fonts</a>, giấy phép SIL Open Font License <span class="pill oss">OFL</span></p>
+    <ul>
+      <li><b>Nunito</b> – Vernon Adams, Cyreal, Jacques Le Bailly</li>
+      <li><b>Baloo 2</b> – Ek Type</li>
+      <li><b>Be Vietnam Pro</b> – Lâm Bảo, Tony Le, ViệtAnh Nguyễn</li>
+      <li><b>Noto Serif</b> – Google</li>
+      <li><b>LXGW WenKai TC</b> – LXGW</li>
+      <li><b>Bevan</b> – Vernon Adams · <b>Rye</b> – Nicole Fally · <b>Oswald</b> – Vernon Adams, Kalapi Gajjar, Cyreal</li>
+      <li><b>Patrick Hand</b> – Patrick Wagesreiter · <b>Shantell Sans</b> – Shantell Martin, Arrow Type</li>
+    </ul>
+  </div></section>
+
+  <section id="code"><h2>🧰 Thư viện & dịch vụ</h2><div class="body">
+    <ul>
+      <li><a href="https://threejs.org/" target="_blank" rel="noopener"><b>three.js</b></a> r160 – vẽ 3D (Cờ Tỷ Phú, Cờ Cá Ngựa, Đua Lạc Đà) <span class="pill oss">MIT</span></li>
+      <li><a href="https://peerjs.com/" target="_blank" rel="noopener"><b>PeerJS</b></a> 1.5.4 – nối máy với máy (dự phòng) <span class="pill oss">MIT</span></li>
+      <li><a href="https://github.com/mqttjs/MQTT.js" target="_blank" rel="noopener"><b>MQTT.js</b></a> 5.10.1 – đường nối dự phòng <span class="pill oss">MIT</span></li>
+      <li><a href="https://firebase.google.com/" target="_blank" rel="noopener"><b>Firebase JS SDK</b></a> 10.12.2 – đường nối dự phòng <span class="pill oss">Apache 2.0</span></li>
+      <li><b>Cloudflare Workers & Durable Objects</b> – máy chủ phòng chơi chính · <b>GitHub Pages</b> – nơi đặt web</li>
+    </ul>
+    <p class="muted">Mã nguồn BGVN: <a href="https://github.com/mangomint1805/bgvn" target="_blank" rel="noopener">github.com/mangomint1805/bgvn</a></p>
+  </div></section>
+
+  <section id="game"><h2>🎲 Luật chơi & thương hiệu</h2><div class="body">
+    <p>BGVN là bản <b>fan-made, phi thương mại</b>, làm để chơi vui cùng bạn bè. Tên và luật các trò chơi thuộc về chủ sở hữu tương ứng; BGVN <b>không liên kết</b> với họ:</p>
+    <ul>
+      <li><b>BANG!</b> – dV Giochi · <b>UNO</b> – Mattel · <b>Tam Quốc Sát</b> – Yoka Games · <b>Mèo Nổ</b> lấy cảm hứng từ Exploding Kittens</li>
+      <li><b>Cờ Tỷ Phú</b> theo kiểu luật phổ biến ở Việt Nam (lấy cảm hứng ZingPlay – VNG) · <b>Đua Lạc Đà</b> lấy cảm hứng từ Camel Up</li>
+      <li><b>Ma Sói</b>, <b>Scribble</b> (vẽ – đoán), <b>Tiến Lên</b>, <b>Poker</b>, <b>Xì Dách</b>, <b>Cát Tê</b>, <b>Ba Cào</b>, <b>Cờ Cá Ngựa</b>, <b>Xếp bài</b> là trò chơi dân gian / phổ biến</li>
+    </ul>
+    <p>🪙 Các game bài chỉ dùng <b>chip ảo</b> để chơi vui – không nạp, không rút, không quy đổi tiền thật, không cá cược.</p>
+  </div></section>
+
+  <section id="cam-on"><h2>💖 Cảm ơn</h2><div class="body">
+    <p class="thanks">Cảm ơn các hoạ sĩ đã để lại tranh cho đời sau, cộng đồng KDE, Wikimedia Commons, các tác giả phông chữ và thư viện mã nguồn mở – và cảm ơn <b>bạn</b> đã ghé chơi 🥰</p>
+    <p class="thanks">Thấy lỗi hay ghi nguồn sai? <a href="#" data-feedback="">💌 Báo cho BGVN</a> · Muốn tiếp sức? <a href="#" data-donate>☕ Ủng hộ</a></p>
+  </div></section>
+
+  <footer>BGVN · dự án fan-made phi thương mại · <a href="../">Về trang chủ</a></footer>
+</main>
+<script type="module" src="../shared/ui/feedback.js?v=2"></script>
+<script type="module">
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+try {
+  const { IMG } = await import('../tamquoc/js/images.js?v=9');
+  const list = Object.entries(IMG).filter(([, v]) => v.t && v.u);
+  document.getElementById('tq-n').textContent = list.length + ' tranh';
+  document.getElementById('tq-list').innerHTML = list.map(([k, v]) => `<div class="it"><img src="../tamquoc/img/${k}.jpg?v=${v.v || 6}" alt="" loading="lazy"><div><b>${esc(v.for || k)}</b><a href="${esc(v.u)}" target="_blank" rel="noopener">${esc(v.t)}</a><br><span class="muted">${esc(v.a)}${v.d ? ' · ' + esc(v.d) : ''} · ${esc(v.l)}</span></div></div>`).join('');
+} catch (e) { document.getElementById('tq-list').innerHTML = '<p class="muted">Không tải được danh sách – xem trong Hướng dẫn của Tam Quốc Sát.</p>'; }
+</script>
+</body>
+</html>

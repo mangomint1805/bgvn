@@ -6,6 +6,10 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261110-11', date: '10/11/2026', game: 'all', title: 'Trang Credits', items: [
+    '📜 Trang Credits mới: nguồn mọi tranh, bộ bài, phông chữ, thư viện và lời cảm ơn. Có nút ở trang chủ.',
+    '📱 Trang chủ gọn hơn trên điện thoại: 4 nút Có gì mới / Góp ý / Ủng hộ / Credits xếp 2×2.',
+  ] },
   { id: '20261110-10', date: '10/11/2026', game: 'all', title: 'Máy chủ phòng chơi mới', items: [
     '⚡ Phòng online chạy qua máy chủ riêng của BGVN trên Cloudflare: vào phòng nhanh hơn, chịu được nhiều người hơn. Firebase/PeerJS vẫn giữ làm dự phòng.',
   ] },
