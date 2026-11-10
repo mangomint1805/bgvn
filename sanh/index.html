@@ -25,6 +25,7 @@ main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:14px 16p
 h1{font-family:"Baloo 2";font-size:clamp(30px,6vw,44px);line-height:1.05;margin:0;flex:1;text-align:center}
 h1 span{background:linear-gradient(90deg,#7b61ff,#3d8bff,#2fc76f);-webkit-background-clip:text;background-clip:text;color:transparent}
 .sub{text-align:center;color:var(--muted);margin:-4px auto 0;max-width:640px;font-size:15px}
+.online{text-align:center;margin:-6px auto 0;font:700 14px Nunito,sans-serif;color:#3a7a52;background:#fff9;border:1.5px solid #cdebd8;border-radius:999px;padding:4px 14px;width:max-content;max-width:100%}
 #lobby{flex:1;min-height:0;display:flex;flex-direction:column}
 #lobby .lb{flex:1}
 @media (min-width:761px){#lobby .lb{height:calc(100dvh - 190px);min-height:480px}}
@@ -36,11 +37,14 @@ h1 span{background:linear-gradient(90deg,#7b61ff,#3d8bff,#2fc76f);-webkit-backgr
 <main>
   <div class="top"><a class="back" href="../">← Bàn chơi BGVN</a><h1>🌐 <span>Sảnh chung</span></h1><div id="acct"></div></div>
   <p class="sub">Tìm phòng công khai để vào chơi cùng người lạ, hoặc tạo phòng rồi bật <b>🌐 Công khai</b> để rủ thêm người 🥰</p>
+  <p class="online" id="online" hidden></p>
   <div id="lobby"></div>
 </main>
 <script type="module">
 import { mountAccount } from '../shared/ui/account.js?v=1';
 import { mountLobby } from '../shared/ui/lobby.js?v=1';
+import { mountOnline } from '../shared/net/presence.js?v=1';
+mountOnline(document.getElementById('online'));
 mountAccount(document.getElementById('acct'));
 const g = new URLSearchParams(location.search).get('game');
 const L = mountLobby(document.getElementById('lobby'), {});

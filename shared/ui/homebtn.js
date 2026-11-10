@@ -47,6 +47,9 @@ const GAME = location.pathname.replace(/\/+$/, '').split('/').pop();
   b.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:46px;margin:10px 0 4px;border:0;border-radius:999px;cursor:pointer;font:800 16px "Baloo 2",Nunito,system-ui,sans-serif;color:#fff;background:linear-gradient(90deg,#7b61ff,#3d8bff);box-shadow:0 8px 18px -10px #3d8bffaa';
   b.onclick = () => import('./lobby.js?v=1').then(m => m.openLobby(GAME));
   ft.before(b);
+  const on = document.createElement('p'); on.hidden = true; on.style.cssText = 'text-align:center;margin:4px 0 8px;font:700 13px Nunito,system-ui,sans-serif;opacity:.85';
+  b.after(on);
+  import('../net/presence.js?v=1').then(m => m.mountOnline(on)).catch(() => {});
 })();
 
 // 🌐 Công khai phòng: hiện công tắc cạnh mã phòng (chỉ chủ phòng online)

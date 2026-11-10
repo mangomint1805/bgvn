@@ -6,6 +6,10 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261110-15', date: '10/11/2026', game: 'all', title: 'Số người online + tên game thẳng hàng', items: [
+    '🟢 Trang chủ, Sảnh chung và màn hình đầu mỗi game hiện số người đang online trên BGVN.',
+    '📐 Tên game trên trang chủ giờ thẳng hàng, cùng cỡ chữ; mô tả gọn tối đa 3 dòng.',
+  ] },
   { id: '20261110-14', date: '10/11/2026', game: 'all', title: 'Sảnh chung, tài khoản, chat', items: [
     '🌐 Sảnh chung: xem phòng công khai của mọi game, bấm là vào chơi cùng người lạ. Mỗi game cũng có nút "Phòng công khai & chat" ở màn hình đầu.',
     '🔓 Chủ phòng bật "🌐 Công khai phòng" ngay dưới mã phòng để phòng hiện ở Sảnh. Không bật thì chỉ ai có mã/link mới vào được như cũ.',

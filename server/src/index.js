@@ -55,6 +55,11 @@ export default {
       return json(r, 200, H);
     }
     // ---- sảnh chung ----
+    if (p[0] === 'presence') { // đếm người đang mở web
+      if (req.headers.get('Upgrade') !== 'websocket') return json({ ok: true, n: await env.LOBBY.get(env.LOBBY.idFromName('main')).online() }, 200, cors(origin));
+      if (!okOrigin(origin)) return new Response('Origin không hợp lệ', { status: 403 });
+      return env.LOBBY.get(env.LOBBY.idFromName('main')).fetch(req);
+    }
     if (p[0] === 'lobby') {
       const L = env.LOBBY.get(env.LOBBY.idFromName('main'));
       if (p.length === 1) {

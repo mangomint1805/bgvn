@@ -60,6 +60,12 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:36px}
 .tile:not(.soon){display:flex;flex-direction:column;justify-content:flex-end;padding-top:178px}
 .tile .info{position:relative}
 .tile:not(.bang) .art{bottom:auto!important;height:178px}
+/* tên game thẳng hàng giữa các ô: chữ bắt đầu ngay dưới phần hình, cùng cỡ chữ, mô tả tối đa 3 dòng, nhãn dồn đáy */
+.tile:not(.soon){justify-content:flex-start}
+.tile .info{flex:1;display:flex;flex-direction:column}
+.grid .tile .info h2{font-size:42px;line-height:1.05;white-space:nowrap}
+.tile .info p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tile .info .tags{margin-top:auto}
 .uno .art{top:96px!important;height:0!important}
 .tile:not(.bang):not(.uno) .art{padding-top:44px;box-sizing:border-box}
 .masoi .art{padding-bottom:4px}
@@ -109,6 +115,7 @@ footer a{color:inherit}
 .play.resume{background:#2fc76f;color:#fff;box-shadow:0 0 0 3px #fff,0 8px 18px #0004;animation:rz 1.6s ease-in-out infinite}
 .play.resume small{display:block;font:700 11px/1.1 Nunito,sans-serif;opacity:.95;text-align:center}
 @keyframes rz{50%{transform:scale(1.05)}}
+.online{text-align:center;margin:-26px auto 30px;font:700 14px Nunito,sans-serif;color:#3a7a52;background:#fff9;border:1.5px solid #cdebd8;border-radius:999px;padding:4px 14px;width:max-content;max-width:100%}
 .acct{position:absolute;right:16px;top:14px;z-index:3}
 .lobby-cta{display:flex;flex-direction:column;align-items:center;justify-content:center;width:min(520px,100%);min-height:62px;padding:8px 18px;border-radius:22px;text-decoration:none;color:#fff;font:800 22px/1.1 "Baloo 2",Nunito,sans-serif;background:linear-gradient(90deg,#7b61ff,#3d8bff,#2fc76f);box-shadow:0 14px 28px -14px #3d8bffcc;flex-basis:100%;margin:0 auto}
 .lobby-cta small{font:700 13px Nunito,sans-serif;opacity:.95}.lobby-cta:hover{filter:brightness(1.06)}
@@ -125,6 +132,7 @@ footer a{color:inherit}
   <div class="acct" id="acct"></div>
   <h1>🎲 <span>BGVN</span></h1>
   <p class="sub">Board game tiếng Việt – mở link là chơi cùng hội bạn, không cần cài đặt</p>
+  <p class="online" id="online" hidden></p>
   <div class="bar">
     <a class="lobby-cta" href="sanh/">🌐 Sảnh chung <small>tìm phòng công khai · chat với mọi người</small></a>
     <div class="acts">
@@ -253,8 +261,13 @@ footer a{color:inherit}
   </div>
   <footer>Dự án fan-made phi thương mại · Ảnh minh hoạ CÀ ĐÙNG! là tranh thuộc phạm vi công cộng (Wikimedia Commons) · Game bài chỉ chơi bằng chip ảo, không cá cược tiền thật · Không liên kết với dV Giochi, Mattel, VNG/ZingPlay, Yoka Games hay Exploding Kittens · <a href="https://github.com/mangomint1805/bgvn">Mã nguồn</a> · <a href="luat/">⚙️ Luật mặc định</a> · <a href="credits/">📜 Credits</a> · <a href="#" data-feedback="">💌 Góp ý / báo lỗi</a> · <a href="#" data-donate>☕ Ủng hộ</a></footer>
 </main>
+<script>
+// tên game dài (vd. "Tiến Lên miền Nam") thì thu nhỏ cho vừa 1 dòng
+function fitTitles(){document.querySelectorAll('.grid .tile .info h2').forEach(h=>{h.style.fontSize='';let f=parseFloat(getComputedStyle(h).fontSize);while(h.scrollWidth>h.clientWidth&&f>22){f-=1;h.style.fontSize=f+'px'}})}
+addEventListener('load',fitTitles);addEventListener('resize',()=>{clearTimeout(fitTitles.t);fitTitles.t=setTimeout(fitTitles,120)});document.fonts&&document.fonts.ready.then(fitTitles);
+</script>
 <script type="module" src="shared/ui/feedback.js?v=4"></script>
-<script type="module">import { mountAccount } from "./shared/ui/account.js?v=1"; mountAccount(document.getElementById("acct"));</script>
+<script type="module">import { mountAccount } from "./shared/ui/account.js?v=1"; import { mountOnline } from "./shared/net/presence.js?v=1"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online"));</script>
 <script type="module">
 import { openNews, newsBadge } from './shared/ui/news.js?v=102';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };

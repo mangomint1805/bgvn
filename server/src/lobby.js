@@ -44,12 +44,30 @@ export class Lobby extends DurableObject {
     for (const ws of this.ctx.getWebSockets()) try { ws.send(m); } catch (e) {}
   }
   // ---------- kết nối ----------
+  // ---------- số người đang online (mọi trang BGVN mở 1 WebSocket "presence") ----------
+  online() { return this.ctx.getWebSockets('p').length; } // chỉ đếm kết nối presence (trang nào cũng có đúng 1)
+  bumpOnline() { // gom thay đổi, tối đa 1 lần / 4 giây để đỡ tốn
+    if (this.pending) return; this.pending = true;
+    const due = Math.max(0, (this.lastPush || 0) + 4000 - now());
+    this.ctx.storage.setAlarm(now() + due + 50);
+  }
+  async alarm() {
+    this.pending = false; this.lastPush = now();
+    const m = JSON.stringify({ t: 'online', n: this.online() });
+    for (const ws of this.ctx.getWebSockets()) try { ws.send(m); } catch (e) {}
+  }
   async fetch(req) {
     if (this.ctx.getWebSockets().length >= MAX_SOCKS) return new Response('Sảnh đông quá', { status: 503 });
+    if (new URL(req.url).pathname.endsWith('/presence')) {
+      const pair = new WebSocketPair(), [cli, srv] = Object.values(pair);
+      this.ctx.acceptWebSocket(srv, ['p']); srv.serializeAttachment({ p: 1 });
+      srv.send(JSON.stringify({ t: 'online', n: this.online() })); this.bumpOnline();
+      return new Response(null, { status: 101, webSocket: cli });
+    }
     const ip = req.headers.get('CF-Connecting-IP') || '';
     const ipk = (await sha(ip + '|bgvn')).slice(0, 16);
     const pair = new WebSocketPair(), [cli, srv] = Object.values(pair);
-    this.ctx.acceptWebSocket(srv); srv.serializeAttachment({ ipk, who: null, name: 'Khách', v: 0, chs: ['all'] });
+    this.ctx.acceptWebSocket(srv); srv.serializeAttachment({ ipk, who: null, name: 'Khách', v: 0, chs: ['all'] }); this.bumpOnline();
     return new Response(null, { status: 101, webSocket: cli });
   }
   hist(ch) { return this.sql.exec('SELECT id, ch, ts, who, name, v, text FROM chat WHERE ch = ? AND hidden = 0 ORDER BY id DESC LIMIT ?', ch, HIST).toArray().reverse().map(pubMsg); }
@@ -71,11 +89,13 @@ export class Lobby extends DurableObject {
       if (!chs.length) chs.push('all');
       ws.serializeAttachment({ ...a, who, name, v, chs });
       send({ t: 'me', name, v, who: who.startsWith('u:') ? who : who.slice(0, 9) });
+      send({ t: 'online', n: this.online() });
       send({ t: 'rooms', list: this.rooms() });
       for (const ch of chs) send({ t: 'hist', ch, msgs: this.hist(ch) });
       const b = this.banned(who, a.ipk); if (b) send({ t: 'banned', until: b.until, reason: b.reason });
       return;
     }
+    if (a.p) return; // kết nối đếm online: không nhận lệnh
     if (!a.who) return;
     if (m.t === 'chat') {
       const ch = String(m.ch || 'all'); if (!a.chs.includes(ch)) return;
@@ -108,8 +128,8 @@ export class Lobby extends DurableObject {
       ws.serializeAttachment({ ...a, chs }); for (const ch of chs) send({ t: 'hist', ch, msgs: this.hist(ch) });
     }
   }
-  async webSocketClose(ws, code) { try { ws.close(code === 1005 ? 1000 : code, 'bye'); } catch (e) {} }
-  async webSocketError() {}
+  async webSocketClose(ws, code) { try { ws.close(code === 1005 ? 1000 : code, 'bye'); } catch (e) {} this.bumpOnline(); }
+  async webSocketError() { this.bumpOnline(); }
   hide(id) {
     this.sql.exec('UPDATE chat SET hidden = 1 WHERE id = ?', id);
     const m = JSON.stringify({ t: 'del', id });
