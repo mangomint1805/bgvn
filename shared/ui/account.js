@@ -42,7 +42,7 @@ export async function openLogin(mode = 'login') {
     <label for="ac-p">Mật khẩu</label><input id="ac-p" type="password" maxlength="100" autocomplete="current-password" placeholder="ít nhất 6 ký tự">
     <p class="ac-err" id="ac-e"></p><button class="ac-go" id="ac-go">Đăng nhập</button></form>
     <div id="ac-gw" hidden><div class="ac-or">hoặc</div><div class="ac-g" id="ac-g"></div></div>
-    <p class="ac-note">Quên mật khẩu? Nhắn chủ web qua 💌 Góp ý để được đặt lại. BGVN không lưu email.</p>`);
+    <p class="ac-note">Quên mật khẩu? Nhắn chủ web qua 💌 Góp ý để được đặt lại. BGVN không lưu email. · <a href="${new URL('../../privacy/', import.meta.url).href}" target="_blank" rel="noopener">Chính sách riêng tư</a></p>`);
   const setMode = m => {
     mode = m; box.querySelectorAll('.ac-tabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m));
     box.querySelector('#ac-name-w').hidden = m !== 'register'; box.querySelector('#ac-go').textContent = m === 'register' ? 'Tạo tài khoản' : 'Đăng nhập';
