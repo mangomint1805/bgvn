@@ -36,3 +36,44 @@ import('./feedback.js?v=4').then(() => {
   box.innerHTML = '<a href="#" data-feedback style="color:inherit">💌 Góp ý / báo lỗi</a> · <a href="#" data-donate style="color:inherit">☕ Ủng hộ chủ web</a>';
   if (ft) ft.after(box);
 }).catch(() => {});
+
+// 🌐 Sảnh chung trong từng game: nút mở sảnh (phòng công khai + chat của game này) ở màn hình đầu
+const GAME = location.pathname.replace(/\/+$/, '').split('/').pop();
+(() => {
+  const ft = [...document.querySelectorAll('footer, p.note')].find(e => /fan-made/i.test(e.textContent));
+  if (!ft) return;
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'bgvn-lobbybtn';
+  b.innerHTML = '🌐 Phòng công khai & chat';
+  b.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:46px;margin:10px 0 4px;border:0;border-radius:999px;cursor:pointer;font:800 16px "Baloo 2",Nunito,system-ui,sans-serif;color:#fff;background:linear-gradient(90deg,#7b61ff,#3d8bff);box-shadow:0 8px 18px -10px #3d8bffaa';
+  b.onclick = () => import('./lobby.js?v=1').then(m => m.openLobby(GAME));
+  ft.before(b);
+})();
+
+// 🌐 Công khai phòng: hiện công tắc cạnh mã phòng (chỉ chủ phòng online)
+let wantPublic = false;
+try { if (/[?&]public=1/.test(location.search)) sessionStorage.setItem('bgvn-pub-next', '1'); wantPublic = sessionStorage.getItem('bgvn-pub-next') === '1'; } catch (e) {}
+function pubToggle() {
+  const host = window.__bgvnHost; if (!host || host.dead) return;
+  const codeEl = document.querySelector('#room-code, #lobby-code'); if (!codeEl) return;
+  const code = (codeEl.textContent || '').trim(); if (!/^[A-Z0-9]{5}$/.test(code) || code !== host.code) return;
+  const anchor = document.getElementById('code-box') || codeEl;
+  if (!anchor.offsetParent) return; // đang ẩn
+  let w = document.getElementById('bgvn-pub');
+  const key = 'bgvn-pub-' + host.game + '-' + code;
+  let saved = null; try { saved = sessionStorage.getItem(key); } catch (e) {}
+  if (!w) {
+    w = document.createElement('label'); w.id = 'bgvn-pub';
+    w.style.cssText = 'display:flex;align-items:center;gap:10px;margin:10px auto;max-width:420px;padding:10px 14px;border-radius:16px;background:#eef3ff;border:1.5px solid #c9d6ff;color:#22306b;font:700 14px/1.35 Nunito,system-ui,sans-serif;cursor:pointer;text-align:left';
+    w.innerHTML = '<input type="checkbox" style="width:22px;height:22px;flex:none;accent-color:#3d63ff"><span><b>🌐 Công khai phòng</b><br><small style="font-weight:600;opacity:.85">Hiện ở Sảnh chung để người lạ vào chơi cùng. Tắt = chỉ ai có mã/link mới vào được.</small></span>';
+    anchor.after(w);
+    w.querySelector('input').onchange = e => { const on = e.target.checked; try { sessionStorage.setItem(key, on ? '1' : '0'); sessionStorage.removeItem('bgvn-pub-next'); } catch (x) {} host.setPublic(on); };
+  }
+  const cb = w.querySelector('input');
+  if (w.dataset.code !== code || w.dataset.host !== host.pubK) { // phòng mới / chủ phòng mới (tải lại trang)
+    w.dataset.code = code; w.dataset.host = host.pubK;
+    const on = saved === '1' || (saved === null && wantPublic);
+    cb.checked = on; if (on !== !!host.pub) host.setPublic(on);
+    if (wantPublic) { wantPublic = false; try { sessionStorage.removeItem('bgvn-pub-next'); sessionStorage.setItem(key, on ? '1' : '0'); } catch (e) {} }
+  }
+}
+setInterval(pubToggle, 1000);

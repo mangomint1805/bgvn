@@ -12,6 +12,7 @@ function base() {
   } catch (e) {}
   return DEFAULT;
 }
+try { base(); } catch (e) {} // đọc ?cf= ngay khi tải trang (lưu lại cho các trang sau)
 export const cfHttp = () => (base() || DEFAULT).replace(/^ws/, 'http'); // địa chỉ http(s) của máy chủ (góp ý…)
 export const cfEnabled = () => !!base() && typeof WebSocket !== 'undefined';
 const rid = () => Math.random().toString(36).slice(2, 12);

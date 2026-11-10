@@ -109,6 +109,9 @@ footer a{color:inherit}
 .play.resume{background:#2fc76f;color:#fff;box-shadow:0 0 0 3px #fff,0 8px 18px #0004;animation:rz 1.6s ease-in-out infinite}
 .play.resume small{display:block;font:700 11px/1.1 Nunito,sans-serif;opacity:.95;text-align:center}
 @keyframes rz{50%{transform:scale(1.05)}}
+.acct{position:absolute;right:16px;top:14px;z-index:3}
+.lobby-cta{display:flex;flex-direction:column;align-items:center;justify-content:center;width:min(520px,100%);min-height:62px;padding:8px 18px;border-radius:22px;text-decoration:none;color:#fff;font:800 22px/1.1 "Baloo 2",Nunito,sans-serif;background:linear-gradient(90deg,#7b61ff,#3d8bff,#2fc76f);box-shadow:0 14px 28px -14px #3d8bffcc;flex-basis:100%;margin:0 auto}
+.lobby-cta small{font:700 13px Nunito,sans-serif;opacity:.95}.lobby-cta:hover{filter:brightness(1.06)}
 .acts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
 .news{justify-content:center}
 @media (max-width:560px){.bar{flex-direction:column;align-items:stretch}.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}.acts .news{width:100%;padding:8px 10px}.filter{align-self:center}}
@@ -119,9 +122,11 @@ footer a{color:inherit}
 <body>
 <i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="blob b4"></i>
 <main>
+  <div class="acct" id="acct"></div>
   <h1>🎲 <span>BGVN</span></h1>
   <p class="sub">Board game tiếng Việt – mở link là chơi cùng hội bạn, không cần cài đặt</p>
   <div class="bar">
+    <a class="lobby-cta" href="sanh/">🌐 Sảnh chung <small>tìm phòng công khai · chat với mọi người</small></a>
     <div class="acts">
     <button class="news" id="btn-news" type="button">📝 Có gì mới</button>
     <button class="news alt" type="button" data-feedback="">💌 Góp ý</button>
@@ -249,6 +254,7 @@ footer a{color:inherit}
   <footer>Dự án fan-made phi thương mại · Ảnh minh hoạ CÀ ĐÙNG! là tranh thuộc phạm vi công cộng (Wikimedia Commons) · Game bài chỉ chơi bằng chip ảo, không cá cược tiền thật · Không liên kết với dV Giochi, Mattel, VNG/ZingPlay, Yoka Games hay Exploding Kittens · <a href="https://github.com/mangomint1805/bgvn">Mã nguồn</a> · <a href="luat/">⚙️ Luật mặc định</a> · <a href="credits/">📜 Credits</a> · <a href="#" data-feedback="">💌 Góp ý / báo lỗi</a> · <a href="#" data-donate>☕ Ủng hộ</a></footer>
 </main>
 <script type="module" src="shared/ui/feedback.js?v=4"></script>
+<script type="module">import { mountAccount } from "./shared/ui/account.js?v=1"; mountAccount(document.getElementById("acct"));</script>
 <script type="module">
 import { openNews, newsBadge } from './shared/ui/news.js?v=102';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };

@@ -6,6 +6,12 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261110-14', date: '10/11/2026', game: 'all', title: 'Sảnh chung, tài khoản, chat', items: [
+    '🌐 Sảnh chung: xem phòng công khai của mọi game, bấm là vào chơi cùng người lạ. Mỗi game cũng có nút "Phòng công khai & chat" ở màn hình đầu.',
+    '🔓 Chủ phòng bật "🌐 Công khai phòng" ngay dưới mã phòng để phòng hiện ở Sảnh. Không bật thì chỉ ai có mã/link mới vào được như cũ.',
+    '💬 Chat ở Sảnh: kênh Chung + kênh riêng từng game. Từ bậy tự bị che, bấm 🚩 để báo cáo, tin bị nhiều người báo tự ẩn.',
+    '👤 Tài khoản (không bắt buộc): tạo bằng tên đăng nhập + mật khẩu, giữ tên và có dấu ✓ khi chat. Khách vẫn chơi ngay như cũ.',
+  ] },
   { id: '20261110-13', date: '10/11/2026', game: 'meono', title: 'Lá "ĐÉO!" đổi tên thành "HUỶ KÈO!"', items: [
     '🙅 Lá chặn đổi tên thành HUỶ KÈO! cho thân thiện hơn – công dụng y như cũ (huỷ 1 hành động, chồng được). Con dấu, nút bấm, hướng dẫn, danh hiệu cuối ván đổi theo.',
   ] },

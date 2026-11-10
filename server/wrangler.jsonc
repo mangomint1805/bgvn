@@ -7,10 +7,15 @@
   "durable_objects": {
     "bindings": [
       { "name": "ROOM", "class_name": "Room" },
-      { "name": "INBOX", "class_name": "Inbox" }
+      { "name": "INBOX", "class_name": "Inbox" },
+      { "name": "USERS", "class_name": "Users" },
+      { "name": "LOBBY", "class_name": "Lobby" }
     ]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room", "Inbox"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Room", "Inbox"] },
+    { "tag": "v2", "new_sqlite_classes": ["Users", "Lobby"] }
+  ],
   "observability": { "enabled": true },
   // giữ biến/mật khẩu đặt trên trang Cloudflare khi deploy lại từ GitHub
   "keep_vars": true

@@ -8,6 +8,7 @@ import { peerOptions, keepAlive } from './ice.js';
 import { RelayHost, relayConnect } from './relay.js';
 import { FbHost, fbConnect, fbEnabled } from './fbrelay.js';
 import { CfHost, cfConnect, cfEnabled } from './cfrelay.js?v=2';
+import { announceRoom } from './api.js?v=1';
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export function makeCode() { let s = ''; for (let i = 0; i < 5; i++) s += ALPHABET[Math.floor(Math.random() * ALPHABET.length)]; return s; }
@@ -35,6 +36,11 @@ export class RoomHost {
     this.o = { ...opts, onConn: c => { this.conns.add(c); const del = () => this.conns.delete(c); c.on('close', del); c.on('error', del); inner(c); } };
     this.open();
     this.stopKeep = keepAlive(() => this.peer);
+    // phòng công khai (hiện ở Sảnh chung) – bật bằng nút "🌐 Công khai" (shared/ui/homebtn.js)
+    this.pubK = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    try { window.__bgvnHost = this; dispatchEvent(new CustomEvent('bgvn-host', { detail: this })); } catch (e) {}
+    this._unload = () => { if (this.pub) this.announce(false); };
+    try { addEventListener('pagehide', this._unload); } catch (e) {}
     // nhịp tim: người chơi không nghe gì 8 giây thì tự vào lại (rớt mạng âm thầm, chủ phòng đã đóng chỗ…)
     this.hb = setInterval(() => { for (const c of this.conns) if (c.open && !String(c.peer || '').startsWith('cf:')) try { c.send({ t: '__hb' }); } catch (e) {} }, 2500); // đường Cloudflare tự giữ kết nối bằng ping/pong miễn phí
   }
@@ -63,7 +69,15 @@ export class RoomHost {
       } else if (!['network', 'server-error', 'socket-error', 'socket-closed', 'disconnected', 'peer-unavailable'].includes(e.type)) this.o.onError && this.o.onError('Lỗi mạng: ' + e.type);
     });
   }
-  destroy() { this.dead = true; clearInterval(this.hb); this.stopKeep && this.stopKeep(); this.relay && this.relay.destroy(); this.fb && this.fb.destroy(); this.cf && this.cf.destroy(); try { this.peer && this.peer.destroy(); } catch (e) {} }
+  get game() { return String(this.o.ns || '').replace(/^bgvn-/, ''); }
+  announce(open) { try { announceRoom({ game: this.game, code: this.code, k: this.pubK, host: localStorage.getItem('bgvn-name') || 'Ai đó', n: this.conns.size + 1, open }); } catch (e) {} }
+  setPublic(on) {
+    this.pub = !!on; clearInterval(this.pubT);
+    if (this.pub) { this.announce(true); this.pubT = setInterval(() => { if (!this.dead) this.announce(true); }, 30000); }
+    else this.announce(false);
+  }
+  destroy() { if (this.pub) { this.pub = false; clearInterval(this.pubT); this.announce(false); } try { removeEventListener('pagehide', this._unload); if (window.__bgvnHost === this) window.__bgvnHost = null; } catch (e) {}
+    this.dead = true; clearInterval(this.hb); this.stopKeep && this.stopKeep(); this.relay && this.relay.destroy(); this.fb && this.fb.destroy(); this.cf && this.cf.destroy(); try { this.peer && this.peer.destroy(); } catch (e) {} }
 }
 
 // ======================= NGƯỜI VÀO PHÒNG =======================
