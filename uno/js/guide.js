@@ -114,7 +114,7 @@ export function openGuide(openModal, cardHTML) {
       <li>Mỗi lượt có <b>40 giây</b> (bốc phạt: 20 giây). Còn 15 giây sẽ hiện đồng hồ ⏳ trên cùng; hết giờ máy tự đánh thay để ván không bị treo.</li></ul>`],
   };
   const draw = k => {
-    openModal(`<button class="close-x" onclick="__closeModal()">✕</button><h2>📖 Cách chơi UNO</h2><div class="guide"><div class="tabs">${Object.entries(tabs).map(([id, [t]]) => `<button class="chip ${id === k ? 'on' : ''}" data-tab="${id}">${t}</button>`).join('')}<button class="chip news-chip" onclick="window.__news && window.__news()">📝 Có gì mới</button></div>${tabs[k][1]()}</div>`, 'wide');
+    openModal(`<button class="close-x" onclick="__closeModal()">✕</button><h2>📖 Cách chơi UNÔ</h2><div class="guide"><div class="tabs">${Object.entries(tabs).map(([id, [t]]) => `<button class="chip ${id === k ? 'on' : ''}" data-tab="${id}">${t}</button>`).join('')}<button class="chip news-chip" onclick="window.__news && window.__news()">📝 Có gì mới</button></div>${tabs[k][1]()}</div>`, 'wide');
     document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => draw(b.dataset.tab));
   };
   draw('basic');

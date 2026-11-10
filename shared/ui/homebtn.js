@@ -29,7 +29,7 @@ const mo = new MutationObserver(muts => { for (const m of muts) for (const n of 
 mo.observe(document.body, { childList: true, subtree: true });
 
 // 💌 Góp ý / ☕ Ủng hộ: thêm link vào chân trang của game (dùng shared/ui/feedback.js)
-import('./feedback.js?v=2').then(() => {
+import('./feedback.js?v=3').then(() => {
   const ft = [...document.querySelectorAll('footer, p.note')].find(e => /fan-made/i.test(e.textContent));
   const box = document.createElement('p'); box.className = 'bgvn-fbline';
   box.style.cssText = 'text-align:center;font-size:13px;margin:6px 0 0;opacity:.9';

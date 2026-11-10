@@ -44,7 +44,7 @@ export function guideHTML() {
   const guns = ['volcanic', 'schofield', 'remington', 'carabine', 'winchester'];
   const P = gp(GI, GV, '.gp-ill .pcard{flex:none}');
   return `
-<div class="g-head"><h2>📖 Hướng dẫn chơi BANG!</h2><button class="btn small" id="g-close">Đóng ✕</button></div>
+<div class="g-head"><h2>📖 Hướng dẫn chơi CÀ ĐÙNG!</h2><button class="btn small" id="g-close">Đóng ✕</button></div>
 <nav class="g-toc">
   <a href="#g-goal">Mục tiêu</a><a href="#g-setup">Chuẩn bị</a><a href="#g-turn">Một lượt</a><a href="#g-dist">Khoảng cách</a><a href="#g-draw">Lật bài</a>
   <a href="#g-brown">Lá nâu</a><a href="#g-blue">Lá xanh</a><a href="#g-guns">Súng</a><a href="#g-death">Bị loại</a><a href="#g-end">Kết thúc</a><a href="#g-chars">Nhân vật</a><a href="#g-tips">Mẹo</a><a href="#g-web">Chơi trên web</a>

@@ -7,7 +7,7 @@ const apiBase = () => cfHttp();
 
 const V = '10.12.2';
 const ROOT = new URL('../../', import.meta.url).href; // gốc web (dù đang ở trang game nào)
-const GAMES = { '': 'Trang chủ / chung', bang: 'BANG!', uno: 'UNO', typhu: 'Cờ Tỷ Phú', tamquoc: 'Tam Quốc Sát', meono: 'Mèo Nổ', masoi: 'Ma Sói', scribble: 'Scribble', tienlen: 'Tiến Lên', poker: 'Poker', xidach: 'Xì Dách', catte: 'Cát Tê', bacao: 'Ba Cào', cangua: 'Cờ Cá Ngựa', camel: 'Đua Lạc Đà', solitaire: 'Xếp bài' };
+const GAMES = { '': 'Trang chủ / chung', bang: 'CÀ ĐÙNG!', uno: 'UNÔ', typhu: 'Cờ Tỷ Phú', tamquoc: 'Tam Quốc Sát', meono: 'Mèo Nổ', masoi: 'Ma Sói', scribble: 'Scribble', tienlen: 'Tiến Lên', poker: 'Poker', xidach: 'Xì Dách', catte: 'Cát Tê', bacao: 'Ba Cào', cangua: 'Cờ Cá Ngựa', camel: 'Đua Lạc Đà', solitaire: 'Xếp bài' };
 const curGame = () => { const seg = location.pathname.replace(/\/+$/, '').split('/').pop(); return GAMES[seg] !== undefined && seg !== '' ? seg : ''; };
 
 const CSS = `.fb-ov{position:fixed;inset:0;z-index:9999;background:#1a1426aa;display:grid;place-items:center;padding:14px;animation:fbIn .2s}

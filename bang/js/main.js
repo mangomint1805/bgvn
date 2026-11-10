@@ -10,7 +10,7 @@ import { syncPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 import { imgTag, avatarTag } from './images.js';
 import { BANG_DEFAULTS, S, SPEEDS, getSpeed, setSpeed, sfx, cardSfx, gunSfx, fly, shake, flash, floatText, banner, toggleMute, isMuted, shoot, arrows, explode, sparkle, confetti, stamp, screenShake } from './fx.js?v=2';
 import { THEMES, getTheme, setTheme, onThemeChange } from './themes.js';
-import { openGuide } from './guide.js?v=14';
+import { openGuide } from './guide.js?v=15';
 import { musicSetTheme, musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=11';
 
 const $ = s => document.querySelector(s);

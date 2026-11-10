@@ -6,7 +6,7 @@ import { openNews, newsBadge } from '../../shared/ui/news.js?v=6';
 import { startPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 import { MODES, COLOR_NAME, cardText, DRAW_VALUE, CARD_NAME, MATCH_TARGETS } from './engine.js?v=19';
 import * as fx from './ufx.js?v=20';
-import { openGuide, CARD_HELP, NEW_TYPES } from './guide.js?v=20';
+import { openGuide, CARD_HELP, NEW_TYPES } from './guide.js?v=21';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
