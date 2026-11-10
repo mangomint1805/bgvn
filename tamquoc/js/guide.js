@@ -1,7 +1,7 @@
 // Hướng dẫn luật Tam Quốc Sát (bản BGVN) – soạn lại bằng lời của hội, rút gọn hợp lý cho bản web.
 import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, buildDeck, rolesFor, DECK_SIZE_BASE, DECK_SIZE_EXP, HORSE_NAMES, artKey } from './cards.js?v=7';
-import { cardHTML, portrait } from './art.js?v=7';
-import { IMG } from './images.js?v=7';
+import { cardHTML, portrait } from './art.js?v=8';
+import { IMG } from './images.js?v=8';
 import { gp, ill } from '../../shared/ui/guidepics.js?v=1';
 import { GI, GV } from './guide-img.js?v=1';
 

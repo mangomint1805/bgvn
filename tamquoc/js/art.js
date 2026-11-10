@@ -1,7 +1,7 @@
 // Hình lá bài & chân dung: tranh cổ thuộc phạm vi công cộng (Wikimedia Commons, xem img/CREDITS.md) trong img/,
 // đè lên lớp SVG tự vẽ (khung màu theo nước, chữ Hán thư pháp, vật biểu tượng) – ảnh lỗi thì tự rơi về SVG.
 import { GENERALS, KINGDOMS, CARD_INFO, SUIT_SYMBOL, rankLabel, cardName, isRed, infoOf, artKey } from './cards.js?v=7';
-import { IMG } from './images.js?v=7';
+import { IMG } from './images.js?v=8';
 import { weaponSVG } from './weapons.js?v=7';
 // biểu tượng nhỏ: binh khí/trang bị vẽ SVG đúng hình, còn lại emoji
 export function emoOf(type) { const w = weaponSVG(type, 'wi'); return w || (CARD_INFO[type] ? CARD_INFO[type].emo : ''); }

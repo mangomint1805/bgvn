@@ -8,10 +8,10 @@ import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=1';
 import { syncPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
-import { portrait, blankPortrait, cardHTML, backHTML, generalCardHTML, kindTag, iconsFor, emoOf } from './art.js?v=7';
+import { portrait, blankPortrait, cardHTML, backHTML, generalCardHTML, kindTag, iconsFor, emoOf } from './art.js?v=8';
 import * as fx from './fx.js?v=8';
 import { musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=8';
-import { openGuide as guide } from './guide.js?v=8';
+import { openGuide as guide } from './guide.js?v=9';
 import { SKILL_HELP, SKILL_TYPE } from './skillhelp.js?v=7';
 import { PHASE_HELP } from './coach.js?v=7';
 

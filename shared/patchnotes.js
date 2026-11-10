@@ -9,6 +9,7 @@ export const NOTES = [
   { id: '20261110-08', date: '10/11/2026', game: 'all', title: 'Nút về trang chủ + sửa lặt vặt', items: [
     '🏠 Hộp "Rời ván?" ở mọi game có thêm nút Về trang chủ BGVN (Bang!: trong ⚙️).',
     '🎴 Tam Quốc Sát: màn bốc thẻ thân phận – chữ trên thẻ tre không còn bị vỡ dấu/cắt chữ, nền che kín, chữ "Bạn là …" dễ đọc.',
+    '🖌️ Tam Quốc Sát: Hoàng Nguyệt Anh có chân dung nét mực BGVN tự vẽ (thay con dấu).',
     '🤖 Tên bot có chữ cái đầu khác nhau (Kẹo, Xôi, Gấu Bông, Đậu, Nấm, Sữa…) để avatar không trùng.',
   ] },
   { id: '20261110-07', date: '10/11/2026', game: 'all', title: 'Đổi tên bot', items: [
