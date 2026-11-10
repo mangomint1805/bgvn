@@ -11,5 +11,7 @@
     ]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room", "Inbox"] }],
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  // giữ biến/mật khẩu đặt trên trang Cloudflare khi deploy lại từ GitHub
+  "keep_vars": true
 }
