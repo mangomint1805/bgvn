@@ -17,6 +17,8 @@
     { "tag": "v2", "new_sqlite_classes": ["Users", "Lobby"] }
   ],
   "observability": { "enabled": true },
+  // Client ID đăng nhập Google (công khai, không phải bí mật) – Google Cloud project bgvn-514316
+  "vars": { "GOOGLE_CLIENT_ID": "743609743476-9qrmaq0mrn5m2jm2p0664m7v717qdr4e.apps.googleusercontent.com" },
   // giữ biến/mật khẩu đặt trên trang Cloudflare khi deploy lại từ GitHub
   "keep_vars": true
 }
