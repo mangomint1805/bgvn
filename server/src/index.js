@@ -41,7 +41,9 @@ export default {
     if (p[0] === 'admin') {
       if (p[1] === 'list' && req.method === 'POST') {
         const { key, del } = await req.json().catch(() => ({}));
-        if (!env.ADMIN_KEY || key !== env.ADMIN_KEY) return json({ ok: false, msg: 'Sai mật khẩu' }, 401);
+        const want = String(env.ADMIN_KEY || '').trim();
+        if (!want) return json({ ok: false, msg: 'Máy chủ chưa có ADMIN_KEY – vào Cloudflare → bgvn-rooms → Settings → Variables and Secrets (KHÔNG phải mục Build) để thêm' }, 503);
+        if (String(key || '').trim() !== want) return json({ ok: false, msg: 'Sai mật khẩu' }, 401);
         const inbox = env.INBOX.get(env.INBOX.idFromName('main'));
         if (del) await inbox.remove(del);
         return json({ ok: true, items: await inbox.list() });
@@ -142,7 +144,7 @@ const ADMIN_HTML = `<!doctype html><html lang="vi"><head><meta charset="utf-8"><
 input,button{font:inherit;padding:10px 12px;border-radius:10px;border:1.5px solid #e2d4c4}button{background:#2a2340;color:#fff;border:0;cursor:pointer}
 .it{background:#fff;border-radius:14px;padding:12px 14px;margin:10px 0;box-shadow:0 2px 8px #0001}.meta{font-size:12.5px;color:#7a6f88;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .tag{padding:2px 8px;border-radius:999px;background:#eee;font-weight:700}.bug{background:#ffd9dc}.idea{background:#dff5e6}.msg{white-space:pre-wrap;margin:6px 0}.del{margin-left:auto;background:#ff4d5e;padding:4px 10px;font-size:13px}</style></head>
-<body><main><h1>💌 Góp ý / báo lỗi BGVN</h1><form id="f"><input id="k" type="password" placeholder="Mật khẩu quản trị" autocomplete="current-password"> <button>Xem</button></form><p id="st"></p><div id="l"></div></main>
+<body><main><h1>💌 Góp ý / báo lỗi BGVN</h1><form id="f"><input id="k" type="password" placeholder="Mật khẩu quản trị" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false"> <label style="font-size:13px"><input type="checkbox" onchange="k.type=this.checked?'text':'password'"> hiện</label> <button>Xem</button></form><p id="st"></p><div id="l"></div></main>
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const T={bug:'🐞 Lỗi',idea:'💡 Góp ý',other:'💬 Khác'};
