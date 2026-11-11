@@ -6,6 +6,12 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261111-5', date: '11/11/2026', game: 'all', title: 'BGVN khoác áo mới', items: [
+    '🙂 Logo mới: bé xúc xắc biết cười – có luôn trên tab trình duyệt và khi "Thêm vào màn hình chính" (mở lên như một app thật).',
+    '🏠 Trang chủ làm lại: game nổi bật ở đầu trang, mục 🔥 Đang hot theo số người đang chơi thật, lọc theo loại game (Tiệc tùng / Bàn cờ / Game bài).',
+    '🟢 Mỗi ô game hiện số người đang chơi game đó ngay lúc này.',
+    '💬 Các hộp hỏi – đáp (đổi tên, đổi mật khẩu, báo cáo…) dùng giao diện riêng của BGVN thay cho hộp xám của trình duyệt.',
+  ] },
   { id: '20261111-4', date: '11/11/2026', game: 'all', title: 'Icon game mới toanh', items: [
     '🎨 Vẽ lại hình minh hoạ cho 13 game ở trang chủ: mèo ôm bom, sói làng, cờ trận Ngụy–Thục–Ngô, phố Sài Gòn…',
     '🖼️ Ảnh xem trước khi share link từng game cũng đổi theo hình mới.',

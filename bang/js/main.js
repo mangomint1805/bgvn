@@ -4,8 +4,9 @@ import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net
 import { CARD_INFO, CHARACTERS, ROLES, SUIT_SYMBOL, rankLabel, cardLabel, suitify } from './cards.js';
 import { Host, Client, loadSnapshot, session, BANG_PHRASES } from './net.js?v=16';
 import { createReactions } from '../../shared/ui/react.js?v=2';
+import { confirmBox } from '../../shared/ui/dialog.js?v=1';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=107';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=109';
 import { syncPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 import { imgTag, avatarTag } from './images.js';
 import { BANG_DEFAULTS, S, SPEEDS, getSpeed, setSpeed, sfx, cardSfx, gunSfx, fly, shake, flash, floatText, banner, toggleMute, isMuted, shoot, arrows, explode, sparkle, confetti, stamp, screenShake } from './fx.js?v=2';
@@ -145,7 +146,7 @@ $('#btn-copy').onclick = () => {
 $('#btn-add-bot').onclick = () => net?.addBot();
 $('#btn-start').onclick = () => net?.start();
 $('#btn-leave').onclick = () => { net?.leave ? net.leave() : net?.destroy(); location.href = location.pathname; };
-$('#btn-home-g').onclick = () => { if (!confirm('Rời ván và về trang chủ BGVN?')) return; try { net?.leave ? net.leave() : net?.destroy(); } catch (e) {} setTimeout(() => { location.href = '../'; }, 200); };
+$('#btn-home-g').onclick = async () => { if (!(await confirmBox('Ván đang chơi sẽ không được lưu cho bạn.', { title: '🏠 Rời ván và về trang chủ?', ok: 'Về trang chủ', cancel: 'Ở lại' }))) return; try { net?.leave ? net.leave() : net?.destroy(); } catch (e) {} setTimeout(() => { location.href = '../'; }, 200); };
 $('#btn-log-toggle').onclick = () => $('#log').classList.toggle('hidden');
 $('#btn-recap').onclick = $('#btn-recap-log').onclick = () => showRecap();
 $('#btn-newbie').onclick = () => setNewbie(!newbie);

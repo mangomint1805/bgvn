@@ -9,7 +9,7 @@
 <meta property="og:description" content="Phòng công khai của mọi game + chat chung. Bấm là vào chơi, không cần cài đặt.">
 <meta property="og:image" content="https://boardgamevui.com/shared/img/og.jpg?v=2">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+<link rel="icon" href="/favicon.svg?v=1" type="image/svg+xml"><link rel="apple-touch-icon" href="/shared/img/brand/apple-touch-icon.png?v=1"><link rel="manifest" href="/manifest.webmanifest?v=1"><meta name="apple-mobile-web-app-title" content="BGVN"><meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
 <style>
@@ -41,9 +41,9 @@ h1 span{background:linear-gradient(90deg,#7b61ff,#3d8bff,#2fc76f);-webkit-backgr
   <div id="lobby"></div>
 </main>
 <script type="module">
-import { mountAccount } from '../shared/ui/account.js?v=2';
-import { mountLobby } from '../shared/ui/lobby.js?v=2';
-import { mountOnline } from '../shared/net/presence.js?v=4';
+import { mountAccount } from '../shared/ui/account.js?v=3';
+import { mountLobby } from '../shared/ui/lobby.js?v=3';
+import { mountOnline } from '../shared/net/presence.js?v=5';
 mountOnline(document.getElementById('online'));
 mountAccount(document.getElementById('acct'));
 const g = new URLSearchParams(location.search).get('game');

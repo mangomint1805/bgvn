@@ -1,5 +1,6 @@
 // ⚙️ Cài đặt chung BGVN (lưu trên máy này): tên mặc định, âm thanh, phòng công khai, số online, dữ liệu.
 import { auth } from '../net/api.js?v=1';
+import { confirmBox } from './dialog.js?v=1';
 const ROOT = new URL('../../', import.meta.url).href;
 const GAMES = ['bang', 'uno', 'typhu', 'tamquoc', 'meono', 'masoi', 'scribble', 'tienlen', 'poker', 'xidach', 'catte', 'bacao', 'cangua', 'camel', 'solitaire'];
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
@@ -46,8 +47,8 @@ export function openSettings() {
   $('#st-mute').onchange = e => ls.set('bgvn-mute-all', e.target.checked ? '1' : '0');
   $('#st-pub').onchange = e => ls.set('bgvn-pub-default', e.target.checked ? '1' : '0');
   $('#st-online').onchange = e => { ls.set('bgvn-hide-online', e.target.checked ? '0' : '1'); document.querySelectorAll('#online').forEach(el => { el.style.display = e.target.checked ? '' : 'none'; }); };
-  $('#st-clear').onclick = () => {
-    if (!confirm('Xoá tên, giao diện, luật đã chọn, ván đang chơi dở… trên máy này? (Tài khoản vẫn giữ trên máy chủ, chỉ bị đăng xuất.)')) return;
+  $('#st-clear').onclick = async () => {
+    if (!(await confirmBox('Tên, giao diện, luật đã chọn và ván đang chơi dở trên máy này sẽ bị xoá. Tài khoản vẫn còn trên máy chủ, bạn chỉ bị đăng xuất.', { title: '🗑️ Xoá dữ liệu trên máy này?', ok: 'Xoá hết', danger: true }))) return;
     try { Object.keys(localStorage).filter(k => /^(bgvn|bangvn|meono|uno|typhu|sol|tq|masoi|scribble|camel|cangua|poker|tienlen|xidach|catte|bacao)/i.test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
     location.reload();
   };

@@ -5,7 +5,7 @@ let ws = null, wait = 2000, ka = null, started = false;
 function connect() {
   try { ws = new WebSocket(WS() + '/presence'); } catch (e) { setTimeout(connect, wait); return; }
   ws.onopen = () => { wait = 2000; clearInterval(ka); ka = setInterval(() => { try { if (ws.readyState === 1) ws.send('ping'); } catch (e) {} }, 30000); };
-  ws.onmessage = ev => { if (ev.data === 'pong') return; try { const m = JSON.parse(ev.data); if (m.t === 'online') { window.__bgvnOnline = m.n; dispatchEvent(new CustomEvent('bgvn-online', { detail: m.n })); if (m.rooms != null) { window.__bgvnLive = { n: m.n, rooms: m.rooms, players: m.players }; dispatchEvent(new CustomEvent('bgvn-live', { detail: window.__bgvnLive })); } } } catch (e) {} };
+  ws.onmessage = ev => { if (ev.data === 'pong') return; try { const m = JSON.parse(ev.data); if (m.t === 'online') { window.__bgvnOnline = m.n; dispatchEvent(new CustomEvent('bgvn-online', { detail: m.n })); if (m.rooms != null) { window.__bgvnLive = { n: m.n, rooms: m.rooms, players: m.players, games: m.games || {} }; dispatchEvent(new CustomEvent('bgvn-live', { detail: window.__bgvnLive })); } } } catch (e) {} };
   ws.onclose = () => { clearInterval(ka); setTimeout(connect, wait); wait = Math.min(wait * 2, 60000); };
   ws.onerror = () => {};
 }

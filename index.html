@@ -11,12 +11,12 @@
 <meta property="og:site_name" content="BGVN">
 <meta property="og:title" content="BGVN – Board game tiếng Việt chơi online">
 <meta property="og:description" content="Mở link là chơi cùng hội bạn: UNÔ, Tiến Lên, Cờ Tỷ Phú 3D, Ma Sói, Mèo Nổ, Tam Quốc Sát, Scribble… Không cần cài đặt, có bot.">
-<meta property="og:image" content="https://boardgamevui.com/shared/img/og.jpg?v=2">
+<meta property="og:image" content="https://boardgamevui.com/shared/img/og.jpg?v=3">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta property="og:locale" content="vi_VN">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#fff7ef">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+<link rel="icon" href="/favicon.svg?v=1" type="image/svg+xml"><link rel="apple-touch-icon" href="/shared/img/brand/apple-touch-icon.png?v=1"><link rel="manifest" href="/manifest.webmanifest?v=1"><meta name="apple-mobile-web-app-title" content="BGVN"><meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;800&family=Bevan&display=swap" rel="stylesheet">
 <style>
@@ -116,7 +116,6 @@ footer a{color:inherit}
 .play.resume small{display:block;font:700 11px/1.1 Nunito,sans-serif;opacity:.95;text-align:center}
 @keyframes rz{50%{transform:scale(1.05)}}
 .online{text-align:center;margin:-26px auto 30px;font:700 14px Nunito,sans-serif;color:#3a7a52;background:#fff9;border:1.5px solid #cdebd8;border-radius:999px;padding:4px 14px;width:max-content;max-width:100%}
-.acct{position:absolute;right:16px;top:14px;z-index:3;display:flex;gap:8px;align-items:center}
 .setbtn{width:42px;height:42px;border-radius:50%;border:1.5px solid #ecdfd0;background:#fff;font-size:19px;cursor:pointer;box-shadow:0 4px 10px -6px #2a234055}.setbtn:hover{transform:rotate(30deg)}
 .lobby-cta{display:flex;flex-direction:column;align-items:center;justify-content:center;width:min(520px,100%);min-height:62px;padding:8px 18px;border-radius:22px;text-decoration:none;color:#fff;font:800 22px/1.1 "Baloo 2",Nunito,sans-serif;background:linear-gradient(90deg,#7b61ff,#3d8bff,#2fc76f);box-shadow:0 14px 28px -14px #3d8bffcc;flex-basis:100%;margin:0 auto}
 .lobby-cta small{font:700 13px Nunito,sans-serif;opacity:.95}.lobby-cta:hover{filter:brightness(1.06)}
@@ -128,36 +127,130 @@ footer a{color:inherit}
 .tile .art .ic{display:block;height:100%;max-width:68%;margin:0 auto;object-fit:contain;animation:tb 3.2s ease-in-out infinite;pointer-events:none}
 .tile:hover .art .ic{animation-duration:1.4s}
 @media (prefers-reduced-motion:reduce){.tile .art .ic{animation:none}}
+/* ===== Giao diện 11/2026: thanh trên, hero, mục hot, bộ lọc, chân trang ===== */
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+.nav{position:sticky;top:0;z-index:50;background:#fff7efd9;backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid #2a234012;transition:box-shadow .2s}
+.nav.stuck{box-shadow:0 10px 30px -18px #2a234066}
+.nav-in{max-width:1080px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:18px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);flex:none}
+.brand .mark{width:42px;height:42px;display:block;filter:drop-shadow(0 6px 8px #ff4d6a40);transition:transform .3s cubic-bezier(.2,1.6,.4,1)}
+.brand:hover .mark{transform:rotate(14deg) scale(1.08)}
+.wm{font:800 27px/0.95 "Baloo 2",Nunito,sans-serif;letter-spacing:.5px;display:flex;flex-direction:column}
+.wm small{font:800 10.5px/1 Nunito,sans-serif;letter-spacing:.3px;color:var(--muted);margin-top:1px}
+.links{display:flex;align-items:center;gap:4px;margin-left:10px;flex:1}
+.links a,.links button{position:relative;font:800 15px Nunito,sans-serif;color:var(--ink);text-decoration:none;background:none;border:0;border-radius:999px;padding:9px 14px;cursor:pointer;transition:background .15s}
+.links a:hover,.links button:hover{background:#2a23400f}
+.links .bgvn-dot::after{top:6px;right:4px}
+.acct{position:static;margin-left:auto;display:flex;gap:8px;align-items:center}
+.setbtn{width:42px;height:42px;border-radius:50%;border:1.5px solid #ecdfd0;background:#fff;color:var(--ink);cursor:pointer;display:grid;place-items:center;box-shadow:0 4px 10px -6px #2a234055;transition:transform .3s}.setbtn:hover{transform:rotate(45deg)}
+main{max-width:1080px;padding:28px 16px 32px}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:36px;align-items:center;margin:14px 0 30px}
+.hero h1{font-size:clamp(34px,4.5vw,54px);white-space:nowrap;line-height:1.04;text-align:left;letter-spacing:-1.2px;margin:12px 0 0}
+.hero h1 span{background:linear-gradient(90deg,#ff4d6a,#ff7a45 55%,#ffb23d);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .sub{text-align:left;margin:14px 0 22px;font-size:18px;max-width:30em;color:#5d5475}
+.online{margin:0;text-align:left;width:max-content;max-width:100%;font:700 13.5px Nunito,sans-serif;color:#2e6b47;background:#fff;border:1.5px solid #cdebd8;border-radius:999px;padding:5px 14px;box-shadow:0 6px 14px -10px #2fc76f}
+.cta{display:flex;flex-wrap:wrap;gap:12px;align-items:stretch}
+.btn-main{display:inline-flex;align-items:center;gap:8px;min-height:58px;padding:10px 28px;border-radius:999px;text-decoration:none;color:#fff;font:800 21px "Baloo 2",Nunito,sans-serif;background:linear-gradient(90deg,#ff4d6a,#ff7a45 60%,#ffa23d);box-shadow:0 14px 28px -12px #ff4d6acc,inset 0 -3px 0 #0000001f;transition:transform .15s,filter .15s}
+.btn-main,.btn-sub{white-space:nowrap}.btn-main:hover{transform:translateY(-2px);filter:brightness(1.05)}.btn-main:active{transform:translateY(1px)}
+.btn-sub{display:inline-flex;flex-direction:column;justify-content:center;min-height:58px;padding:6px 22px;border-radius:999px;text-decoration:none;color:var(--ink);font:800 17px/1.15 "Baloo 2",Nunito,sans-serif;background:#fff;border:1.5px solid #e6d8c8;box-shadow:0 10px 22px -14px #2a234088;transition:transform .15s}
+.btn-sub small{font:700 12px Nunito,sans-serif;color:var(--muted)}.btn-sub:hover{transform:translateY(-2px)}
+.facts{list-style:none;display:flex;flex-wrap:wrap;gap:6px 18px;padding:0;margin:20px 0 0;color:#5d5475;font:700 14.5px Nunito,sans-serif}
+.facts li{display:flex;align-items:center;gap:6px}.facts li+li::before{content:"";width:4px;height:4px;border-radius:50%;background:#c9bfd9;margin-right:12px}.facts b{font:800 17px "Baloo 2";color:var(--ink)}
+.hero-card{position:relative;min-height:330px}
+.hero-card .tile{min-height:360px;transform:rotate(1.5deg);box-shadow:0 34px 60px -24px #2a2340aa}
+.hero-card .tile:hover{transform:rotate(0) translateY(-6px)}
+.hero-card .feat{position:absolute;left:-10px;top:-14px;z-index:5;background:var(--ink);color:#fff;font:800 13px Nunito,sans-serif;padding:7px 14px;border-radius:999px;box-shadow:0 8px 18px -8px #2a2340;transform:rotate(-4deg)}
+.hero-card .newtag,.hero-card .livetag{display:none!important}
+.quick{display:none}
+.hot{margin:0 0 26px}.hot h2,.sec-head h2{font:800 26px/1 "Baloo 2",Nunito,sans-serif;margin:0}
+.hot-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.hot-chip{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);background:#fff;border:1.5px solid #f0e2d2;border-radius:18px;padding:8px 16px 8px 8px;box-shadow:0 10px 22px -16px #2a234088;transition:transform .15s}
+.hot-chip:hover{transform:translateY(-3px)}
+.hot-chip i{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font:800 17px "Baloo 2";font-style:normal;color:#fff;background:linear-gradient(135deg,#ff4d6a,#ffa23d)}
+.hot-chip b{display:block;font:800 16px/1.15 "Baloo 2",Nunito,sans-serif}.hot-chip small{font:700 12.5px Nunito,sans-serif;color:#2e8b57}
+.sec-head{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin:0 0 18px}
+.sec-head .filter{margin-left:auto}
+.psel{display:flex;align-items:center;gap:8px;font:800 13.5px Nunito,sans-serif;color:var(--muted)}
+.psel select{appearance:none;font:800 14px Nunito,sans-serif;color:var(--ink);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%232a2340' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 14px center/11px;border:1.5px solid #ecdfd0;border-radius:999px;padding:9px 36px 9px 16px;min-height:44px;cursor:pointer}
+.livetag{position:absolute;left:16px;top:18px;z-index:3;display:none;align-items:center;gap:6px;background:#0f2a1ccc;backdrop-filter:blur(6px);color:#fff;font:800 12px/1 Nunito,sans-serif;padding:7px 11px;border-radius:999px;box-shadow:0 6px 14px #0003}
+.livetag::before{content:"";width:8px;height:8px;border-radius:50%;background:#3ddc84;box-shadow:0 0 0 3px #3ddc8444;animation:lv 1.6s ease-in-out infinite}
+.livetag.on{display:inline-flex}.livetag.on~.newtag{top:52px}
+@keyframes lv{50%{box-shadow:0 0 0 6px #3ddc8400}}
+.tile{animation:tin .5s cubic-bezier(.2,.9,.3,1) both;animation-delay:calc(var(--i,0)*45ms)}
+@keyframes tin{from{opacity:0;transform:translateY(18px)}}
+.play{display:inline-flex;align-items:center;gap:6px}
+.foot{margin-top:56px;text-align:left;color:#5d5475;border-top:1.5px solid #2a234014;padding-top:28px}
+.foot-top{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:24px}
+.foot-brand p{margin:12px 0 0;font-size:14.5px;max-width:26em}
+.foot nav{display:flex;flex-direction:column;gap:8px}.foot h3{margin:4px 0 4px;font:800 13px Nunito,sans-serif;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.foot nav a{color:var(--ink);text-decoration:none;font-weight:800;font-size:15px}.foot nav a:hover{text-decoration:underline}
+.foot-note{margin:26px 0 0;font-size:12.5px;line-height:1.6;color:#8d84a3}
+@media (max-width:860px){.links{display:none}.hero{grid-template-columns:1fr;gap:22px;margin-top:6px}.hero-card{min-height:0;max-width:440px;width:100%;margin:6px auto 0}.hero-card .tile{min-height:300px;transform:none}.hero-card .feat{left:8px}
+ .hot-row{flex-wrap:nowrap;overflow-x:auto;margin:12px -16px 0;padding:0 16px 10px;scrollbar-width:none}.hot-row::-webkit-scrollbar{display:none}.hot-chip{flex:none}
+ .quick{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 24px;padding:2px 16px 8px;scrollbar-width:none}.quick::-webkit-scrollbar{display:none}
+ .quick>*{position:relative;flex:none;font:800 14px Nunito,sans-serif;color:var(--ink);background:#fff;border:1.5px solid #ecdfd0;border-radius:999px;padding:9px 16px;min-height:42px;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center}
+ .sec-head .filter{margin-left:0;order:3;width:100%;overflow-x:auto;flex-wrap:nowrap;justify-content:flex-start;scrollbar-width:none}.sec-head .filter button{flex:none}.psel{margin-left:auto}
+ .foot-top{grid-template-columns:1fr 1fr}.foot-brand{grid-column:1/-1}}
+@media (max-width:480px){.wm small{display:none}.wm{font-size:25px}.brand .mark{width:38px;height:38px}.nav-in{gap:8px;padding:8px 12px}.hero h1{font-size:clamp(28px,8.6vw,36px)}.facts{font-size:13px;gap:4px 10px}.facts li+li::before{margin-right:6px}.btn-main{padding:10px 18px;font-size:20px}.btn-sub{padding:6px 14px}.hero .sub{font-size:16.5px}.btn-main,.btn-sub{flex:1;justify-content:center;align-items:center;text-align:center}.psel{font-size:0}.psel select{font-size:13.5px}}
 </style>
 </head>
 <body>
 <i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="blob b4"></i>
+<header class="nav" id="nav">
+  <div class="nav-in">
+    <a class="brand" href="./" aria-label="BGVN – trang chủ"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" class="mark" aria-hidden="true">
+<defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff4d6a"/><stop offset=".55" stop-color="#ff7a45"/><stop offset="1" stop-color="#ffb23d"/></linearGradient></defs>
+<g transform="rotate(-8 32 32)">
+<rect x="7" y="11" width="50" height="50" rx="15" fill="#c9283f"/>
+<rect x="7" y="5" width="50" height="50" rx="15" fill="url(#lg)"/>
+<path d="M14 20c0-5 4-9 9-9h14" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3.5" stroke-linecap="round"/>
+<circle cx="22.5" cy="25" r="5.2" fill="#fff"/><circle cx="41.5" cy="25" r="5.2" fill="#fff"/>
+<path d="M20.5 37.5c3.2 5.6 8 7.6 11.500 7.6s8.300-2 11.500-7.600" fill="none" stroke="#fff" stroke-width="5.2" stroke-linecap="round"/>
+</g></svg>
+<span class="wm">BGVN<small>boardgamevui.com</small></span></a>
+    <nav class="links" aria-label="Điều hướng">
+      <a href="sanh/">🌐 Sảnh chung</a>
+      <button type="button" id="btn-news">Có gì mới</button>
+      <button type="button" data-feedback="">Góp ý</button>
+      <button type="button" data-donate>Ủng hộ</button>
+    </nav>
+    <div class="acct"><button class="setbtn" id="btn-set" type="button" aria-label="Cài đặt" title="Cài đặt"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.900 2.900l-.1-.1a1.700 1.700 0 0 0-1.800-.300 1.700 1.700 0 0 0-1 1.500V21a2 2 0 1 1-4 0v-.100a1.700 1.700 0 0 0-1.100-1.500 1.700 1.700 0 0 0-1.800.300l-.100.100a2 2 0 1 1-2.900-2.900l.100-.100a1.700 1.700 0 0 0 .300-1.800 1.700 1.700 0 0 0-1.500-1H3a2 2 0 1 1 0-4h.100a1.700 1.700 0 0 0 1.500-1.100 1.700 1.700 0 0 0-.300-1.800l-.100-.100a2 2 0 1 1 2.900-2.900l.100.100a1.700 1.700 0 0 0 1.800.300H9a1.700 1.700 0 0 0 1-1.500V3a2 2 0 1 1 4 0v.100a1.700 1.700 0 0 0 1 1.500 1.700 1.700 0 0 0 1.800-.300l.100-.100a2 2 0 1 1 2.900 2.900l-.100.100a1.700 1.700 0 0 0-.300 1.800V9a1.700 1.700 0 0 0 1.500 1H21a2 2 0 1 1 0 4h-.100a1.700 1.700 0 0 0-1.500 1z"/></svg></button><span id="acct"></span></div>
+  </div>
+</header>
 <main>
-  <div class="acct"><button class="setbtn" id="btn-set" type="button" aria-label="Cài đặt" title="Cài đặt">⚙️</button><span id="acct"></span></div>
-  <h1>🎲 <span>BGVN</span></h1>
-  <p class="sub">Board game tiếng Việt – mở link là chơi cùng hội bạn, không cần cài đặt</p>
-  <p class="online" id="online" hidden></p>
-  <div class="bar">
-    <a class="lobby-cta" href="sanh/">🌐 Sảnh chung <small>tìm phòng công khai · chat với mọi người</small></a>
-    <div class="acts">
-    <button class="news" id="btn-news" type="button">📝 Có gì mới</button>
-    <button class="news alt" type="button" data-feedback="">💌 Góp ý</button>
-    <button class="news alt2" type="button" data-donate>☕ Ủng hộ</button>
-    <a class="news alt3" href="credits/">📜 Credits</a>
+  <section class="hero">
+    <div class="hero-txt">
+      <p class="online" id="online" hidden></p>
+      <h1>Board game tiếng Việt.<br><span>Mở link là chơi.</span></h1>
+      <p class="sub">Rủ hội bạn vào chung một phòng, hoặc chơi với bot. Không cần cài app, không cần đăng ký, miễn phí.</p>
+      <div class="cta">
+        <a class="btn-main" href="#games">Chọn game <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M8 5.200v13.600a1 1 0 0 0 1.500.900l11-6.800a1 1 0 0 0 0-1.700l-11-6.800A1 1 0 0 0 8 5.200z"/></svg></a>
+        <a class="btn-sub" href="sanh/">🌐 Sảnh chung<small>tìm phòng · chat</small></a>
+      </div>
+      <ul class="facts"><li><b>15</b> game</li><li><b>2–16</b> người</li><li>Điện thoại &amp; máy tính</li></ul>
     </div>
-    <div class="filter" role="group" aria-label="Lọc theo số người chơi">
-      <button type="button" data-f="all" aria-pressed="true">Tất cả</button><button type="button" data-f="1" aria-pressed="false">1 người</button><button type="button" data-f="2" aria-pressed="false">2 người</button><button type="button" data-f="4-7" aria-pressed="false">4–7</button><button type="button" data-f="8+" aria-pressed="false">8+</button>
+    <div class="hero-card" id="hero-card" aria-live="polite"></div>
+  </section>
+  <div class="quick" aria-label="Lối tắt">
+    <button type="button" id="btn-news-m">📝 Có gì mới</button><button type="button" data-feedback="">💌 Góp ý</button><button type="button" data-donate>☕ Ủng hộ</button><a href="credits/">📜 Credits</a>
+  </div>
+  <section class="hot" id="hot" hidden><h2>🔥 Đang hot</h2><div class="hot-row" id="hot-row"></div></section>
+  <div class="sec-head" id="games">
+    <h2>Tất cả game</h2>
+    <div class="filter" role="group" aria-label="Lọc theo loại game">
+      <button type="button" data-c="all" aria-pressed="true">Tất cả</button><button type="button" data-c="party" aria-pressed="false">🎉 Tiệc tùng</button><button type="button" data-c="board" aria-pressed="false">🎲 Bàn cờ</button><button type="button" data-c="card" aria-pressed="false">🃏 Game bài</button>
     </div>
+    <label class="psel">Số người <select id="pf" aria-label="Lọc theo số người chơi"><option value="all">Bao nhiêu cũng được</option><option value="1">1 người</option><option value="2">2 người</option><option value="4-7">4–7 người</option><option value="8+">8 người trở lên</option></select></label>
   </div>
   <div class="grid">
-    <a class="tile bang" href="bang/" data-game="bang" data-min="4" data-max="7">
+    <a class="tile bang" href="bang/" data-game="bang" data-cat="party" data-min="4" data-max="7">
       <span class="newtag" data-news="bang">MỚI</span>
       <div class="art"><img src="bang/img/sheriff.jpg" alt=""><img src="bang/img/bang.jpg" alt=""><img src="bang/img/calamityjanet.jpg" alt=""></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>CÀ ĐÙNG!</h2><p>Đấu súng Viễn Tây: Cảnh sát trưởng, Phó cảnh sát, Tội phạm và Kẻ hai mặt – ai sẽ trụ lại?</p>
         <div class="tags"><i>4–7 người</i><i>Vai trò ẩn</i><i>Có bot</i></div></div>
     </a>
-    <a class="tile uno" href="uno/" data-game="uno" data-min="2" data-max="10">
+    <a class="tile uno" href="uno/" data-game="uno" data-cat="party" data-min="2" data-max="10">
       <span class="newtag" data-news="uno">MỚI</span>
       <div class="art">
         <div class="uc" style="background:#ff4d5e;transform:rotate(-21deg)"><b style="color:#ff4d5e">7</b></div>
@@ -169,121 +262,147 @@ footer a{color:inherit}
       <div class="info"><h2>UNÔ</h2><p>Đánh bài màu cực cuốn: Cổ điển, Luật rừng cộng dồn, và No Mercy +10 siêu gắt 💀</p>
         <div class="tags"><i>2–10 người</i><i>3 chế độ</i><i>Có bot</i></div></div>
     </a>
-    <a class="tile typhu" href="typhu/" data-game="typhu" data-min="2" data-max="6">
+    <a class="tile typhu" href="typhu/" data-game="typhu" data-cat="board" data-min="2" data-max="6">
       <span class="newtag" data-news="typhu">MỚI</span>
       <div class="art"><img class="ic" src="shared/img/icons/typhu.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Cờ Tỷ Phú</h2><p>Bàn cờ 3D 40 ô đường Sài Gòn: mua đất, xây nhà lên Landmark, đấu giá, giao dịch, mua lại đất 🏙️</p>
         <div class="tags"><i>2–6 người</i><i>3D</i><i>Nhân vật tự tạo</i><i>Có bot</i></div></div>
     </a>
-    <a class="tile scribble" href="scribble/" data-game="scribble" data-min="2" data-max="12">
+    <a class="tile scribble" href="scribble/" data-game="scribble" data-cat="party" data-min="2" data-max="12">
       <span class="newtag" data-news="scribble">MỚI</span>
       <div class="art"><img class="ic" src="shared/img/icons/scribble.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Scribble it!</h2><p>Vẽ bậy – đoán bừa: Đoán hình kiểu skribbl và Tam sao thất bản kiểu Gartic Phone 😂</p>
         <div class="tags"><i>2–12 người</i><i>2 chế độ</i><i>Có Tướng Liên Minh</i></div></div>
     </a>
-    <a class="tile meono" href="meono/" data-game="meono" data-min="2" data-max="8">
+    <a class="tile meono" href="meono/" data-game="meono" data-cat="party" data-min="2" data-max="8">
       <span class="newtag" data-news="meono">MỚI</span>
       <div class="art"><img class="ic" src="shared/img/icons/meono.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Mèo Nổ</h2><p>Bốc bài hồi hộp: né Mèo Nổ, gỡ bom rồi nhét lại cho đứa khác, hô KHÔNG! đúng lúc 💥</p>
         <div class="tags"><i>2–8 người</i><i>Hồi hộp</i><i>Có bot</i></div></div>
     </a>
-    <a class="tile tamquoc" href="tamquoc/" data-game="tamquoc" data-min="2" data-max="8">
+    <a class="tile tamquoc" href="tamquoc/" data-game="tamquoc" data-cat="party" data-min="2" data-max="8">
       <span class="newtag" data-news="tamquoc">MỚI</span>
       <div class="art"><img class="ic" src="shared/img/icons/tamquoc.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Tam Quốc Sát</h2><p>Chúa công, Trung thần, Phản tặc, Nội gián – 25 võ tướng Ngụy Thục Ngô Quần, Sát – Né – Đào ⚔️</p>
         <div class="tags"><i>2–8 người</i><i>Vai trò ẩn</i><i>Có bot</i></div></div>
     </a>
-    <a class="tile masoi" href="masoi/" data-game="masoi" data-min="5" data-max="16">
+    <a class="tile masoi" href="masoi/" data-game="masoi" data-cat="party" data-min="5" data-max="16">
       <span class="newtag" data-news="masoi">MỚI</span>
       <div class="art"><img class="ic" src="shared/img/icons/masoi.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Ma Sói</h2><p>Làng quê đêm trăng: Sói, Tiên tri, Bảo vệ, Phù thủy, Thợ săn, Cupid… máy làm quản trò, ai cũng dùng điện thoại riêng 🌕</p>
         <div class="tags"><i>5–16 người</i><i>12 vai</i><i>Có bot</i></div></div>
     </a>
-    <a class="tile camel" href="camel/" data-game="camel" data-min="2" data-max="8">
+    <a class="tile camel" href="camel/" data-game="camel" data-cat="board" data-min="2" data-max="8">
       <span class="newtag" data-news="camel">MỚI</span>
       <div class="art"><img class="ic" src="shared/img/icons/camel.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Đua Lạc Đà</h2><p>Lạc đà 3D cõng nhau chạy loạn – đoán con về nhất bằng xu ảo, ai giàu nhất thắng! 🏜️</p>
         <div class="tags"><i>2–8 người</i><i>3D</i><i>Đoán vui</i></div></div>
     </a>
-    <a class="tile cangua" href="cangua/" data-game="cangua" data-min="2" data-max="4">
+    <a class="tile cangua" href="cangua/" data-game="cangua" data-cat="board" data-min="2" data-max="4">
       <span class="newtag" data-news="cangua">MỚI</span>
       <div class="art"><img class="ic" src="shared/img/icons/cangua.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Cờ cá ngựa</h2><p>Cờ cá ngựa 3D: đổ đôi xuất chuồng, đá ngựa bạn bay về chuồng, chơi online hoặc với bot 🐴💨</p>
         <div class="tags"><i>2–4 người</i><i>3D</i><i>Đá nhau</i></div></div>
     </a>
-    <a class="tile tienlen" href="tienlen/" data-game="tienlen" data-min="2" data-max="4">
+    <a class="tile tienlen" href="tienlen/" data-game="tienlen" data-cat="card" data-min="2" data-max="4">
       <span class="newtag" data-news="tienlen">MỚI</span>
       <div class="art"><img class="ic" src="shared/img/icons/tienlen.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Tiến Lên miền Nam</h2><p>Chặt heo, tới trắng, thối heo, cóng – chip ảo, có bot 3 cấp 🐷🔪</p>
         <div class="tags"><i>2–4 người</i><i>Chặt heo</i><i>Chip ảo</i></div></div>
     </a>
-    <a class="tile catte" href="catte/" data-game="catte" data-min="2" data-max="6">
+    <a class="tile catte" href="catte/" data-game="catte" data-cat="card" data-min="2" data-max="6">
       <span class="newtag" data-news="catte">MỚI</span>
       <div class="art"><img class="ic" src="shared/img/icons/catte.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Cát tê</h2><p>6 lá, 6 vòng: đè hay úp, không ăn vòng nào là chết, ăn vòng cuối là tới! ☠️</p>
         <div class="tags"><i>2–6 người</i><i>Đè / úp</i><i>Chip ảo</i></div></div>
     </a>
-    <a class="tile bacao" href="bacao/" data-game="bacao" data-min="2" data-max="8">
+    <a class="tile bacao" href="bacao/" data-game="bacao" data-cat="card" data-min="2" data-max="8">
       <span class="newtag" data-news="bacao">MỚI</span>
       <div class="art"><img class="ic" src="shared/img/icons/bacao.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Ba Cào</h2><p>Bài cào 3 lá: nặn bài hồi hộp, ba tây, sáp – có cái hoặc chơi gà 👑</p>
         <div class="tags"><i>2–8 người</i><i>Hên xui</i><i>Chip ảo</i></div></div>
     </a>
-    <a class="tile xidach" href="xidach/" data-game="xidach" data-min="2" data-max="8">
+    <a class="tile xidach" href="xidach/" data-game="xidach" data-cat="card" data-min="2" data-max="8">
       <span class="newtag" data-news="xidach">MỚI</span>
       <div class="art"><img class="ic" src="shared/img/icons/xidach.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Xì dách</h2><p>Xì dách kiểu Việt: rút hay dằn, xì bàn, ngũ linh, nhà cái xét bài – chip ảo chơi vui 🃏</p>
         <div class="tags"><i>2–8 người</i><i>Nhà cái</i><i>Chip ảo</i></div></div>
     </a>
-    <a class="tile poker" href="poker/" data-game="poker" data-min="2" data-max="9">
+    <a class="tile poker" href="poker/" data-game="poker" data-cat="card" data-min="2" data-max="9">
       <span class="newtag" data-news="poker">MỚI</span>
       <div class="art"><img class="ic" src="shared/img/icons/poker.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Poker</h2><p>Texas Hold'em không giới hạn: tố, bịp, tất tay cùng hội bạn bằng chip ảo 😎</p>
         <div class="tags"><i>2–9 người</i><i>Bluff</i><i>Chip ảo</i></div></div>
     </a>
-    <a class="tile solitaire" href="solitaire/" data-game="solitaire" data-min="1" data-max="1">
+    <a class="tile solitaire" href="solitaire/" data-game="solitaire" data-cat="card" data-min="1" data-max="1">
       <span class="newtag" data-news="solitaire">MỚI</span>
       <div class="art"><img class="ic" src="shared/img/icons/solitaire.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Xếp bài</h2><p>Xếp bài cổ điển như Solitaire Windows: rút 1/3, điểm Vegas, gợi ý, bài nảy khi thắng 🃏</p>
         <div class="tags"><i>1 người</i><i>Bài Tây</i><i>Thư giãn</i></div></div>
     </a>
-    <p class="empty-filter" id="empty-filter">Không có game nào hợp số người này.</p>
+    <p class="empty-filter" id="empty-filter">Chưa có game nào hợp với lựa chọn này – thử đổi bộ lọc nha.</p>
     <div class="tile soon"><div><b style="font-size:22px">Sắp có thêm…</b><br>Góp ý game tiếp theo nhé 💌</div></div>
   </div>
-  <footer>Dự án fan-made phi thương mại · Ảnh minh hoạ CÀ ĐÙNG! là tranh thuộc phạm vi công cộng (Wikimedia Commons) · Game bài chỉ chơi bằng chip ảo, không cá cược tiền thật · Không liên kết với dV Giochi, Mattel, VNG/ZingPlay, Yoka Games hay Exploding Kittens · <a href="https://github.com/mangomint1805/bgvn">Mã nguồn</a> · <a href="luat/">⚙️ Luật mặc định</a> · <a href="credits/">📜 Credits</a> · <a href="#" data-feedback="">💌 Góp ý / báo lỗi</a> · <a href="#" data-donate>☕ Ủng hộ</a></footer>
+  <footer class="foot">
+    <div class="foot-top">
+      <div class="foot-brand"><a class="brand" href="./"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" class="mark" aria-hidden="true">
+<defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff4d6a"/><stop offset=".55" stop-color="#ff7a45"/><stop offset="1" stop-color="#ffb23d"/></linearGradient></defs>
+<g transform="rotate(-8 32 32)">
+<rect x="7" y="11" width="50" height="50" rx="15" fill="#c9283f"/>
+<rect x="7" y="5" width="50" height="50" rx="15" fill="url(#lg2)"/>
+<path d="M14 20c0-5 4-9 9-9h14" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3.5" stroke-linecap="round"/>
+<circle cx="22.5" cy="25" r="5.2" fill="#fff"/><circle cx="41.5" cy="25" r="5.2" fill="#fff"/>
+<path d="M20.5 37.5c3.2 5.6 8 7.6 11.500 7.6s8.300-2 11.500-7.600" fill="none" stroke="#fff" stroke-width="5.2" stroke-linecap="round"/>
+</g></svg>
+<span class="wm">BGVN<small>boardgamevui.com</small></span></a><p>Board game và game bài tiếng Việt, chơi online cùng bạn bè. Làm bằng tình yêu boardgame 💛</p></div>
+      <nav aria-label="Chơi"><h3>Chơi</h3><a href="#games">Tất cả game</a><a href="sanh/">Sảnh chung</a><a href="luat/">Luật mặc định</a></nav>
+      <nav aria-label="Cộng đồng"><h3>Cộng đồng</h3><a href="#" data-feedback="">Góp ý / báo lỗi</a><a href="#" data-donate>Ủng hộ chủ web</a><a href="https://github.com/mangomint1805/bgvn">Mã nguồn</a></nav>
+      <nav aria-label="Thông tin"><h3>Thông tin</h3><a href="credits/">Credits</a><a href="privacy/">Quyền riêng tư</a><a href="terms/">Điều khoản</a></nav>
+    </div>
+    <p class="foot-note">Dự án fan-made phi thương mại · Ảnh minh hoạ CÀ ĐÙNG! là tranh thuộc phạm vi công cộng (Wikimedia Commons) · Game bài chỉ chơi bằng chip ảo, không cá cược tiền thật · Không liên kết với dV Giochi, Mattel, VNG/ZingPlay, Yoka Games hay Exploding Kittens.</p>
+  </footer>
 </main>
 <script>
 // tên game dài (vd. "Tiến Lên miền Nam") thì thu nhỏ cho vừa 1 dòng
-function fitTitles(){document.querySelectorAll('.grid .tile .info h2').forEach(h=>{h.style.fontSize='';let f=parseFloat(getComputedStyle(h).fontSize);while(h.scrollWidth>h.clientWidth&&f>22){f-=1;h.style.fontSize=f+'px'}})}
+function fitTitles(){document.querySelectorAll('.grid .tile .info h2,.hero-card .tile .info h2').forEach(h=>{h.style.fontSize='';let f=parseFloat(getComputedStyle(h).fontSize);while(h.scrollWidth>h.clientWidth&&f>22){f-=1;h.style.fontSize=f+'px'}})}
 addEventListener('load',fitTitles);addEventListener('resize',()=>{clearTimeout(fitTitles.t);fitTitles.t=setTimeout(fitTitles,120)});document.fonts&&document.fonts.ready.then(fitTitles);
 </script>
 <script type="module" src="shared/ui/feedback.js?v=4"></script>
-<script type="module">import { mountAccount } from "./shared/ui/account.js?v=2"; import { mountOnline } from "./shared/net/presence.js?v=4"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=1").then(m => m.openSettings());</script>
+<script type="module">import { mountAccount } from "./shared/ui/account.js?v=3"; import { mountOnline } from "./shared/net/presence.js?v=5"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=2").then(m => m.openSettings());</script>
 <script type="module">
-import { openNews, newsBadge } from './shared/ui/news.js?v=105';
+import { openNews, newsBadge } from './shared/ui/news.js?v=109';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 const json = k => { try { return JSON.parse(ls.get(k)); } catch (e) { return null; } };
-// 📝 Có gì mới
-const nb = document.getElementById('btn-news');
-newsBadge(nb, null);
-nb.onclick = () => { openNews(); nb.classList.remove('bgvn-dot'); };
-document.querySelectorAll('.newtag[data-news]').forEach(t => newsBadge(t, t.dataset.news));
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const tiles = $$('.grid .tile[data-game]');
+tiles.forEach((t, i) => t.style.setProperty('--i', i));
+// thanh trên đổ bóng khi cuộn
+const nav = $('#nav'), onScroll = () => nav.classList.toggle('stuck', scrollY > 8); addEventListener('scroll', onScroll, { passive: true }); onScroll();
+// 📝 Có gì mới – khách lần đầu vào thì coi như đã xem hết (không gắn "MỚI" cho cả 15 game)
+if (!ls.get('bgvn-visited')) {
+  ls.set('bgvn-visited', String(Date.now()));
+  let old = false; try { old = Object.keys(localStorage).some(k => k.startsWith('bgvn-news-seen-') || k.startsWith('bgvn-session-') || k === 'bgvn-name'); } catch (e) {}
+  if (!old) import('./shared/patchnotes.js?v=68').then(m => { ['all', ...tiles.map(t => t.dataset.game)].forEach(g => { const id = m.latestId(g === 'all' ? null : g); if (id) ls.set('bgvn-news-seen-' + g, id); }); });
+  else marks();
+} else marks();
+function marks() { $$('#btn-news,#btn-news-m').forEach(b => newsBadge(b, null)); $$('.grid .newtag[data-news]').forEach(t => newsBadge(t, t.dataset.news)); }
+$$('#btn-news,#btn-news-m').forEach(b => b.onclick = () => { openNews(); $$('#btn-news,#btn-news-m').forEach(x => x.classList.remove('bgvn-dot')); });
 // ▶ Vào lại ván: game nào còn phiên dở (bgvn-session-<game>, xem shared/net/room.js) thì hiện nút
-const FRESH = 3 * 3600e3;
-document.querySelectorAll('.tile[data-game]').forEach(tile => {
+const FRESH = 3 * 3600e3; let resumeGame = null;
+tiles.forEach(tile => {
   const g = tile.dataset.game, ses = json('bgvn-session-' + g);
   if (!ses || !(Date.now() - ses.ts < FRESH)) return;
   let inGame = true;
@@ -297,19 +416,46 @@ document.querySelectorAll('.tile[data-game]').forEach(tile => {
   pill.classList.add('resume');
   pill.innerHTML = `▶ Vào lại ${inGame ? 'ván' : 'phòng'}<small>${where}</small>`;
   tile.setAttribute('aria-label', `Vào lại ${inGame ? 'ván' : 'phòng'} ${tile.querySelector('h2').textContent} (${where})`);
+  resumeGame = resumeGame || g;
 });
-// Lọc nhanh theo số người: hiện game có khoảng số người giao với khoảng đã chọn
-const RANGES = { all: [1, 99], '1': [1, 1], '2': [2, 2], '4-7': [4, 7], '8+': [8, 99] };
-function applyFilter(f) {
-  if (!RANGES[f]) f = 'all';
-  const [a, b] = RANGES[f]; let shown = 0;
-  document.querySelectorAll('.tile[data-game]').forEach(t => { const ok = +t.dataset.min <= b && +t.dataset.max >= a; t.classList.toggle('off', !ok); if (ok) shown++; });
-  document.querySelectorAll('.filter button').forEach(x => x.setAttribute('aria-pressed', x.dataset.f === f));
-  document.getElementById('empty-filter').style.display = shown ? 'none' : 'block';
-  ls.set('bgvn-hub-filter', f);
+// nhãn "đang chơi" trên từng ô
+tiles.forEach(t => { const l = document.createElement('span'); l.className = 'livetag'; t.prepend(l); });
+// ⭐ Ô nổi bật ở đầu trang: ván đang chơi dở > game đông người nhất > game của hôm nay
+const FEATURED = ['bang', 'uno', 'meono', 'masoi', 'typhu', 'tamquoc', 'tienlen'];
+let heroG = null;
+function hero(g, label) {
+  if (heroG === g + label) return; heroG = g + label;
+  const src = tiles.find(t => t.dataset.game === g); if (!src) return;
+  const c = src.cloneNode(true); c.classList.remove('off'); c.style.animation = 'none'; c.removeAttribute('data-game');
+  const box = $('#hero-card'); box.innerHTML = `<span class="feat">${label}</span>`; box.append(c);
+  window.fitTitles && fitTitles();
 }
-document.querySelectorAll('.filter button').forEach(x => x.onclick = () => applyFilter(x.dataset.f));
-applyFilter(ls.get('bgvn-hub-filter') || 'all');
+const today = FEATURED[Math.floor(Date.now() / 864e5) % FEATURED.length];
+hero(resumeGame || today, resumeGame ? '▶ Chơi tiếp nè' : '⭐ Nổi bật hôm nay');
+// 🔥 Đang hot: số người đang chơi thật theo từng game (máy chủ gửi tức thì)
+function live(lv) {
+  const games = (lv && lv.games) || {}, hide = ls.get('bgvn-hide-online') === '1';
+  tiles.forEach(t => { const n = games[t.dataset.game] || 0, l = t.querySelector('.livetag'); l.classList.toggle('on', n > 0 && !hide); l.textContent = n + ' đang chơi'; });
+  const top = Object.entries(games).filter(([g, n]) => n > 0 && tiles.some(t => t.dataset.game === g)).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  $('#hot').hidden = !top.length || hide;
+  $('#hot-row').innerHTML = top.map(([g, n], i) => { const t = tiles.find(t => t.dataset.game === g); return `<a class="hot-chip" href="${g}/"><i>#${i + 1}</i><span><b>${t.querySelector('h2').textContent}</b><small>🟢 ${n} người đang chơi</small></span></a>`; }).join('');
+  if (top.length && !resumeGame && !hide) hero(top[0][0], '🔥 Đang hot nhất');
+}
+addEventListener('bgvn-live', e => live(e.detail)); if (window.__bgvnLive) live(window.__bgvnLive);
+// Lọc: loại game + số người (hiện game có khoảng số người giao với khoảng đã chọn)
+const RANGES = { all: [1, 99], '1': [1, 1], '2': [2, 2], '4-7': [4, 7], '8+': [8, 99] };
+let cat = ls.get('bgvn-hub-cat') || 'all', pf = ls.get('bgvn-hub-filter') || 'all';
+function applyFilter() {
+  if (!RANGES[pf]) pf = 'all'; if (!['all', 'party', 'board', 'card'].includes(cat)) cat = 'all';
+  const [a, b] = RANGES[pf]; let shown = 0;
+  tiles.forEach(t => { const ok = +t.dataset.min <= b && +t.dataset.max >= a && (cat === 'all' || t.dataset.cat === cat); t.classList.toggle('off', !ok); if (ok) t.style.setProperty('--i', shown++); });
+  $$('.filter button').forEach(x => x.setAttribute('aria-pressed', x.dataset.c === cat));
+  $('#pf').value = pf; $('#empty-filter').style.display = shown ? 'none' : 'block';
+  ls.set('bgvn-hub-filter', pf); ls.set('bgvn-hub-cat', cat);
+}
+$$('.filter button').forEach(x => x.onclick = () => { cat = x.dataset.c; applyFilter(); });
+$('#pf').onchange = e => { pf = e.target.value; applyFilter(); };
+applyFilter();
 </script>
 </body>
 </html>

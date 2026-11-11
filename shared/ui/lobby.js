@@ -2,7 +2,8 @@
 // mountLobby(el, { game }) – game = null: sảnh tổng (mọi game, kênh chat "Chung" + kênh game đang lọc)
 // openLobby(game) – mở dạng hộp nổi (dùng trong trang game)
 import { WS, auth, guestId, myName } from '../net/api.js?v=1';
-import { openLogin } from './account.js?v=2';
+import { openLogin } from './account.js?v=3';
+import { promptBox, chooseBox } from './dialog.js?v=1';
 
 const ROOT = new URL('../../', import.meta.url).href;
 export const GAME_INFO = {
@@ -99,16 +100,16 @@ export function mountLobby(el, { game = null } = {}) {
     const nm = $('.lb-nm'); if (nm) nm.onchange = () => { try { localStorage.setItem('bgvn-name', nm.value.trim().slice(0, 20)); } catch (e) {} hello(); };
     const lg = $('.lb-login'); if (lg) lg.onclick = () => openLogin();
   };
-  $('.lb-msgs').onclick = e => {
+  $('.lb-msgs').onclick = async e => {
     const b = e.target.closest('.lb-rp'); if (!b) return;
     const id = +b.closest('.lb-m').dataset.id;
     if (b.classList.contains("lb-adm")) {
-      const c = prompt('🛡️ Quản trị tin này – gõ số:\n1 = Ẩn tin\n2 = Cấm chat 24 giờ\n3 = Cấm chat 7 ngày\n4 = Cấm chat vĩnh viễn'); if (!c) return;
-      const hours = { 2: 24, 3: 168, 4: 87600 }[c.trim()];
-      if (c.trim() === '1') send({ t: 'mod', op: 'hide', id }); else if (hours) send({ t: 'mod', op: 'ban', id, hours, reason: 'Quản trị viên xử lý trong chat' });
+      const c = await chooseBox('🛡️ Xử lý tin nhắn này', [{ id: '1', label: '🙈 Ẩn tin' }, { id: '2', label: '⛔ Cấm chat 24 giờ' }, { id: '3', label: '⛔ Cấm chat 7 ngày' }, { id: '4', label: '🚫 Cấm chat vĩnh viễn', danger: true }]); if (!c) return;
+      const hours = { 2: 24, 3: 168, 4: 87600 }[c];
+      if (c === '1') send({ t: 'mod', op: 'hide', id }); else if (hours) send({ t: 'mod', op: 'ban', id, hours, reason: 'Quản trị viên xử lý trong chat' });
       return;
     }
-    const reason = prompt('Báo cáo tin nhắn này vì sao? (chửi bậy, quấy rối, spam, lừa đảo…)'); if (reason === null) return;
+    const reason = await promptBox('Tin này có vấn đề gì? Quản trị viên sẽ xem lại.', { title: '🚩 Báo cáo tin nhắn', placeholder: 'chửi bậy, quấy rối, spam, lừa đảo…', maxlength: 120, ok: 'Gửi báo cáo' }); if (reason === null) return;
     send({ t: 'report', id, reason });
   };
   $('.lb-in').onsubmit = e => {

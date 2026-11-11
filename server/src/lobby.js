@@ -20,21 +20,26 @@ export class Lobby extends DurableObject {
     this.sql.exec(`CREATE TABLE IF NOT EXISTS usage10 (b INTEGER PRIMARY KEY, ms INTEGER, req INTEGER)`); // ước tính hạn mức theo khối 10 phút
     this.sql.exec(`CREATE TABLE IF NOT EXISTS live (id TEXT PRIMARY KEY, upd INTEGER, n INTEGER)`); // phòng đang có người
     this.sql.exec(`CREATE TABLE IF NOT EXISTS stat (k TEXT PRIMARY KEY, v INTEGER)`);
+    try { this.sql.exec("ALTER TABLE live ADD COLUMN g TEXT DEFAULT ''"); } catch (e) {} // game của phòng
     if (!this.sql.exec("SELECT v FROM stat WHERE k = 'live-v'").toArray().length) { this.sql.exec('DELETE FROM live'); this.sql.exec("INSERT INTO stat (k, v) VALUES ('live-v', 2)"); } // bỏ số cũ (kiểu đếm trước)
     this.last = new Map(); // ai → lúc gửi tin gần nhất (chống spam)
     this.m = new Meter((ms, req) => this.addUsage(ms, req));
   }
   // ---------- hạn mức (ước tính) ----------
-  async live(room, n) { // phòng báo số người khi có người vào/ra
+  async live(room, n, g = '') { // phòng báo số người khi có người vào/ra
     await this.m.tick('req');
-    if (n > 0) this.sql.exec('INSERT OR REPLACE INTO live (id, upd, n) VALUES (?,?,?)', String(room), now(), +n); else this.sql.exec('DELETE FROM live WHERE id = ?', String(room));
+    if (n > 0) this.sql.exec('INSERT OR REPLACE INTO live (id, upd, n, g) VALUES (?,?,?,?)', String(room), now(), +n, String(g || '').slice(0, 12)); else this.sql.exec('DELETE FROM live WHERE id = ?', String(room));
     this.bumpOnline();
   }
-  liveNow() { return this.sql.exec('SELECT COUNT(*) AS rooms, COALESCE(SUM(n),0) AS players FROM live WHERE upd > ?', now() - 8 * 3600e3).one(); }
+  liveNow() {
+    const rows = this.sql.exec('SELECT g, COUNT(*) AS rooms, COALESCE(SUM(n),0) AS players FROM live WHERE upd > ? GROUP BY g', now() - 4 * 3600e3).toArray();
+    const games = {}; let rooms = 0, players = 0;
+    for (const r of rows) { rooms += r.rooms; players += r.players; if (r.g) games[r.g] = r.players; }
+    return { rooms, players, games };
+  }
   addUsage(ms, req, room, n) {
     const b = Math.floor(now() / 600e3);
     this.sql.exec('INSERT INTO usage10 (b, ms, req) VALUES (?,?,?) ON CONFLICT(b) DO UPDATE SET ms = ms + excluded.ms, req = req + excluded.req', b, Math.round(ms), Math.round(req));
-    if (room) this.sql.exec('INSERT OR REPLACE INTO live (id, upd, n) VALUES (?,?,?)', room, now(), +n || 0);
     if (b % 36 === 0) { this.sql.exec('DELETE FROM usage10 WHERE b < ?', b - 6 * 24 * 40); this.sql.exec('DELETE FROM live WHERE upd < ?', now() - 8 * 3600e3); }
   }
   async usage(ms, req, room, n) { await this.m.tick('req'); this.addUsage(ms, req, room, n); }
@@ -95,7 +100,7 @@ export class Lobby extends DurableObject {
     this.pending = false; this.lastPush = now(); await this.m.tick('req');
     const n0 = this.online(), pk = 'peak:' + new Date().toISOString().slice(0, 10);
     this.sql.exec('INSERT INTO stat (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = MAX(v, excluded.v)', pk, n0);
-    const lv = this.liveNow(), m = JSON.stringify({ t: 'online', n: n0, rooms: lv.rooms, players: lv.players });
+    const lv = this.liveNow(), m = JSON.stringify({ t: 'online', n: n0, rooms: lv.rooms, players: lv.players, games: lv.games });
     for (const ws of this.ctx.getWebSockets()) try { ws.send(m); } catch (e) {}
   }
   async fetch(req) {
@@ -104,7 +109,7 @@ export class Lobby extends DurableObject {
     if (new URL(req.url).pathname.endsWith('/presence')) {
       const pair = new WebSocketPair(), [cli, srv] = Object.values(pair);
       this.ctx.acceptWebSocket(srv, ['p']); srv.serializeAttachment({ p: 1 });
-      const lv = this.liveNow(); srv.send(JSON.stringify({ t: 'online', n: this.online(), rooms: lv.rooms, players: lv.players })); this.bumpOnline();
+      const lv = this.liveNow(); srv.send(JSON.stringify({ t: 'online', n: this.online(), rooms: lv.rooms, players: lv.players, games: lv.games })); this.bumpOnline();
       return new Response(null, { status: 101, webSocket: cli });
     }
     const ip = req.headers.get('CF-Connecting-IP') || '';

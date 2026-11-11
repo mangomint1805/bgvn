@@ -133,15 +133,18 @@ export class Room extends DurableObject {
   }
   // báo Sảnh số người đang ở phòng này (để trang Quản trị cập nhật "đang chơi" tức thì)
   async liveSync(except) {
-    const n = this.ctx.getWebSockets().filter(w => w !== except && w.readyState <= 1 && (w.deserializeAttachment() || {}).role).length;
+    const all = this.ctx.getWebSockets().map(w => [w, w.deserializeAttachment() || {}]);
+    const n = all.filter(([w, a]) => w !== except && w.readyState <= 1 && a.role).length;
     if (n === this.lastN) return; this.lastN = n;
-    try { await this.env.LOBBY.get(this.env.LOBBY.idFromName('main')).live(this.ctx.id.toString(), n); } catch (e) {}
+    const g = this.g || (all.find(([, a]) => a.g) || [0, {}])[1].g || ''; // game của phòng (để trang chủ biết game nào đang hot)
+    try { await this.env.LOBBY.get(this.env.LOBBY.idFromName('main')).live(this.ctx.id.toString(), n, g); } catch (e) {}
   }
   host() { return this.ctx.getWebSockets('host')[0] || null; }
   client(id) { return this.ctx.getWebSockets('c:' + id)[0] || null; }
   async fetch(req) {
     await this.m.tick('req');
     const url = new URL(req.url), role = url.searchParams.get('role');
+    const g = this.g = (decodeURIComponent(url.pathname.split('/')[2] || '').replace(/^bgvn-/, '').match(/^[a-z0-9]{2,12}$/) || [''])[0];
     const pair = new WebSocketPair(), [cli, srv] = Object.values(pair);
     if (role === 'host') {
       const k = (url.searchParams.get('k') || '').slice(0, 40);
@@ -151,7 +154,7 @@ export class Room extends DurableObject {
         if (a.k !== k) { this.ctx.acceptWebSocket(srv, ['reject']); srv.send(JSON.stringify({ x: 'taken' })); srv.close(4001, 'taken'); return new Response(null, { status: 101, webSocket: cli }); }
         try { old.close(4000, 'replaced'); } catch (e) {}
       }
-      this.ctx.acceptWebSocket(srv, ['host']); srv.serializeAttachment({ role: 'host', k }); await this.liveSync(old);
+      this.ctx.acceptWebSocket(srv, ['host']); srv.serializeAttachment({ role: 'host', k, g }); await this.liveSync(old);
       return new Response(null, { status: 101, webSocket: cli });
     }
     const id = url.searchParams.get('id') || '';
@@ -160,7 +163,7 @@ export class Room extends DurableObject {
     if (!this.host()) { srv.send('{"x":"nf"}'); srv.close(4004, 'no room'); return new Response(null, { status: 101, webSocket: cli }); }
     if (this.ctx.getWebSockets().length > MAX_CLIENTS + 1) { srv.send('{"x":"full"}'); srv.close(4003, 'full'); return new Response(null, { status: 101, webSocket: cli }); }
     const dup = this.ctx.getWebSockets('c:' + id).filter(w => w !== srv); dup.forEach(w => { try { w.close(4000, 'replaced'); } catch (e) {} });
-    srv.serializeAttachment({ role: 'c', id }); await this.liveSync();
+    srv.serializeAttachment({ role: 'c', id, g }); await this.liveSync();
     return new Response(null, { status: 101, webSocket: cli });
   }
   limited(ws) { // chống spam: quá RATE tin/giây thì cắt

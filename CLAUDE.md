@@ -19,6 +19,11 @@ Chủ web: Minto. Trả lời bằng tiếng Việt, xưng "em", gọi "anh". Kh
 - Có thay đổi người chơi thấy được thì thêm patch note lên **đầu** `shared/patchnotes.js` (id `YYYYMMDD-n`), rồi tăng `patchnotes.js?v` trong `shared/ui/news.js` và `news.js?v` ở các `main.js`.
 - Giao diện phải dùng tốt trên **điện thoại** (390px) lẫn máy tính. Phông có chữ Việt đầy đủ: kiểm tra chữ Đ/ư/ơ trước khi đổi phông.
 
+## Giao diện chung
+- **Không dùng `alert` / `confirm` / `prompt` của trình duyệt.** Dùng `shared/ui/dialog.js` (`confirmBox`, `promptBox`, `formBox`, `chooseBox`, `alertBox`, `toast`).
+- Nhận diện: logo "xúc xắc cười" ở `shared/img/brand/` (`mark.svg`, icon PNG), `favicon.svg`, `manifest.webmanifest` (cài như app). Màu chủ đạo: mực `#2a2340`, nền `#fff7ef`, dải cam–hồng `#ff4d6a → #ff7a45 → #ffb23d`. Phông: Baloo 2 (tiêu đề), Nunito (chữ thường).
+- Trang chủ: mỗi ô game có `data-game`, `data-cat` (`party` / `board` / `card`), `data-min`, `data-max`. Số người đang chơi theo game đến từ sự kiện `bgvn-live` (`detail.games`).
+
 ## Hình ảnh
 - Icon ô game ở trang chủ: `node tools/icons/make-icons.mjs && node tools/icons/fit.mjs` → `shared/img/icons/<game>.svg` (tự vẽ bằng code). Sửa icon thì tăng `?v` ở `index.html`.
 - Ảnh xem trước khi share link: chạy máy chủ tĩnh `:8811` rồi `node tools/og/make-og.mjs [game…]` → `shared/img/og/<game>.jpg` (lấy hình + chữ từ ô game ở trang chủ).
