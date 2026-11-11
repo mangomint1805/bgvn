@@ -3,6 +3,11 @@
 // Tắt trong ⚙️ Cài đặt: bgvn-ui-sfx = '0' (tiếng), bgvn-haptic = '0' (rung); "Tắt hết nhạc nền" không ảnh hưởng tiếng nút.
 import './inapp.js?v=1'; /* nhắc mở bằng Safari/Chrome khi đang ở trình duyệt nhúng của Zalo, Facebook… */
 import './errlog.js?v=2'; /* ghi lỗi JS về máy chủ cho chủ web */
+/* 📈 Thống kê lượt xem của Cloudflare Web Analytics (không cookie, không theo dõi cá nhân) – chỉ chạy trên tên miền thật */
+if (location.hostname === 'boardgamevui.com' && !navigator.webdriver && !document.querySelector('script[data-cf-beacon]')) {
+  const b = document.createElement('script'); b.defer = true; b.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+  b.setAttribute('data-cf-beacon', '{"token": "853e19cc344441d28703e0fe5bb866f0"}'); document.head.append(b);
+}
 /* màn 🎓 Học chơi nhanh – chỉ nạp ở trang game (có nút Hướng dẫn) */
 if (document.querySelector('#btn-guide-home, #btn-guide')) import('./tutorial.js?v=1').catch(() => {});
 // Giao diện chung (hộp thoại, thông báo nổi, hồ sơ, tin mới…) viết bằng Nunito + Baloo 2. Game nào không tự nạp 2 phông này thì nạp giúp,
