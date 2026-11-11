@@ -7,6 +7,10 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261111-12', date: '11/11/2026', game: 'catte', title: 'Cát tê: tự xếp bài theo ý mình', items: [
+    '✋ Giữ một lá rồi kéo sang trái/phải để xếp bài theo ý bạn (giống bên Tiến Lên).',
+    '🔃 Bấm nút "Tự xếp · bấm để xếp lại" để trả về thứ tự tự động; sang ván mới bài tự xếp lại.',
+  ] },
   { id: '20261111-11', date: '11/11/2026', game: 'masoi', title: 'Ma Sói: gợi ý bộ vai + kiểu chơi "Quản trò"', items: [
     '💡 Phòng chờ gợi ý sẵn 3 bộ vai theo số người: 🌱 Dễ chơi, ⚖️ Cân bằng, 🎭 Hỗn loạn – bấm là xong.',
     '🎩 Kiểu chơi "Quản trò" (theo góp ý của các bạn), bật một chạm hoặc chọn từng luật:',

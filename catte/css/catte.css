@@ -302,3 +302,14 @@ input#name:focus,.join-row input:focus{border-color:var(--pri)}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* tự xếp bài: kéo lá sang trái/phải */
+.hand .pc{touch-action:none;transition:transform .16s,box-shadow .16s,translate .14s,opacity .14s}
+.hand.dragging .pc{cursor:grabbing}
+.hand .pc.dragsrc{opacity:.28;filter:grayscale(.6)}
+.hand-ghost{position:fixed;left:0;top:0;z-index:95;display:flex;pointer-events:none;will-change:transform;transform-origin:30% 80%}
+.hand-ghost .pc{width:var(--cw);height:var(--ch);box-shadow:0 0 0 2.5px #ffd23f,0 18px 28px -10px #000d,0 0 18px 2px #ffb02077}
+.hand-mark{position:fixed;z-index:96;width:0;pointer-events:none}
+.hand-mark i{position:absolute;left:-3px;top:0;bottom:0;width:6px;border-radius:6px;background:linear-gradient(180deg,#fff3b0,#ffb020);box-shadow:0 0 0 1.5px #7a4a00,0 0 14px 3px #ffd23faa}
+.resort{align-self:center;border:0;cursor:pointer;font:800 12.5px Nunito,sans-serif;color:#3a2300;background:linear-gradient(135deg,#ffe27a,#ffb020);border-radius:999px;padding:4px 12px;box-shadow:0 2px 6px -2px #0006}
+.resort[hidden]{display:none}

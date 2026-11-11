@@ -2,7 +2,7 @@ import { Host, Client, MAX, loadSnapshot, session, XD_PHRASES, setSpeedFn } from
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=116';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=117';
 import { KIND_NAME, OPT_CHOICES, DEFAULT_OPTS, MAX_CARDS } from './engine.js?v=2';
 import { cardHTML } from './cards.js?v=2';
 import * as fx from './xfx.js?v=2';

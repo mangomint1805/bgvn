@@ -2,9 +2,10 @@ import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, CT_PHRASES, NEXT_
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=116';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=117';
 import { cardName, rankLabel, SUIT_SYM, SUIT_NAME, WHITE_NAME, OPT_CHOICES, CUT, REFILL, parseCard } from './engine.js?v=2';
 import { cardHTML, cardTxt, suitTxt } from './cards.js?v=3';
+import { initHandDrag } from '../../shared/ui/handsort.js?v=3';
 import * as fx from './cfx.js?v=3';
 import { openGuide } from './guide.js?v=4';
 setSpeedFn(fx.S);
@@ -278,10 +279,24 @@ function renderPrompt(v) {
   p.innerHTML = `<div class="ph">${h}</div><div class="ps">${sub}</div>`;
 }
 const SUIT_ORD = { S: 0, C: 1, D: 2, H: 3 };
+// tự xếp bài: kéo lá sang trái/phải (chỉ là giao diện, nhớ trong ván đang chơi)
+let ownOrd = null;
+const drag = initHandDrag($('#hand'), {
+  attr: 'id', str: true,
+  enabled: () => !!(view && me() && me().hand.length > 1),
+  selected: () => new Set(),
+  onDrop: ids => { if (ids) { ownOrd = { no: view.handNo, ids }; fx.sfx.flip(); } renderHand(view); },
+});
+$('#btn-resort').onclick = () => { ownOrd = null; renderHand(view); };
 function renderHand(v) {
   const m = me(); const hEl = $('#hand');
   if (!m) { hEl.innerHTML = '<div class="empty-hand">🪑 Ghế chờ</div>'; return; }
-  const hand = [...m.hand].sort((a, b) => SUIT_ORD[a.s] - SUIT_ORD[b.s] || a.r - b.r);
+  let hand = [...m.hand].sort((a, b) => SUIT_ORD[a.s] - SUIT_ORD[b.s] || a.r - b.r);
+  if (ownOrd && ownOrd.no !== v.handNo) ownOrd = null; /* ván mới: xếp lại tự động */
+  if (ownOrd) { const pos = id => { const i = ownOrd.ids.indexOf(id); return i < 0 ? 99 : i; }; hand = hand.map((c, i) => [c, i]).sort((a, b) => pos(a[0].id) - pos(b[0].id) || a[1] - b[1]).map(x => x[0]); }
+  $('#btn-resort').hidden = !ownOrd || hand.length < 2;
+  /* đang kéo dở: giữ nguyên tay bài, trừ khi bài trên tay đã đổi */
+  if (drag.active) { if (hand.map(c => c.id).join() !== [...hEl.querySelectorAll('.pc[data-id]')].map(x => x.dataset.id).join()) drag.cancel(); else return; }
   const turn = myTurn(), legal = v.legal || [];
   const canBeat = id => legal.some(x => x.card === id && !x.down);
   const lead = v.trick && !v.trick.plays.length;

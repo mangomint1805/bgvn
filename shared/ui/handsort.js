@@ -3,16 +3,17 @@
 const THRESH = 8; // px – dưới mức này coi là chạm/bấm
 
 export function initHandDrag(hEl, opt) {
-  // opt: { selected():Set, onDrop(newOrderIds), enabled():bool, onStart?() }
+  // opt: { selected():Set, onDrop(newOrderIds), enabled():bool, onStart?(), attr?: tên data-* giữ mã lá (mặc định 'c'), str?: mã lá là chuỗi (mặc định là số) }
+  const A = opt.attr || 'c', idOf = el => opt.str ? el.dataset[A] : +el.dataset[A];
   let st = null; // { pid, x0, y0, id, ids, dragging, ... }
   let blockClick = false;
 
-  const cardsNow = () => [...hEl.querySelectorAll('.pc[data-c]')];
+  const cardsNow = () => [...hEl.querySelectorAll(`.pc[data-${A}]`)];
 
   hEl.addEventListener('pointerdown', e => {
     if (st || (e.pointerType === 'mouse' && e.button !== 0) || !opt.enabled()) return;
-    const el = e.target.closest('.pc[data-c]'); if (!el) return;
-    st = { pid: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, id: +el.dataset.c, dragging: false };
+    const el = e.target.closest(`.pc[data-${A}]`); if (!el) return;
+    st = { pid: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, id: idOf(el), dragging: false };
   });
   hEl.addEventListener('pointermove', e => {
     if (!st || e.pointerId !== st.pid) return;
@@ -40,7 +41,7 @@ export function initHandDrag(hEl, opt) {
 
   function begin() {
     const els = cardsNow();
-    const order = els.map(x => +x.dataset.c);
+    const order = els.map(x => idOf(x));
     if (!order.includes(st.id) || order.length < 2) { st = null; return; }
     const sel = opt.selected();
     // nắm lá đang chọn → kéo cả nhóm đã chọn (giữ thứ tự hiện tại)
@@ -50,10 +51,10 @@ export function initHandDrag(hEl, opt) {
     const hr = hEl.getBoundingClientRect();
     const sl0 = hEl.scrollLeft;
     // vị trí theo toạ độ nội dung (không đổi khi cuộn)
-    const info = els.map(x => { const r = x.getBoundingClientRect(); return { c: +x.dataset.c, el: x, l: r.left - hr.left + sl0, w: r.width }; });
+    const info = els.map(x => { const r = x.getBoundingClientRect(); return { c: idOf(x), el: x, l: r.left - hr.left + sl0, w: r.width }; });
     const rest = info.filter(o => !ids.includes(o.c));
     const cw = info[0].w;
-    const gEl = els.find(x => +x.dataset.c === st.id);
+    const gEl = els.find(x => idOf(x) === st.id);
     const gr = gEl.getBoundingClientRect();
     Object.assign(st, { dragging: true, order, ids, info, rest, cw, gap: Math.max(20, cw * 0.5), ins: -1, offX: st.x0 - gr.left, offY: st.y0 - gr.top, gw: gr.width, gh: gr.height });
     hEl.classList.add('dragging');
