@@ -1,5 +1,10 @@
 /* ♟️ Cờ tướng – giao diện riêng (nền chung ở shared/ui/gamekit.css) */
-:root{--acc:#c0392b;--acc2:#e67e22;--bg:#f6ecdc;--wood1:#f4dfb6;--wood2:#e6c486;--line:#e6d5bb;--grid:#5a3d22;--red:#c0271d;--blk:#22201e}
+:root{--acc:#c0392b;--acc2:#e67e22;--bg:#f6ecdc;--line:#e6d5bb;--red:#c0271d;--blk:#22201e;
+  /* các biến dưới đây đổi theo theme bàn cờ (body[data-theme]) */
+  --wood1:#f4dfb6;--wood2:#e6c486;--grid:#5a3d22;--frame:#b98d52;--frame2:#f6e4bf;--bshadow:#5a3d22cc;
+  --pc-r:radial-gradient(circle at 34% 28%,#fffaf0,#f3e1bd 62%,#e2c58f);--pc-b:radial-gradient(circle at 34% 28%,#fffaf0,#f3e1bd 62%,#e2c58f);--pc-edge:#a9824a;--pc-hi:#fff8;
+  --ink-r:#c0271d;--ink-b:#22201e;--river:.62;--hint:#2f9e5bcc;--last:#2f6fd099;
+  --pcfont:"Noto Serif TC","Noto Serif CJK TC","Noto Serif CJK SC","Songti TC","Songti SC","Source Han Serif TC",SimSun,"PMingLiU",serif;--pcw:900}
 body{background:radial-gradient(circle at 12% 8%,#ffe2c4 0,transparent 40%),radial-gradient(circle at 92% 94%,#f3d2a8 0,transparent 44%),var(--bg)}
 .home-card .hero{height:140px}
 #screen-game.active{display:flex;flex-direction:column;height:100dvh;min-height:0;overflow:hidden}
@@ -12,28 +17,28 @@ body{background:radial-gradient(circle at 12% 8%,#ffe2c4 0,transparent 40%),radi
 .pbar .nm{font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pbar .nm small{display:block;font-weight:700;color:var(--muted);font-size:12px;line-height:1.1}
 .pbar .side{width:14px;height:14px;border-radius:50%;flex:none;box-shadow:0 0 0 2px #fff,0 0 0 3.5px #0002}.pbar .side.r{background:var(--red)}.pbar .side.b{background:var(--blk)}
 .pbar .caps{margin-left:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:2px;max-width:55%}
-.pbar .caps span{width:22px;height:22px;border-radius:50%;background:#fbf1dc;border:1.5px solid #c9a56b;display:grid;place-items:center;font:800 12px/1 "Noto Serif CJK SC","Songti SC","Noto Serif SC",SimSun,serif}
+.pbar .caps span{width:22px;height:22px;border-radius:50%;background:#fbf1dc;border:1.5px solid #c9a56b;display:grid;place-items:center;font:900 12px/1 var(--pcfont)}
 .pbar .caps span.r{color:var(--red)}.pbar .caps span.b{color:var(--blk)}.pbar .caps span.vi{font:800 8px/1 Nunito,sans-serif}
 .pbar .think{font-size:12.5px;color:var(--muted);font-weight:800;display:none}.pbar.thinking .think{display:block;animation:ct-bl 1.2s ease-in-out infinite}
 @keyframes ct-bl{50%{opacity:.35}}
 /* bàn cờ: 9 cột × 10 hàng giao điểm; kích thước theo chỗ trống còn lại */
 .board-wrap{flex:1;min-height:0;width:100%;display:grid;place-items:center;container-type:size}
-.board{position:relative;aspect-ratio:9/10;width:min(100cqw,90cqh,620px);border-radius:3.2% / 2.9%;background:linear-gradient(135deg,var(--wood1),var(--wood2));box-shadow:0 18px 40px -18px #5a3d22cc,inset 0 0 0 2px #b98d52,inset 0 0 0 7px #f6e4bf,inset 0 0 0 9px #b98d52;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.board{position:relative;aspect-ratio:9/10;width:min(100cqw,90cqh,620px);border-radius:3.2% / 2.9%;background:var(--board-bg,linear-gradient(135deg,var(--wood1),var(--wood2)));box-shadow:0 18px 40px -18px var(--bshadow),inset 0 0 0 2px var(--frame),inset 0 0 0 7px var(--frame2),inset 0 0 0 9px var(--frame);touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .board svg.grid{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .sq{position:absolute;width:11.11%;height:10%;transform:translate(-50%,-50%);display:grid;place-items:center;cursor:pointer;z-index:1;border-radius:50%}
-.sq.hint::after{content:"";width:26%;aspect-ratio:1;border-radius:50%;background:#2f9e5bcc;box-shadow:0 0 0 3px #fff8}
+.sq.hint::after{content:"";width:26%;aspect-ratio:1;border-radius:50%;background:var(--hint);box-shadow:0 0 0 3px #fff8}
 .sq.hint.cap::after{width:92%;background:none;border:3.5px solid #e0384acc;box-shadow:none;border-radius:50%}
-.sq.last::before{content:"";position:absolute;width:84%;aspect-ratio:1;border-radius:22%;border:2.5px dashed #2f6fd099}
+.sq.last::before{content:"";position:absolute;width:84%;aspect-ratio:1;border-radius:22%;border:2.5px dashed var(--last)}
 .pc{position:absolute;width:10.2%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;z-index:3;display:grid;place-items:center;pointer-events:none;
-  background:radial-gradient(circle at 34% 28%,#fffaf0,#f3e1bd 62%,#e2c58f);box-shadow:0 3px 0 #a9824a,0 6px 9px -2px #3b260f99,inset 0 0 0 2px #fff8;
-  transition:left .22s cubic-bezier(.2,.9,.3,1),top .22s cubic-bezier(.2,.9,.3,1),transform .15s,box-shadow .15s;font:800 1em/1 "Noto Serif CJK SC","Songti SC","Noto Serif SC","Source Han Serif SC",SimSun,"PMingLiU",serif}
+  background:var(--pc-r);box-shadow:0 3px 0 var(--pc-edge),0 6px 9px -2px #3b260f99,inset 0 0 0 2px var(--pc-hi);
+  transition:left .22s cubic-bezier(.2,.9,.3,1),top .22s cubic-bezier(.2,.9,.3,1),transform .15s,box-shadow .15s;font:var(--pcw) 1em/1 var(--pcfont)}
 .pc::before{content:"";position:absolute;inset:9%;border-radius:50%;border:1.6px solid currentColor;opacity:.75}
-.pc b{position:relative;font-size:clamp(15px,5.6cqw,34px);font-weight:800}
-.pc.r{color:var(--red)}.pc.b{color:var(--blk)}
+.pc b{position:relative;font-size:clamp(15px,5.6cqw,34px);font-weight:var(--pcw)}
+.pc.r{color:var(--ink-r)}.pc.b{color:var(--ink-b);background:var(--pc-b)}
 .pc.vi b{font:800 clamp(8px,2.5cqw,15px)/1 Nunito,sans-serif;letter-spacing:-.3px}
-.pc.sel{transform:translate(-50%,-58%) scale(1.1);box-shadow:0 8px 0 #a9824a55,0 14px 18px -4px #3b260faa,0 0 0 3px #ffd166;z-index:5}
+.pc.sel{transform:translate(-50%,-58%) scale(1.1);box-shadow:0 8px 0 #0002,0 14px 18px -4px #3b260faa,0 0 0 3px #ffd166;z-index:5}
 .pc.chk{animation:ct-chk .7s ease-in-out infinite}
-@keyframes ct-chk{50%{box-shadow:0 3px 0 #a9824a,0 0 0 5px #e0384a99,0 0 18px 6px #e0384a88}}
+@keyframes ct-chk{50%{box-shadow:0 3px 0 var(--pc-edge),0 0 0 5px #e0384a99,0 0 18px 6px #e0384a88}}
 .pc.gone{opacity:0;transform:translate(-50%,-50%) scale(.4);transition:opacity .2s,transform .2s}
 .board.flip .river text{transform-box:fill-box;transform-origin:center;transform:rotate(180deg)}
 .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:min(560px,100%)}
@@ -46,8 +51,37 @@ body{background:radial-gradient(circle at 12% 8%,#ffe2c4 0,transparent 40%),radi
 /* biên bản + luật + cờ thế */
 .mv-list{display:grid;grid-template-columns:auto 1fr 1fr;gap:4px 12px;font-weight:700;max-height:56vh;overflow:auto}.mv-list i{font-style:normal;color:var(--muted)}
 .rules h3{font-size:17px;margin:12px 0 4px}.rules p,.rules li{font-size:14.5px;margin:4px 0}.rules ul{padding-left:20px;margin:4px 0}
-.rules .pcs{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center}.rules .pcs span{width:34px;height:34px;border-radius:50%;background:#fbf1dc;border:1.5px solid #c9a56b;display:grid;place-items:center;color:var(--red);font:800 18px "Noto Serif CJK SC","Songti SC",SimSun,serif}
+.rules .pcs{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center}.rules .pcs span{width:34px;height:34px;border-radius:50%;background:#fbf1dc;border:1.5px solid #c9a56b;display:grid;place-items:center;color:var(--red);font:900 18px var(--pcfont)}
 .pz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:10px}
 .pz-grid button{border:1.5px solid var(--line);background:#fff;border-radius:16px;padding:10px;text-align:left;cursor:pointer;font:800 15px Nunito,sans-serif;color:var(--ink)}
 .pz-grid button small{display:block;color:var(--muted);font-weight:700;font-size:12.5px}.pz-grid button.done{border-color:#2fc76f;background:#f0fbf4}
 @media (max-height:640px){.pbar{min-height:40px;padding:3px 8px}.topbar{padding:4px 8px}}
+
+/* ---------- 🎨 Theme bàn cờ (tự vẽ bằng CSS) ---------- */
+body[data-theme=mun],.th-prev[data-theme-prev=mun]{--wood1:#7a5234;--wood2:#4f321e;--grid:#f1d9a8;--frame:#2e1c10;--frame2:#8a6038;--bshadow:#1e120acc;--river:.5;
+  --pc-r:radial-gradient(circle at 34% 28%,#fffdf5,#f1e6cf 60%,#d8c39b);--pc-b:radial-gradient(circle at 34% 28%,#fffdf5,#f1e6cf 60%,#d8c39b);--pc-edge:#7d6238;--hint:#7be08dcc;--last:#ffe08acc}
+body[data-theme=ngoc],.th-prev[data-theme-prev=ngoc]{--wood1:#cfeadd;--wood2:#8fc9b0;--grid:#1f5a47;--frame:#2f7d65;--frame2:#e3f5ec;--bshadow:#1f5a47aa;--river:.5;
+  --pc-r:radial-gradient(circle at 34% 28%,#ffffff,#eef7f1 60%,#cfe3d8);--pc-b:radial-gradient(circle at 34% 28%,#ffffff,#eef7f1 60%,#cfe3d8);--pc-edge:#6fa590;--ink-r:#b3261e;--ink-b:#14463a;
+  --pcfont:"LXGW WenKai TC","Noto Serif TC","Kaiti TC","KaiTi","BiauKai","Noto Serif CJK SC",serif;--pcw:700}
+body[data-theme=giay],.th-prev[data-theme-prev=giay]{--board-bg:#f7f1e3;--grid:#3a3530;--frame:#3a3530;--frame2:#f7f1e3;--bshadow:#3a353055;--river:.38;
+  --pc-r:#fffdf8;--pc-b:#fffdf8;--pc-edge:#8d8578;--pc-hi:#0000;--ink-r:#a8281e;--ink-b:#1d1b19;--hint:#3a8f6bcc;
+  --pcfont:"LXGW WenKai TC","Noto Serif TC","Kaiti TC","KaiTi","BiauKai","Noto Serif CJK SC",serif;--pcw:700}
+body[data-theme=dem],.th-prev[data-theme-prev=dem]{--wood1:#24304f;--wood2:#151c33;--grid:#8fa6e8;--frame:#0c1124;--frame2:#33426d;--bshadow:#050816cc;--river:.45;
+  --pc-r:radial-gradient(circle at 34% 28%,#3b4568,#252d49 60%,#171c30);--pc-b:radial-gradient(circle at 34% 28%,#3b4568,#252d49 60%,#171c30);--pc-edge:#0b0f1f;--pc-hi:#ffffff22;--ink-r:#ff7a6b;--ink-b:#f3e3a6;--hint:#6ee7a0cc;--last:#ffd166cc}
+body[data-theme=dao],.th-prev[data-theme-prev=dao]{--wood1:#ffe9ef;--wood2:#ffc9d8;--grid:#a3506b;--frame:#d77a98;--frame2:#fff3f6;--bshadow:#a3506b88;--river:.45;
+  --pc-r:radial-gradient(circle at 34% 28%,#ffffff,#fff3f6 60%,#ffdbe5);--pc-b:radial-gradient(circle at 34% 28%,#ffffff,#fff3f6 60%,#ffdbe5);--pc-edge:#d58aa2;--ink-r:#d6274b;--ink-b:#4a2a66}
+body[data-theme=da],.th-prev[data-theme-prev=da]{--wood1:#e9e6df;--wood2:#c9c4b8;--grid:#3d3a35;--frame:#56524a;--frame2:#efece6;--bshadow:#2a282399;--river:.4;
+  --pc-r:radial-gradient(circle at 34% 28%,#e8554a,#c22a22 60%,#8f1712);--pc-b:radial-gradient(circle at 34% 28%,#55524d,#2c2a27 60%,#141312);--pc-edge:#0006;--pc-hi:#ffffff33;--ink-r:#fff4e6;--ink-b:#f4efe6;--last:#1f6fd0cc}
+body[data-theme=mun] .pbar .caps span,body[data-theme=dem] .pbar .caps span{background:#fbf1dc}
+/* hộp chọn giao diện */
+.th-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px;margin:10px 0}
+.th-grid button{border:2px solid var(--line);background:#fff;border-radius:16px;padding:8px;cursor:pointer;font:800 14px Nunito,sans-serif;color:var(--ink);display:flex;flex-direction:column;gap:6px;align-items:center}
+.th-grid button[aria-pressed=true]{border-color:var(--acc);box-shadow:0 0 0 3px #c0392b33}
+.th-prev{width:100%;aspect-ratio:16/10;border-radius:10px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:8%;background:var(--board-bg,linear-gradient(135deg,var(--wood1),var(--wood2)));box-shadow:inset 0 0 0 2px var(--frame)}
+.th-prev::before{content:"";position:absolute;inset:0;background:linear-gradient(var(--grid),var(--grid)) 50% 50%/100% 1.5px no-repeat,linear-gradient(var(--grid),var(--grid)) 30% 50%/1.5px 100% no-repeat,linear-gradient(var(--grid),var(--grid)) 70% 50%/1.5px 100% no-repeat;opacity:.8}
+.th-prev i{position:relative;width:30%;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font:var(--pcw) 17px/1 var(--pcfont);font-style:normal;box-shadow:0 2px 0 var(--pc-edge),0 4px 6px -2px #0006,inset 0 0 0 1.5px var(--pc-hi)}
+.th-prev i.r{background:var(--pc-r);color:var(--ink-r)}.th-prev i.b{background:var(--pc-b);color:var(--ink-b)}
+.th-prev[data-theme-prev=go]{--board-bg:initial;  --wood1:#f4dfb6;--wood2:#e6c486;--grid:#5a3d22;--frame:#b98d52;--frame2:#f6e4bf;--bshadow:#5a3d22cc;--pc-r:radial-gradient(circle at 34% 28%,#fffaf0,#f3e1bd 62%,#e2c58f);--pc-b:radial-gradient(circle at 34% 28%,#fffaf0,#f3e1bd 62%,#e2c58f);--pc-edge:#a9824a;--pc-hi:#fff8;--ink-r:#c0271d;--ink-b:#22201e;--river:.62;--hint:#2f9e5bcc;--last:#2f6fd099;--pcfont:"Noto Serif TC","Noto Serif CJK TC","Noto Serif CJK SC","Songti TC","Songti SC","Source Han Serif TC",SimSun,"PMingLiU",serif;--pcw:900}
+/* quân cờ bằng hình vẽ */
+.pc.pic b{display:grid;place-items:center;width:100%;height:100%}.pc.pic svg{width:58%;height:58%;fill:currentColor}
+.pbar .caps span.pic svg{width:70%;height:70%;fill:currentColor}.th-prev i svg{width:62%;height:62%;fill:currentColor}

@@ -124,7 +124,7 @@ function openGuide() {
   ui.openModal(`<div class="guide"><h2>📖 Cách chơi Thật hay Thách</h2>
     <p>Tới lượt ai, người đó chọn <b>💬 Thật</b> (trả lời thật lòng một câu hỏi) hoặc <b>🔥 Thách</b> (làm một thử thách nhỏ). Làm xong bấm <b>Xong rồi</b>, cả phòng làm trọng tài.</p>
     <h3>Trong mỗi lượt</h3><ul><li><b>🔄 Đổi câu:</b> được đổi 1 lần nếu câu không hợp.</li><li><b>🙈 Bỏ qua:</b> mỗi người có vài lượt bỏ qua (chủ phòng chỉnh).</li><li><b>🎲 Ngẫu nhiên:</b> để game chọn giúp Thật hay Thách.</li></ul>
-    <h3>Chủ phòng chỉnh được</h3><ul><li><b>Chủ đề</b> (12 chủ đề, trộn tuỳ thích) và <b>độ lầy</b> 🌱 → 🔥.</li><li><b>Câu tự viết</b> – thêm câu "đặc sản" của nhóm.</li><li>Số vòng, thứ tự lượt, số lượt bỏ qua.</li></ul>
+    <h3>Chủ phòng chỉnh được</h3><ul><li><b>Chủ đề</b> (14 chủ đề, trộn tuỳ thích) và <b>độ lầy</b> 🌱 → 🔥.</li><li><b>Câu tự viết</b> – thêm câu "đặc sản" của nhóm.</li><li>Số vòng, thứ tự lượt, số lượt bỏ qua.</li></ul>
     <h3>Chơi sao cho vui</h3><ul><li>Chơi online thì nên mở gọi thoại / video để thấy nhau.</li><li>Không ai bị ép: câu nào không thoải mái cứ bỏ qua hoặc đổi câu.</li><li>Chuyện kể trong phòng thì để lại trong phòng nha 🤫</li></ul>
     <div class="btns"><button class="btn" id="m-close">Đã hiểu</button></div></div>`);
   $('#m-close').onclick = ui.closeModal;

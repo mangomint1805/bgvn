@@ -10,8 +10,21 @@ import { openNews, newsBadge } from '../../shared/ui/news.js?v=114';
 
 const LV = { easy: ['🌱 Dễ', 'Mới tập chơi'], normal: ['⚔️ Vừa', 'Biết đánh, có sơ hở'], hard: ['🔥 Khó', 'Tính trước 4–5 nước'], master: ['👑 Đại sư', 'Động cơ Fairy-Stockfish'] };
 const GLYPH = { han: { K: '帥', A: '仕', E: '相', R: '俥', H: '傌', C: '炮', P: '兵', k: '將', a: '士', e: '象', r: '車', h: '馬', c: '砲', p: '卒' }, viet: { K: 'Tướng', A: 'Sĩ', E: 'Tượng', R: 'Xe', H: 'Mã', C: 'Pháo', P: 'Tốt' } };
-let style = ls.get('cotuong-style') === 'viet' ? 'viet' : 'han', sound = ls.get('cotuong-sound') !== '0';
-const glyph = p => style === 'han' ? GLYPH.han[p] : GLYPH.viet[p.toUpperCase()];
+let style = ['han', 'viet', 'pic'].includes(ls.get('cotuong-style')) ? ls.get('cotuong-style') : 'han', sound = ls.get('cotuong-sound') !== '0';
+// quân cờ bằng hình (tự vẽ, một màu theo phe): Tướng = vương miện, Sĩ = khiên, Tượng = voi, Xe = bánh xe, Mã = ngựa, Pháo = khẩu pháo, Tốt = nón lá
+const PIC = {
+  K: '<path d="M14 70 8 30l22 16 20-28 20 28 22-16-6 40z"/><rect x="14" y="76" width="72" height="10" rx="4"/>',
+  A: '<path fill-rule="evenodd" d="M50 10 84 22v26c0 22-14 35-34 42-20-7-34-20-34-42V22zm0 22-6 12-13 2 9 9-2 13 12-6 12 6-2-13 9-9-13-2z"/>',
+  E: '<circle cx="22" cy="40" r="17"/><circle cx="78" cy="40" r="17"/><path d="M30 38c0-14 9-22 20-22s20 8 20 22c0 12-5 20-10 25v13c0 9-6 14-13 12-5-1-7-6-5-9 3 2 7 1 7-4V63c-11-3-19-12-19-25z"/><path d="M34 60c-3 6-3 12 0 16 2-4 5-8 8-10zM66 60c3 6 3 12 0 16-2-4-5-8-8-10z"/>',
+  R: '<path fill-rule="evenodd" d="M50 10a40 40 0 1 1 0 80 40 40 0 0 1 0-80zm0 11a29 29 0 1 0 0 58 29 29 0 0 0 0-58z"/><circle cx="50" cy="50" r="9"/><path d="M47 20h6v60h-6zM20 47h60v6H20z"/><path d="M27.5 31.700 31.700 27.500 72.500 68.300 68.300 72.500zM68.300 27.500 72.500 31.700 31.700 72.500 27.500 68.300z"/>',
+  H: '<path d="M26 88c1-16 8-24 15-33-8 3-13 9-19 7-5-2-7-8-3-13 7-9 13-17 16-27l6-12 7 9c18 3 30 18 31 40 1 11-1 21-4 29z"/>',
+  C: '<path d="M10 52 62 22l12 20-52 30z"/><path fill-rule="evenodd" d="M40 54a18 18 0 1 1 0 36 18 18 0 0 1 0-36zm0 10a8 8 0 1 0 0 16 8 8 0 0 0 0-16z"/><circle cx="84" cy="20" r="7"/>',
+  P: '<path d="M50 12 6 54c14 6 74 6 88 0z"/><path d="M28 62c0 16 9 27 22 27s22-11 22-27c-14 3-30 3-44 0z"/>',
+};
+const picSvg = p => `<svg viewBox="0 0 100 100" aria-hidden="true">${PIC[p.toUpperCase()]}</svg>`;
+const glyph = p => style === 'pic' ? picSvg(p) : style === 'han' ? GLYPH.han[p] : GLYPH.viet[p.toUpperCase()];
+const STYLE_CLS = () => style === 'viet' ? 'vi' : style === 'pic' ? 'pic' : '';
+const STYLE_SEG = () => `<div class="seg"><button type="button" data-style="han" aria-pressed="${style === 'han'}">Chữ Hán 帥</button><button type="button" data-style="viet" aria-pressed="${style === 'viet'}">Chữ Việt</button><button type="button" data-style="pic" aria-pressed="${style === 'pic'}">Hình vẽ 👑</button></div>`;
 
 // bot: mức Đại sư gọi động cơ ngoài (bất đồng bộ); lỗi thì lùi về mức Khó
 async function botPlay(s, pid) {
@@ -54,7 +67,8 @@ function renderLobby(info, ui) {
     + (seated.length < 2 ? `<div class="row-btns"><button class="btn" id="btn-addbot">＋ Thêm máy</button><button class="btn" id="btn-addlocal">＋ Người chơi cùng máy</button></div>` : '');
   const o = info.opts, dis = ui.isHost ? '' : 'disabled';
   $('#opts').innerHTML = `<div class="opt"><b>🔴 Ai cầm quân Đỏ (đi trước)</b><div class="seg">${[['host', 'Chủ phòng'], ['guest', 'Người kia'], ['random', 'Ngẫu nhiên']].map(([v, n]) => `<button type="button" data-first="${v}" aria-pressed="${o.first === v}" ${dis}>${n}</button>`).join('')}</div></div>
-    <div class="opt"><b>字 Chữ trên quân cờ</b><div class="seg"><button type="button" data-style="han" aria-pressed="${style === 'han'}">Chữ Hán 帥</button><button type="button" data-style="viet" aria-pressed="${style === 'viet'}">Chữ Việt (Tướng)</button></div><small>Chỉ đổi trên máy bạn. Trong ván bấm nút 字 để đổi nhanh.</small></div>
+    <div class="opt"><b>字 Mặt quân cờ</b>${STYLE_SEG()}<small>Chưa quen chữ Hán thì chọn Chữ Việt hoặc Hình vẽ. Chỉ đổi trên máy bạn.</small></div>
+    <div class="opt"><b>🎨 Giao diện bàn cờ</b><div class="row-btns"><button type="button" class="btn sm" id="btn-theme-lobby">${(THEMES.find(t => t[0] === theme) || THEMES[0])[1]} · đổi…</button></div><small>7 kiểu bàn và quân. Trong ván bấm nút 🎨 để đổi.</small></div>
     <div class="opt"><small>Luật: chiếu bí hoặc hết nước đi là thua · không được để hai Tướng nhìn thẳng mặt nhau · chiếu lặp lại mãi (chiếu dai) bị xử thua · lặp thế cờ 3 lần là hoà.</small></div>`;
   $('#btn-start').style.display = ui.isHost ? '' : 'none'; $('#btn-start').disabled = seated.length < 2;
   $('#wait-msg').style.display = ui.isHost ? 'none' : '';
@@ -63,6 +77,7 @@ function renderLobby(info, ui) {
 $('#screen-lobby').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b || !ui.net) return; const h = ui.isHost ? ui.net.raw : null;
   if (b.dataset.style) { setStyle(b.dataset.style); renderLobby(ui.lobby, ui); return; }
+  if (b.id === 'btn-theme-lobby') { openTheme(); return; }
   if (!h) return;
   if (b.dataset.rm) h.removePlayer(b.dataset.rm);
   if (b.dataset.first) h.setOpt('first', b.dataset.first);
@@ -83,7 +98,7 @@ const GRID = (() => {
   let m = ''; const mark = (r, c) => { const x = 50 + c * 100, y = 50 + r * 100; for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { if ((c === 0 && dx < 0) || (c === 8 && dx > 0)) continue; m += `M${x + dx * 26} ${y + dy * 10}L${x + dx * 10} ${y + dy * 10}L${x + dx * 10} ${y + dy * 26}`; } };
   [[2, 1], [2, 7], [7, 1], [7, 7], [3, 0], [3, 2], [3, 4], [3, 6], [3, 8], [6, 0], [6, 2], [6, 4], [6, 6], [6, 8]].forEach(([r, c]) => mark(r, c));
   return `<svg class="grid" viewBox="0 0 900 1000" aria-hidden="true"><path d="${s}" fill="none" stroke="var(--grid)" stroke-width="4" stroke-linecap="round"/><path d="${m}" fill="none" stroke="var(--grid)" stroke-width="3" stroke-linecap="round"/>
-    <g class="river" fill="var(--grid)" opacity=".62" font-family="'Noto Serif CJK SC','Songti SC','Noto Serif SC',SimSun,serif" font-weight="800" font-size="62" text-anchor="middle"><text x="250" y="522">楚 河</text><text x="650" y="522">漢 界</text></g></svg>`;
+    <g class="river" fill="var(--grid)" style="opacity:var(--river);font-family:var(--pcfont);font-weight:var(--pcw)" font-size="62" text-anchor="middle"><text x="250" y="522">楚 河</text><text x="650" y="522">漢 界</text></g></svg>`;
 })();
 const pos = i => { let r = Math.floor(i / 9), c = i % 9; if (flip) { r = 9 - r; c = 8 - c; } return [(c + .5) / 9 * 100, (r + .5) / 10 * 100]; };
 function buildBoard(v) {
@@ -92,8 +107,8 @@ function buildBoard(v) {
   for (const q of $$('#board .sq')) { const [x, y] = pos(+q.dataset.i); q.style.left = x + '%'; q.style.top = y + '%'; }
   pcs = new Map(); v.board.forEach((p, i) => { if (p) addPiece(p, i); });
 }
-function addPiece(p, i) { const el = document.createElement('div'); el.className = `pc ${E.sideOf(p)} ${style === 'viet' ? 'vi' : ''}`; el.dataset.p = p; el.innerHTML = `<b>${glyph(p)}</b>`; const [x, y] = pos(i); el.style.left = x + '%'; el.style.top = y + '%'; boardEl.append(el); pcs.set(i, el); return el; }
-function setStyle(s) { style = s; ls.set('cotuong-style', s); for (const el of pcs.values()) { el.classList.toggle('vi', s === 'viet'); el.firstChild.textContent = glyph(el.dataset.p); } if (ui.view) renderBars(ui.view); }
+function addPiece(p, i) { const el = document.createElement('div'); el.className = `pc ${E.sideOf(p)} ${STYLE_CLS()}`; el.dataset.p = p; el.innerHTML = `<b>${glyph(p)}</b>`; const [x, y] = pos(i); el.style.left = x + '%'; el.style.top = y + '%'; boardEl.append(el); pcs.set(i, el); return el; }
+function setStyle(s) { style = s; ls.set('cotuong-style', s); for (const el of pcs.values()) { el.classList.toggle('vi', s === 'viet'); el.classList.toggle('pic', s === 'pic'); el.firstChild.innerHTML = glyph(el.dataset.p); } if (ui.view) renderBars(ui.view); }
 const turnPlayer = v => v.players.find(p => p.side === v.turn);
 const canMove = v => v.phase === 'playing' && !v.spec && ui.controls(turnPlayer(v).id);
 const actor = v => { const t = turnPlayer(v); if (ui.controls(t.id) && !t.isBot) return t; return v.players.find(p => ui.controls(p.id) && !p.isBot) || null; }; // người mình đang "cầm" để xin thua / cầu hoà
@@ -126,7 +141,7 @@ function renderBars(v) {
     const p = v.players.find(x => x.side === side), on = v.phase === 'playing' && v.turn === side, caps = v.caps[side];
     el.className = `pbar ${el.id === 'p-top' ? 'top' : 'bottom'}${on ? ' turn-on' : ''}${on && p.isBot ? ' thinking' : ''}`;
     el.innerHTML = `${avatar(p.name, 34)}<span class="side ${side}"></span><span class="nm">${esc(cleanName(p.name))}<small>${side === 'r' ? 'Quân Đỏ' : 'Quân Đen'}${p.isBot ? ' · máy ' + LV[p.level][0] : ''}${(v.away || []).includes(p.id) ? ' · mất kết nối' : ''}</small></span><span class="think">đang nghĩ…</span>
-      <span class="caps">${caps.map(c => `<span class="${E.sideOf(c)} ${style === 'viet' ? 'vi' : ''}">${style === 'han' ? GLYPH.han[c] : GLYPH.viet[c.toUpperCase()].slice(0, 2)}</span>`).join('')}</span>`;
+      <span class="caps">${caps.map(c => `<span class="${E.sideOf(c)} ${STYLE_CLS()}">${style === 'viet' ? GLYPH.viet[c.toUpperCase()].slice(0, 2) : glyph(c)}</span>`).join('')}</span>`;
   };
   bar(bottomSide === 'r' ? 'b' : 'r', $('#p-top')); bar(bottomSide, $('#p-bot'));
   const t = $('#turn'), mine = canMove(v);
@@ -176,7 +191,21 @@ function openGuide() {
   $('#m-close').onclick = ui.closeModal;
 }
 $('#btn-guide').onclick = $('#btn-guide-home').onclick = openGuide;
-$('#btn-style').onclick = () => setStyle(style === 'han' ? 'viet' : 'han');
+// 🎨 theme bàn cờ – chỉ đổi trên máy mình
+const THEMES = [['go', 'Gỗ sáng'], ['mun', 'Gỗ mun'], ['ngoc', 'Ngọc bích'], ['giay', 'Giấy dó'], ['da', 'Cờ đá'], ['dao', 'Hoa đào'], ['dem', 'Đêm trăng']];
+let theme = THEMES.some(t => t[0] === ls.get('cotuong-theme')) ? ls.get('cotuong-theme') : 'go';
+const setTheme = t => { theme = t; ls.set('cotuong-theme', t); document.body.dataset.theme = t; }; setTheme(theme);
+function openTheme() {
+  const draw = () => {
+    ui.openModal(`<h2>🎨 Giao diện bàn cờ</h2><div class="th-grid">${THEMES.map(([k, n]) => `<button type="button" data-th="${k}" aria-pressed="${theme === k}"><span class="th-prev" data-theme-prev="${k}"><i class="r">${style === 'han' ? '帥' : style === 'pic' ? picSvg('K') : 'T'}</i><i class="b">${style === 'han' ? '將' : style === 'pic' ? picSvg('H') : 'T'}</i></span>${n}</button>`).join('')}</div>
+      <div class="opt"><b>字 Mặt quân cờ</b>${STYLE_SEG()}<small>Hình vẽ: 👑 Tướng · 🛡️ Sĩ · 🐘 Tượng · ☸️ Xe · 🐴 Mã · 💥 Pháo · nón lá = Tốt. Chỉ đổi trên máy bạn.</small></div>
+      <div class="btns"><button class="btn" id="m-close">Xong</button></div>`);
+    $('#m-close').onclick = ui.closeModal;
+  };
+  draw();
+  $('#modal-box').onclick = e => { const b = e.target.closest('[data-th],[data-style]'); if (!b || !$('.th-grid')) return; if (b.dataset.th) setTheme(b.dataset.th); else setStyle(b.dataset.style); draw(); if (ui.lobby && !ui.view) renderLobby(ui.lobby, ui); };
+}
+$('#btn-style').onclick = openTheme;
 const drawSound = () => { $('#btn-sound').textContent = sound ? '🔊' : '🔇'; }; drawSound();
 $('#btn-sound').onclick = () => { sound = !sound; ls.set('cotuong-sound', sound ? '1' : '0'); drawSound(); beep('move'); };
 $('#btn-news-home').onclick = () => openNews('cotuong'); newsBadge($('#btn-news-home'), 'cotuong');

@@ -9,7 +9,7 @@ export const GAMES = {
 export const NOTES = [
   { id: '20261111-10', date: '11/11/2026', game: 'thathaythach', title: 'Game mới: Thật hay Thách!', items: [
     '🎯 Truth or Dare tiếng Việt theo góp ý của các bạn: tới lượt thì chọn 💬 Thật hoặc 🔥 Thách, làm xong bấm Xong.',
-    '📚 12 chủ đề (Bạn bè, Hài hước, Học đường, Công sở, Tình cảm, Gia đình, Tâm sự, Mạng xã hội, Game thủ, Tài lẻ, Ăn uống, Du lịch & Ước mơ) với hơn 220 câu, 3 độ lầy 🌱😄🔥.',
+    '📚 14 chủ đề (Bạn bè, Hội thân, Kỷ niệm, Hài hước, Học đường, Công sở, Tình cảm, Gia đình, Tâm sự, Mạng xã hội, Game thủ, Tài lẻ, Ăn uống, Du lịch & Ước mơ) với gần 270 câu, 3 độ lầy 🌱😄🔥.',
     '✍️ Chủ phòng thêm được câu tự viết của nhóm; có đổi câu, bỏ qua, tổng kết danh hiệu cuối buổi.',
     '📱 Chơi online theo mã phòng hoặc chuyền tay một máy.',
   ] },
@@ -17,7 +17,8 @@ export const NOTES = [
     '♟️ Đấu với bạn qua mã phòng, 2 người chung một máy, hoặc đấu máy.',
     '🤖 Máy có 4 mức: Dễ, Vừa, Khó và 👑 Đại sư (động cơ Fairy-Stockfish, tải thêm khi bạn chọn).',
     '🧩 Cờ thế: 13 bài chiếu bí trong 1–3 nước để luyện tay.',
-    '✨ Gợi ý nước đi hợp lệ, biên bản ván cờ, xin đi lại, cầu hoà, đổi chữ Hán ↔ chữ Việt trên quân.',
+    '🎨 7 giao diện bàn cờ (Gỗ sáng, Gỗ mun, Ngọc bích, Giấy dó, Cờ đá, Hoa đào, Đêm trăng) và 3 kiểu mặt quân: chữ Hán, chữ Việt, hình vẽ.',
+    '✨ Gợi ý nước đi hợp lệ, biên bản ván cờ, xin đi lại, cầu hoà.',
   ] },
   { id: '20261111-8', date: '11/11/2026', game: 'all', title: 'Chơi công bằng', items: [
     '⚖️ Trang mới "Chơi công bằng" (cuối trang chủ): bài xáo ngẫu nhiên thế nào, bot biết những gì, kèm số liệu hàng nghìn ván thử.',
