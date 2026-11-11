@@ -25,6 +25,10 @@ function inject(root) {
   leave.parentElement.after(b);
 }
 
+// Nút rời ván trong game vốn là mũi tên "←" – trên điện thoại khó đoán là đường về trang chủ, nên đổi thành 🏠.
+// Bấm vẫn mở hộp "Rời ván?" như cũ, trong đó có sẵn nút "🏠 Về trang chủ".
+{ const lv = document.getElementById('btn-leave'); if (lv && lv.textContent.trim() === '←') { lv.textContent = '🏠'; lv.title = 'Rời ván · về trang chủ'; lv.setAttribute('aria-label', 'Rời ván, về trang chủ'); } }
+
 const mo = new MutationObserver(muts => { for (const m of muts) for (const n of m.addedNodes) if (n.nodeType === 1) inject(n.closest ? (n.closest('[class*=modal],dialog,#modal') || n) : n); });
 mo.observe(document.body, { childList: true, subtree: true });
 
