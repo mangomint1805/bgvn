@@ -17,7 +17,7 @@ export const NOTES = [
     '♟️ Đấu với bạn qua mã phòng, 2 người chung một máy, hoặc đấu máy.',
     '🤖 Máy có 4 mức: Dễ, Vừa, Khó và 👑 Đại sư (động cơ Fairy-Stockfish, tải thêm khi bạn chọn).',
     '🧩 Cờ thế: 13 bài chiếu bí trong 1–3 nước để luyện tay.',
-    '🎨 7 giao diện bàn cờ (Gỗ sáng, Gỗ mun, Ngọc bích, Giấy dó, Cờ đá, Hoa đào, Đêm trăng) và 3 kiểu mặt quân: chữ Hán, chữ Việt, hình vẽ.',
+    '🎨 7 giao diện bàn cờ (Gỗ sáng, Gỗ mun, Ngọc bích, Giấy dó, Cờ đá, Hoa đào, Đêm trăng) và 3 kiểu mặt quân: chữ Hán (7 kiểu chữ: Tống, Khải, Bút lông…), chữ Việt, hình vẽ.',
     '✨ Gợi ý nước đi hợp lệ, biên bản ván cờ, xin đi lại, cầu hoà.',
   ] },
   { id: '20261111-8', date: '11/11/2026', game: 'all', title: 'Chơi công bằng', items: [

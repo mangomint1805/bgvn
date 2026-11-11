@@ -33,7 +33,7 @@ body{background:radial-gradient(circle at 12% 8%,#ffe2c4 0,transparent 40%),radi
   background:var(--pc-r);box-shadow:0 3px 0 var(--pc-edge),0 6px 9px -2px #3b260f99,inset 0 0 0 2px var(--pc-hi);
   transition:left .22s cubic-bezier(.2,.9,.3,1),top .22s cubic-bezier(.2,.9,.3,1),transform .15s,box-shadow .15s;font:var(--pcw) 1em/1 var(--pcfont)}
 .pc::before{content:"";position:absolute;inset:9%;border-radius:50%;border:1.6px solid currentColor;opacity:.75}
-.pc b{position:relative;font-size:clamp(15px,5.6cqw,34px);font-weight:var(--pcw)}
+.pc b{-webkit-text-stroke:var(--pcstroke,0) currentColor;position:relative;font-size:clamp(15px,5.6cqw,34px);font-weight:var(--pcw)}
 .pc.r{color:var(--ink-r)}.pc.b{color:var(--ink-b);background:var(--pc-b)}
 .pc.vi b{font:800 clamp(8px,2.5cqw,15px)/1 Nunito,sans-serif;letter-spacing:-.3px}
 .pc.sel{transform:translate(-50%,-58%) scale(1.1);box-shadow:0 8px 0 #0002,0 14px 18px -4px #3b260faa,0 0 0 3px #ffd166;z-index:5}
@@ -61,11 +61,9 @@ body{background:radial-gradient(circle at 12% 8%,#ffe2c4 0,transparent 40%),radi
 body[data-theme=mun],.th-prev[data-theme-prev=mun]{--wood1:#7a5234;--wood2:#4f321e;--grid:#f1d9a8;--frame:#2e1c10;--frame2:#8a6038;--bshadow:#1e120acc;--river:.5;
   --pc-r:radial-gradient(circle at 34% 28%,#fffdf5,#f1e6cf 60%,#d8c39b);--pc-b:radial-gradient(circle at 34% 28%,#fffdf5,#f1e6cf 60%,#d8c39b);--pc-edge:#7d6238;--hint:#7be08dcc;--last:#ffe08acc}
 body[data-theme=ngoc],.th-prev[data-theme-prev=ngoc]{--wood1:#cfeadd;--wood2:#8fc9b0;--grid:#1f5a47;--frame:#2f7d65;--frame2:#e3f5ec;--bshadow:#1f5a47aa;--river:.5;
-  --pc-r:radial-gradient(circle at 34% 28%,#ffffff,#eef7f1 60%,#cfe3d8);--pc-b:radial-gradient(circle at 34% 28%,#ffffff,#eef7f1 60%,#cfe3d8);--pc-edge:#6fa590;--ink-r:#b3261e;--ink-b:#14463a;
-  --pcfont:"LXGW WenKai TC","Noto Serif TC","Kaiti TC","KaiTi","BiauKai","Noto Serif CJK SC",serif;--pcw:700}
+  --pc-r:radial-gradient(circle at 34% 28%,#ffffff,#eef7f1 60%,#cfe3d8);--pc-b:radial-gradient(circle at 34% 28%,#ffffff,#eef7f1 60%,#cfe3d8);--pc-edge:#6fa590;--ink-r:#b3261e;--ink-b:#14463a;}
 body[data-theme=giay],.th-prev[data-theme-prev=giay]{--board-bg:#f7f1e3;--grid:#3a3530;--frame:#3a3530;--frame2:#f7f1e3;--bshadow:#3a353055;--river:.38;
-  --pc-r:#fffdf8;--pc-b:#fffdf8;--pc-edge:#8d8578;--pc-hi:#0000;--ink-r:#a8281e;--ink-b:#1d1b19;--hint:#3a8f6bcc;
-  --pcfont:"LXGW WenKai TC","Noto Serif TC","Kaiti TC","KaiTi","BiauKai","Noto Serif CJK SC",serif;--pcw:700}
+  --pc-r:#fffdf8;--pc-b:#fffdf8;--pc-edge:#8d8578;--pc-hi:#0000;--ink-r:#a8281e;--ink-b:#1d1b19;--hint:#3a8f6bcc;}
 body[data-theme=dem],.th-prev[data-theme-prev=dem]{--wood1:#24304f;--wood2:#151c33;--grid:#8fa6e8;--frame:#0c1124;--frame2:#33426d;--bshadow:#050816cc;--river:.45;
   --pc-r:radial-gradient(circle at 34% 28%,#3b4568,#252d49 60%,#171c30);--pc-b:radial-gradient(circle at 34% 28%,#3b4568,#252d49 60%,#171c30);--pc-edge:#0b0f1f;--pc-hi:#ffffff22;--ink-r:#ff7a6b;--ink-b:#f3e3a6;--hint:#6ee7a0cc;--last:#ffd166cc}
 body[data-theme=dao],.th-prev[data-theme-prev=dao]{--wood1:#ffe9ef;--wood2:#ffc9d8;--grid:#a3506b;--frame:#d77a98;--frame2:#fff3f6;--bshadow:#a3506b88;--river:.45;
@@ -85,3 +83,6 @@ body[data-theme=mun] .pbar .caps span,body[data-theme=dem] .pbar .caps span{back
 /* quân cờ bằng hình vẽ */
 .pc.pic b{display:grid;place-items:center;width:100%;height:100%}.pc.pic svg{width:58%;height:58%;fill:currentColor}
 .pbar .caps span.pic svg{width:70%;height:70%;fill:currentColor}.th-prev i svg{width:62%;height:62%;fill:currentColor}
+/* chọn kiểu chữ Hán */
+.fn-row{display:flex;flex-wrap:wrap;gap:8px}.fn-row button{border:2px solid var(--line);background:#fff;border-radius:14px;padding:6px 8px 4px;min-width:74px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font:800 12px Nunito,sans-serif;color:var(--ink)}
+.fn-row button b{font-size:26px;line-height:1.15;color:var(--red)}.fn-row button[aria-pressed=true]{border-color:var(--acc);box-shadow:0 0 0 3px #c0392b33}

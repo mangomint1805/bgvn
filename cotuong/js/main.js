@@ -22,7 +22,13 @@ const PIC = {
   P: '<path d="M50 12 6 54c14 6 74 6 88 0z"/><path d="M28 62c0 16 9 27 22 27s22-11 22-27c-14 3-30 3-44 0z"/>',
 };
 const picSvg = p => `<svg viewBox="0 0 100 100" aria-hidden="true">${PIC[p.toUpperCase()]}</svg>`;
-const glyph = p => style === 'pic' ? picSvg(p) : style === 'han' ? GLYPH.han[p] : GLYPH.viet[p.toUpperCase()];
+// kiểu chữ Hán (Google Fonts, giấy phép mở – chỉ tải đúng 18 chữ cần dùng). noMa: phông thiếu chữ 傌 → quân Mã đỏ dùng chữ 馬
+const FONTS = [['tong', 'Tống', 'Noto Serif TC', 900], ['khai', 'Khải', 'LXGW WenKai TC', 700], ['but', 'Bút lông', 'Yuji Syuku', 400, 1], ['hac', 'Nét đậm', 'Noto Sans TC', 900], ['co', 'Cổ điển', 'Cactus Classical Serif', 400], ['tay', 'Viết tay', 'Iansui', 400], ['tron', 'Bo tròn', 'Chiron GoRound TC', 900]];
+let font = FONTS.find(f => f[0] === ls.get('cotuong-font')) || FONTS[0];
+const fontCss = f => `"${f[2]}","Noto Serif TC","Noto Serif CJK TC","Songti TC",SimSun,"PMingLiU",serif`;
+const applyFont = () => { document.body.style.setProperty('--pcfont', fontCss(font)); document.body.style.setProperty('--pcw', font[3]); document.body.style.setProperty('--pcstroke', font[3] < 700 ? '.04em' : '0'); /* phông nét mảnh: tô đậm thêm cho dễ đọc */ }; applyFont();
+const han = p => p === 'H' && font[4] ? '馬' : GLYPH.han[p];
+const glyph = p => style === 'pic' ? picSvg(p) : style === 'han' ? han(p) : GLYPH.viet[p.toUpperCase()];
 const STYLE_CLS = () => style === 'viet' ? 'vi' : style === 'pic' ? 'pic' : '';
 const STYLE_SEG = () => `<div class="seg"><button type="button" data-style="han" aria-pressed="${style === 'han'}">Chữ Hán 帥</button><button type="button" data-style="viet" aria-pressed="${style === 'viet'}">Chữ Việt</button><button type="button" data-style="pic" aria-pressed="${style === 'pic'}">Hình vẽ 👑</button></div>`;
 
@@ -68,7 +74,7 @@ function renderLobby(info, ui) {
   const o = info.opts, dis = ui.isHost ? '' : 'disabled';
   $('#opts').innerHTML = `<div class="opt"><b>🔴 Ai cầm quân Đỏ (đi trước)</b><div class="seg">${[['host', 'Chủ phòng'], ['guest', 'Người kia'], ['random', 'Ngẫu nhiên']].map(([v, n]) => `<button type="button" data-first="${v}" aria-pressed="${o.first === v}" ${dis}>${n}</button>`).join('')}</div></div>
     <div class="opt"><b>字 Mặt quân cờ</b>${STYLE_SEG()}<small>Chưa quen chữ Hán thì chọn Chữ Việt hoặc Hình vẽ. Chỉ đổi trên máy bạn.</small></div>
-    <div class="opt"><b>🎨 Giao diện bàn cờ</b><div class="row-btns"><button type="button" class="btn sm" id="btn-theme-lobby">${(THEMES.find(t => t[0] === theme) || THEMES[0])[1]} · đổi…</button></div><small>7 kiểu bàn và quân. Trong ván bấm nút 🎨 để đổi.</small></div>
+    <div class="opt"><b>🎨 Giao diện bàn cờ</b><div class="row-btns"><button type="button" class="btn sm" id="btn-theme-lobby">${(THEMES.find(t => t[0] === theme) || THEMES[0])[1]} · đổi…</button></div><small>7 kiểu bàn, 7 kiểu chữ Hán. Trong ván bấm nút 🎨 để đổi.</small></div>
     <div class="opt"><small>Luật: chiếu bí hoặc hết nước đi là thua · không được để hai Tướng nhìn thẳng mặt nhau · chiếu lặp lại mãi (chiếu dai) bị xử thua · lặp thế cờ 3 lần là hoà.</small></div>`;
   $('#btn-start').style.display = ui.isHost ? '' : 'none'; $('#btn-start').disabled = seated.length < 2;
   $('#wait-msg').style.display = ui.isHost ? 'none' : '';
@@ -199,11 +205,12 @@ function openTheme() {
   const draw = () => {
     ui.openModal(`<h2>🎨 Giao diện bàn cờ</h2><div class="th-grid">${THEMES.map(([k, n]) => `<button type="button" data-th="${k}" aria-pressed="${theme === k}"><span class="th-prev" data-theme-prev="${k}"><i class="r">${style === 'han' ? '帥' : style === 'pic' ? picSvg('K') : 'T'}</i><i class="b">${style === 'han' ? '將' : style === 'pic' ? picSvg('H') : 'T'}</i></span>${n}</button>`).join('')}</div>
       <div class="opt"><b>字 Mặt quân cờ</b>${STYLE_SEG()}<small>Hình vẽ: 👑 Tướng · 🛡️ Sĩ · 🐘 Tượng · ☸️ Xe · 🐴 Mã · 💥 Pháo · nón lá = Tốt. Chỉ đổi trên máy bạn.</small></div>
+      ${style === 'han' ? `<div class="opt"><b>🖌️ Kiểu chữ Hán</b><div class="fn-row">${FONTS.map(f => `<button type="button" data-font="${f[0]}" aria-pressed="${font === f}"><b style="font:${f[3]} 26px ${fontCss(f).replace(/"/g, "'")}">帥</b>${f[1]}</button>`).join('')}</div></div>` : ''}
       <div class="btns"><button class="btn" id="m-close">Xong</button></div>`);
     $('#m-close').onclick = ui.closeModal;
   };
   draw();
-  $('#modal-box').onclick = e => { const b = e.target.closest('[data-th],[data-style]'); if (!b || !$('.th-grid')) return; if (b.dataset.th) setTheme(b.dataset.th); else setStyle(b.dataset.style); draw(); if (ui.lobby && !ui.view) renderLobby(ui.lobby, ui); };
+  $('#modal-box').onclick = e => { const b = e.target.closest('[data-th],[data-style],[data-font]'); if (!b || !$('.th-grid')) return; if (b.dataset.th) setTheme(b.dataset.th); else if (b.dataset.font) { font = FONTS.find(f => f[0] === b.dataset.font) || FONTS[0]; ls.set('cotuong-font', font[0]); applyFont(); setStyle(style); } else setStyle(b.dataset.style); draw(); if (ui.lobby && !ui.view) renderLobby(ui.lobby, ui); };
 }
 $('#btn-style').onclick = openTheme;
 const drawSound = () => { $('#btn-sound').textContent = sound ? '🔊' : '🔇'; }; drawSound();
