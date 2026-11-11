@@ -90,6 +90,11 @@ export default {
       const r = await inbox.add(await req.text(), req.headers.get('CF-Connecting-IP') || '', req.headers.get('User-Agent') || '');
       return json(r, r.ok ? 200 : 400, cors(origin));
     }
+    if (p[0] === 'err' && req.method === 'POST') { // lỗi JavaScript phía người chơi (shared/ui/errlog.js)
+      if (!okOrigin(origin) || !origin) return json({ ok: false }, 403);
+      const inbox = env.INBOX.get(env.INBOX.idFromName('main'));
+      return json(await inbox.err(await req.text(), req.headers.get('CF-Connecting-IP') || '', req.headers.get('User-Agent') || ''), 200, cors(origin));
+    }
     if (p[0] === 'admin') {
       if (p[1] === 'list' && req.method === 'POST') {
         const { key, del, op, ...d } = await req.json().catch(() => ({}));
@@ -112,6 +117,7 @@ export default {
           return json({ ok: true, ...(await L.admin(op, d)) }, 200, H);
         }
         const inbox = env.INBOX.get(env.INBOX.idFromName('main'));
+        if (d.errs) { if (d.errDel) await inbox.errRemove(d.errDel); return json({ ok: true, errs: await inbox.errs() }, 200, H); }
         if (del) await inbox.remove(del);
         return json({ ok: true, items: await inbox.list() }, 200, H);
       }
@@ -209,6 +215,7 @@ export class Room extends DurableObject {
 export class Inbox extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env); this.sql = ctx.storage.sql; this.ipHits = new Map();
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS err (h TEXT PRIMARY KEY, ts INTEGER, first INTEGER, n INTEGER, game TEXT, msg TEXT, at TEXT, page TEXT, ua TEXT)`); // lỗi JS phía người chơi, gộp theo (game, câu lỗi, vị trí)
     this.sql.exec(`CREATE TABLE IF NOT EXISTS fb (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER, t TEXT, game TEXT, msg TEXT, contact TEXT, page TEXT, ua TEXT)`);
   }
   async add(body, ip, ua) {
@@ -224,6 +231,21 @@ export class Inbox extends DurableObject {
     this.sql.exec('INSERT INTO fb (ts,t,game,msg,contact,page,ua) VALUES (?,?,?,?,?,?,?)', now, t, s(d.game, 20), msg, s(d.contact, 100), s(d.page, 200), s(ua, 300));
     return { ok: true };
   }
+  async err(body, ip, ua) {
+    let d; try { d = JSON.parse(body); } catch (e) { return { ok: false }; }
+    const s = (v, n) => (typeof v === 'string' ? v : '').trim().slice(0, n);
+    const msg = s(d.msg, 300), at = s(d.at, 160), game = s(d.game, 20).replace(/[^a-z0-9-]/g, '');
+    if (msg.length < 3) return { ok: false };
+    const now = Date.now(), k = 'e:' + ip, hits = (this.ipHits.get(k) || []).filter(x => now - x < 3600e3);
+    if (hits.length >= 10) return { ok: false }; /* mỗi địa chỉ tối đa 10 lỗi/giờ */
+    hits.push(now); this.ipHits.set(k, hits);
+    const h = (game + '|' + msg + '|' + at).slice(0, 400);
+    this.sql.exec('INSERT INTO err (h,ts,first,n,game,msg,at,page,ua) VALUES (?,?,?,1,?,?,?,?,?) ON CONFLICT(h) DO UPDATE SET n = n + 1, ts = excluded.ts, page = excluded.page, ua = excluded.ua', h, now, now, game, msg, at, s(d.page, 120), s(ua, 300));
+    if (this.sql.exec('SELECT COUNT(*) AS n FROM err').one().n > 300) this.sql.exec('DELETE FROM err WHERE h IN (SELECT h FROM err ORDER BY ts LIMIT 50)');
+    return { ok: true };
+  }
+  async errs() { return this.sql.exec('SELECT * FROM err ORDER BY ts DESC LIMIT 200').toArray(); }
+  async errRemove(h) { if (h === '*') this.sql.exec('DELETE FROM err'); else this.sql.exec('DELETE FROM err WHERE h = ?', String(h)); }
   async list() { return this.sql.exec('SELECT * FROM fb ORDER BY id DESC LIMIT 500').toArray(); }
   async remove(id) { this.sql.exec('DELETE FROM fb WHERE id = ?', +id || 0); }
 }

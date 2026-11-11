@@ -1,5 +1,5 @@
 // ⚙️ Cài đặt chung BGVN (lưu trên máy này): tên mặc định, âm thanh, phòng công khai, số online, dữ liệu.
-import { auth } from '../net/api.js?v=1';
+import { auth } from '../net/api.js?v=2';
 import { confirmBox } from './dialog.js?v=1';
 const ROOT = new URL('../../', import.meta.url).href;
 const GAMES = ['bang', 'uno', 'typhu', 'tamquoc', 'meono', 'masoi', 'scribble', 'tienlen', 'poker', 'xidach', 'catte', 'bacao', 'cangua', 'camel', 'solitaire', 'cotuong', 'thathaythach'];

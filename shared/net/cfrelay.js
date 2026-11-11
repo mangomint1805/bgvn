@@ -2,6 +2,23 @@
 // Giao diện giả lập "conn" giống fbrelay.js / relay.js: on('open'|'data'|'close'|'error'), send(msg), close(), open, peer.
 // Thử máy chủ khác: ?cf=ws://127.0.0.1:8787 (lưu lại trong máy) · tắt: ?cf=0
 const DEFAULT = 'wss://api.boardgamevui.com';
+// Địa chỉ dự phòng của cùng máy chủ (bgvn-rooms.<tài khoản>.workers.dev) – dùng khi tên miền riêng gặp sự cố. Để trống = tắt.
+const FALLBACK = '';
+let alt = null, probing = null;
+try { const a = JSON.parse(sessionStorage.getItem('bgvn-cf-alt')); if (a && a.u === FALLBACK && Date.now() - a.t < 15 * 60e3) alt = a.u; } catch (e) {}
+const ping = (u, ms = 4000) => { const c = new AbortController(), t = setTimeout(() => c.abort(), ms); return fetch(u.replace(/^ws/, 'http') + '/health', { signal: c.signal, cache: 'no-store' }).then(r => r.ok).catch(() => false).finally(() => clearTimeout(t)); };
+// Gọi khi nối máy chủ chính thất bại: nếu địa chỉ chính chết thật mà địa chỉ dự phòng còn sống thì chuyển sang dự phòng (nhớ 15 phút trong tab này).
+export function cfProbe() {
+  if (!FALLBACK || alt || probing) return probing;
+  try { if (localStorage.getItem('bgvn-cf')) return null; } catch (e) {} /* đang trỏ máy chủ thử nghiệm thì thôi */
+  probing = (async () => {
+    if (await ping(DEFAULT)) return;
+    if (!(await ping(FALLBACK))) return;
+    alt = FALLBACK; try { sessionStorage.setItem('bgvn-cf-alt', JSON.stringify({ u: alt, t: Date.now() })); } catch (e) {}
+    try { dispatchEvent(new CustomEvent('bgvn-cf-alt')); } catch (e) {}
+  })().finally(() => { probing = null; });
+  return probing;
+}
 function base() {
   try {
     const q = new URLSearchParams(location.search).get('cf');
@@ -10,7 +27,7 @@ function base() {
     if (v === 'off') return null;
     if (v) return v.replace(/\/+$/, '');
   } catch (e) {}
-  return DEFAULT;
+  return alt || DEFAULT;
 }
 try { base(); } catch (e) {} // đọc ?cf= ngay khi tải trang (lưu lại cho các trang sau)
 export const cfHttp = () => (base() || DEFAULT).replace(/^ws/, 'http'); // địa chỉ http(s) của máy chủ (góp ý…)
@@ -37,7 +54,8 @@ export class CfHost {
     if (this.dead) return;
     let ws; try { ws = new WebSocket(wsUrl(this.ns, this.code, `role=host&k=${this.k}`)); } catch (e) { this.retry(); return; }
     this.ws = ws;
-    ws.onopen = () => { this.wait = 1000; this.lastPong = Date.now(); clearInterval(this.ka); this.ka = setInterval(() => this.keep(ws), 15000); };
+    let opened = false;
+    ws.onopen = () => { opened = true; this.wait = 1000; this.lastPong = Date.now(); clearInterval(this.ka); this.ka = setInterval(() => this.keep(ws), 15000); };
     ws.onmessage = ev => {
       if (ev.data === 'pong') { this.lastPong = Date.now(); return; }
       const m = dec(ev.data); if (!m) return;
@@ -59,6 +77,7 @@ export class CfHost {
       if (d) conn.emit('data', d);
     };
     ws.onclose = () => {
+      if (!opened) cfProbe();
       if (this.ws !== ws) return;
       for (const c of this.conns.values()) { c.open = false; c.emit('close'); } // máy chủ đã ngắt mọi người: họ sẽ tự vào lại
       this.conns.clear();
@@ -94,7 +113,7 @@ export function cfConnect(ns, code) {
     if (d.t === '__bye') { fail(); return; }
     conn.emit('data', d);
   };
-  ws.onclose = () => { clearInterval(ka); fail(); };
+  ws.onclose = () => { clearInterval(ka); if (!conn.open && !conn.notFound) cfProbe(); fail(); };
   ws.onerror = () => {};
   conn.close = () => { clearInterval(ka); if (!alive) return; alive = false; conn.open = false; try { ws.close(1000, 'bye'); } catch (e) {} };
   return conn;

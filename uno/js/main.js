@@ -1,4 +1,4 @@
-import { Host, Client, MAX, loadSnapshot, session, UNO_PHRASES } from './net.js?v=27';
+import { Host, Client, MAX, loadSnapshot, session, UNO_PHRASES } from './net.js?v=28';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';

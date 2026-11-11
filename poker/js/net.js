@@ -1,7 +1,7 @@
 // Lớp mạng Poker: chủ phòng giữ state (host-authoritative), người vào chỉ gửi action. Kết nối dùng chung shared/net/room.js
 import { createGame, applyAction, viewFor, nextHand, seatPlayers, DEFAULT_OPTS, OPT_CHOICES, MAX_PLAYERS } from './engine.js?v=2';
 import { botAction } from './bot.js?v=1';
-import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=5';
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=6';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
 import { watch } from '../../shared/ui/stats.js?v=3';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';

@@ -1,5 +1,5 @@
 // Gọi máy chủ BGVN (Cloudflare): tài khoản, sảnh chung. Đăng nhập là TUỲ CHỌN – khách vẫn chơi bình thường.
-import { cfHttp } from './cfrelay.js?v=2';
+import { cfHttp, cfProbe } from './cfrelay.js?v=3';
 
 export const API = () => cfHttp();
 export const WS = () => cfHttp().replace(/^http/, 'ws');
@@ -17,7 +17,7 @@ async function call(path, data, token) {
   try {
     const r = await fetch(API() + path, { method: data === undefined ? 'GET' : 'POST', headers: { 'content-type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: data === undefined ? undefined : JSON.stringify(data), signal: ctl.signal });
     return await r.json();
-  } catch (e) { return { ok: false, msg: 'Không kết nối được máy chủ – thử lại sau nha' }; } finally { clearTimeout(t); }
+  } catch (e) { try { cfProbe(); } catch (e2) {} return { ok: false, msg: 'Không kết nối được máy chủ – thử lại sau nha' }; } finally { clearTimeout(t); } /* máy chủ chính không tới được: dò địa chỉ dự phòng cho lần gọi sau */
 }
 
 // ---------- tài khoản ----------

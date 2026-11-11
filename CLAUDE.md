@@ -34,6 +34,12 @@ Chủ web: Minto. Trả lời bằng tiếng Việt, xưng "em", gọi "anh". Kh
 - Icon ô game ở trang chủ: `node tools/icons/make-icons.mjs && node tools/icons/fit.mjs` → `shared/img/icons/<game>.svg` (tự vẽ bằng code). Sửa icon thì tăng `?v` ở `index.html`.
 - Ảnh xem trước khi share link: chạy máy chủ tĩnh `:8811` rồi `node tools/og/make-og.mjs [game…]` → `shared/img/og/<game>.jpg` (lấy hình + chữ từ ô game ở trang chủ).
 
+## Khi tên miền gặp sự cố
+- Tên miền `boardgamevui.com` (nhà đăng ký P.A Việt Nam) bị khoá thì cả web lẫn `api.boardgamevui.com` biến mất. Kiểm tra: `curl -sL https://rdap.verisign.com/com/v1/domain/boardgamevui.com` (trạng thái `client hold` = bị khoá; chỉ nhà đăng ký gỡ được).
+- Chạy tạm: xoá file `CNAME` rồi push → web ở `https://mangomint1805.github.io/bgvn/` (mọi đường dẫn trong trang đã là tương đối). Khi tên miền sống lại thì tạo lại `CNAME` (nội dung `boardgamevui.com`).
+- Máy chủ: `shared/net/cfrelay.js` có hằng `FALLBACK` (địa chỉ `bgvn-rooms.<tài khoản>.workers.dev`, đã bật `workers_dev` trong `server/wrangler.jsonc`). Khi nối địa chỉ chính thất bại, client tự dò và chuyển sang dự phòng (`cfProbe`). `FALLBACK` để trống = tắt.
+- Lỗi JS phía người chơi: `shared/ui/errlog.js` (feel.js nạp) gửi `POST /err`, xem ở tab "🐞 Lỗi web" của trang Quản trị.
+
 ## Kiểm tra trước khi push
 - Tự động: `bash tools/qa/run.sh [game…]` chạy máy chủ tĩnh `:8811` + `wrangler dev :8787` rồi test mọi game. Ảnh chụp nằm ở `tools/qa/out/`, phải mở xem chứ đừng chỉ đọc ✅.
 - Thủ công: xem `tools/qa/CHECKLIST.md`.

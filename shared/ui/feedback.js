@@ -2,7 +2,7 @@
 // Góp ý gửi tới máy chủ BGVN trên Cloudflare (POST /feedback, chủ web đọc ở https://api.boardgamevui.com/admin).
 // Không tới được Cloudflare thì gửi dự phòng vào Firebase: feedback/<id>.
 import { FIREBASE } from '../net/fbrelay.js';
-import { cfHttp } from '../net/cfrelay.js?v=2';
+import { cfHttp } from '../net/cfrelay.js?v=3';
 const apiBase = () => cfHttp();
 
 const V = '10.12.2';

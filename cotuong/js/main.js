@@ -1,5 +1,5 @@
 // ♟️ Cờ tướng – giao diện. Luật ở engine.js, bot ở bot.js, mạng ở shared/net/simplenet.js, khung màn hình ở shared/ui/gamekit.js
-import { makeNet } from '../../shared/net/simplenet.js?v=1';
+import { makeNet } from '../../shared/net/simplenet.js?v=2';
 import * as E from './engine.js?v=1';
 import { botAction, botWants } from './bot.js?v=1';
 import { masterMove, masterReady, masterOff } from './master.js?v=1';

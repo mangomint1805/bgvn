@@ -1,6 +1,6 @@
 // 🟢 Đếm người đang mở BGVN: mỗi trang giữ 1 WebSocket nhẹ tới máy chủ (ping/pong tự trả lời, không tốn).
 // Nghe số: addEventListener('bgvn-online', e => e.detail) · số gần nhất: window.__bgvnOnline
-import { WS, API } from './api.js?v=1';
+import { WS, API } from './api.js?v=2';
 let ws = null, wait = 2000, ka = null, started = false;
 function connect() {
   try { ws = new WebSocket(WS() + '/presence'); } catch (e) { setTimeout(connect, wait); return; }

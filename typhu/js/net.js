@@ -4,7 +4,7 @@ import { createGame, applyAction, viewFor, actorOf, P } from './engine.js?v=55';
 import { botAction } from './bot.js?v=55';
 import { S } from './fx.js?v=50';
 import { OPTIONS, PRESETS } from '../../shared/js/avatar3d.js';
-import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=5';
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=6';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
 import { watch } from '../../shared/ui/stats.js?v=3';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';

@@ -2,7 +2,7 @@
 import { createGame, applyAction, viewFor, current, MODES, newMatch, recordRound, MATCH_TARGETS } from './engine.js?v=19';
 import { botAction, botCatch } from './bot.js?v=19';
 import { S } from './ufx.js?v=20';
-import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=5';
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=6';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
