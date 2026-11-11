@@ -3,13 +3,14 @@ import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=117';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=118';
 import { classify, legalPlays, badFinish, VE_HEO, comboName, comboKind, rankOf, HEO, BETS, TURN_TIMES, DEFAULT_OPTS, START_CHIPS, TOI_TRANG, isHang, cardName } from './engine.js?v=5';
 import { rankPlays, splitHand, LEVELS } from './bot.js?v=5';
 import { cardHTML } from './cards.js?v=6';
 import { guideHTML } from './guide.js?v=7';
 import * as fx from './tfx.js?v=6';
 import { initHandDrag } from '../../shared/ui/handsort.js?v=3';
+import { rotateHint } from '../../shared/ui/rotate.js?v=1';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -588,3 +589,4 @@ if (location.hash === '#debug') window.__dbg = () => ({ net, view, sel: [...sel]
     net = new Client(ses.code, ses.name || myName(), handlers); isHost = false; $('#code-box').style.display = '';
   }
 })();
+rotateHint('tienlen'); /* gợi ý xoay ngang khi vào bàn ở màn hình dọc */

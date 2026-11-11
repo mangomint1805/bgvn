@@ -9,7 +9,7 @@ import { Board3D, DIE_COLORS } from './scene3d.js?v=2';
 import * as fx from './fx.js?v=2';
 import { guideHTML } from './guide.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=117';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=118';
 
 const GAME = 'camel';
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
