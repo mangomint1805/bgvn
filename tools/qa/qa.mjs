@@ -16,6 +16,7 @@ const GAMES = {
   uno: {}, meono: {}, tamquoc: {}, masoi: { nbot: 5 }, tienlen: {}, poker: {}, xidach: {}, bacao: {},
   catte: { specText: 'ghế chờ' }, // Cát tê có sẵn giao diện ghế chờ riêng
   cangua: {}, camel: {}, typhu: {}, cotuong: { nbot: 1 },
+  thathaythach: { local: ['Na'] }, // không có bot: thêm một người chơi cùng máy
   scribble: { online: false }, solitaire: { online: false }, // scribble cần người thật vẽ; solitaire chơi một mình
 };
 const want = process.argv.slice(2); const list = want.length ? want : Object.keys(GAMES);
@@ -48,7 +49,8 @@ for (const g of list) {
     await host.fill(c.nm, 'Chủ'); await host.click('#btn-create');
     await host.waitForFunction(rc => /^[A-Z0-9]{4,6}$/.test(document.querySelector(rc)?.textContent.trim()), c.rc, { timeout: 15000 });
     const code = (await host.textContent(c.rc)).trim();
-    for (let i = 0; i < c.nbot; i++) { await host.click(c.bot); await host.waitForTimeout(150); }
+    if (c.local) for (const n of c.local) { await host.click('#btn-addlocal'); await host.waitForTimeout(400); await host.keyboard.type(n); await host.keyboard.press('Enter'); await host.waitForTimeout(400); }
+    else for (let i = 0; i < c.nbot; i++) { await host.click(c.bot); await host.waitForTimeout(150); }
     await host.click(c.start); await host.waitForTimeout(2500);
     await cli.goto(`${WEB}/${g}/?cf=${CF}`); await cli.waitForTimeout(1200);
     await cli.fill(c.nm, 'Xem'); await cli.fill(c.jc, code); await cli.click('#btn-join'); await cli.waitForTimeout(5000);

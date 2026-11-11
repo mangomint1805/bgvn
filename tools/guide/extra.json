@@ -1,0 +1,30 @@
+{
+  "cotuong": {
+    "cta": "🤖 Đấu với máy",
+    "steps": [
+      { "icon": "♟️", "html": "<b>Mục tiêu:</b> chiếu bí Tướng đối phương. Đỏ đi trước, mỗi lượt đi một quân." },
+      { "icon": "👆", "html": "Chạm vào quân của mình: <b>chấm xanh</b> là chỗ đi được, <b>vòng đỏ</b> là quân ăn được. Chạm tiếp vào chỗ muốn đi." },
+      { "icon": "🐴", "html": "Xe đi thẳng, Mã đi chữ L (bị cản nếu có quân sát bên), Pháo phải <b>nhảy qua đúng một quân</b> mới ăn được, Tốt qua sông mới được đi ngang." },
+      { "icon": "🎨", "html": "Chưa quen chữ Hán? Bấm 🎨 để đổi sang <b>chữ Việt</b> hoặc <b>quân hình</b>, và chọn bàn cờ bạn thích." },
+      { "icon": "🤖", "html": "Tập với máy từ mức <b>Dễ</b> tới <b>Đại sư</b>, được đi lại thoải mái. Muốn luyện đòn kết thúc thì vào <b>Cờ thế</b>." }
+    ]
+  },
+  "thathaythach": {
+    "cta": "📱 Chơi chung một máy",
+    "steps": [
+      { "icon": "🎯", "html": "Tới lượt ai, người đó chọn <b>💬 Thật</b> (trả lời thật lòng) hoặc <b>🔥 Thách</b> (làm một thử thách nhỏ)." },
+      { "icon": "✅", "html": "Làm xong bấm <b>Xong rồi</b> để tới người kế. Câu không hợp thì <b>🔄 Đổi câu</b> (1 lần) hoặc <b>🙈 Bỏ qua</b>." },
+      { "icon": "🌶️", "html": "Chủ phòng chọn <b>chủ đề</b> (bạn bè, học đường, gia đình…) và <b>độ lầy</b> từ 🌱 nhẹ nhàng tới 🔥 lầy lội." },
+      { "icon": "📱", "html": "Ngồi chung thì chọn <b>Chơi chung một máy</b> rồi chuyền điện thoại. Ở xa thì <b>Tạo phòng online</b> và gửi mã cho hội bạn." }
+    ]
+  },
+  "solitaire": {
+    "cta": "",
+    "steps": [
+      { "icon": "🃏", "html": "<b>Mục tiêu:</b> đưa cả 52 lá lên 4 ô đích, mỗi chất xếp từ <b>A tới K</b>." },
+      { "icon": "🔴", "html": "Trên bàn, xếp lá <b>nhỏ hơn 1 nút và khác màu</b> lên nhau (đỏ – đen xen kẽ). Kéo được cả một xâu lá." },
+      { "icon": "👑", "html": "Cột trống chỉ đặt được <b>K</b>. Lật hết lá úp là gần thắng rồi." },
+      { "icon": "🔄", "html": "Bí thì bấm chồng bài để rút thêm, dùng <b>Gợi ý</b> hoặc <b>Hoàn tác</b>. Chạm đúp vào lá để đưa nhanh lên ô đích." }
+    ]
+  }
+}

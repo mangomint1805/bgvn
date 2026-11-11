@@ -2,7 +2,7 @@ import { Host, Client, MAX, loadSnapshot, session, UNO_PHRASES } from './net.js?
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=119';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=120';
 import { startPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 import { MODES, COLOR_NAME, cardText, DRAW_VALUE, CARD_NAME, MATCH_TARGETS } from './engine.js?v=19';
 import * as fx from './ufx.js?v=20';

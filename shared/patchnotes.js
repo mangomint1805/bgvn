@@ -7,6 +7,11 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261112-1', date: '12/11/2026', game: 'all', title: 'Màn "Học chơi nhanh" + trang luật cho mọi game', items: [
+    '🎓 Lần đầu vào một game sẽ có màn học chơi nhanh: vài bước có hình, chưa tới 1 phút, vuốt để chuyển bước. Mở lại bằng nút "🎓 Học chơi nhanh" cạnh nút Hướng dẫn.',
+    '📖 Mỗi game có thêm trang luật chơi riêng (đuôi /huong-dan/) để đọc hoặc gửi cho bạn mới.',
+    'ℹ️ Thêm trang Giới thiệu & liên hệ ở chân trang chủ.',
+  ] },
   { id: '20261111-14', date: '11/11/2026', game: 'thathaythach', title: 'Thật hay Thách: chỉnh lại giao diện', items: [
     '🎨 Hình đầu trang không còn đè lên tên game; chữ cái trong vòng tròn người chơi nằm đúng giữa.',
     '👥 Vòng sáng quanh người tới lượt không bị cắt mất phần trên; các ô "Độ lầy" đều nhau.',

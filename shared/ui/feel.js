@@ -2,6 +2,8 @@
 // Trong ván chơi mỗi game có âm thanh riêng nên ở đó chỉ rung, không kêu thêm.
 // Tắt trong ⚙️ Cài đặt: bgvn-ui-sfx = '0' (tiếng), bgvn-haptic = '0' (rung); "Tắt hết nhạc nền" không ảnh hưởng tiếng nút.
 import './inapp.js?v=1'; /* nhắc mở bằng Safari/Chrome khi đang ở trình duyệt nhúng của Zalo, Facebook… */
+/* màn 🎓 Học chơi nhanh – chỉ nạp ở trang game (có nút Hướng dẫn) */
+if (document.querySelector('#btn-guide-home, #btn-guide')) import('./tutorial.js?v=1').catch(() => {});
 // Giao diện chung (hộp thoại, thông báo nổi, hồ sơ, tin mới…) viết bằng Nunito + Baloo 2. Game nào không tự nạp 2 phông này thì nạp giúp,
 // kẻo chữ Việt rơi về phông máy và mỗi chữ một kiểu.
 { const have = f => [...document.querySelectorAll('link[href*="fonts.googleapis.com"]')].some(l => l.href.includes('family=' + f)), need = [];

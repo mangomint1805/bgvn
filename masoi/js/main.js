@@ -8,7 +8,7 @@ import { coachCheck, coachHide, coachTipEnd } from './coach.js?v=5';
 import { roleCardSVG, cardBackSVG, roleChip, roleDot, bambooSVG, dinhSVG, hillsSVG, starsHTML, firefliesHTML, heroSVG } from './art.js?v=4';
 import * as fx from './fx.js?v=4';
 import { openGuide } from './guide.js?v=6';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=119';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=120';
 import { syncPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 
 const $ = s => document.querySelector(s);
