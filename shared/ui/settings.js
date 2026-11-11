@@ -37,7 +37,7 @@ export function openSettings() {
       <label class="st-row"><input type="checkbox" id="st-pub" ${ls.get('bgvn-pub-default') === '1' ? 'checked' : ''}><span>Tạo phòng là tự công khai<small>Phòng mới tự hiện ở Sảnh chung (vẫn tắt được trong phòng)</small></span></label>
       <label class="st-row"><input type="checkbox" id="st-online" ${ls.get('bgvn-hide-online') === '1' ? '' : 'checked'}><span>Hiện số người đang online</span></label></div>
     <div class="st-sec"><h3>🧰 Khác</h3><div class="st-acts">
-      <a class="st-btn" href="${ROOT}luat/">⚙️ Luật mặc định</a><a class="st-btn" href="${ROOT}credits/">📜 Credits</a><a class="st-btn" href="${ROOT}privacy/">🔒 Riêng tư</a>
+      <button class="st-btn" id="st-prof" type="button">🏅 Hồ sơ &amp; thành tích</button><a class="st-btn" href="${ROOT}luat/">⚙️ Luật mặc định</a><a class="st-btn" href="${ROOT}credits/">📜 Credits</a><a class="st-btn" href="${ROOT}privacy/">🔒 Riêng tư</a>
       ${u && u.admin ? `<a class="st-btn" href="${ROOT}quantri/">🛠️ Quản trị</a>` : ''}
       <button class="st-btn red" id="st-clear" type="button">🗑️ Xoá dữ liệu trên máy này</button></div></div>
   </div>`;
@@ -51,6 +51,7 @@ export function openSettings() {
   $('#st-haptic').onchange = e => ls.set('bgvn-haptic', e.target.checked ? '1' : '0');
   $('#st-pub').onchange = e => ls.set('bgvn-pub-default', e.target.checked ? '1' : '0');
   $('#st-online').onchange = e => { ls.set('bgvn-hide-online', e.target.checked ? '0' : '1'); document.querySelectorAll('#online').forEach(el => { el.style.display = e.target.checked ? '' : 'none'; }); };
+  $('#st-prof').onclick = () => { ov.remove(); import('./profile.js?v=1').then(m => m.openProfile()); };
   $('#st-clear').onclick = async () => {
     if (!(await confirmBox('Tên, giao diện, luật đã chọn và ván đang chơi dở trên máy này sẽ bị xoá. Tài khoản vẫn còn trên máy chủ, bạn chỉ bị đăng xuất.', { title: '🗑️ Xoá dữ liệu trên máy này?', ok: 'Xoá hết', danger: true }))) return;
     try { Object.keys(localStorage).filter(k => /^(bgvn|bangvn|meono|uno|typhu|sol|tq|masoi|scribble|camel|cangua|poker|tienlen|xidach|catte|bacao)/i.test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) {}

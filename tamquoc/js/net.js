@@ -5,6 +5,7 @@ import { coachHint } from './coach.js?v=7';
 import { S } from './fx.js?v=8';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=5';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
+import { watch } from '../../shared/ui/stats.js?v=1';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 export const TURN_TIME = 60, PROMPT_TIME = 20, PICK_TIME = 30; // giây: hết giờ thì máy tự đánh thay (chống treo máy)
@@ -34,7 +35,7 @@ function askKey(s, t) { return [s.turnCount, s.stack.length, t.k, t.stage || '',
 // ======================= HOST =======================
 export class Host {
   constructor(name, handlers, offline = false, restore = null) {
-    this.h = handlers; this.offline = offline;
+    this.h = watch(GAME, handlers, () => 'host'); this.offline = offline;
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.opts = { exp: CFG.exp, expGen: CFG.expGen, training: CFG.training };
     this.hintCache = {}; this.lim = hostLimiter(); this.botReactAt = 0;
@@ -236,7 +237,7 @@ export class Host {
 // ======================= CLIENT =======================
 export class Client {
   constructor(code, name, handlers, hints = false) {
-    this.h = handlers; this.code = code.toUpperCase().trim(); this.name = name; this.id = null; this.hints = !!hints;
+    this.h = watch(GAME, handlers, () => this.id); this.code = code.toUpperCase().trim(); this.name = name; this.id = null; this.hints = !!hints;
     this.room = new RoomClient({
       ns: NS, prefix: PREFIX, code: this.code, joinMsg: () => ({ name: this.name, hints: this.hints }),
       onStatus: (t, k) => { this.h.onNet && this.h.onNet(t, k, () => this.room.retryNow()); },

@@ -3,6 +3,7 @@ import { createGame, applyAction, viewFor, resolveWindow, waitingOn, getPlayer, 
 import { botAction, botNope } from './bot.js?v=8';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=5';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
+import { watch } from '../../shared/ui/stats.js?v=1';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 // ⚙️ Luật mặc định khi tạo phòng mới: lấy từ luat-mac-dinh.js (gốc repo); giá trị sai/thiếu → giữ luật gốc trong code
@@ -30,7 +31,7 @@ export function setSpeedFn(f) { speedK = f; }
 
 export class Host {
   constructor(name, handlers, offline = false, restore = null) {
-    this.h = handlers; this.offline = offline;
+    this.h = watch(GAME, handlers, () => 'host'); this.offline = offline;
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.timers = {}; this.clock = null; this.graceUntil = 0;
     this.hs = Math.random().toString(36).slice(2, 8); // mã phiên chủ phòng (đổi khi tải lại trang)
@@ -245,7 +246,7 @@ export class Host {
 
 export class Client {
   constructor(code, name, handlers) {
-    this.h = handlers; this.code = code.toUpperCase().trim(); this.name = name; this.id = null;
+    this.h = watch(GAME, handlers, () => this.id); this.code = code.toUpperCase().trim(); this.name = name; this.id = null;
     this.hs = null; this.bc = 0; this.joined = false; this.lastRx = Date.now();
     this.diag = { rx: 0, lastRx: 0, status: [], reconnects: 0, why: [], dropped: 0, syncs: 0 };
     this.makeRoom();

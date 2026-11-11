@@ -3,6 +3,7 @@ import { createGame, applyAction, viewFor, actors, timeout, phaseMs, DEFAULT_OPT
 import { botAction, botDayPlan, botWolfLine, botGhostLine, botLastWords } from './bot.js?v=3';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=5';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
+import { watch } from '../../shared/ui/stats.js?v=1';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 // câu chọc riêng của Ma Sói (bảng thả emoji – shared/ui/react.js)
@@ -35,7 +36,7 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 
 export class Host {
   constructor(name, handlers, offline = false, restore = null) {
-    this.h = handlers; this.offline = offline;
+    this.h = watch(GAME, handlers, () => 'host'); this.offline = offline;
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.timers = {}; this.botT = {}; this.curPk = null; this.deadline = 0; this.total = 1; this.lastChat = {};
     this.opts = cfgOpts();
@@ -315,7 +316,7 @@ export class Host {
 
 export class Client {
   constructor(code, name, handlers) {
-    this.h = handlers; this.code = code.toUpperCase().trim(); this.name = name; this.id = null;
+    this.h = watch(GAME, handlers, () => this.id); this.code = code.toUpperCase().trim(); this.name = name; this.id = null;
     this.room = new RoomClient({
       ns: NS, prefix: PREFIX, code: this.code, joinMsg: () => ({ name: this.name }),
       onStatus: (t, k) => { this.h.onNet && this.h.onNet(t, k, () => this.room.retryNow()); },

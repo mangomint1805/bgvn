@@ -6,6 +6,13 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261111-7', date: '11/11/2026', game: 'all', title: 'Hồ sơ, cấp độ và thành tích', items: [
+    '🏅 Mỗi người chơi có hồ sơ riêng: số ván đã chơi, số ván thắng, tỉ lệ thắng, chuỗi thắng dài nhất – tính cho cả 15 game.',
+    '⭐ Chơi là lên cấp: từ Tân binh tới Truyền kỳ (mỗi ván +10 điểm, thắng +20 điểm nữa).',
+    '🎖️ 16 thành tích để săn: Cao thủ, Cú đêm, Không thể cản, Sưu tầm gia… Mở khoá là có thông báo ngay trong ván.',
+    '🦊 Chọn hình đại diện và màu nền cho mình. Mở hồ sơ bằng hình tròn cạnh nút ⚙️ ở trang chủ, hoặc dòng "Hồ sơ & thành tích" trong từng game.',
+    '💾 Hồ sơ lưu trên máy bạn đang dùng (chưa đồng bộ giữa các máy).',
+  ] },
   { id: '20261111-6', date: '11/11/2026', game: 'all', title: 'Mời bạn bằng mã QR + chuyển trang mượt', items: [
     '📨 Trong phòng chờ có nút "Mời bạn (mã QR)": bạn bè ngồi cạnh chỉ cần giơ camera quét là vào phòng. Trên điện thoại có luôn nút Chia sẻ qua Zalo, Messenger…',
     '✨ Chuyển giữa các trang mượt hơn, tải lâu thì có màn hình chờ với bé xúc xắc nhún nhảy.',

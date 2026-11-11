@@ -6,6 +6,7 @@ import { S } from './fx.js?v=50';
 import { OPTIONS, PRESETS } from '../../shared/js/avatar3d.js';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=5';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
+import { watch } from '../../shared/ui/stats.js?v=1';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 const NS = 'bgvn-typhu', PREFIX = 'bgvn-typhu-', GAME = 'typhu', SNAP = 'bgvn-hostsnap-' + GAME;
@@ -50,7 +51,7 @@ const randomPreset = () => ({ ...PRESETS[Math.floor(Math.random() * PRESETS.leng
 export class Host {
   // me: { name, avatar }
   constructor(me, handlers, offline = false, restore = null) {
-    this.h = handlers; this.offline = offline;
+    this.h = watch(GAME, handlers, () => 'host'); this.offline = offline;
     this.players = [{ id: 'host', name: me.name, avatar: cleanAvatar(me.avatar), isBot: false, local: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.timer = null; this.afk = null;
     this.lim = hostLimiter(); this.botReactAt = 0;
@@ -212,7 +213,7 @@ export class Host {
 
 export class Client {
   constructor(code, me, handlers) {
-    this.h = handlers; this.code = code.toUpperCase().trim(); this.me = me; this.id = null;
+    this.h = watch(GAME, handlers, () => this.id); this.code = code.toUpperCase().trim(); this.me = me; this.id = null;
     this.room = new RoomClient({
       ns: NS, prefix: PREFIX, code: this.code, joinMsg: () => ({ name: this.me.name, avatar: this.me.avatar }),
       onStatus: (t, k) => { this.h.onNet && this.h.onNet(t, k, () => this.room.retryNow()); },

@@ -6,6 +6,7 @@ import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
+import { watch } from '../../shared/ui/stats.js?v=1';
 const NS = 'bgvn-uno', PREFIX = 'bgvn-uno-', GAME = 'uno';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
@@ -25,7 +26,7 @@ const BOT_POOLS = { attack: ['Ăn +4 đi cưng', 'Khoá mõm nè!'], hurt: ['C�
 
 export class Host {
   constructor(name, handlers, offline = false, restore = null) {
-    this.h = handlers; this.offline = offline;
+    this.h = watch(GAME, handlers, () => 'host'); this.offline = offline;
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.botTimer = null; this.catchTimer = null;
     this.mode = CFG.mode; this.rules = modeRules(CFG.mode);
@@ -205,7 +206,7 @@ export class Host {
 
 export class Client {
   constructor(code, name, handlers) {
-    this.h = handlers; this.code = code.toUpperCase().trim(); this.name = name; this.id = null;
+    this.h = watch(GAME, handlers, () => this.id); this.code = code.toUpperCase().trim(); this.name = name; this.id = null;
     this.room = new RoomClient({
       ns: NS, prefix: PREFIX, code: this.code, joinMsg: () => ({ name: this.name }),
       onStatus: (t, k) => { this.h.onNet && this.h.onNet(t, k, () => this.room.retryNow()); },

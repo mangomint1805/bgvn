@@ -2,6 +2,7 @@
 // Nét vẽ đi riêng (tin 'draw' theo lô ~100ms, chủ phòng chuyển tiếp), người vào muộn nhận lại cả lịch sử ('canvas').
 import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, bookItems, shiftTime, cleanOpts, DEFAULT_OPTS, maxPlayers, MAX_CROWD, MAX_NORMAL, checkTease } from './engine.js?v=7';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=5';
+import { watch } from '../../shared/ui/stats.js?v=1';
 import { isReact, hostLimiter } from '../../shared/ui/react.js?v=2';
 import { CATS } from './words.js?v=5';
 import { GMODES, REVEAL_AUTO } from './engine.js?v=7';
@@ -41,7 +42,7 @@ const clone = o => JSON.parse(JSON.stringify(o));
 
 export class Host {
   constructor(name, handlers, restore = null, offline = false) {
-    this.h = handlers; this.isHost = true; this.offline = !!(offline || (restore && restore.offline));
+    this.h = watch(GAME, handlers, () => 'host'); this.isHost = true; this.offline = !!(offline || (restore && restore.offline));
     this.players = [{ id: 'host', name, token: token(), conn: null, connected: true }];
     this.opts = cfgOpts(); this.state = null; this.conns = new Map(); this.lastGuess = {}; this.lim = hostLimiter();
     if (restore) {
@@ -221,7 +222,7 @@ export class Host {
 
 export class Client {
   constructor(code, name, handlers) {
-    this.h = handlers; this.isHost = false; this.code = code.toUpperCase().trim(); this.name = name; this.id = null;
+    this.h = watch(GAME, handlers, () => this.id); this.isHost = false; this.code = code.toUpperCase().trim(); this.name = name; this.id = null;
     this.room = new RoomClient({
       ns: NS, prefix: PREFIX, code: this.code, joinMsg: () => ({ name: this.name }),
       onStatus: (t, k) => { this.h.onNet && this.h.onNet(t, k, () => this.room.retryNow()); },

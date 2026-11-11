@@ -5,6 +5,7 @@ import { botAction } from './bot.js?v=2';
 import { S } from './fx.js?v=2';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=5';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
+import { watch } from '../../shared/ui/stats.js?v=1';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 // Câu chọc riêng của BANG! (bảng thả emoji – shared/ui/react.js), mỗi câu ≤ 24 ký tự
 export const BANG_PHRASES = ['Né đi cưng!', 'Bang bang 🔫', 'Uống Beer đi', 'Trật rồi nha!', 'Sếp ơi cứu!', 'Tui là Phó mà 😭', 'Gà quá!'];
@@ -18,7 +19,7 @@ const BOT_NAMES = ['Django', 'Clint', 'Tuco', 'Calamity', 'Doc', 'Billy', 'Wyatt
 // ======================= HOST =======================
 export class Host {
   constructor(name, handlers, offline = false, restore = null) {
-    this.h = handlers; // {onLobby(players, code), onState(view), onError(msg)}
+    this.h = watch(GAME, handlers, () => 'host'); // {onLobby(players, code), onState(view), onError(msg)}
     this.offline = offline;
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null;
@@ -177,7 +178,7 @@ export class Host {
 // ======================= CLIENT =======================
 export class Client {
   constructor(code, name, handlers) {
-    this.h = handlers; this.code = code.toUpperCase().trim(); this.name = name; this.id = null;
+    this.h = watch(GAME, handlers, () => this.id); this.code = code.toUpperCase().trim(); this.name = name; this.id = null;
     this.room = new RoomClient({
       ns: NS, prefix: PREFIX, code: this.code, joinMsg: () => ({ name: this.name }),
       onStatus: (t, k) => { this.h.onNet && this.h.onNet(t, k, () => this.room.retryNow()); this.h.onStatus && k !== 'ok' && this.h.onStatus(t); },

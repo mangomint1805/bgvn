@@ -1,4 +1,4 @@
-import { Host, Client, MAX, maxPlayers, loadSnapshot, session, PHRASES, SOLO_DEFAULT } from './net.js?v=11';
+import { Host, Client, MAX, maxPlayers, loadSnapshot, session, PHRASES, SOLO_DEFAULT } from './net.js?v=12';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
@@ -10,7 +10,7 @@ import { encodeGif } from './gif.js?v=5';
 import { opsBytes, simplifyOps } from './ops.js?v=5';
 import * as fx from './fx.js?v=6';
 import { guideHTML } from './guide.js?v=9';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=110';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=111';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];

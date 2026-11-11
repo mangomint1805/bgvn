@@ -1,4 +1,4 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, MEO_PHRASES } from './net.js?v=13';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, MEO_PHRASES } from './net.js?v=14';
 import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { createReactions } from '../../shared/ui/react.js?v=2';
@@ -7,7 +7,7 @@ import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat,
 import { cardHTML, catSVG, bombSVG, cardIcon, mascotSVG, tint } from './cards.js?v=8';
 import * as fx from './mfx.js?v=9';
 import { openGuide } from './guide.js?v=10';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=110';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=111';
 import { startPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 setSpeedFn(fx.S);
 

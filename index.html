@@ -127,6 +127,8 @@ footer a{color:inherit}
 .tile .art .ic{display:block;height:100%;max-width:68%;margin:0 auto;object-fit:contain;animation:tb 3.2s ease-in-out infinite;pointer-events:none}
 .tile:hover .art .ic{animation-duration:1.4s}
 @media (prefers-reduced-motion:reduce){.tile .art .ic{animation:none}}
+  .profbtn{border:0;background:none;padding:0;cursor:pointer;border-radius:50%;display:grid;position:relative;transition:transform .2s}.profbtn:hover{transform:scale(1.08)}
+.profbtn .lv{position:absolute;right:-5px;bottom:-4px;min-width:20px;height:20px;padding:0 4px;border-radius:999px;background:var(--ink);color:#fff;font:800 11px/20px Nunito,sans-serif;text-align:center;box-shadow:0 0 0 2px #fff7ef}
 /* ===== Giao diện 11/2026: thanh trên, hero, mục hot, bộ lọc, chân trang ===== */
 html{scroll-behavior:smooth;scroll-padding-top:84px}
 .nav{position:sticky;top:0;z-index:50;background:#fff7efd9;backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid #2a234012;transition:box-shadow .2s}
@@ -216,7 +218,7 @@ main{max-width:1080px;padding:28px 16px 32px}
       <button type="button" data-feedback="">Góp ý</button>
       <button type="button" data-donate>Ủng hộ</button>
     </nav>
-    <div class="acct"><button class="setbtn" id="btn-set" type="button" aria-label="Cài đặt" title="Cài đặt"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.900 2.900l-.1-.1a1.700 1.700 0 0 0-1.800-.300 1.700 1.700 0 0 0-1 1.500V21a2 2 0 1 1-4 0v-.100a1.700 1.700 0 0 0-1.100-1.500 1.700 1.700 0 0 0-1.800.300l-.100.100a2 2 0 1 1-2.900-2.900l.100-.100a1.700 1.700 0 0 0 .300-1.800 1.700 1.700 0 0 0-1.500-1H3a2 2 0 1 1 0-4h.100a1.700 1.700 0 0 0 1.500-1.100 1.700 1.700 0 0 0-.300-1.800l-.100-.100a2 2 0 1 1 2.900-2.900l.100.100a1.700 1.700 0 0 0 1.800.300H9a1.700 1.700 0 0 0 1-1.500V3a2 2 0 1 1 4 0v.100a1.700 1.700 0 0 0 1 1.500 1.700 1.700 0 0 0 1.800-.300l.100-.100a2 2 0 1 1 2.900 2.900l-.100.100a1.700 1.700 0 0 0-.300 1.800V9a1.700 1.700 0 0 0 1.500 1H21a2 2 0 1 1 0 4h-.100a1.700 1.700 0 0 0-1.500 1z"/></svg></button><span id="acct"></span></div>
+    <div class="acct"><button class="profbtn" id="btn-prof" type="button" aria-label="Hồ sơ và thành tích" title="Hồ sơ & thành tích"></button><button class="setbtn" id="btn-set" type="button" aria-label="Cài đặt" title="Cài đặt"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.900 2.900l-.1-.1a1.700 1.700 0 0 0-1.800-.300 1.700 1.700 0 0 0-1 1.500V21a2 2 0 1 1-4 0v-.100a1.700 1.700 0 0 0-1.100-1.500 1.700 1.700 0 0 0-1.800.300l-.100.100a2 2 0 1 1-2.900-2.900l.100-.100a1.700 1.700 0 0 0 .300-1.800 1.700 1.700 0 0 0-1.500-1H3a2 2 0 1 1 0-4h.100a1.700 1.700 0 0 0 1.500-1.100 1.700 1.700 0 0 0-.300-1.800l-.100-.100a2 2 0 1 1 2.900-2.900l.100.100a1.700 1.700 0 0 0 1.800.300H9a1.700 1.700 0 0 0 1-1.500V3a2 2 0 1 1 4 0v.100a1.700 1.700 0 0 0 1 1.500 1.700 1.700 0 0 0 1.800-.300l.100-.100a2 2 0 1 1 2.900 2.900l-.100.100a1.700 1.700 0 0 0-.300 1.800V9a1.700 1.700 0 0 0 1.500 1H21a2 2 0 1 1 0 4h-.100a1.700 1.700 0 0 0-1.500 1z"/></svg></button><span id="acct"></span></div>
   </div>
 </header>
 <main>
@@ -383,9 +385,9 @@ function fitTitles(){document.querySelectorAll('.grid .tile .info h2,.hero-card 
 addEventListener('load',fitTitles);addEventListener('resize',()=>{clearTimeout(fitTitles.t);fitTitles.t=setTimeout(fitTitles,120)});document.fonts&&document.fonts.ready.then(fitTitles);
 </script>
 <script type="module" src="shared/ui/feedback.js?v=4"></script>
-<script type="module">import { mountAccount } from "./shared/ui/account.js?v=4"; import { mountOnline } from "./shared/net/presence.js?v=5"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=3").then(m => m.openSettings());</script>
+<script type="module">import { mountAccount } from "./shared/ui/account.js?v=5"; import { mountOnline } from "./shared/net/presence.js?v=5"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} import("./shared/ui/profile.js?v=1").then(async m => { const st = await import("./shared/ui/stats.js?v=1"); m.profileCss(); const b = document.getElementById("btn-prof"), d = () => { b.innerHTML = m.avatarHTML(42) + `<span class="lv">${st.level().lv}</span>`; }; d(); addEventListener("bgvn-avatar", d); addEventListener("bgvn-stats", d); b.onclick = () => m.openProfile(); }); document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=4").then(m => m.openSettings());</script>
 <script type="module">
-import { openNews, newsBadge } from './shared/ui/news.js?v=110';
+import { openNews, newsBadge } from './shared/ui/news.js?v=111';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 const json = k => { try { return JSON.parse(ls.get(k)); } catch (e) { return null; } };
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
@@ -397,7 +399,7 @@ const nav = $('#nav'), onScroll = () => nav.classList.toggle('stuck', scrollY > 
 if (!ls.get('bgvn-visited')) {
   ls.set('bgvn-visited', String(Date.now()));
   let old = false; try { old = Object.keys(localStorage).some(k => k.startsWith('bgvn-news-seen-') || k.startsWith('bgvn-session-') || k === 'bgvn-name'); } catch (e) {}
-  if (!old) import('./shared/patchnotes.js?v=69').then(m => { ['all', ...tiles.map(t => t.dataset.game)].forEach(g => { const id = m.latestId(g === 'all' ? null : g); if (id) ls.set('bgvn-news-seen-' + g, id); }); });
+  if (!old) import('./shared/patchnotes.js?v=70').then(m => { ['all', ...tiles.map(t => t.dataset.game)].forEach(g => { const id = m.latestId(g === 'all' ? null : g); if (id) ls.set('bgvn-news-seen-' + g, id); }); });
   else marks();
 } else marks();
 function marks() { $$('#btn-news,#btn-news-m').forEach(b => newsBadge(b, null)); $$('.grid .newtag[data-news]').forEach(t => newsBadge(t, t.dataset.news)); }

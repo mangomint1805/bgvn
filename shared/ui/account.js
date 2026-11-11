@@ -1,7 +1,8 @@
 // 👤 Tài khoản BGVN (tuỳ chọn): nút đăng nhập + hộp đăng nhập / tạo tài khoản / Google.
-// Dùng: import { mountAccount, openLogin } from '…/shared/ui/account.js?v=4'; mountAccount(element)
+// Dùng: import { mountAccount, openLogin } from '…/shared/ui/account.js?v=5'; mountAccount(element)
 import { auth } from '../net/api.js?v=1';
 import { promptBox, formBox } from './dialog.js?v=1';
+import { avatarHTML, profileCss, openProfile } from './profile.js?v=1';
 
 const CSS = `.ac-btn{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 14px;border-radius:999px;border:1.5px solid #ecdfd0;background:#fff;color:#2a2340;font:800 14px Nunito,system-ui,sans-serif;cursor:pointer;max-width:220px}
 .ac-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ac-btn .v{color:#2f9e5b}
@@ -83,7 +84,7 @@ function menu(anchor) {
   document.querySelector('.ac-menu')?.remove();
   const m = document.createElement('div'); m.className = 'ac-menu';
   const u = auth.user();
-  m.innerHTML = `<div style="padding:8px 12px;color:#8a7f96;font-size:13px">${u.username ? '@' + esc(u.username) : 'Tài khoản Google'}</div>${u.admin ? '<button data-a="admin">🛠️ Quản trị BGVN</button>' : ''}<button data-a="set">⚙️ Cài đặt</button><button data-a="name">✏️ Đổi tên hiển thị</button>${u.username ? '<button data-a="pw">🔑 Đổi mật khẩu</button>' : ''}<button data-a="out">🚪 Đăng xuất</button>`;
+  m.innerHTML = `<div style="padding:8px 12px;color:#8a7f96;font-size:13px">${u.username ? '@' + esc(u.username) : 'Tài khoản Google'}</div>${u.admin ? '<button data-a="admin">🛠️ Quản trị BGVN</button>' : ''}<button data-a="prof">🏅 Hồ sơ &amp; thành tích</button><button data-a="set">⚙️ Cài đặt</button><button data-a="name">✏️ Đổi tên hiển thị</button>${u.username ? '<button data-a="pw">🔑 Đổi mật khẩu</button>' : ''}<button data-a="out">🚪 Đăng xuất</button>`;
   document.body.append(m);
   const r = anchor.getBoundingClientRect(); m.style.top = (r.bottom + scrollY + 6) + 'px'; m.style.left = Math.max(8, Math.min(r.right + scrollX - m.offsetWidth, innerWidth - m.offsetWidth - 8)) + 'px';
   const off = e => { if (!m.contains(e.target)) { m.remove(); removeEventListener('pointerdown', off, true); } };
@@ -92,7 +93,8 @@ function menu(anchor) {
     const a = e.target.closest('button')?.dataset.a; if (!a) return; m.remove();
     if (a === 'out') { await auth.logout(); toast('Đã đăng xuất'); }
     if (a === 'admin') location.href = new URL('../../quantri/', import.meta.url).href;
-    if (a === 'set') import('./settings.js?v=3').then(m => m.openSettings());
+    if (a === 'prof') openProfile();
+    if (a === 'set') import('./settings.js?v=4').then(m => m.openSettings());
     if (a === 'name') { const n = await promptBox('Tên này hiện khi bạn vào phòng và chat (2–20 ký tự).', { title: '✏️ Đổi tên hiển thị', value: u.name, maxlength: 20, ok: 'Đổi tên', required: true }); if (n) { const r = await auth.rename(n); toast(r.ok ? 'Đổi tên rồi nè ✨' : r.msg); } }
     if (a === 'pw') {
       const v = await formBox('🔑 Đổi mật khẩu', [{ id: 'o', label: 'Mật khẩu hiện tại', type: 'password', autocomplete: 'current-password' }, { id: 'n', label: 'Mật khẩu mới (ít nhất 6 ký tự)', type: 'password', autocomplete: 'new-password', maxlength: 100 }], { ok: 'Đổi mật khẩu', validate: v => !v.o ? 'Nhập mật khẩu hiện tại nha' : v.n.length < 6 ? 'Mật khẩu mới cần ít nhất 6 ký tự' : '' });
@@ -104,9 +106,9 @@ function menu(anchor) {
 export function mountAccount(el) {
   css();
   const draw = u => {
-    el.innerHTML = u ? `<button class="ac-btn" type="button" aria-haspopup="menu">😊 <span>${esc(u.name)}</span> <b class="v" title="Đã đăng nhập">✓</b></button>` : `<button class="ac-btn" type="button">👤 <span>Đăng nhập</span></button>`;
+    el.innerHTML = u ? `<button class="ac-btn" type="button" aria-haspopup="menu" style="padding-left:5px">${avatarHTML(30)} <span>${esc(u.name)}</span> <b class="v" title="Đã đăng nhập">✓</b></button>` : `<button class="ac-btn" type="button">👤 <span>Đăng nhập</span></button>`;
     el.firstElementChild.onclick = e => u ? menu(e.currentTarget) : openLogin();
   };
-  draw(auth.user()); auth.onChange(draw);
+  profileCss(); draw(auth.user()); auth.onChange(draw); addEventListener('bgvn-avatar', () => draw(auth.user()));
   if (auth.user()) auth.refresh(); // phiên hết hạn → tự đăng xuất
 }
