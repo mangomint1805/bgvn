@@ -9,7 +9,7 @@
 /* màn hình chờ: chỉ hiện khi trang tải lâu hơn ~0,35 giây */
 #bgvn-splash{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;background:#fff7ef;opacity:0;pointer-events:none;animation:bgvn-sp-in .2s .35s forwards}
 #bgvn-splash.out{animation:none;opacity:0;transition:opacity .3s}
-#bgvn-splash i{display:block;width:92px;height:92px;background:url("/favicon.svg?v=1") center/contain no-repeat;animation:bgvn-sp-b 1s cubic-bezier(.3,0,.3,1) infinite;filter:drop-shadow(0 14px 14px #ff4d6a55)}
+#bgvn-splash i{display:block;width:92px;height:92px;background:url("../../favicon.svg?v=1") center/contain no-repeat;animation:bgvn-sp-b 1s cubic-bezier(.3,0,.3,1) infinite;filter:drop-shadow(0 14px 14px #ff4d6a55)}
 #bgvn-splash b{position:absolute;left:50%;top:calc(50% + 74px);transform:translateX(-50%);width:120px;height:6px;border-radius:999px;background:#2a23401a;overflow:hidden}
 #bgvn-splash b::after{content:"";position:absolute;inset:0;width:40%;border-radius:999px;background:linear-gradient(90deg,#ff4d6a,#ffb23d);animation:bgvn-sp-l 1s ease-in-out infinite}
 @keyframes bgvn-sp-in{to{opacity:1;pointer-events:auto}}

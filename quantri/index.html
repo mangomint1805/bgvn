@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quản trị – BGVN</title>
 <meta name="robots" content="noindex">
-<link rel="icon" href="/favicon.svg?v=1" type="image/svg+xml"><link rel="apple-touch-icon" href="/shared/img/brand/apple-touch-icon.png?v=1"><link rel="manifest" href="/manifest.webmanifest?v=1"><meta name="apple-mobile-web-app-title" content="BGVN"><meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="../favicon.svg?v=1" type="image/svg+xml"><link rel="apple-touch-icon" href="../shared/img/brand/apple-touch-icon.png?v=1"><link rel="manifest" href="../manifest.webmanifest?v=2"><meta name="apple-mobile-web-app-title" content="BGVN"><meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
 <style>
@@ -29,11 +29,11 @@ button{background:var(--ink);color:#fff;border:0;cursor:pointer;font-weight:800}
 .bar.warn i{background:#f5a524}.bar.full i{background:#e0384a}.alert{border-radius:14px;padding:10px 14px;margin:8px 0;font-weight:800}.alert.warn{background:#fff1d6;color:#8a5a00}.alert.full{background:#ffd9dc;color:#a01828}
 .days{display:flex;gap:6px;align-items:flex-end;height:70px;margin-top:10px}.days div{flex:1;text-align:center;font-size:11px;color:var(--muted)}.days span{display:block;background:#c9b8f5;border-radius:6px 6px 0 0;margin:0 auto 2px;width:70%;min-height:2px}#st{min-height:22px;color:#c0263b;font-weight:700}
 </style>
-<link rel="stylesheet" href="/shared/ui/shell.css?v=1">
+<link rel="stylesheet" href="../shared/ui/shell.css?v=2">
 </head>
 <body>
 <div id="bgvn-splash" aria-hidden="true"><i></i><b></b></div><script>(function(){var s=document.getElementById("bgvn-splash");function h(){if(!s)return;var x=s;s=null;x.className="out";setTimeout(function(){x.remove()},320)}addEventListener("load",h);addEventListener("pageshow",h);setTimeout(h,4500)})()</script><main>
-  <div class="top"><a class="back bgvn-chip" href="../" aria-label="Về trang chủ BGVN" title="Về trang chủ BGVN"><img src="/favicon.svg?v=1" alt="" width="26" height="26"><span>BGVN</span></a><h1>🛠️ Quản trị BGVN</h1><span id="acct"></span></div>
+  <div class="top"><a class="back bgvn-chip" href="../" aria-label="Về trang chủ BGVN" title="Về trang chủ BGVN"><img src="../favicon.svg?v=1" alt="" width="26" height="26"><span>BGVN</span></a><h1>🛠️ Quản trị BGVN</h1><span id="acct"></span></div>
   <div id="gate" class="card" hidden></div>
   <div id="panel" hidden>
     <div class="card use" id="use"><p class="muted">Đang tải hạn mức…</p></div>
@@ -121,5 +121,5 @@ $('#l').onclick = async e => {
   if (b.dataset.pw) { const pw = await promptBox('Đặt xong thì nhắn mật khẩu mới cho người đó.', { title: '🔑 Đặt lại mật khẩu', placeholder: 'Mật khẩu mới (ít nhất 6 ký tự)', maxlength: 100, ok: 'Đặt lại' }); if (pw && pw.length >= 6) { await api({ op: 'user', id: b.dataset.pw, patch: { password: pw } }); await alertBox('Nhắn người đó mật khẩu mới nha.', { title: '✅ Đã đặt lại mật khẩu' }); } else if (pw) await alertBox('Mật khẩu cần ít nhất 6 ký tự.', { title: 'Chưa đặt được' }); }
 };
 </script>
-<script type="module" src="/shared/ui/feel.js?v=3"></script>
+<script type="module" src="../shared/ui/feel.js?v=3"></script>
 </body></html>

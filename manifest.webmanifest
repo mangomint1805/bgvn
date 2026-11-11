@@ -3,20 +3,20 @@
   "short_name": "BGVN",
   "description": "Board game và game bài tiếng Việt chơi online cùng bạn bè. Mở là chơi, không cần cài đặt.",
   "lang": "vi",
-  "start_url": "/?src=app",
-  "scope": "/",
+  "start_url": "./?src=app",
+  "scope": "./",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#fff7ef",
   "theme_color": "#fff7ef",
   "categories": ["games", "entertainment"],
   "icons": [
-    { "src": "/shared/img/brand/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/shared/img/brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/shared/img/brand/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    { "src": "shared/img/brand/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "shared/img/brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "shared/img/brand/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ],
   "shortcuts": [
-    { "name": "Sảnh chung", "url": "/sanh/", "description": "Tìm phòng công khai và chat" }
+    { "name": "Sảnh chung", "url": "./sanh/", "description": "Tìm phòng công khai và chat" }
   ]
 }

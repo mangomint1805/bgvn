@@ -9,7 +9,7 @@
 <meta property="og:description" content="Phòng công khai của mọi game + chat chung. Bấm là vào chơi, không cần cài đặt.">
 <meta property="og:image" content="https://boardgamevui.com/shared/img/og.jpg?v=2">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="/favicon.svg?v=1" type="image/svg+xml"><link rel="apple-touch-icon" href="/shared/img/brand/apple-touch-icon.png?v=1"><link rel="manifest" href="/manifest.webmanifest?v=1"><meta name="apple-mobile-web-app-title" content="BGVN"><meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="../favicon.svg?v=1" type="image/svg+xml"><link rel="apple-touch-icon" href="../shared/img/brand/apple-touch-icon.png?v=1"><link rel="manifest" href="../manifest.webmanifest?v=2"><meta name="apple-mobile-web-app-title" content="BGVN"><meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
 <style>
@@ -31,13 +31,13 @@ h1 span{background:linear-gradient(90deg,#7b61ff,#3d8bff,#2fc76f);-webkit-backgr
 @media (min-width:761px){#lobby .lb{height:calc(100dvh - 190px);min-height:480px}}
 @media (max-width:520px){.top h1{order:3;flex-basis:100%}}
 </style>
-<link rel="stylesheet" href="/shared/ui/shell.css?v=1">
+<link rel="stylesheet" href="../shared/ui/shell.css?v=2">
 </head>
 <body>
 <div id="bgvn-splash" aria-hidden="true"><i></i><b></b></div><script>(function(){var s=document.getElementById("bgvn-splash");function h(){if(!s)return;var x=s;s=null;x.className="out";setTimeout(function(){x.remove()},320)}addEventListener("load",h);addEventListener("pageshow",h);setTimeout(h,4500)})()</script>
 <i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="blob b4"></i>
 <main>
-  <div class="top"><a class="back bgvn-chip" href="../" aria-label="Về trang chủ BGVN" title="Về trang chủ BGVN"><img src="/favicon.svg?v=1" alt="" width="26" height="26"><span>BGVN</span></a><h1>🌐 <span>Sảnh chung</span></h1><div id="acct"></div></div>
+  <div class="top"><a class="back bgvn-chip" href="../" aria-label="Về trang chủ BGVN" title="Về trang chủ BGVN"><img src="../favicon.svg?v=1" alt="" width="26" height="26"><span>BGVN</span></a><h1>🌐 <span>Sảnh chung</span></h1><div id="acct"></div></div>
   <p class="sub">Tìm phòng công khai để vào chơi cùng người lạ, hoặc tạo phòng rồi bật <b>🌐 Công khai</b> để rủ thêm người 🥰</p>
   <p class="online" id="online" hidden></p>
   <div id="lobby"></div>
@@ -52,6 +52,6 @@ const g = new URLSearchParams(location.search).get('game');
 const L = mountLobby(document.getElementById('lobby'), {});
 if (g) setTimeout(() => document.querySelector(`.lb-gf button[data-g="${CSS.escape(g)}"]`)?.click(), 0);
 </script>
-<script type="module" src="/shared/ui/feel.js?v=3"></script>
+<script type="module" src="../shared/ui/feel.js?v=3"></script>
 </body>
 </html>
