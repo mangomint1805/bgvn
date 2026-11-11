@@ -1,4 +1,4 @@
-// 🏅 Thống kê + thành tích của người chơi (lưu trên máy này – localStorage 'bgvn-stats'; chưa gửi lên máy chủ).
+// 🏅 Thống kê + thành tích của người chơi (lưu trên máy này – localStorage 'bgvn-stats'; ai đăng nhập thì shared/ui/sync.js đồng bộ thêm lên tài khoản).
 // Mỗi net.js bọc handlers: this.h = watch(GAME, handlers, () => this.id) → tự đếm ván đã chơi / thắng khi ván kết thúc.
 // Thêm game mới: thêm 1 dòng vào bảng OVER bên dưới (trả null khi ván CHƯA xong; { won: true/false/null } khi xong).
 const KEY = 'bgvn-stats';
@@ -79,3 +79,7 @@ export function watch(game, handlers, getId) {
   w.onState = function (view, ...rest) { observe(game, view, getId ? getId() : null); return handlers.onState.call(handlers, view, ...rest); };
   return w;
 }
+// ☁️ có đăng nhập thì nạp phần đồng bộ hồ sơ theo tài khoản (khách không nạp gì thêm)
+const hasAuth = () => { try { return !!JSON.parse(ls.get('bgvn-auth') || 'null'); } catch (e) { return false; } };
+let syncOn = false; const startSync = () => { if (syncOn || !hasAuth()) return; syncOn = true; import('./sync.js?v=1').catch(() => { syncOn = false; }); };
+try { startSync(); addEventListener('bgvn-auth', startSync); } catch (e) {}

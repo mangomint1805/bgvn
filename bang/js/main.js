@@ -2,11 +2,11 @@
 import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { CARD_INFO, CHARACTERS, ROLES, SUIT_SYMBOL, rankLabel, cardLabel, suitify } from './cards.js';
-import { Host, Client, loadSnapshot, session, BANG_PHRASES } from './net.js?v=19';
+import { Host, Client, loadSnapshot, session, BANG_PHRASES } from './net.js?v=21';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { confirmBox } from '../../shared/ui/dialog.js?v=1';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=120';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=121';
 import { syncPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 import { imgTag, avatarTag } from './images.js';
 import { BANG_DEFAULTS, S, SPEEDS, getSpeed, setSpeed, sfx, cardSfx, gunSfx, fly, shake, flash, floatText, banner, toggleMute, isMuted, shoot, arrows, explode, sparkle, confetti, stamp, screenShake } from './fx.js?v=2';

@@ -44,9 +44,9 @@ h1 span{background:linear-gradient(90deg,#7b61ff,#3d8bff,#2fc76f);-webkit-backgr
   <div id="lobby"></div>
 </main>
 <script type="module">
-import { mountAccount } from '../shared/ui/account.js?v=7';
-import { mountLobby } from '../shared/ui/lobby.js?v=7';
-import { mountOnline } from '../shared/net/presence.js?v=6';
+import { mountAccount } from '../shared/ui/account.js?v=9';
+import { mountLobby } from '../shared/ui/lobby.js?v=9';
+import { mountOnline } from '../shared/net/presence.js?v=8';
 mountOnline(document.getElementById('online'));
 mountAccount(document.getElementById('acct'));
 const g = new URLSearchParams(location.search).get('game');

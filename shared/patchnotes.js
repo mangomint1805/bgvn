@@ -7,6 +7,11 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261112-2', date: '12/11/2026', game: 'all', title: 'Hồ sơ đi theo tài khoản', items: [
+    '☁️ Đã đăng nhập thì số ván, cấp độ, thành tích và hình đại diện được lưu theo tài khoản – đổi điện thoại hay mở máy khác, đăng nhập là thấy lại.',
+    '🧳 Những ván bạn chơi lúc chưa đăng nhập trên máy này sẽ được cộng vào tài khoản ở lần đăng nhập đầu.',
+    '👤 Chơi không đăng nhập vẫn như cũ: hồ sơ nằm trên máy bạn.',
+  ] },
   { id: '20261112-1', date: '12/11/2026', game: 'all', title: 'Màn "Học chơi nhanh" + trang luật cho mọi game', items: [
     '🎓 Lần đầu vào một game sẽ có màn học chơi nhanh: vài bước có hình, chưa tới 1 phút, vuốt để chuyển bước. Mở lại bằng nút "🎓 Học chơi nhanh" cạnh nút Hướng dẫn.',
     '📖 Mỗi game có thêm trang luật chơi riêng (đuôi /huong-dan/) để đọc hoặc gửi cho bạn mới.',

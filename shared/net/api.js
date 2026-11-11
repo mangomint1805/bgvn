@@ -24,7 +24,7 @@ async function call(path, data, token) {
 const KEY = 'bgvn-auth';
 const subs = new Set();
 function load() { try { return JSON.parse(ls.get(KEY)) || null; } catch (e) { return null; } }
-function save(d) { if (d) ls.set(KEY, JSON.stringify(d)); else ls.del(KEY); if (d && d.user && d.user.name) ls.set('bgvn-name', d.user.name); subs.forEach(f => { try { f(d && d.user); } catch (e) {} }); }
+function save(d) { if (d) ls.set(KEY, JSON.stringify(d)); else ls.del(KEY); if (d && d.user && d.user.name) ls.set('bgvn-name', d.user.name); subs.forEach(f => { try { f(d && d.user); } catch (e) {} }); try { dispatchEvent(new CustomEvent('bgvn-auth')); } catch (e) {} }
 const done = r => { if (r.ok && r.token) save({ token: r.token, user: r.user }); return r; };
 let cfg = null;
 export const auth = {

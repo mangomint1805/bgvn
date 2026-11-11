@@ -23,6 +23,7 @@ export class Users extends DurableObject {
     this.sql.exec(`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, name TEXT, pw TEXT, salt TEXT, google TEXT UNIQUE, email TEXT, created INTEGER, banned INTEGER DEFAULT 0)`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS sessions (tok TEXT PRIMARY KEY, uid INTEGER, exp INTEGER)`);
     try { this.sql.exec('ALTER TABLE users ADD COLUMN admin INTEGER DEFAULT 0'); } catch (e) {} // cột quản trị (bản 11/2026)
+    try { this.sql.exec('ALTER TABLE users ADD COLUMN prof TEXT'); this.sql.exec('ALTER TABLE users ADD COLUMN profOp TEXT'); } catch (e) {} // hồ sơ đồng bộ theo tài khoản (số ván, thành tích, avatar)
   }
   pub(u) { return u && { id: u.id, username: u.username || null, name: u.name, google: !!u.google, banned: !!u.banned, admin: !!u.admin }; }
   one(q, ...a) { const r = this.sql.exec(q, ...a).toArray(); return r[0] || null; }
@@ -86,6 +87,33 @@ export class Users extends DurableObject {
     if (nm.includes('*')) return { ok: false, msg: 'Tên có từ không phù hợp' };
     this.sql.exec('UPDATE users SET name = ? WHERE id = ?', nm, u.id);
     return { ok: true, user: this.pub(this.one('SELECT * FROM users WHERE id = ?', u.id)) };
+  }
+  // ☁️ Hồ sơ theo tài khoản. Client gửi phần chơi THÊM (add) + mã op; cùng op gửi lại thì không cộng lần hai. Trả về tổng hiện có.
+  async profile(token, d) {
+    const me = await this.whoami(token); if (!me) return { ok: false, msg: 'Hết phiên đăng nhập' };
+    const row = this.one('SELECT prof, profOp FROM users WHERE id = ?', me.id);
+    let P = null; try { P = JSON.parse(row.prof || 'null'); } catch (e) {}
+    P = P && typeof P === 'object' ? P : {}; P.g = P.g || {}; P.ach = P.ach || {}; P.days = P.days || [];
+    const num = (v, max = 1e6) => Math.min(max, Math.max(0, Math.floor(+v || 0)));
+    const op = d && typeof d.op === 'string' ? d.op.slice(0, 40) : '';
+    if (op && op !== row.profOp && JSON.stringify(d).length < 40000) {
+      const add = d.add && typeof d.add === 'object' ? d.add : {};
+      for (const g of Object.keys(add).slice(0, 40)) {
+        if (!/^[a-z]{2,14}$/.test(g) || (!P.g[g] && Object.keys(P.g).length >= 40)) continue;
+        const a = add[g] || {}, cur = P.g[g] || { p: 0, w: 0, last: 0 };
+        const p = num(cur.p + num(a.p, 5000)), w = Math.min(p, num(cur.w + num(a.w, 5000)));
+        P.g[g] = { p, w, last: Math.max(num(cur.last, 4e12), num(a.last, 4e12)) };
+      }
+      if (d.ach && typeof d.ach === 'object') for (const k of Object.keys(d.ach).slice(0, 80)) { if (!/^[a-z0-9_-]{1,30}$/i.test(k)) continue; const t = num(d.ach[k], 4e12) || Date.now(); P.ach[k] = P.ach[k] ? Math.min(P.ach[k], t) : t; }
+      if (Array.isArray(d.days)) P.days = [...new Set([...P.days, ...d.days.filter(x => typeof x === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x)).slice(-400)])].sort().slice(-400);
+      P.best = Math.max(num(P.best), num(d.best));
+      if (num(d.lastT, 4e12) >= num(P.lastT, 4e12)) { P.streak = num(d.streak); P.lastT = num(d.lastT, 4e12); }
+      if (d.night) P.night = 1;
+      const f = num(d.first, 4e12); if (f && (!P.first || f < P.first)) P.first = f;
+      if (d.av && typeof d.av.e === 'string' && d.av.e.length <= 16 && num(d.av.t, 4e12) > num(P.av && P.av.t, 4e12)) P.av = { e: d.av.e, c: num(d.av.c, 40), t: num(d.av.t, 4e12) };
+      this.sql.exec('UPDATE users SET prof = ?, profOp = ? WHERE id = ?', JSON.stringify(P), op, me.id);
+    }
+    return { ok: true, prof: P };
   }
   async changePassword(token, oldPw, newPw) {
     const me = await this.whoami(token); if (!me) return { ok: false, msg: 'Hết phiên đăng nhập' };

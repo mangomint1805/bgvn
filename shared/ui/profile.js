@@ -1,6 +1,6 @@
 // 🏅 Hồ sơ người chơi: avatar, cấp độ, thống kê từng game, thành tích. Dữ liệu ở shared/ui/stats.js (lưu trên máy này).
 // import { openProfile, avatarHTML } from '…/shared/ui/profile.js?v=2'
-import { load, totals, level, ACHS, GAME_NAMES } from './stats.js?v=3';
+import { load, totals, level, ACHS, GAME_NAMES } from './stats.js?v=5';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 export const AVATARS = ['🐱', '🐶', '🦊', '🐼', '🐯', '🐸', '🐵', '🐰', '🐻', '🐨', '🦁', '🐷', '🐙', '🦄', '🐲', '🤖', '👻', '🧙', '🥷', '🤠'];
 const BG = ['#ff7a8a,#ffb23d', '#7b61ff,#3d8bff', '#2fc76f,#8fe3a8', '#ff9a3d,#ffd166', '#ff5fa2,#b06bff', '#3dc7d6,#3d8bff'];
@@ -56,7 +56,7 @@ export function openProfile() {
     if (e.target === ov || e.target.closest('.pf-x')) return close();
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.a === 'pick') { picking = !picking; return draw(); }
-    if (b.dataset.e || b.dataset.c) { const a = avatar(); ls.set('bgvn-avatar', JSON.stringify({ e: b.dataset.e || a.e, c: b.dataset.c != null ? +b.dataset.c : a.c })); try { dispatchEvent(new CustomEvent('bgvn-avatar')); } catch (x) {} draw(); }
+    if (b.dataset.e || b.dataset.c) { const a = avatar(); ls.set('bgvn-avatar', JSON.stringify({ e: b.dataset.e || a.e, c: b.dataset.c != null ? +b.dataset.c : a.c, t: Date.now() })); try { dispatchEvent(new CustomEvent('bgvn-avatar')); } catch (x) {} draw(); }
   });
   addEventListener('keydown', key, true); draw(); document.body.append(ov);
 }

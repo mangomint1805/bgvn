@@ -378,7 +378,7 @@ test('Ván tập: ép vai cho người chơi', () => {
 });
 
 test('Thả emoji: ban đêm cấm, ban ngày cả làng thấy, hồn ma chỉ hồn ma thấy', async () => {
-  const { Host, MS_PHRASES } = await import('../js/net.js?v=12');
+  const { Host, MS_PHRASES } = await import('../js/net.js?v=14');
   const got = [];
   const h = new Host('Chủ', { onLobby() {}, onState() {}, onError() {}, onReact: m => got.push(m) }, true);
   h.addBot(5); h.opts.auto = false; h.opts.roles = { wolf: 1 };

@@ -51,6 +51,7 @@ export default {
       else if (p[1] === 'me') { const u = await U.whoami(bearer()); r = u ? { ok: true, user: u } : { ok: false, msg: 'Hết phiên đăng nhập' }; }
       else if (p[1] === 'logout') r = await U.logout(bearer());
       else if (p[1] === 'rename') r = await U.rename(bearer(), d.name);
+      else if (p[1] === 'profile') r = await U.profile(bearer(), d);
       else if (p[1] === 'password') r = await U.changePassword(bearer(), d.old, d.new);
       else if (p[1] === 'claim-admin') r = await U.claimAdmin(bearer(), d.key, env.ADMIN_KEY, ip);
       else return json({ ok: false }, 404, H);

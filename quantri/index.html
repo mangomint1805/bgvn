@@ -43,10 +43,10 @@ button{background:var(--ink);color:#fff;border:0;cursor:pointer;font-weight:800}
   </div>
 </main>
 <script type="module">
-import { auth, API } from '../shared/net/api.js?v=2';
-import { mountAccount, openLogin } from '../shared/ui/account.js?v=7';
+import { auth, API } from '../shared/net/api.js?v=4';
+import { mountAccount, openLogin } from '../shared/ui/account.js?v=9';
 import { confirmBox, promptBox, alertBox } from '../shared/ui/dialog.js?v=1';
-import '../shared/net/presence.js?v=6';
+import '../shared/net/presence.js?v=8';
 mountAccount(document.getElementById('acct'));
 const $ = s => document.querySelector(s), esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const dt = t => new Date(t).toLocaleString('vi-VN'), T = { bug: '🐞 Lỗi', idea: '💡 Góp ý', other: '💬 Khác' };
