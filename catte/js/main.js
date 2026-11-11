@@ -1,8 +1,8 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, CT_PHRASES, NEXT_MS } from './net.js?v=11';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, CT_PHRASES, NEXT_MS } from './net.js?v=13';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=121';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=122';
 import { cardName, rankLabel, SUIT_SYM, SUIT_NAME, WHITE_NAME, OPT_CHOICES, CUT, REFILL, parseCard } from './engine.js?v=2';
 import { cardHTML, cardTxt, suitTxt } from './cards.js?v=3';
 import { initHandDrag } from '../../shared/ui/handsort.js?v=3';

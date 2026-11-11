@@ -7,6 +7,10 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261112-3', date: '12/11/2026', game: 'all', title: '📸 Khoe kết quả + 📅 Cờ thế hôm nay', items: [
+    '📸 Thắng ván hay có thành tích mới sẽ hiện nút "Khoe": web vẽ sẵn một tấm ảnh đẹp có tên, cấp độ và link để gửi Zalo, Facebook rủ hội bạn vào chơi.',
+    '📅 Cờ tướng có "Cờ thế hôm nay": mỗi ngày một bài chiếu bí mới, giải liên tục để giữ chuỗi ngày 🔥. Trang chủ cũng có ô Thử thách hôm nay.',
+  ] },
   { id: '20261112-2', date: '12/11/2026', game: 'all', title: 'Hồ sơ đi theo tài khoản', items: [
     '☁️ Đã đăng nhập thì số ván, cấp độ, thành tích và hình đại diện được lưu theo tài khoản – đổi điện thoại hay mở máy khác, đăng nhập là thấy lại.',
     '🧳 Những ván bạn chơi lúc chưa đăng nhập trên máy này sẽ được cộng vào tài khoản ở lần đăng nhập đầu.',

@@ -1,7 +1,7 @@
 // Đua Lạc Đà 3D – giao diện: trang chủ, sảnh, ván chơi (3D + bảng HUD 2D), hoạt ảnh sự kiện.
 import { hintsAllowed, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
-import { Host, Client, MAX, loadSnapshot, session, CAMEL_PHRASES, setSpeedFn } from './net.js?v=11';
+import { Host, Client, MAX, loadSnapshot, session, CAMEL_PHRASES, setSpeedFn } from './net.js?v=13';
 import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.js?v=2';
 import { CAMEL, RACERS, TRACK, LEG_ROLLS, OVERALL_PAY, legalTiles, ranking } from './engine.js?v=1';
 import { simLeg } from './bot.js?v=1';
@@ -9,7 +9,7 @@ import { Board3D, DIE_COLORS } from './scene3d.js?v=2';
 import * as fx from './fx.js?v=2';
 import { guideHTML } from './guide.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=121';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=122';
 
 const GAME = 'camel';
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];

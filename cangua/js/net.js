@@ -5,7 +5,7 @@ import { botAction } from './bot.js?v=3';
 import { S } from './fx.js?v=3';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=9';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
-import { watch } from '../../shared/ui/stats.js?v=6';
+import { watch } from '../../shared/ui/stats.js?v=8';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 const NS = 'bgvn-cangua', PREFIX = 'bgvn-cangua-', GAME = 'cangua', SNAP = 'bgvn-hostsnap-' + GAME;

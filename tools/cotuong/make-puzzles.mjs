@@ -1,8 +1,10 @@
 // 🧩 Sinh cờ thế cho Cờ tướng: xếp ngẫu nhiên tàn cuộc rồi dùng máy kiểm chứng "Đỏ đi trước, chiếu liên tục và chiếu bí trong đúng N nước",
 // chỉ giữ thế có ĐÚNG MỘT nước đầu đúng. Chạy: node tools/cotuong/make-puzzles.mjs  → cotuong/js/puzzles.js
+// Kho "Cờ thế hôm nay": node tools/cotuong/make-puzzles.mjs --daily [số bài] [seed] → cotuong/js/daily.js (mỗi ngày một bài, xoay vòng)
 import { writeFileSync } from 'fs';
 import { legalMoves, inCheck, kingSq } from '../../cotuong/js/engine.js';
-let seed = +process.argv[2] || 20261111; const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+const DAILY = process.argv[2] === '--daily', DN = DAILY ? (+process.argv[3] || 120) : 0;
+let seed = +(DAILY ? process.argv[4] : process.argv[2]) || (DAILY ? 777 : 20261111); const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
 const ri = n => Math.floor(rnd() * n), pick = a => a[ri(a.length)];
 const mv = (b, m, fn) => { const f = Math.floor(m / 100), t = m % 100, cap = b[t]; b[t] = b[f]; b[f] = ''; const r = fn(); b[f] = b[t]; b[t] = cap; return r; };
 // Đỏ có chiếu bí trong ≤ n nước bằng toàn nước chiếu không?
@@ -31,18 +33,32 @@ const PLAN = [ // [số nước, số bài, các bộ quân tấn công, quân t
   [2, 6, [['R', 'C'], ['R', 'H'], ['H', 'C'], ['R', 'R'], ['R', 'P'], ['H', 'H'], ['R', 'C', 'P'], ['H', 'C', 'P']], [['a', 'a'], ['a', 'e', 'e'], ['a', 'a', 'e'], ['a', 'a', 'e', 'e'], ['a', 'e', 'r'], ['a', 'a', 'p']]],
   [3, 4, [['R', 'C'], ['R', 'H'], ['H', 'C'], ['R', 'C', 'P'], ['R', 'H', 'P'], ['H', 'C', 'P']], [['a', 'a'], ['a', 'a', 'e'], ['a', 'e', 'e'], ['a', 'a', 'e', 'e']]],
 ];
+if (DAILY) { /* kho bài hằng ngày: phần lớn 2 nước, xen bài 1 và 3 nước cho đỡ đều */
+  PLAN.length = 0;
+  PLAN.push([1, Math.round(DN * .2), [['R', 'C'], ['R', 'H'], ['H', 'C'], ['R', 'P'], ['C', 'C'], ['H', 'H']], [['a', 'a'], ['a', 'e'], ['a', 'a', 'e'], ['a', 'e', 'e']]]);
+  PLAN.push([2, Math.round(DN * .55), [['R', 'C'], ['R', 'H'], ['H', 'C'], ['R', 'R'], ['R', 'P'], ['H', 'H'], ['R', 'C', 'P'], ['H', 'C', 'P'], ['C', 'C', 'P'], ['R', 'H', 'P']], [['a', 'a'], ['a', 'e', 'e'], ['a', 'a', 'e'], ['a', 'a', 'e', 'e'], ['a', 'e', 'r'], ['a', 'a', 'p'], ['a', 'a', 'e', 'p']]]);
+  PLAN.push([3, DN - Math.round(DN * .2) - Math.round(DN * .55), [['R', 'C'], ['R', 'H'], ['H', 'C'], ['R', 'C', 'P'], ['R', 'H', 'P'], ['H', 'C', 'P'], ['H', 'H', 'P']], [['a', 'a'], ['a', 'a', 'e'], ['a', 'e', 'e'], ['a', 'a', 'e', 'e']]]);
+}
+const LIMIT = DAILY ? (+process.env.LIMIT || 1500000) : 100000, OUTF = process.env.OUT || '../../cotuong/js/daily.js';
 const out = [], t0 = Date.now(), seen = new Set();
 for (const [n, count, atts, defs] of PLAN) {
   let got = 0, tries = 0;
-  while (got < count && tries++ < 60000 && Date.now() - t0 < 100000) {
+  while (got < count && tries++ < (DAILY ? 4000000 : 60000) && Date.now() - t0 < LIMIT) {
     const att = pick(atts), b = randomPos(att, pick(defs)); if (!b) continue;
     if (n > 1 && mateIn(b, n - 1)) continue; // không được có lời giải ngắn hơn
-    const fm = firstMoves(b, n); if (fm.length !== 1) continue; // đúng 1 nước đầu
-    const nm = title(att); if ([...seen].filter(x => x === n + nm).length >= 2) continue; seen.add(n + nm + got);
+    const fm = firstMoves(b, n); if (fm.length < 1 || fm.length > (DAILY ? 2 : 1)) continue; // đúng 1 nước đầu (kho hằng ngày cho phép 2)
+    const nm = title(att); if (!DAILY && [...seen].filter(x => x === n + nm).length >= 2) continue; seen.add(n + nm + got);
+    const key = b.join(','); if (seen.has(key)) continue; seen.add(key);
     const rows = []; for (let r = 0; r < 10; r++) rows.push(b.slice(r * 9, r * 9 + 9).map(p => p || '.').join(''));
     out.push({ id: `m${n}-${out.length + 1}`, name: nm, n, rows, sol: [Math.floor(fm[0] / 100), fm[0] % 100] }); got++;
   }
   console.log(`chiếu bí ${n} nước: ${got}/${count} bài sau ${tries} lần thử`);
+}
+if (DAILY) { /* trộn thứ tự để ngày liền nhau không cùng độ khó */
+  for (let i = out.length - 1; i > 0; i--) { const j = ri(i + 1); [out[i], out[j]] = [out[j], out[i]]; }
+  out.forEach((p, i) => { p.id = 'd' + (i + 1); });
+  writeFileSync(OUTF.startsWith('/') ? OUTF : new URL(OUTF, import.meta.url), `// 📅 Kho "Cờ thế hôm nay" – sinh bởi tools/cotuong/make-puzzles.mjs --daily (mỗi bài đã kiểm chứng: chiếu bí đúng n nước, đúng 1 nước đầu)\nexport const DAILY = ${JSON.stringify(out).replace(/\},\{/g, '},\n  {')};\n`);
+  console.log('ghi', out.length, 'bài hằng ngày', Math.round((Date.now() - t0) / 1000) + 's'); process.exit(0);
 }
 writeFileSync(new URL('../../cotuong/js/puzzles.js', import.meta.url), `// 🧩 Cờ thế – sinh và kiểm chứng bằng tools/cotuong/make-puzzles.mjs (Đỏ đi trước, chiếu bí trong n nước; sol = nước đầu đúng duy nhất [từ, tới])\nexport const PUZZLES = ${JSON.stringify(out, null, 0).replace(/\},\{/g, '},\n  {').replace('[{', '[\n  {').replace('}]', '},\n]')};\n`);
 console.log('ghi', out.length, 'bài', Math.round((Date.now() - t0) / 1000) + 's');

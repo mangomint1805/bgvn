@@ -1,12 +1,12 @@
 // Giao diện Xếp bài cổ điển (Klondike): vẽ bàn, kéo-thả / chạm, hoàn tác, gợi ý, tự xếp, bộ giải, thống kê, lưu ván
 import { VARIANTS, newGame, defaultOpts, optsKey, optsName, scoreStart, liveScore, timeBonus, passesLeft, SCORE_NONE, SCORE_VEGAS } from './variants.js?v=1';
 import { apply, canMove, legalMoves, autoMoves, greedyFinish, key, hintMove, idsOf, isSeq, isRed, cardName, top } from './core.js?v=1';
-import { record } from '../../shared/ui/stats.js?v=6';
+import { record } from '../../shared/ui/stats.js?v=8';
 import { solve } from './solver.js?v=1';
 import { faceHTML, backHTML, drawCard, THEMES, getTheme, setTheme, previewHTML } from './cards.js?v=6';
 import * as fx from './sfx.js?v=1';
 import { guideHTML } from './guide.js?v=6';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=121';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=122';
 import { rulesFor } from '../../shared/rules.js?v=1';
 // ⚙️ Mặc định cho máy CHƯA từng chơi (luat-mac-dinh.js ở gốc repo). Máy đã chơi thì nhớ tuỳ chọn ván gần nhất ('sol-opts')
 // và nút tự đưa lên đích ('sol-auto') – lựa chọn riêng của máy thắng file luật.

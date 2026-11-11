@@ -6,7 +6,7 @@ import { S } from './fx.js?v=50';
 import { OPTIONS, PRESETS } from '../../shared/js/avatar3d.js';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=9';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
-import { watch } from '../../shared/ui/stats.js?v=6';
+import { watch } from '../../shared/ui/stats.js?v=8';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 const NS = 'bgvn-typhu', PREFIX = 'bgvn-typhu-', GAME = 'typhu', SNAP = 'bgvn-hostsnap-' + GAME;

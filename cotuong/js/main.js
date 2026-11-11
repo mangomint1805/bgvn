@@ -1,12 +1,13 @@
 // ♟️ Cờ tướng – giao diện. Luật ở engine.js, bot ở bot.js, mạng ở shared/net/simplenet.js, khung màn hình ở shared/ui/gamekit.js
-import { makeNet } from '../../shared/net/simplenet.js?v=5';
+import { makeNet } from '../../shared/net/simplenet.js?v=7';
 import * as E from './engine.js?v=1';
 import { botAction, botWants } from './bot.js?v=1';
 import { masterMove, masterReady, masterOff } from './master.js?v=1';
 import { PUZZLES } from './puzzles.js?v=1';
+import { today, state as dailyState, markSolved } from './today.js?v=1';
 import { gameKit, $, $$, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=2';
 import { confirmBox, promptBox, toast as tip } from '../../shared/ui/dialog.js?v=1';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=121';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=122';
 
 const LV = { easy: ['🌱 Dễ', 'Mới tập chơi'], normal: ['⚔️ Vừa', 'Biết đánh, có sơ hở'], hard: ['🔥 Khó', 'Tính trước 4–5 nước'], master: ['👑 Đại sư', 'Động cơ Fairy-Stockfish'] };
 const GLYPH = { han: { K: '帥', A: '仕', E: '相', R: '俥', H: '傌', C: '炮', P: '兵', k: '將', a: '士', e: '象', r: '車', h: '馬', c: '砲', p: '卒' }, viet: { K: 'Tướng', A: 'Sĩ', E: 'Tượng', R: 'Xe', H: 'Mã', C: 'Pháo', P: 'Tốt' } };
@@ -195,7 +196,7 @@ boardEl.addEventListener('click', e => {
 });
 $('#acts').addEventListener('click', async e => {
   const b = e.target.closest('button[data-a]'), v = ui.view; if (!b || !v) return; const k = b.dataset.a, a = actor(v);
-  if (k === 'again') { const h = ui.net.raw; if (v.puzzle) return startPuzzle(PUZZLES.find(p => p.id === v.puzzle.id)); h.restart(); h.setOpt('first', v.players[0].side === 'r' ? 'guest' : 'host'); h.start(); return; }
+  if (k === 'again') { const h = ui.net.raw; if (v.puzzle) return v.puzzle.daily ? startDaily() : startPuzzle(PUZZLES.find(p => p.id === v.puzzle.id)); h.restart(); h.setOpt('first', v.players[0].side === 'r' ? 'guest' : 'host'); h.start(); return; }
   if (k === 'lobby') { if (v.puzzle) { ui.leave(); openPuzzles(); } else ui.net.raw.restart(); return; }
   if (!a) return;
   if (k === 'resign' && !(await confirmBox('Ván này sẽ tính là thua.', { title: '🏳️ Xin thua?', ok: 'Xin thua', cancel: 'Đánh tiếp', danger: true }))) return;
@@ -205,9 +206,11 @@ function showEnd(v) {
   if (ui.view !== v && (!ui.view || ui.view.gid !== v.gid || ui.view.phase !== 'ended')) return;
   const w = v.players.find(p => p.id === v.winner), mine = v.players.filter(p => ui.controls(p.id) && !p.isBot), iWon = w && mine.length === 1 && mine[0].id === w.id, iLost = w && mine.length === 1 && mine[0].id !== w.id;
   let extra = '', nextPz = null;
-  if (v.puzzle) { const ok = w && w.id === 'host' && Math.ceil(v.nMoves / 2) <= v.puzzle.n; if (ok) { const d = solved(); d[v.puzzle.id] = 1; ls.set('cotuong-pz', JSON.stringify(d)); nextPz = PUZZLES[PUZZLES.findIndex(x => x.id === v.puzzle.id) + 1] || null; } extra = `<p style="text-align:center">${ok ? `🎉 Giải đúng trong ${Math.ceil(v.nMoves / 2)} nước!` : w && w.id === 'host' ? `Thắng rồi, nhưng đề yêu cầu chiếu bí trong <b>${v.puzzle.n}</b> nước. Thử lại nha!` : 'Chưa đúng – thử lại nha 💪'}</p>`; }
-  ui.openModal(`<h2>${!w ? '🤝 Hoà cờ' : iWon ? '🏆 Bạn thắng!' : iLost ? '😵 Bạn thua rồi' : `🏆 ${esc(cleanName(w.name))} thắng`}</h2><p style="text-align:center;color:var(--muted);font-weight:800">${E.RESULT_TEXT[v.result.kind] || ''} · ${v.nMoves} nước</p>${extra}<div class="btns">${nextPz ? '<button class="btn pri" id="m-next">🧩 Bài tiếp theo</button>' : ''}<button class="btn" id="m-close">Xem lại bàn cờ</button></div>`);
+  let daily = null;
+  if (v.puzzle) { const ok = w && w.id === 'host' && Math.ceil(v.nMoves / 2) <= v.puzzle.n; if (ok && v.puzzle.daily) daily = markSolved(v.puzzle.daily); if (ok && !v.puzzle.daily) { const d = solved(); d[v.puzzle.id] = 1; ls.set('cotuong-pz', JSON.stringify(d)); nextPz = PUZZLES[PUZZLES.findIndex(x => x.id === v.puzzle.id) + 1] || null; } extra = `<p style="text-align:center">${ok && daily ? `🎉 Giải xong Cờ thế hôm nay!<br>🔥 Chuỗi <b>${daily.streak}</b> ngày liên tiếp${daily.best > daily.streak ? ` (kỷ lục ${daily.best})` : ''}` : ok ? `🎉 Giải đúng trong ${Math.ceil(v.nMoves / 2)} nước!` : w && w.id === 'host' ? `Thắng rồi, nhưng đề yêu cầu chiếu bí trong <b>${v.puzzle.n}</b> nước. Thử lại nha!` : 'Chưa đúng – thử lại nha 💪'}</p>`; }
+  ui.openModal(`<h2>${!w ? '🤝 Hoà cờ' : iWon ? '🏆 Bạn thắng!' : iLost ? '😵 Bạn thua rồi' : `🏆 ${esc(cleanName(w.name))} thắng`}</h2><p style="text-align:center;color:var(--muted);font-weight:800">${E.RESULT_TEXT[v.result.kind] || ''} · ${v.nMoves} nước</p>${extra}<div class="btns">${daily ? '<button class="btn pri" id="m-brag">📸 Khoe</button>' : ''}${nextPz ? '<button class="btn pri" id="m-next">🧩 Bài tiếp theo</button>' : ''}<button class="btn" id="m-close">Xem lại bàn cờ</button></div>`);
   $('#m-close').onclick = ui.closeModal;
+  if (daily) $('#m-brag').onclick = () => import('../../shared/ui/brag.js?v=1').then(m => m.brag({ game: 'cotuong', title: `Mình giải xong Cờ thế #${v.puzzle.no}!`, sub: `🔥 Chuỗi ${daily.streak} ngày`, lines: [`Chiếu bí trong ${v.puzzle.n} nước`, 'Mỗi ngày một bài mới – thử sức đi!'] }));
   if (nextPz) $('#m-next').onclick = () => { ui.closeModal(); ui.leave(); startPuzzle(nextPz); };
 }
 // ---------- biên bản, luật ----------
@@ -249,11 +252,18 @@ function openPuzzles() {
   $('#m-close').onclick = ui.closeModal;
   $('.pz-grid').onclick = e => { const b = e.target.closest('[data-pz]'); if (b) { ui.closeModal(); startPuzzle(PUZZLES.find(p => p.id === b.dataset.pz)); } };
 }
-function startPuzzle(pz) {
+function drawDaily() {
+  const b = $('#btn-daily'); if (!b) return; const t = today(), d = dailyState();
+  b.innerHTML = `📅 Cờ thế hôm nay <small>#${t.no} · ${d.done[t.day] ? '✅ đã giải' : `chiếu bí ${t.n} nước`}${d.streak ? ` · 🔥 ${d.streak} ngày` : ''}</small>`;
+}
+function startDaily() { const t = today(); startPuzzle({ ...t, name: `Cờ thế hôm nay #${t.no}` }, { daily: t.day, no: t.no }); }
+function startPuzzle(pz, more = {}) {
   if (!pz) return; const h = ui.startHost(true, true);
-  h.addBot({ level: 'hard' }); h.start({ first: 'host', setup: pz.rows.join('').split('').map(c => c === '.' ? '' : c), puzzle: { id: pz.id, name: pz.name, n: pz.n } });
+  h.addBot({ level: 'hard' }); h.start({ first: 'host', setup: pz.rows.join('').split('').map(c => c === '.' ? '' : c), puzzle: { id: pz.id, name: pz.name, n: pz.n, ...more } });
 }
 $('#btn-puzzle').onclick = openPuzzles;
+$('#btn-daily').onclick = startDaily; drawDaily(); addEventListener('focus', drawDaily);
+if (/[?&]daily=1/.test(location.search)) { history.replaceState(null, '', location.pathname); setTimeout(startDaily, 300); } /* vào từ ô Thử thách hôm nay ở trang chủ */
 
 const ui = gameKit({
   game: 'cotuong', net: NET,

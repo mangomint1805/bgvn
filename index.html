@@ -190,6 +190,9 @@ main{max-width:1080px;padding:28px 16px 32px}
 @keyframes tin{from{opacity:0;transform:translateY(18px)}}
 .play{display:inline-flex;align-items:center;gap:6px}
 .foot{margin-top:56px;text-align:left;color:#5d5475;border-top:1.5px solid #2a234014;padding-top:28px}
+.daily{display:flex;align-items:center;gap:10px;margin-top:14px;padding:9px 10px 9px 12px;border-radius:18px;background:#fff;border:1.5px solid #ffe0b8;box-shadow:0 12px 24px -18px #b8780a;color:var(--ink);text-decoration:none;max-width:420px}.daily[hidden]{display:none}
+.daily i{font-style:normal;font-size:26px}.daily span{flex:1;min-width:0;line-height:1.2}.daily b{display:block;font:800 16px "Baloo 2",Nunito,sans-serif}.daily small{display:block;color:var(--muted);font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.daily em{font-style:normal;flex:none;padding:6px 12px;border-radius:999px;color:#3a2300;background:linear-gradient(120deg,#ffe27a,#ffb020);font:800 14px Nunito,sans-serif}.daily.done em{background:#e3f6ea;color:#17683a}
 .foot-top{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr;gap:20px}
 .foot-brand p{margin:12px 0 0;font-size:14.5px;max-width:26em}
 .foot nav{display:flex;flex-direction:column;gap:8px}.foot h3{margin:4px 0 4px;font:800 13px Nunito,sans-serif;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
@@ -255,6 +258,7 @@ main{max-width:1080px;padding:28px 16px 32px}
         <a class="btn-sub" href="sanh/">🌐 Sảnh chung<small>tìm phòng · chat</small></a>
       </div>
       <ul class="facts"><li><b>17</b> game</li><li><b>2–16</b> người</li><li>Điện thoại &amp; máy tính</li></ul>
+      <a class="daily" id="daily" href="cotuong/?daily=1" hidden><i>📅</i><span><b>Thử thách hôm nay</b><small id="daily-sub">Cờ thế · chiếu bí</small></span><em>Giải ▶</em></a>
     </div>
     <div class="hero-card" id="hero-card" aria-live="polite"></div>
   </section>
@@ -423,14 +427,16 @@ function fitTitles(){document.querySelectorAll('.grid .tile .info h2,.hero-card 
 addEventListener('load',fitTitles);addEventListener('resize',()=>{clearTimeout(fitTitles.t);fitTitles.t=setTimeout(fitTitles,120)});document.fonts&&document.fonts.ready.then(fitTitles);
 </script>
 <script type="module" src="shared/ui/feedback.js?v=7"></script>
-<script type="module">import { mountAccount } from "./shared/ui/account.js?v=10"; import { mountOnline } from "./shared/net/presence.js?v=9"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} import("./shared/ui/profile.js?v=5").then(async m => { const st = await import("./shared/ui/stats.js?v=6"); m.profileCss(); const b = document.getElementById("btn-prof"), d = () => { b.innerHTML = m.avatarHTML(42) + `<span class="lv">${st.level().lv}</span>`; }; d(); addEventListener("bgvn-avatar", d); addEventListener("bgvn-stats", d); b.onclick = () => m.openProfile(); }); document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=9").then(m => m.openSettings());</script>
+<script type="module">import { mountAccount } from "./shared/ui/account.js?v=12"; import { mountOnline } from "./shared/net/presence.js?v=9"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} import("./shared/ui/profile.js?v=7").then(async m => { const st = await import("./shared/ui/stats.js?v=8"); m.profileCss(); const b = document.getElementById("btn-prof"), d = () => { b.innerHTML = m.avatarHTML(42) + `<span class="lv">${st.level().lv}</span>`; }; d(); addEventListener("bgvn-avatar", d); addEventListener("bgvn-stats", d); b.onclick = () => m.openProfile(); }); document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=11").then(m => m.openSettings());</script>
 <script type="module">
-import { openNews, newsBadge } from './shared/ui/news.js?v=121';
+import { openNews, newsBadge } from './shared/ui/news.js?v=122';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 const json = k => { try { return JSON.parse(ls.get(k)); } catch (e) { return null; } };
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const tiles = $$('.grid .tile[data-game]');
 tiles.forEach((t, i) => t.style.setProperty('--i', i));
+// 📅 Thử thách hôm nay (Cờ thế của Cờ tướng)
+import('./cotuong/js/today.js?v=1').then(m => { const t = m.today(), d = m.state(), el = $('#daily'); if (!el || !t) return; const done = !!d.done[t.day]; el.classList.toggle('done', done); $('#daily-sub').textContent = `Cờ thế #${t.no} · chiếu bí trong ${t.n} nước${d.streak ? ` · 🔥 ${d.streak} ngày` : ''}`; el.querySelector('em').textContent = done ? '✅ Đã giải' : 'Giải ▶'; el.hidden = false; }).catch(() => {});
 // ô game ra khỏi màn hình thì dừng hoạt ảnh (cuộn nhẹ hơn, đỡ tốn pin)
 if ('IntersectionObserver' in window) { const io = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('asleep', !e.isIntersecting)), { rootMargin: '120px' }); $$('.tile').forEach(t => io.observe(t)); }
 // thanh trên đổ bóng khi cuộn
@@ -439,7 +445,7 @@ const nav = $('#nav'), onScroll = () => nav.classList.toggle('stuck', scrollY > 
 if (!ls.get('bgvn-visited')) {
   ls.set('bgvn-visited', String(Date.now()));
   let old = false; try { old = Object.keys(localStorage).some(k => k.startsWith('bgvn-news-seen-') || k.startsWith('bgvn-session-') || k === 'bgvn-name'); } catch (e) {}
-  if (!old) import('./shared/patchnotes.js?v=80').then(m => { ['all', ...tiles.map(t => t.dataset.game)].forEach(g => { const id = m.latestId(g === 'all' ? null : g); if (id) ls.set('bgvn-news-seen-' + g, id); }); });
+  if (!old) import('./shared/patchnotes.js?v=81').then(m => { ['all', ...tiles.map(t => t.dataset.game)].forEach(g => { const id = m.latestId(g === 'all' ? null : g); if (id) ls.set('bgvn-news-seen-' + g, id); }); });
   else marks();
 } else marks();
 function marks() { $$('#btn-news,#btn-news-m').forEach(b => newsBadge(b, null)); $$('.grid .newtag[data-news]').forEach(t => newsBadge(t, t.dataset.news)); }

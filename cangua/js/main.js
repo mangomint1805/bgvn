@@ -1,13 +1,13 @@
 // Cờ cá ngựa 3D – giao diện: trang chủ, sảnh, ván chơi 3D, hoạt ảnh sự kiện, nút đổ giữ-để-đổ.
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
-import { Host, Client, MAX, loadSnapshot, session, CANGUA_PHRASES } from './net.js?v=15';
+import { Host, Client, MAX, loadSnapshot, session, CANGUA_PHRASES } from './net.js?v=17';
 import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.js?v=2';
 import { COLOR_NAMES, GATE, HOME0, exitOk } from './engine.js?v=3';
 import { Board3D } from './scene3d.js?v=5';
 import * as fx from './fx.js?v=3';
 import { guideHTML } from './guide.js?v=4';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=121';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=122';
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
