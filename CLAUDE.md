@@ -39,7 +39,7 @@ Chủ web: Minto. Trả lời bằng tiếng Việt, xưng "em", gọi "anh". Kh
 - `server/.dev.vars` (ADMIN_KEY để test) **không bao giờ được commit**.
 
 ## Game mới – nhớ đăng ký đủ chỗ
-Ô game ở `index.html` (+ CSS nền, số game ở hero) · `GAME_NAMES` + `OVER` trong `stats.js` · `GAMES` trong `shared/patchnotes.js`, `shared/ui/lobby.js`, `shared/ui/settings.js`, `shared/ui/feedback.js`, `server/src/lobby.js` (đổi server = deploy lại) · icon (`tools/icons`) + ảnh OG · `tools/qa/qa.mjs` · `credits/` nếu dùng thứ của người khác. Xong thì chạy `python3 tools/bump.py` để tăng `?v` cả chuỗi import.
+Ô game ở `index.html` (+ CSS nền, số game ở hero; thêm `data-new="YYYYMMDD"` vào ô để trang chủ tự bật hộp "Game mới" một lần cho mỗi người trong 45 ngày) · `GAME_NAMES` + `OVER` trong `stats.js` · `GAMES` trong `shared/patchnotes.js`, `shared/ui/lobby.js`, `shared/ui/settings.js`, `shared/ui/feedback.js`, `server/src/lobby.js` (đổi server = deploy lại) · icon (`tools/icons`) + ảnh OG · `tools/qa/qa.mjs` · `credits/` nếu dùng thứ của người khác. Xong thì chạy `python3 tools/bump.py` để tăng `?v` cả chuỗi import.
 - Cờ tướng: test luật `node cotuong/test/sim.mjs`, sinh cờ thế `node tools/cotuong/make-puzzles.mjs`. Mức Đại sư = Fairy-Stockfish (GPL-3, `cotuong/vendor/fsf/`), cần service worker `cotuong/coi-sw.js` để bật cross-origin isolation (chỉ đăng ký khi chọn Đại sư).
 - Thật hay Thách: câu hỏi ở `thathaythach/js/cards.js` – chỉ nội dung lành mạnh (không rượu bia, không 18+, không ép lộ chuyện riêng tư nặng); test `node thathaythach/test/sim.mjs`.
 

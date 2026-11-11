@@ -196,6 +196,21 @@ main{max-width:1080px;padding:28px 16px 32px}
  .sec-head .filter{margin-left:0;order:3;width:100%;overflow-x:auto;flex-wrap:nowrap;justify-content:flex-start;scrollbar-width:none}.sec-head .filter button{flex:none}.psel{margin-left:auto}
  .foot-top{grid-template-columns:1fr 1fr}.foot-brand{grid-column:1/-1}}
 @media (max-width:480px){.wm small{display:none}.wm{font-size:25px}.brand .mark{width:38px;height:38px}.nav-in{gap:8px;padding:8px 12px}.hero h1{font-size:clamp(28px,8.6vw,36px)}.facts{font-size:13px;gap:4px 10px}.facts li+li::before{margin-right:6px}.btn-main{padding:10px 18px;font-size:20px}.btn-sub{padding:6px 14px}.hero .sub{font-size:16.5px}.btn-main,.btn-sub{flex:1;justify-content:center;align-items:center;text-align:center}.psel{font-size:0}.psel select{font-size:13.5px}}
+/* hộp giới thiệu game mới */
+.ng-back{position:fixed;inset:0;z-index:90;background:#2a2340b3;backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;transition:opacity .25s}
+.ng-back.on{opacity:1}.ng-box{position:relative;width:min(440px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:#fff7ef;border-radius:28px;box-shadow:0 30px 60px -20px #000a;transform:translateY(18px) scale(.96);transition:transform .3s cubic-bezier(.2,.9,.3,1.2)}
+.ng-back.on .ng-box{transform:none}
+.ng-head{background:linear-gradient(120deg,#ff4d6a,#ff7a45 55%,#ffb23d);color:#fff;padding:22px 20px 18px;border-radius:28px 28px 0 0;text-align:center}
+.ng-head b{display:block;font:800 27px/1.15 'Baloo 2',Nunito,sans-serif}.ng-head span{font:700 14.5px Nunito,sans-serif;opacity:.95}
+.ng-x{position:absolute;right:12px;top:12px;width:36px;height:36px;border-radius:50%;border:0;background:#ffffff40;color:#fff;font:800 16px Nunito;cursor:pointer}
+.ng-list{display:flex;flex-direction:column;gap:10px;padding:14px}
+.ng-item{display:flex;align-items:center;gap:12px;background:#fff;border:2px solid #f0e2d2;border-radius:20px;padding:10px;text-decoration:none;color:#2a2340;transition:transform .12s,border-color .12s}
+.ng-item:hover,.ng-item:focus-visible{border-color:#ff7a45;transform:translateY(-2px);outline:0}
+.ng-ic{flex:none;width:68px;height:68px;border-radius:16px;display:grid;place-items:center;overflow:hidden}.ng-ic img{width:82%;height:82%;object-fit:contain}
+.ng-tx{flex:1;min-width:0}.ng-tx b{display:block;font:800 19px/1.2 'Baloo 2',Nunito,sans-serif}.ng-tx small{display:block;font:600 13px/1.35 Nunito,sans-serif;color:#6b6480}
+.ng-item i{flex:none;font:800 13.5px Nunito,sans-serif;font-style:normal;background:#2a2340;color:#fff;border-radius:999px;padding:8px 12px;white-space:nowrap}
+.ng-later{display:block;margin:0 auto 14px;border:0;background:none;font:800 14px Nunito,sans-serif;color:#6b6480;cursor:pointer;padding:8px 16px}
+@media (prefers-reduced-motion:reduce){.ng-back,.ng-box{transition:none}}
 </style>
 <link rel="stylesheet" href="/shared/ui/shell.css?v=1">
 </head>
@@ -359,14 +374,14 @@ main{max-width:1080px;padding:28px 16px 32px}
       <div class="info"><h2>Xếp bài</h2><p>Xếp bài cổ điển như Solitaire Windows: rút 1/3, điểm Vegas, gợi ý, bài nảy khi thắng 🃏</p>
         <div class="tags"><i>1 người</i><i>Bài Tây</i><i>Thư giãn</i></div></div>
     </a>
-    <a class="tile cotuong" href="cotuong/" data-game="cotuong" data-cat="board" data-min="1" data-max="2">
+    <a class="tile cotuong" href="cotuong/" data-game="cotuong" data-new="20261111" data-cat="board" data-min="1" data-max="2">
       <span class="newtag" data-news="cotuong">MỚI</span>
       <div class="art"><img class="ic" src="shared/img/icons/cotuong.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Cờ tướng</h2><p>Đấu với bạn hoặc với máy 4 mức, có cả Đại sư. Thêm cờ thế để luyện chiếu bí ♟️</p>
         <div class="tags"><i>1–2 người</i><i>Cờ</i><i>Đấu trí</i></div></div>
     </a>
-    <a class="tile thathaythach" href="thathaythach/" data-game="thathaythach" data-cat="party" data-min="2" data-max="12">
+    <a class="tile thathaythach" href="thathaythach/" data-game="thathaythach" data-new="20261111" data-cat="party" data-min="2" data-max="12">
       <span class="newtag" data-news="thathaythach">MỚI</span>
       <div class="art"><img class="ic" src="shared/img/icons/thathaythach.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
@@ -476,6 +491,21 @@ function applyFilter() {
 $$('.filter button').forEach(x => x.onclick = () => { cat = x.dataset.c; applyFilter(); });
 $('#pf').onchange = e => { pf = e.target.value; applyFilter(); };
 applyFilter();
+
+// 🎉 Game mới: bật hộp giới thiệu một lần cho mỗi người. Ô game nào có data-new="YYYYMMDD" (ngày ra mắt, trong vòng 45 ngày) và chưa được xem thì hiện.
+(function newGames() {
+  const seen = ls.get('bgvn-newgames') || '0', d = new Date(Date.now() - 45 * 864e5), min = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+  const fresh = tiles.filter(t => t.dataset.new && t.dataset.new > seen && t.dataset.new >= min); if (!fresh.length) return;
+  const top = fresh.map(t => t.dataset.new).sort().pop();
+  setTimeout(() => {
+    const el = document.createElement('div'); el.className = 'ng-back'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Game mới');
+    el.innerHTML = `<div class="ng-box"><button class="ng-x" aria-label="Đóng">✕</button><div class="ng-head"><b>🎉 ${fresh.length > 1 ? fresh.length + ' game mới' : 'Game mới'} ra lò!</b><span>Rủ bạn bè vào thử liền nha</span></div><div class="ng-list">${fresh.map(t => `<a class="ng-item" href="${t.getAttribute('href')}"><span class="ng-ic ${t.dataset.game}"><img src="${t.querySelector('img.ic').getAttribute('src')}" alt=""></span><span class="ng-tx"><b>${t.querySelector('h2').textContent}</b><small>${t.querySelector('.info p').textContent}</small></span><i>Chơi ▶</i></a>`).join('')}</div><button class="ng-later">Để sau</button></div>`;
+    const close = () => { ls.set('bgvn-newgames', top); el.classList.remove('on'); setTimeout(() => el.remove(), 250); };
+    el.addEventListener('click', e => { if (e.target === el || e.target.closest('.ng-x,.ng-later')) close(); else if (e.target.closest('.ng-item')) ls.set('bgvn-newgames', top); });
+    document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); } });
+    document.body.append(el); requestAnimationFrame(() => el.classList.add('on')); el.querySelector('.ng-item').focus({ preventScroll: true });
+  }, 1100);
+})();
 </script>
 <script type="module" src="/shared/ui/feel.js?v=1"></script>
 </body>
