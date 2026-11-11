@@ -1,0 +1,60 @@
+/* 🎯 Thật hay Thách – giao diện riêng (khung chung ở shared/ui/gamekit.css) */
+:root{--acc:#7b5cff;--acc2:#ff5c9a;--bg:#f5efff;--line:#e4daf5;--t1:#2f7bff;--t2:#19c3c9;--d1:#ff4d6a;--d2:#ff9a3d}
+body{background:radial-gradient(900px 500px at 10% -10%,#ffe0ef 0,transparent 60%),radial-gradient(800px 520px at 100% 0,#dfe7ff 0,transparent 60%),var(--bg)}
+.home-card .hero{height:130px}
+#screen-game.active{display:flex;flex-direction:column;height:100dvh}
+.round{font:800 15px "Baloo 2",Nunito,sans-serif;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:6px 14px;min-height:42px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.arena{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;gap:10px;padding:4px 12px max(10px,env(safe-area-inset-bottom));width:100%;max-width:640px;margin:0 auto}
+
+/* chủ đề ở phòng chờ */
+.topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:7px;margin-bottom:6px}
+.topics button{display:flex;align-items:center;gap:8px;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:7px 9px;min-height:50px;cursor:pointer;font:800 14px Nunito,sans-serif;color:var(--ink);transition:transform .12s}
+.topics button i{font-style:normal;font-size:22px;flex:none}.topics button small{display:block;font-weight:700;color:var(--muted);font-size:11.5px;line-height:1.2}
+.topics button[aria-pressed=true]{border-color:var(--acc);background:#f3efff;box-shadow:0 0 0 2px #7b5cff33}.topics button:disabled{cursor:default}.topics button:not(:disabled):active{transform:scale(.97)}
+.lv{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.lv button{border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:7px 6px;text-align:center;cursor:pointer;font:800 14px Nunito,sans-serif;color:var(--ink)}
+.lv button small{display:block;font-weight:700;color:var(--muted);font-size:11.5px;line-height:1.25}.lv button[aria-pressed=true]{border-color:var(--acc);box-shadow:0 0 0 2px #7b5cff33;background:#f3efff}.lv button:disabled{cursor:default;opacity:.75}
+.cus{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:5px;max-height:170px;overflow:auto}
+.cus li{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:5px 8px;font-weight:700;font-size:13.5px}
+.cus li span{flex:1;min-width:0}.cus li b{flex:none;font-size:11.5px;padding:2px 7px;border-radius:999px;color:#fff}.cus li b.t{background:var(--t1)}.cus li b.d{background:var(--d1)}
+.cus li button{flex:none;width:28px;height:28px;border-radius:50%;border:0;background:#ffe3e6;color:#c0263b;font-weight:800;cursor:pointer}
+
+/* dải người chơi */
+.seats{display:flex;gap:8px;overflow-x:auto;max-width:100%;padding:6px 4px 4px;scrollbar-width:none}.seats::-webkit-scrollbar{display:none}
+.seat{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;width:62px;opacity:.72;transition:opacity .2s,transform .2s;position:relative}
+.seat .gk-av{box-shadow:0 0 0 3px #fff}.seat b{font:800 12px Nunito,sans-serif;max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seat small{font:800 11px Nunito,sans-serif;color:var(--muted)}
+.seat.on{opacity:1;transform:translateY(-2px)}.seat.on .gk-av{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--acc2)}.seat.away{opacity:.4}
+.seat.next::after{content:"kế";position:absolute;top:-6px;right:2px;background:var(--ink);color:#fff;font:800 10px Nunito;padding:1px 6px;border-radius:999px}
+
+/* sân khấu: chọn Thật/Thách và lá câu hỏi */
+.stage{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;perspective:1200px}
+.who{text-align:center;font:800 24px "Baloo 2",Nunito,sans-serif;line-height:1.2}.who small{display:block;font:700 14.5px Nunito,sans-serif;color:var(--muted);margin-top:2px}
+.who .gk-av{display:flex;margin:0 auto 8px;box-shadow:0 0 0 4px #fff,0 10px 22px -10px #2a2340}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(460px,100%)}
+.pick button{border:0;border-radius:26px;min-height:150px;color:#fff;cursor:pointer;font:800 27px "Baloo 2",Nunito,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 18px 30px -18px #2a2340,inset 0 -5px 0 #0000001f;transition:transform .14s}
+.pick button i{font-style:normal;font-size:40px}.pick button small{font:700 13px Nunito,sans-serif;opacity:.9}
+.pick button:hover{transform:translateY(-3px) rotate(-1deg)}.pick button:active{transform:scale(.96)}
+.pick .t{background:linear-gradient(140deg,var(--t1),var(--t2))}.pick .d{background:linear-gradient(140deg,var(--d1),var(--d2))}
+.pick .r{grid-column:1/-1;min-height:54px;font-size:18px;flex-direction:row;gap:8px;background:var(--ink)}.pick .r i{font-size:22px}
+.qcard{width:min(460px,100%);min-height:250px;border-radius:28px;padding:20px 22px 22px;color:#fff;display:flex;flex-direction:column;gap:10px;box-shadow:0 26px 44px -24px #2a2340,inset 0 -6px 0 #0000001a;animation:flip .5s cubic-bezier(.2,.8,.2,1) both;position:relative;overflow:hidden}
+.qcard::before{content:"";position:absolute;inset:0;background:radial-gradient(300px 180px at 100% 0,#ffffff38,transparent 70%);pointer-events:none}
+.qcard.t{background:linear-gradient(150deg,var(--t1),var(--t2))}.qcard.d{background:linear-gradient(150deg,var(--d1),var(--d2))}
+.qcard .kind{font:800 15px "Baloo 2",Nunito,sans-serif;letter-spacing:2px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.qcard .kind span{background:#ffffff33;border-radius:999px;padding:3px 12px;letter-spacing:0;font:800 12.5px Nunito,sans-serif;white-space:nowrap}
+.qcard p{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;margin:0;font:800 clamp(21px,5.6vw,27px)/1.3 "Baloo 2",Nunito,sans-serif;text-wrap:balance}
+.qcard .for{font:800 13.5px Nunito,sans-serif;opacity:.92;text-align:center}
+@keyframes flip{from{transform:rotateY(88deg) scale(.9);opacity:0}to{transform:none;opacity:1}}
+.waitmsg{font:800 15px Nunito,sans-serif;color:var(--muted);text-align:center}
+.lastline{font:700 13.5px Nunito,sans-serif;color:var(--muted);text-align:center;max-width:460px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:min(460px,100%)}.acts .btn{flex:1;min-width:0;white-space:nowrap}.acts .btn.big{flex-basis:100%}
+.hostbar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.hostbar .chip{min-height:34px;font-size:13px}
+
+/* tổng kết */
+.sum{list-style:none;margin:10px 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.sum li{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:6px 10px;font-weight:800}
+.sum li .nm{flex:1;min-width:0}.sum li .nm small{display:block;color:var(--acc);font-size:12px;font-weight:800}.sum li .n{font-size:13px;color:var(--muted);white-space:nowrap}
+.logl{list-style:none;margin:8px 0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:56dvh;overflow:auto}
+.logl li{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:7px 10px;font-weight:700;font-size:14px}.logl li b{color:var(--t1)}.logl li b.d{color:var(--d1)}.logl li small{display:block;color:var(--muted);font-weight:700}
+.guide h3{margin:12px 0 4px;font-size:17px}.guide p,.guide li{font-weight:600;line-height:1.5}.guide ul{padding-left:20px;margin:4px 0}
+@media (prefers-reduced-motion:reduce){.qcard{animation:none}}
+@media (max-height:640px){.pick button{min-height:110px}.qcard{min-height:200px}.who{font-size:20px}}

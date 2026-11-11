@@ -4,7 +4,7 @@ import { DurableObject } from 'cloudflare:workers';
 import { clean, cleanName } from './filter.js';
 import { Meter, LIMITS, GB } from './meter.js';
 
-const GAMES = ['bang', 'uno', 'typhu', 'tamquoc', 'meono', 'masoi', 'scribble', 'tienlen', 'poker', 'xidach', 'catte', 'bacao', 'cangua', 'camel'];
+const GAMES = ['bang', 'uno', 'typhu', 'tamquoc', 'meono', 'masoi', 'scribble', 'tienlen', 'poker', 'xidach', 'catte', 'bacao', 'cangua', 'camel', 'cotuong', 'thathaythach'];
 const CHANNELS = new Set(['all', ...GAMES]);
 const ROOM_TTL = 75e3, HIST = 60, MSG_MAX = 300, SLOW = 1500, MAX_SOCKS = 2000;
 const now = () => Date.now();

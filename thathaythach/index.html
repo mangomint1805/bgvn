@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thật hay Thách – chơi online cùng bạn bè | BGVN</title>
+<meta name="description" content="Thật hay Thách (Truth or Dare) tiếng Việt: 12 chủ đề, hơn 220 câu hỏi và thử thách lành mạnh. Chơi online với bạn bè hoặc chuyền tay một máy. Miễn phí, không cần cài đặt.">
+<meta property="og:type" content="website"><meta property="og:site_name" content="BGVN">
+<meta property="og:url" content="https://boardgamevui.com/thathaythach/">
+<meta property="og:title" content="Thật hay Thách – chơi online cùng bạn bè | BGVN">
+<meta property="og:description" content="12 chủ đề, hơn 220 câu Thật – Thách cho hội bạn, lớp học, công ty, gia đình. Bấm link là vào phòng.">
+<meta property="og:image" content="https://boardgamevui.com/shared/img/og/thathaythach.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:locale" content="vi_VN">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg?v=1" type="image/svg+xml"><link rel="apple-touch-icon" href="/shared/img/brand/apple-touch-icon.png?v=1"><link rel="manifest" href="/manifest.webmanifest?v=1"><meta name="apple-mobile-web-app-title" content="BGVN"><meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" crossorigin>
+<link rel="stylesheet" href="/shared/ui/gamekit.css?v=1">
+<link rel="stylesheet" href="css/tht.css?v=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/shared/ui/shell.css?v=1">
+</head>
+<body>
+<div id="bgvn-splash" aria-hidden="true"><i></i><b></b></div><script>(function(){var s=document.getElementById("bgvn-splash");function h(){if(!s)return;var x=s;s=null;x.className="out";setTimeout(function(){x.remove()},320)}addEventListener("load",h);addEventListener("pageshow",h);setTimeout(h,4500)})()</script>
+
+<!-- TRANG CHỦ -->
+<section id="screen-home" class="screen active">
+  <a class="back-hub bgvn-chip" href="../" aria-label="Về trang chủ BGVN" title="Về trang chủ BGVN"><img src="/favicon.svg?v=1" alt="" width="26" height="26"><span>BGVN</span></a>
+  <div class="home-card">
+    <div class="hero"><img src="../shared/img/icons/thathaythach.svg?v=1" alt=""></div>
+    <h1 class="logo">Thật <span>hay</span> Thách</h1>
+    <p class="tag">Nói thật một câu – hay dám làm một trò? 😏</p>
+    <label class="fld"><span>Tên của bạn</span><input id="name" maxlength="16" placeholder="Nhập tên…" autocomplete="nickname"></label>
+    <div class="btn-col">
+      <button class="btn big pri" id="btn-create">✨ Tạo phòng online</button>
+      <div class="join-row"><input id="join-code" maxlength="5" placeholder="MÃ PHÒNG" autocomplete="off"><button class="btn" id="btn-join">Vào</button></div>
+      <button class="btn big" id="btn-offline">📱 Chơi chung một máy (chuyền tay)</button>
+    </div>
+    <div class="home-tools">
+      <button class="chip" id="btn-guide-home">📖 Cách chơi</button>
+      <button class="chip" id="btn-news-home" data-news="thathaythach">📝 Có gì mới</button>
+    </div>
+    <p class="note">12 chủ đề · hơn 220 câu · nội dung lành mạnh, ai cũng chơi được.</p>
+  </div>
+</section>
+
+<!-- PHÒNG CHỜ -->
+<section id="screen-lobby" class="screen">
+  <div class="lobby">
+    <div class="lobby-head">
+      <button class="chip" id="btn-leave-lobby">← Thoát</button>
+      <div class="code-box" id="code-box">Mã phòng <b id="room-code">…</b> <button class="chip" id="btn-copy">Sao chép link</button></div>
+    </div>
+    <div class="lobby-grid">
+      <div class="panel">
+        <h3>Người chơi <small id="pcount"></small></h3>
+        <ul id="plist" class="plist"></ul>
+        <div id="add-box"></div>
+      </div>
+      <div class="panel">
+        <h3>Chủ đề <small id="ccount"></small></h3>
+        <div id="topics" class="topics"></div>
+        <div id="opts"></div>
+      </div>
+    </div>
+    <p class="wait" id="wait-msg">Đang chờ chủ phòng bắt đầu…</p>
+    <div class="start-bar"><button class="btn big pri" id="btn-start">🎯 Bắt đầu chơi</button></div>
+  </div>
+</section>
+
+<!-- VÁN CHƠI -->
+<section id="screen-game" class="screen">
+  <header class="topbar">
+    <button class="chip ic" id="btn-leave" title="Rời ván" aria-label="Rời ván">←</button>
+    <div class="round" id="round" aria-live="polite"></div>
+    <span class="sp"></span>
+    <div class="tools">
+      <button class="chip ic" id="btn-sound" title="Âm thanh" aria-label="Âm thanh">🔊</button>
+      <button class="chip ic" id="btn-log" title="Các câu đã qua" aria-label="Các câu đã qua">📜</button>
+      <button class="chip ic" id="btn-guide" title="Cách chơi" aria-label="Cách chơi">📖</button>
+    </div>
+  </header>
+  <div class="arena">
+    <div class="seats" id="seats"></div>
+    <div class="stage" id="stage"></div>
+    <div class="acts" id="acts"></div>
+    <div class="hostbar" id="hostbar"></div>
+  </div>
+</section>
+
+<div class="modal" id="modal"><div class="modal-box" id="modal-box"></div></div>
+<div class="toast" id="toast"></div>
+<script type="module" src="js/main.js?v=1"></script>
+<script type="module" src="../shared/ui/homebtn.js?v=15"></script>
+<script type="module" src="/shared/ui/feel.js?v=1"></script>
+</body>
+</html>

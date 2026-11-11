@@ -70,6 +70,13 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:26px}
     <p>UNO, Cờ Tỷ Phú 3D (bàn cờ, toà nhà Sài Gòn, nhân vật), Mèo Nổ, Ma Sói, Scribble, Cờ Cá Ngựa 3D, Đua Lạc Đà 3D, Tiến Lên, Poker, Xì Dách, Cát Tê, Ba Cào: lá bài, quân cờ, biểu tượng và hiệu ứng đều do BGVN tự vẽ bằng code (CSS/SVG/3D). Ảnh đại diện người chơi tự tạo từ các mảnh hình BGVN vẽ.</p>
   </div></section>
 
+  <section id="cotuong"><h2>♟️ Cờ tướng</h2><div class="body">
+    <p>Bàn cờ, quân cờ, luật và máy 3 mức Dễ / Vừa / Khó do BGVN tự viết. Cờ thế do BGVN tự sinh và kiểm chứng bằng máy.</p>
+    <h3>👑 Mức Đại sư <span class="pill oss">Fairy-Stockfish · GPL 3.0</span></h3>
+    <p>Dùng động cơ cờ mã nguồn mở <b>Fairy-Stockfish</b> (Fabian Fichter và cộng sự, dựa trên Stockfish), bản WebAssembly <b>fairy-stockfish-nnue.wasm 1.1.12</b>, giấy phép GNU GPL 3.0. Chạy nguyên bản, không sửa đổi.
+      <a href="https://github.com/fairy-stockfish/fairy-stockfish.wasm">Mã nguồn</a> · <a href="../cotuong/vendor/fsf/Copying.txt">GPL 3.0</a> · <a href="../cotuong/vendor/fsf/AUTHORS">Tác giả</a></p>
+  </div></section>
+
   <section id="bai"><h2>🃏 Bộ bài Xếp bài (Solitaire)</h2><div class="body">
     <h3>🏺 Ai Cập <span class="pill oss">KDE · LGPL / GPL</span></h3>
     <p>Bộ bài <b>Ancient Egyptians</b> (Sean Wilson) – KDE libkdegames, giấy phép GNU LGPL 2.0 · Nền bàn <b>Desert Sands</b> (Sean Wilson) – KDE KPatience, giấy phép GNU GPL 2.0 trở lên.
@@ -130,7 +137,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:26px}
 
   <footer>BGVN · dự án fan-made phi thương mại · <a href="../">Về trang chủ</a></footer>
 </main>
-<script type="module" src="../shared/ui/feedback.js?v=4"></script>
+<script type="module" src="../shared/ui/feedback.js?v=5"></script>
 <script type="module">
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 try {

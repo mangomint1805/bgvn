@@ -1,7 +1,7 @@
 // Unit test: đánh giá bài, so bài, kicker, chia pot, pot phụ, luật cược tối thiểu, mù tay đôi.
 // Chạy: node poker/test/unit.mjs
 import { evaluate, scoreOf, catOf, CAT_NAME, evalCodes, toCode } from '../js/eval.js?v=1';
-import { createGame, applyAction, viewFor, computePots, nextHand, chipsOnTable, setRandom, legal } from '../js/engine.js?v=1';
+import { createGame, applyAction, viewFor, computePots, nextHand, chipsOnTable, setRandom, legal } from '../js/engine.js?v=2';
 import { equity } from '../js/bot.js?v=1';
 
 let pass = 0, fail = 0;

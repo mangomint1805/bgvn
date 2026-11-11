@@ -1,8 +1,8 @@
 // 👤 Tài khoản BGVN (tuỳ chọn): nút đăng nhập + hộp đăng nhập / tạo tài khoản / Google.
-// Dùng: import { mountAccount, openLogin } from '…/shared/ui/account.js?v=5'; mountAccount(element)
+// Dùng: import { mountAccount, openLogin } from '…/shared/ui/account.js?v=6'; mountAccount(element)
 import { auth } from '../net/api.js?v=1';
 import { promptBox, formBox } from './dialog.js?v=1';
-import { avatarHTML, profileCss, openProfile } from './profile.js?v=1';
+import { avatarHTML, profileCss, openProfile } from './profile.js?v=2';
 
 const CSS = `.ac-btn{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 14px;border-radius:999px;border:1.5px solid #ecdfd0;background:#fff;color:#2a2340;font:800 14px Nunito,system-ui,sans-serif;cursor:pointer;max-width:220px}
 .ac-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ac-btn .v{color:#2f9e5b}
@@ -94,7 +94,7 @@ function menu(anchor) {
     if (a === 'out') { await auth.logout(); toast('Đã đăng xuất'); }
     if (a === 'admin') location.href = new URL('../../quantri/', import.meta.url).href;
     if (a === 'prof') openProfile();
-    if (a === 'set') import('./settings.js?v=4').then(m => m.openSettings());
+    if (a === 'set') import('./settings.js?v=5').then(m => m.openSettings());
     if (a === 'name') { const n = await promptBox('Tên này hiện khi bạn vào phòng và chat (2–20 ký tự).', { title: '✏️ Đổi tên hiển thị', value: u.name, maxlength: 20, ok: 'Đổi tên', required: true }); if (n) { const r = await auth.rename(n); toast(r.ok ? 'Đổi tên rồi nè ✨' : r.msg); } }
     if (a === 'pw') {
       const v = await formBox('🔑 Đổi mật khẩu', [{ id: 'o', label: 'Mật khẩu hiện tại', type: 'password', autocomplete: 'current-password' }, { id: 'n', label: 'Mật khẩu mới (ít nhất 6 ký tự)', type: 'password', autocomplete: 'new-password', maxlength: 100 }], { ok: 'Đổi mật khẩu', validate: v => !v.o ? 'Nhập mật khẩu hiện tại nha' : v.n.length < 6 ? 'Mật khẩu mới cần ít nhất 6 ký tự' : '' });

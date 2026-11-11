@@ -1,6 +1,6 @@
 // 🏅 Hồ sơ người chơi: avatar, cấp độ, thống kê từng game, thành tích. Dữ liệu ở shared/ui/stats.js (lưu trên máy này).
-// import { openProfile, avatarHTML } from '…/shared/ui/profile.js?v=1'
-import { load, totals, level, ACHS, GAME_NAMES } from './stats.js?v=2';
+// import { openProfile, avatarHTML } from '…/shared/ui/profile.js?v=2'
+import { load, totals, level, ACHS, GAME_NAMES } from './stats.js?v=3';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 export const AVATARS = ['🐱', '🐶', '🦊', '🐼', '🐯', '🐸', '🐵', '🐰', '🐻', '🐨', '🦁', '🐷', '🐙', '🦄', '🐲', '🤖', '👻', '🧙', '🥷', '🤠'];
 const BG = ['#ff7a8a,#ffb23d', '#7b61ff,#3d8bff', '#2fc76f,#8fe3a8', '#ff9a3d,#ffd166', '#ff5fa2,#b06bff', '#3dc7d6,#3d8bff'];

@@ -6,7 +6,7 @@ import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
-import { watch } from '../../shared/ui/stats.js?v=2';
+import { watch } from '../../shared/ui/stats.js?v=3';
 const NS = 'bgvn-uno', PREFIX = 'bgvn-uno-', GAME = 'uno';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }

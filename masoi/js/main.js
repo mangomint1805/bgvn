@@ -1,4 +1,4 @@
-import { Host, Client, MAX, MIN, loadSnapshot, session, MS_PHRASES, REACT_PHASES } from './net.js?v=9';
+import { Host, Client, MAX, MIN, loadSnapshot, session, MS_PHRASES, REACT_PHASES } from './net.js?v=10';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
@@ -8,7 +8,7 @@ import { coachCheck, coachHide, coachTipEnd } from './coach.js?v=4';
 import { roleCardSVG, cardBackSVG, roleChip, roleDot, bambooSVG, dinhSVG, hillsSVG, starsHTML, firefliesHTML, heroSVG } from './art.js?v=3';
 import * as fx from './fx.js?v=4';
 import { openGuide } from './guide.js?v=5';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=112';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=114';
 import { syncPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 
 const $ = s => document.querySelector(s);

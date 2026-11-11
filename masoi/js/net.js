@@ -3,7 +3,7 @@ import { createGame, applyAction, viewFor, actors, timeout, phaseMs, DEFAULT_OPT
 import { botAction, botDayPlan, botWolfLine, botGhostLine, botLastWords } from './bot.js?v=3';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=5';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
-import { watch } from '../../shared/ui/stats.js?v=2';
+import { watch } from '../../shared/ui/stats.js?v=3';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 // câu chọc riêng của Ma Sói (bảng thả emoji – shared/ui/react.js)

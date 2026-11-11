@@ -1,5 +1,5 @@
 // node xidach/test/sim.mjs [số ván]  – unit test luật + mô phỏng hàng trăm ván bot (0 kẹt, 0 lỗi, bảo toàn chip)
-import { createGame, applyAction, nextRound, handValue, handInfo, compare, viewFor, waitingOn, chipTotal, DEFAULT_OPTS, cleanOpts, OPT_CHOICES, getP, setRandom } from '../js/engine.js?v=1';
+import { createGame, applyAction, nextRound, handValue, handInfo, compare, viewFor, waitingOn, chipTotal, DEFAULT_OPTS, cleanOpts, OPT_CHOICES, getP, setRandom } from '../js/engine.js?v=2';
 import { botAction } from '../js/bot.js?v=1';
 
 let fails = 0, passes = 0;

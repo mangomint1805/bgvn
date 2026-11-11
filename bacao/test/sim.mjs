@@ -1,5 +1,5 @@
 // node bacao/test/sim.mjs [số bàn] – unit test luật + mô phỏng hàng trăm ván bot (0 kẹt, 0 lỗi, bảo toàn chip)
-import { createGame, applyAction, nextRound, handInfo, handPts, compareCards, viewFor, waitingOn, chipTotal, cleanOpts, getP, order, handLabel, multOf, setRandom } from '../js/engine.js?v=1';
+import { createGame, applyAction, nextRound, handInfo, handPts, compareCards, viewFor, waitingOn, chipTotal, cleanOpts, getP, order, handLabel, multOf, setRandom } from '../js/engine.js?v=2';
 import { botAction, betAmount, winChance } from '../js/bot.js?v=1';
 
 let fails = 0, passes = 0;

@@ -4,8 +4,21 @@ export const GAMES = {
   all: '🎲 BGVN', bang: '🤠 CÀ ĐÙNG!', uno: '🃏 UNÔ', typhu: '🏙️ Cờ Tỷ Phú', scribble: '🎨 Scribble it!',
   meono: '💣 Mèo Nổ', tamquoc: '⚔️ Tam Quốc Sát', masoi: '🐺 Ma Sói',
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
+  cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261111-10', date: '11/11/2026', game: 'thathaythach', title: 'Game mới: Thật hay Thách!', items: [
+    '🎯 Truth or Dare tiếng Việt theo góp ý của các bạn: tới lượt thì chọn 💬 Thật hoặc 🔥 Thách, làm xong bấm Xong.',
+    '📚 12 chủ đề (Bạn bè, Hài hước, Học đường, Công sở, Tình cảm, Gia đình, Tâm sự, Mạng xã hội, Game thủ, Tài lẻ, Ăn uống, Du lịch & Ước mơ) với hơn 220 câu, 3 độ lầy 🌱😄🔥.',
+    '✍️ Chủ phòng thêm được câu tự viết của nhóm; có đổi câu, bỏ qua, tổng kết danh hiệu cuối buổi.',
+    '📱 Chơi online theo mã phòng hoặc chuyền tay một máy.',
+  ] },
+  { id: '20261111-9', date: '11/11/2026', game: 'cotuong', title: 'Game mới: Cờ tướng!', items: [
+    '♟️ Đấu với bạn qua mã phòng, 2 người chung một máy, hoặc đấu máy.',
+    '🤖 Máy có 4 mức: Dễ, Vừa, Khó và 👑 Đại sư (động cơ Fairy-Stockfish, tải thêm khi bạn chọn).',
+    '🧩 Cờ thế: 13 bài chiếu bí trong 1–3 nước để luyện tay.',
+    '✨ Gợi ý nước đi hợp lệ, biên bản ván cờ, xin đi lại, cầu hoà, đổi chữ Hán ↔ chữ Việt trên quân.',
+  ] },
   { id: '20261111-8', date: '11/11/2026', game: 'all', title: 'Chơi công bằng', items: [
     '⚖️ Trang mới "Chơi công bằng" (cuối trang chủ): bài xáo ngẫu nhiên thế nào, bot biết những gì, kèm số liệu hàng nghìn ván thử.',
     '🤖 Đã soát lại toàn bộ bot của 13 game: bot không nhìn bài người khác, không nhắm riêng vào người thật.',

@@ -2,14 +2,14 @@
 // mountLobby(el, { game }) – game = null: sảnh tổng (mọi game, kênh chat "Chung" + kênh game đang lọc)
 // openLobby(game) – mở dạng hộp nổi (dùng trong trang game)
 import { WS, auth, guestId, myName } from '../net/api.js?v=1';
-import { openLogin } from './account.js?v=5';
+import { openLogin } from './account.js?v=6';
 import { promptBox, chooseBox } from './dialog.js?v=1';
 
 const ROOT = new URL('../../', import.meta.url).href;
 export const GAME_INFO = {
   bang: ['🤠', 'CÀ ĐÙNG!'], uno: ['🃏', 'UNÔ'], typhu: ['🏙️', 'Cờ Tỷ Phú'], tamquoc: ['⚔️', 'Tam Quốc Sát'], meono: ['💣', 'Mèo Nổ'], masoi: ['🐺', 'Ma Sói'],
   scribble: ['🎨', 'Scribble'], tienlen: ['🐷', 'Tiến Lên'], poker: ['♠️', 'Poker'], xidach: ['🂡', 'Xì Dách'], catte: ['🎴', 'Cát Tê'], bacao: ['🀄', 'Ba Cào'],
-  cangua: ['🐴', 'Cờ Cá Ngựa'], camel: ['🐪', 'Đua Lạc Đà'],
+  cangua: ['🐴', 'Cờ Cá Ngựa'], camel: ['🐪', 'Đua Lạc Đà'], cotuong: ['♟️', 'Cờ tướng'], thathaythach: ['🎯', 'Thật hay Thách'],
 };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const hhmm = t => new Date(t).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });

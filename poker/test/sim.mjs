@@ -1,6 +1,6 @@
 // Mô phỏng hàng trăm ván bot: 0 kẹt, 0 lỗi, bảo toàn chip, không lộ bài.
 // Chạy: node poker/test/sim.mjs [số bàn]
-import { createGame, applyAction, nextHand, viewFor, chipsOnTable, legal, setRandom } from '../js/engine.js?v=1';
+import { createGame, applyAction, nextHand, viewFor, chipsOnTable, legal, setRandom } from '../js/engine.js?v=2';
 import { botAction } from '../js/bot.js?v=1';
 
 const TABLES = +process.argv[2] || 60;

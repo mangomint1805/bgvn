@@ -4,8 +4,9 @@ Web board game / game bài tiếng Việt chơi cùng bạn bè: **https://board
 Chủ web: Minto. Trả lời bằng tiếng Việt, xưng "em", gọi "anh". Khi làm việc thì báo cáo ngắn gọn.
 
 ## Cấu trúc
-- Mỗi game là một thư mục (`bang/ uno/ typhu/ tamquoc/ meono/ masoi/ scribble/ tienlen/ poker/ xidach/ catte/ bacao/ cangua/ camel/ solitaire/`), thường gồm `index.html` + `js/main.js` (giao diện), `js/engine.js` (luật, thuần logic), `js/net.js` (Host/Client), `js/bot.js`, `js/guide.js`.
+- Mỗi game là một thư mục (`bang/ uno/ typhu/ tamquoc/ meono/ masoi/ scribble/ tienlen/ poker/ xidach/ catte/ bacao/ cangua/ camel/ solitaire/ cotuong/ thathaythach/`), thường gồm `index.html` + `js/main.js` (giao diện), `js/engine.js` (luật, thuần logic), `js/net.js` (Host/Client), `js/bot.js`, `js/guide.js`.
 - `shared/net/`: kết nối. `room.js` chọn đường truyền theo thứ tự **cf → fb → p2p → mqtt**. Cloudflare (`cfrelay.js`) là đường chính; Firebase, PeerJS, MQTT chỉ là dự phòng. `api.js` gom tài khoản, sảnh, khách; `presence.js` đếm người online.
+- **Game nhỏ / game mới** (Cờ tướng, Thật hay Thách) không viết `net.js` riêng: dùng `shared/net/simplenet.js` (`makeNet({ game, create, apply, view, actors, bot… })` lo phòng, vào lại, người xem, bot, người chơi cùng máy) + `shared/ui/gamekit.js` / `gamekit.css` (3 màn hình chuẩn, id chuẩn). Chép `thathaythach/` làm mẫu.
 - `shared/ui/`: dùng chung: `homebtn.js` (nút trang chủ, phòng công khai), `account.js`, `lobby.js` (sảnh + chat), `settings.js`, `spectate.js` (dải "Đang xem"), `news.js` + `shared/patchnotes.js`.
 - `server/`: Cloudflare Worker **bgvn-rooms** (`api.boardgamevui.com`) với các Durable Object `Room`, `Inbox`, `Users`, `Lobby` (SQLite, gói Free). Push lên `main` là Workers Builds tự deploy.
 - Trang phụ: `sanh/` (Sảnh chung), `quantri/` (quản trị), `credits/`, `privacy/`, `terms/`, `luat/`. File `luat-mac-dinh.js` là luật chọn sẵn khi tạo phòng.
@@ -36,6 +37,11 @@ Chủ web: Minto. Trả lời bằng tiếng Việt, xưng "em", gọi "anh". Kh
 - Thủ công: xem `tools/qa/CHECKLIST.md`.
 - Chạy local: thêm `?cf=ws://127.0.0.1:8787` vào URL để client dùng máy chủ local (giá trị được nhớ trong localStorage `bgvn-cf`; xoá đi để quay về máy chủ thật).
 - `server/.dev.vars` (ADMIN_KEY để test) **không bao giờ được commit**.
+
+## Game mới – nhớ đăng ký đủ chỗ
+Ô game ở `index.html` (+ CSS nền, số game ở hero) · `GAME_NAMES` + `OVER` trong `stats.js` · `GAMES` trong `shared/patchnotes.js`, `shared/ui/lobby.js`, `shared/ui/settings.js`, `shared/ui/feedback.js`, `server/src/lobby.js` (đổi server = deploy lại) · icon (`tools/icons`) + ảnh OG · `tools/qa/qa.mjs` · `credits/` nếu dùng thứ của người khác. Xong thì chạy `python3 tools/bump.py` để tăng `?v` cả chuỗi import.
+- Cờ tướng: test luật `node cotuong/test/sim.mjs`, sinh cờ thế `node tools/cotuong/make-puzzles.mjs`. Mức Đại sư = Fairy-Stockfish (GPL-3, `cotuong/vendor/fsf/`), cần service worker `cotuong/coi-sw.js` để bật cross-origin isolation (chỉ đăng ký khi chọn Đại sư).
+- Thật hay Thách: câu hỏi ở `thathaythach/js/cards.js` – chỉ nội dung lành mạnh (không rượu bia, không 18+, không ép lộ chuyện riêng tư nặng); test `node thathaythach/test/sim.mjs`.
 
 ## Bot và tính công bằng
 - Bot chỉ được dùng bài của chính nó + thông tin công khai trên bàn. **Không** đọc bài người khác, thứ tự chồng bài hay vai bí mật; **không** viết luật phân biệt người thật với bot (`isBot`) trong `bot.js`.

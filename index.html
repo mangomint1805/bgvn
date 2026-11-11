@@ -72,6 +72,8 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:36px}
 .bacao{background:radial-gradient(circle at 50% 30%,#d94b4b,#9c1f2a 60%,#5c0f18)}.bacao h2{font-family:'Baloo 2';font-size:44px;color:#fff;text-shadow:3px 3px 0 #0005}.bacao .art{position:absolute;inset:0 0 40% 0;display:flex;align-items:center;justify-content:center}
 .bacao .art span{display:grid;place-items:center;width:64px;height:92px;margin:0 -8px;background:#fff;border-radius:10px;box-shadow:0 6px 14px #0004;font:800 28px 'Baloo 2',sans-serif;color:#222}.bacao .art span:nth-child(1){transform:rotate(-14deg) translateY(8px)}.bacao .art span:nth-child(2){color:#d32f2f;transform:translateY(-6px)}.bacao .art span:nth-child(3){transform:rotate(14deg) translateY(8px);background:#ffe14d}
 
+.cotuong{background:radial-gradient(circle at 50% 30%,#d9a55b,#a8662b 62%,#6b3c17)}.cotuong h2{font-family:'Baloo 2';font-size:44px;color:#fff;text-shadow:3px 3px 0 #0006}.cotuong .art{position:absolute;inset:0 0 40% 0;display:flex;align-items:center;justify-content:center}
+.thathaythach{background:linear-gradient(135deg,#7b5cff,#c45cf0 50%,#ff5c9a)}.thathaythach h2{font-family:'Baloo 2';font-size:40px;color:#fff;text-shadow:3px 3px 0 #0005}.thathaythach .art{position:absolute;inset:0 0 40% 0;display:flex;align-items:center;justify-content:center}
 .solitaire{background:radial-gradient(circle at 50% 30%,#2fa463,#126b3c 65%,#0a4526)}.solitaire h2{font-family:'Baloo 2';font-size:42px;color:#fff;text-shadow:3px 3px 0 #0005}.solitaire .art{position:absolute;inset:0 0 40% 0;display:flex;align-items:center;justify-content:center}
 .solitaire .art span{display:grid;place-items:center;width:58px;height:84px;margin:0 -8px;background:#fff;border-radius:9px;box-shadow:0 6px 14px #0004;font:800 26px 'Baloo 2',sans-serif;color:#222}.solitaire .art span:nth-child(even){color:#d32f2f}.solitaire .art span:nth-child(1){transform:translateY(-18px)}.solitaire .art span:nth-child(2){transform:translateY(-6px)}.solitaire .art span:nth-child(3){transform:translateY(6px)}.solitaire .art span:nth-child(4){transform:translateY(18px)}
 
@@ -231,7 +233,7 @@ main{max-width:1080px;padding:28px 16px 32px}
         <a class="btn-main" href="#games">Chọn game <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M8 5.200v13.600a1 1 0 0 0 1.500.900l11-6.800a1 1 0 0 0 0-1.700l-11-6.800A1 1 0 0 0 8 5.200z"/></svg></a>
         <a class="btn-sub" href="sanh/">🌐 Sảnh chung<small>tìm phòng · chat</small></a>
       </div>
-      <ul class="facts"><li><b>15</b> game</li><li><b>2–16</b> người</li><li>Điện thoại &amp; máy tính</li></ul>
+      <ul class="facts"><li><b>17</b> game</li><li><b>2–16</b> người</li><li>Điện thoại &amp; máy tính</li></ul>
     </div>
     <div class="hero-card" id="hero-card" aria-live="polite"></div>
   </section>
@@ -357,6 +359,20 @@ main{max-width:1080px;padding:28px 16px 32px}
       <div class="info"><h2>Xếp bài</h2><p>Xếp bài cổ điển như Solitaire Windows: rút 1/3, điểm Vegas, gợi ý, bài nảy khi thắng 🃏</p>
         <div class="tags"><i>1 người</i><i>Bài Tây</i><i>Thư giãn</i></div></div>
     </a>
+    <a class="tile cotuong" href="cotuong/" data-game="cotuong" data-cat="board" data-min="1" data-max="2">
+      <span class="newtag" data-news="cotuong">MỚI</span>
+      <div class="art"><img class="ic" src="shared/img/icons/cotuong.svg?v=1" alt="" draggable="false"></div>
+      <span class="play">Chơi ▶</span>
+      <div class="info"><h2>Cờ tướng</h2><p>Đấu với bạn hoặc với máy 4 mức, có cả Đại sư. Thêm cờ thế để luyện chiếu bí ♟️</p>
+        <div class="tags"><i>1–2 người</i><i>Cờ</i><i>Đấu trí</i></div></div>
+    </a>
+    <a class="tile thathaythach" href="thathaythach/" data-game="thathaythach" data-cat="party" data-min="2" data-max="12">
+      <span class="newtag" data-news="thathaythach">MỚI</span>
+      <div class="art"><img class="ic" src="shared/img/icons/thathaythach.svg?v=1" alt="" draggable="false"></div>
+      <span class="play">Chơi ▶</span>
+      <div class="info"><h2>Thật hay Thách</h2><p>12 chủ đề, hơn 220 câu Thật – Thách lành mạnh cho hội bạn, lớp học, công ty 🎯</p>
+        <div class="tags"><i>2–12 người</i><i>Party</i><i>Chuyền tay được</i></div></div>
+    </a>
     <p class="empty-filter" id="empty-filter">Chưa có game nào hợp với lựa chọn này – thử đổi bộ lọc nha.</p>
     <div class="tile soon"><div><b style="font-size:22px">Sắp có thêm…</b><br>Góp ý game tiếp theo nhé 💌</div></div>
   </div>
@@ -384,10 +400,10 @@ main{max-width:1080px;padding:28px 16px 32px}
 function fitTitles(){document.querySelectorAll('.grid .tile .info h2,.hero-card .tile .info h2').forEach(h=>{h.style.fontSize='';let f=parseFloat(getComputedStyle(h).fontSize);while(h.scrollWidth>h.clientWidth&&f>22){f-=1;h.style.fontSize=f+'px'}})}
 addEventListener('load',fitTitles);addEventListener('resize',()=>{clearTimeout(fitTitles.t);fitTitles.t=setTimeout(fitTitles,120)});document.fonts&&document.fonts.ready.then(fitTitles);
 </script>
-<script type="module" src="shared/ui/feedback.js?v=4"></script>
-<script type="module">import { mountAccount } from "./shared/ui/account.js?v=5"; import { mountOnline } from "./shared/net/presence.js?v=5"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} import("./shared/ui/profile.js?v=1").then(async m => { const st = await import("./shared/ui/stats.js?v=2"); m.profileCss(); const b = document.getElementById("btn-prof"), d = () => { b.innerHTML = m.avatarHTML(42) + `<span class="lv">${st.level().lv}</span>`; }; d(); addEventListener("bgvn-avatar", d); addEventListener("bgvn-stats", d); b.onclick = () => m.openProfile(); }); document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=4").then(m => m.openSettings());</script>
+<script type="module" src="shared/ui/feedback.js?v=5"></script>
+<script type="module">import { mountAccount } from "./shared/ui/account.js?v=6"; import { mountOnline } from "./shared/net/presence.js?v=5"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} import("./shared/ui/profile.js?v=2").then(async m => { const st = await import("./shared/ui/stats.js?v=3"); m.profileCss(); const b = document.getElementById("btn-prof"), d = () => { b.innerHTML = m.avatarHTML(42) + `<span class="lv">${st.level().lv}</span>`; }; d(); addEventListener("bgvn-avatar", d); addEventListener("bgvn-stats", d); b.onclick = () => m.openProfile(); }); document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=5").then(m => m.openSettings());</script>
 <script type="module">
-import { openNews, newsBadge } from './shared/ui/news.js?v=112';
+import { openNews, newsBadge } from './shared/ui/news.js?v=114';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 const json = k => { try { return JSON.parse(ls.get(k)); } catch (e) { return null; } };
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
@@ -395,11 +411,11 @@ const tiles = $$('.grid .tile[data-game]');
 tiles.forEach((t, i) => t.style.setProperty('--i', i));
 // thanh trên đổ bóng khi cuộn
 const nav = $('#nav'), onScroll = () => nav.classList.toggle('stuck', scrollY > 8); addEventListener('scroll', onScroll, { passive: true }); onScroll();
-// 📝 Có gì mới – khách lần đầu vào thì coi như đã xem hết (không gắn "MỚI" cho cả 15 game)
+// 📝 Có gì mới – khách lần đầu vào thì coi như đã xem hết (không gắn "MỚI" cho cả 17 game)
 if (!ls.get('bgvn-visited')) {
   ls.set('bgvn-visited', String(Date.now()));
   let old = false; try { old = Object.keys(localStorage).some(k => k.startsWith('bgvn-news-seen-') || k.startsWith('bgvn-session-') || k === 'bgvn-name'); } catch (e) {}
-  if (!old) import('./shared/patchnotes.js?v=71').then(m => { ['all', ...tiles.map(t => t.dataset.game)].forEach(g => { const id = m.latestId(g === 'all' ? null : g); if (id) ls.set('bgvn-news-seen-' + g, id); }); });
+  if (!old) import('./shared/patchnotes.js?v=73').then(m => { ['all', ...tiles.map(t => t.dataset.game)].forEach(g => { const id = m.latestId(g === 'all' ? null : g); if (id) ls.set('bgvn-news-seen-' + g, id); }); });
   else marks();
 } else marks();
 function marks() { $$('#btn-news,#btn-news-m').forEach(b => newsBadge(b, null)); $$('.grid .newtag[data-news]').forEach(t => newsBadge(t, t.dataset.news)); }

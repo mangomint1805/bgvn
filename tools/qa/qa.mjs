@@ -15,7 +15,7 @@ const GAMES = {
   bang: { nm: '#inp-name', jc: '#inp-code', rc: '#lobby-code', bot: '#btn-add-bot', nbot: 3 },
   uno: {}, meono: {}, tamquoc: {}, masoi: { nbot: 5 }, tienlen: {}, poker: {}, xidach: {}, bacao: {},
   catte: { specText: 'ghế chờ' }, // Cát tê có sẵn giao diện ghế chờ riêng
-  cangua: {}, camel: {}, typhu: {},
+  cangua: {}, camel: {}, typhu: {}, cotuong: { nbot: 1 },
   scribble: { online: false }, solitaire: { online: false }, // scribble cần người thật vẽ; solitaire chơi một mình
 };
 const want = process.argv.slice(2); const list = want.length ? want : Object.keys(GAMES);
