@@ -22,7 +22,7 @@ Chủ web: Minto. Trả lời bằng tiếng Việt, xưng "em", gọi "anh". Kh
 
 ## Giao diện chung
 - **Không dùng `alert` / `confirm` / `prompt` của trình duyệt.** Dùng `shared/ui/dialog.js` (`confirmBox`, `promptBox`, `formBox`, `chooseBox`, `alertBox`, `toast`).
-- **Khung chung nạp ở mọi trang:** `shared/ui/shell.css` (chuyển trang mượt, màn hình chờ `#bgvn-splash`, nút về trang chủ `.bgvn-chip`) và `shared/ui/feel.js` (rung + tiếng bấm). Trang mới phải có đủ 3 thứ: thẻ `<link>` shell.css trong `<head>`, khối splash ngay sau `<body>`, thẻ script feel.js trước `</body>` – chép từ một trang có sẵn.
+- **Khung chung nạp ở mọi trang:** `shared/ui/shell.css` (chuyển trang mượt, màn hình chờ `#bgvn-splash`, nút về trang chủ `.bgvn-chip`) và `shared/ui/feel.js` (rung + tiếng bấm; kéo theo `inapp.js` – dải nhắc mở bằng Safari/Chrome khi đang ở trình duyệt nhúng của Zalo, Facebook, TikTok…). Trang mới phải có đủ 3 thứ: thẻ `<link>` shell.css trong `<head>`, khối splash ngay sau `<body>`, thẻ script feel.js trước `</body>` – chép từ một trang có sẵn.
 - Hồ sơ người chơi: `shared/ui/stats.js` (đếm ván/thắng, cấp độ, thành tích – lưu localStorage `bgvn-stats`) và `shared/ui/profile.js` (hộp hồ sơ, avatar). Mỗi `net.js` bọc `this.h = watch(GAME, handlers, …)`; game mới phải thêm 1 dòng vào bảng `OVER` trong stats.js để biết lúc nào ván xong và ai thắng.
 - Mời bạn: `shared/ui/invite.js` (QR + chia sẻ), `homebtn.js` tự gắn nút dưới mã phòng (`#room-code` / `#lobby-code`).
 - Nhận diện: logo "xúc xắc cười" ở `shared/img/brand/` (`mark.svg`, icon PNG), `favicon.svg`, `manifest.webmanifest` (cài như app). Màu chủ đạo: mực `#2a2340`, nền `#fff7ef`, dải cam–hồng `#ff4d6a → #ff7a45 → #ffb23d`. Phông: Baloo 2 (tiêu đề), Nunito (chữ thường).

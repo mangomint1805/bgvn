@@ -1,6 +1,7 @@
 // ✨ Cảm giác bấm chung: rung nhẹ trên điện thoại + tiếng "tách" nhỏ ở giao diện chung (trang chủ, trang phụ, hộp thoại, cài đặt, sảnh).
 // Trong ván chơi mỗi game có âm thanh riêng nên ở đó chỉ rung, không kêu thêm.
 // Tắt trong ⚙️ Cài đặt: bgvn-ui-sfx = '0' (tiếng), bgvn-haptic = '0' (rung); "Tắt hết nhạc nền" không ảnh hưởng tiếng nút.
+import './inapp.js?v=1'; /* nhắc mở bằng Safari/Chrome khi đang ở trình duyệt nhúng của Zalo, Facebook… */
 const on = k => { try { return localStorage.getItem(k) !== '0'; } catch (e) { return true; } };
 const SHARED = '.dg-box,.st-box,.ac-box,.ac-menu,.bgvn-news,.lb,.lb-ov,#bgvn-fb,.bgvn-chip,[data-ui-sfx]';
 let ac = null, last = 0;
