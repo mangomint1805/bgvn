@@ -97,5 +97,11 @@ G.camel = svg(`<path d="M80 160l90-120 90 120z" fill="#f0c36a" ${S()}/><path d="
 const horse = (x, y, c, s) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-30 50h60l-6-14H-24z" fill="${c}" ${S()}/><path d="M-22 36c-6-22 4-34 10-44-12-2-22 6-28 0-4-6 8-26 22-36l2-12 10 8c22 2 34 22 32 52-2 14-6 24-10 32z" fill="${c}" ${S()}/><circle cx="-6" cy="-24" r="3.5" fill="${INK}"/><path d="M6 -44c10 6 18 16 20 30" fill="none" stroke="#fff6" stroke-width="5" stroke-linecap="round"/></g>`;
 G.cangua = svg(horse(150, 96, '#ff5a5f', 1) + horse(236, 104, '#4aa3ff', .78) + die(306, 120, 40, 16, [6]) +
   `<g transform="translate(320 26)"><path d="M0 0v62" ${S()}/><path d="M2 2h40v26H2z" fill="#fff" ${S(3)}/><path d="M2 2h10v9H2zM22 2h10v9H22zM12 11h10v9H12zM32 11h10v8H32zM2 20h10v8H2zM22 20h10v8H22z" fill="${INK}"/></g>`);
+// ♟️ Cờ tướng: ba quân cờ gỗ (帥 đỏ, 馬 đen, 炮 đỏ)
+const xq = (x, y, r, ch, col, rot = 0) => `<g transform="translate(${x} ${y}) rotate(${rot})"><ellipse cy="${r * .16}" rx="${r}" ry="${r}" fill="#a9824a" ${S()}/><circle r="${r}" fill="#f6e4bf" ${S()}/><circle r="${r * .78}" fill="none" stroke="${col}" stroke-width="3"/><text y="${r * .36}" text-anchor="middle" font-family="'Noto Serif CJK SC','Songti SC','Noto Serif SC',SimSun,serif" font-weight="900" font-size="${r * 1.05}" fill="${col}">${ch}</text></g>`;
+G.cotuong = svg(xq(140, 104, 44, '馬', '#22201e', -8) + xq(262, 108, 44, '炮', '#c0271d', 8) + xq(200, 82, 56, '帥', '#c0271d', 0));
+// 🎭 Thật hay Thách: hai lá bài "THẬT" và "THÁCH" + chai xoay
+const tc = (x, y, rot, bg, t, em) => `<g transform="translate(${x} ${y}) rotate(${rot})"><rect x="-52" y="-66" width="104" height="132" rx="16" fill="${bg}" ${S()}/><rect x="-42" y="-56" width="84" height="112" rx="10" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="3"/><text y="-8" text-anchor="middle" font-size="44">${em}</text><text y="38" text-anchor="middle" ${F} font-size="23" fill="#fff">${t}</text></g>`;
+G.thathaythach = svg(tc(150, 96, -11, '#3d8bff', 'THẬT', '🤫') + tc(252, 96, 10, '#ff4d6a', 'THÁCH', '🔥') + `<g transform="translate(201 92)"><circle r="23" fill="#ffd166" ${S()}/><text y="10" text-anchor="middle" ${F} font-size="28" fill="${INK}">?</text></g>`);
 for (const [k, v] of Object.entries(G)) writeFileSync(OUT + k + '.svg', v);
 console.log('Đã vẽ', Object.keys(G).length, 'icon →', OUT);

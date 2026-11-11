@@ -3,7 +3,7 @@
 // Thêm game mới: thêm 1 dòng vào bảng OVER bên dưới (trả null khi ván CHƯA xong; { won: true/false/null } khi xong).
 const KEY = 'bgvn-stats';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
-export const GAME_NAMES = { bang: 'CÀ ĐÙNG!', uno: 'UNÔ', typhu: 'Cờ Tỷ Phú', scribble: 'Scribble it!', meono: 'Mèo Nổ', tamquoc: 'Tam Quốc Sát', masoi: 'Ma Sói', camel: 'Đua Lạc Đà', cangua: 'Cờ cá ngựa', tienlen: 'Tiến Lên', catte: 'Cát tê', bacao: 'Ba Cào', xidach: 'Xì dách', poker: 'Poker', solitaire: 'Xếp bài' };
+export const GAME_NAMES = { bang: 'CÀ ĐÙNG!', uno: 'UNÔ', typhu: 'Cờ Tỷ Phú', scribble: 'Scribble it!', meono: 'Mèo Nổ', tamquoc: 'Tam Quốc Sát', masoi: 'Ma Sói', camel: 'Đua Lạc Đà', cangua: 'Cờ cá ngựa', tienlen: 'Tiến Lên', catte: 'Cát tê', bacao: 'Ba Cào', xidach: 'Xì dách', poker: 'Poker', solitaire: 'Xếp bài', cotuong: 'Cờ tướng', thathaythach: 'Thật hay Thách' };
 const byId = (v, id) => (v.players || []).find(p => p.id === id);
 const isMe = (v, me) => id => id === me;
 const SIDE = { bang: { law: ['sheriff', 'deputy'], outlaw: ['outlaw'], renegade: ['renegade'] }, tamquoc: { lord: ['lord', 'loyal'], rebel: ['rebel'], spy: ['spy'] } };
@@ -18,6 +18,8 @@ const OVER = {
   xidach: chip, bacao: chip,
   catte: (v, me) => v.phase === 'handEnd' ? { won: !!(v.result && v.result.winner === me) } : null,
   camel: (v, me) => v.phase === 'ended' ? { won: !!(v.result && (v.result.winners || []).includes(me)) } : null,
+  cotuong: (v, me) => v.phase === 'ended' && !v.puzzle ? { won: v.winner ? v.winner === me : null } : null, // hoà: không tính thắng thua
+  thathaythach: v => v.phase === 'ended' ? { won: null } : null, // game vui, không có thắng thua
   scribble: (v, me) => v.phase === 'end' ? { won: ((v.players || []).slice().sort((a, b) => (b.score || 0) - (a.score || 0))[0] || {}).id === me } : null,
 };
 
