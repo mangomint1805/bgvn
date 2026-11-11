@@ -4,7 +4,7 @@ import * as E from './engine.js?v=1';
 import { botAction, botWants } from './bot.js?v=1';
 import { masterMove, masterReady, masterOff } from './master.js?v=1';
 import { PUZZLES } from './puzzles.js?v=1';
-import { gameKit, $, $$, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=1';
+import { gameKit, $, $$, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=2';
 import { confirmBox, promptBox, toast as tip } from '../../shared/ui/dialog.js?v=1';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=115';
 

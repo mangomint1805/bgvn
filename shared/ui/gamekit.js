@@ -29,8 +29,9 @@ export function gameKit({ game, net: N, onLobby, onState, offline }) {
   $('#name').value = ls.get('bgvn-name') || '';
 
   const handlers = {
-    onLobby(info, code, started) { ui.lobby = info; ui.code = code; $('#room-code').textContent = code; if (!started) { ui.view = null; if (!$('#screen-lobby').classList.contains('active')) ui.show('screen-lobby'); } onLobby && onLobby(info, ui, started); },
+    onLobby(info, code, started) { if (ui.gone) return; /* tin tới trễ sau khi đã rời phòng */ ui.lobby = info; ui.code = code; $('#room-code').textContent = code; if (!started) { ui.view = null; if (!$('#screen-lobby').classList.contains('active')) ui.show('screen-lobby'); } onLobby && onLobby(info, ui, started); },
     onState(v) {
+      if (ui.gone) return;
       if (!v) { ui.view = null; ui.closeModal(); ui.show('screen-lobby'); onLobby && ui.lobby && onLobby(ui.lobby, ui, false); onState && onState(null, null, ui); return; }
       const prev = ui.view; ui.view = v; if (!$('#screen-game').classList.contains('active')) ui.show('screen-game');
       onState && onState(v, prev, ui);
@@ -42,6 +43,7 @@ export function gameKit({ game, net: N, onLobby, onState, offline }) {
   const wrapHost = h => { h.actRaw = h.act; return h; };
   function startHost(off, skipSetup = false) {
     if (ui.net) ui.net.leave();
+    ui.gone = false;
     const h = new Host(myName(), handlers, off); ui.net = { act: (id, a) => h.act(id, a), actAs: (id, a) => h.actAs(id, a), controls: id => h.controls(id), leave: () => h.leave(), raw: h };
     ui.isHost = true; ui.myId = 'host'; wrapHost(h);
     if (off) { session.save(game, { role: 'host', code: 'OFFLINE' }); if (!skipSetup) offline && offline(h); }
@@ -50,6 +52,7 @@ export function gameKit({ game, net: N, onLobby, onState, offline }) {
   ui.startHost = startHost; // game tự mở phòng (vd. chế độ luyện tập) – trả về Host
   function startClient(code, name) {
     if (ui.net) ui.net.leave();
+    ui.gone = false;
     const c = new Client(code, name, handlers); ui.net = { act: (id, a) => c.act(a), actAs: (id, a) => c.actAs(id, a), controls: id => c.controls(id), leave: () => c.leave(), raw: c };
     ui.isHost = false; $('#code-box').style.display = '';
   }
@@ -57,7 +60,7 @@ export function gameKit({ game, net: N, onLobby, onState, offline }) {
   if ($('#btn-offline')) $('#btn-offline').onclick = () => startHost(true);
   $('#btn-join').onclick = () => { const code = $('#join-code').value.trim(); if (code.length < 5) { ui.toast('Nhập mã phòng 5 ký tự nhé.'); return; } startClient(code, myName()); ui.toast('Đang kết nối…'); };
   $('#join-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
-  ui.leave = () => { if (ui.net) ui.net.leave(); ui.net = null; ui.view = null; ui.lobby = null; ui.closeModal(); ui.show('screen-home'); onState && onState(null, null, ui); };
+  ui.leave = () => { ui.gone = true; if (ui.net) ui.net.leave(); ui.net = null; ui.view = null; ui.lobby = null; ui.closeModal(); ui.show('screen-home'); onState && onState(null, null, ui); };
   $('#btn-leave-lobby').onclick = ui.leave;
   if ($('#btn-leave')) $('#btn-leave').onclick = async () => {
     const r = await confirmBox(ui.isHost ? 'Bạn là chủ phòng: rời đi là cả phòng giải tán.' : 'Bạn có thể vào lại bằng mã phòng.', { title: 'Rời ván?', ok: 'Rời ván', cancel: 'Ở lại', danger: true });
