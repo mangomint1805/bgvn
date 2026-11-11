@@ -97,11 +97,23 @@ export class Users extends DurableObject {
     return { ok: true };
   }
   // ---- quản trị ----
-  async claimAdmin(token, key, want) { // tài khoản đang đăng nhập + đúng ADMIN_KEY → thành quản trị viên
+  async claimAdmin(token, key, want, ip = '') { // tài khoản đang đăng nhập + đúng ADMIN_KEY → thành quản trị viên
     const u = await this.whoami(token); if (!u) return { ok: false, msg: 'Đăng nhập trước đã nha' };
-    want = String(want || '').trim(); if (!want || String(key || '').trim() !== want) return { ok: false, msg: 'Sai mật khẩu quản trị' };
+    want = String(want || '').trim();
+    if (!(await this.adminGuard(ip, null))) return { ok: false, msg: 'Sai nhiều lần quá – khoá 1 giờ' };
+    if (!want || !eqTime(String(key || '').trim(), want)) { await this.adminGuard(ip, false); return { ok: false, msg: 'Sai mật khẩu quản trị' }; }
     this.sql.exec('UPDATE users SET admin = 1 WHERE id = ?', u.id);
     return { ok: true, user: this.pub(this.one('SELECT * FROM users WHERE id = ?', u.id)) };
+  }
+  // chống dò mật khẩu quản trị: tối đa 5 lần sai / giờ / IP và 30 lần sai / giờ toàn máy chủ (lưu bền, IP đã băm)
+  async adminGuard(ip, ok) {
+    this.sql.exec('CREATE TABLE IF NOT EXISTS adminfail (ip TEXT, t INTEGER)');
+    const t = Date.now(), h = await sha256('bgvn:' + ip);
+    this.sql.exec('DELETE FROM adminfail WHERE t < ?', t - 3600e3);
+    const mine = this.one('SELECT COUNT(*) AS n FROM adminfail WHERE ip = ?', h).n, all = this.one('SELECT COUNT(*) AS n FROM adminfail').n;
+    if (mine >= 5 || all >= 30) return false; // đang bị khoá
+    if (ok === false) this.sql.exec('INSERT INTO adminfail (ip, t) VALUES (?,?)', h, t);
+    return true;
   }
   async isAdmin(token) { const u = await this.whoami(token); return !!(u && u.admin && !u.banned); }
   async adminFind(q) { q = String(q || '').trim().toLowerCase(); return this.sql.exec('SELECT id, username, name, google IS NOT NULL AS g, created, banned, admin FROM users WHERE username LIKE ? OR lower(name) LIKE ? OR id = ? ORDER BY id DESC LIMIT 50', `%${q}%`, `%${q}%`, +q || -1).toArray(); }

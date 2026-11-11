@@ -52,7 +52,7 @@ export default {
       else if (p[1] === 'logout') r = await U.logout(bearer());
       else if (p[1] === 'rename') r = await U.rename(bearer(), d.name);
       else if (p[1] === 'password') r = await U.changePassword(bearer(), d.old, d.new);
-      else if (p[1] === 'claim-admin') r = await U.claimAdmin(bearer(), d.key, env.ADMIN_KEY);
+      else if (p[1] === 'claim-admin') r = await U.claimAdmin(bearer(), d.key, env.ADMIN_KEY, ip);
       else return json({ ok: false }, 404, H);
       return json(r, 200, H);
     }
@@ -99,7 +99,9 @@ export default {
         const byToken = bearer() ? await env.USERS.get(env.USERS.idFromName('main')).isAdmin(bearer()) : false;
         if (!byToken) {
           if (!want) return json({ ok: false, msg: 'Máy chủ chưa có ADMIN_KEY – vào Cloudflare → bgvn-rooms → Settings → Variables and Secrets (KHÔNG phải mục Build) để thêm' }, 503, H);
-          if (String(key || '').trim() !== want) return json({ ok: false, msg: 'Sai mật khẩu' }, 401, H);
+          const UG = env.USERS.get(env.USERS.idFromName('main'));
+          if (!(await UG.adminGuard(ip, null))) return json({ ok: false, msg: 'Sai nhiều lần quá – khoá 1 giờ' }, 429, H);
+          if (String(key || '').trim() !== want) { await UG.adminGuard(ip, false); return json({ ok: false, msg: 'Sai mật khẩu' }, 401, H); }
         }
         if (op) { // báo cáo, cấm chat, tài khoản
           const L = env.LOBBY.get(env.LOBBY.idFromName('main')), U = env.USERS.get(env.USERS.idFromName('main'));
