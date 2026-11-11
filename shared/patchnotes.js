@@ -7,6 +7,14 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261111-11', date: '11/11/2026', game: 'masoi', title: 'Ma Sói: gợi ý bộ vai + kiểu chơi "Quản trò"', items: [
+    '💡 Phòng chờ gợi ý sẵn 3 bộ vai theo số người: 🌱 Dễ chơi, ⚖️ Cân bằng, 🎭 Hỗn loạn – bấm là xong.',
+    '🎩 Kiểu chơi "Quản trò" (theo góp ý của các bạn), bật một chạm hoặc chọn từng luật:',
+    '🏹 Thợ Săn ghim mù: mỗi đêm ghim trước một người, chỉ kéo theo khi chết ngay trong đêm đó.',
+    '⏱️ Đêm kín giờ + 🤫 chết kín: lượt nào cũng chạy đủ giờ, sáng ra chỉ báo ai chết chứ không lộ nguyên nhân.',
+    '🐺 Sói hoà phiếu thì không ai bị cắn · 🌫️ Phù Thủy dùng bình cứu rồi thì không còn biết ai bị cắn · 🎲 hết giờ máy chọn giúp.',
+    'Kiểu "Vui vẻ" như cũ vẫn là mặc định.',
+  ] },
   { id: '20261111-10', date: '11/11/2026', game: 'thathaythach', title: 'Game mới: Thật hay Thách!', items: [
     '🎯 Truth or Dare tiếng Việt theo góp ý của các bạn: tới lượt thì chọn 💬 Thật hoặc 🔥 Thách, làm xong bấm Xong.',
     '📚 14 chủ đề (Bạn bè, Hội thân, Kỷ niệm, Hài hước, Học đường, Công sở, Tình cảm, Gia đình, Tâm sự, Mạng xã hội, Game thủ, Tài lẻ, Ăn uống, Du lịch & Ước mơ) với gần 270 câu, 3 độ lầy 🌱😄🔥.',

@@ -47,6 +47,21 @@ const PRESETS = {
   16: { wolf: 2, alpha: 1, cub: 1, seer: 1, guard: 1, witch: 1, hunter: 1, cupid: 1, idiot: 1, elder: 1, tanner: 1 },
 };
 export function presetRoles(n) { return { ...PRESETS[Math.max(MIN_PLAYERS, Math.min(MAX_PLAYERS, n))] }; }
+// 3 bộ vai gợi ý cho n người: Dễ chơi (ít vai, hợp người mới) · Cân bằng (bộ chuẩn) · Hỗn loạn (nhiều vai vui)
+export function suggestRoles(n) {
+  n = Math.max(MIN_PLAYERS, Math.min(MAX_PLAYERS, n));
+  const on = (c, k) => c ? { [k]: 1 } : {};
+  const easy = { wolf: n <= 6 ? 1 : n <= 10 ? 2 : n <= 14 ? 3 : 4, seer: 1, guard: 1, ...on(n >= 7, 'witch'), ...on(n >= 9, 'hunter') };
+  const chaos = { wolf: n <= 6 ? 1 : n <= 9 ? 2 : n <= 12 ? 1 : 2, ...on(n >= 10, 'cub'), ...on(n >= 10, 'alpha'), seer: 1, witch: 1, ...on(n >= 6, 'cupid'), ...on(n >= 7, 'hunter'), ...on(n >= 7, 'guard'),
+    ...on(n >= 8, 'tanner'), ...on(n >= 9, 'medium'), ...on(n >= 10, 'lunatic'), ...on(n >= 11, 'idiot'), ...on(n >= 12, 'thief'), ...on(n >= 13, 'elder') };
+  const size = r => Object.values(r).reduce((t, x) => t + x, 0); /* luôn chừa ít nhất 1 Dân Làng */
+  for (const k of ['elder', 'idiot', 'lunatic', 'medium', 'guard', 'tanner']) if (size(chaos) > n - 1 && chaos[k]) delete chaos[k];
+  return [
+    { id: 'easy', emoji: '🌱', name: 'Dễ chơi', desc: 'Ít vai, hợp người mới', roles: easy },
+    { id: 'std', emoji: '⚖️', name: 'Cân bằng', desc: 'Bộ chuẩn của BGVN', roles: presetRoles(n) },
+    { id: 'chaos', emoji: '🎭', name: 'Hỗn loạn', desc: 'Nhiều vai lạ, lắm bất ngờ', roles: chaos },
+  ];
+}
 // danh sách vai đầy đủ (có Dân Làng lấp chỗ) + kiểm tra hợp lệ
 // có Kẻ Trộm: chia thêm 2 lá thừa (luôn là vai phe Dân/vai lẻ, KHÔNG BAO GIỜ là Sói – để ván chắc chắn có Sói)
 export function roleList(n, roles) {
@@ -70,6 +85,13 @@ export const DEFAULT_OPTS = {
   voteMode: 'open',      // open | secret
   tie: 'revote',         // revote (bầu lại 1 lần giữa những người hoà) | none (hoà thì không ai bị treo)
   doubleSave: 'live',    // Bảo vệ + Phù thủy cùng cứu 1 người: live (sống) | die (chết – luật "sữa đổ")
+  hunter: 'shot',        // shot (chết thì chọn người kéo theo) | pin (mỗi đêm ghim trước 1 người, chỉ kéo theo khi chết TRONG ĐÊM đó)
+  wolfTie: 'first',      // Sói hoà phiếu: first (lấy mục tiêu được chọn sớm nhất) | none (đêm đó không ai bị cắn)
+  wolfSelf: false,       // Sói được cắn cả Sói
+  witchBlind: false,     // Phù Thủy hết bình cứu thì không còn được biết Sói cắn ai
+  fixedNight: false,     // mỗi lượt đêm chạy ĐỦ giờ (kể cả vai đã chết / đã chọn xong) – không ai đoán được vai nào còn sống
+  afkAuto: false,        // hết giờ mà chưa chọn: hệ thống chọn ngẫu nhiên giúp (Bảo Vệ, Tiên Tri, Thợ Săn ghim, Thần Tình Yêu, Bà Đồng, bầy Sói)
+  secretDeath: false,    // chết trong đêm chỉ báo "đã chết", không lộ vì sói, độc, tình hay bị ghim
   dayTime: 120, voteTime: 40, nightTime: 25,
   tutorial: false,       // ván tập cho người mới (offline, có bong bóng giải thích)
 };
@@ -83,7 +105,7 @@ const holderAlive = (s, role) => s.players.find(p => p.role === role && p.alive)
 // vai có trong bộ bài (kể cả 2 lá thừa của Kẻ Trộm) – để bước đêm vẫn được "gọi", không lộ ai đang giữ
 const inGame = (s, role) => has(s, role) || !!(s.extra && s.extra.includes(role));
 const nm = (s, id) => (P(s, id) || {}).name || '?';
-export const STEP_ROLE = { thief: 'thief', cupid: 'cupid', guard: 'guard', seer: 'seer', medium: 'medium', wolves: 'wolf', wolves2: 'wolf', witch: 'witch' };
+export const STEP_ROLE = { thief: 'thief', cupid: 'cupid', guard: 'guard', hunter: 'hunter', seer: 'seer', medium: 'medium', wolves: 'wolf', wolves2: 'wolf', witch: 'witch' };
 // ai thức dậy ở mỗi bước (Ông Già Lẩm Cẩm dậy cùng lúc Tiên Tri)
 const STEP_HOLDERS = { seer: ['seer', 'lunatic'] };
 const stepHolders = (s, step) => { const rs = STEP_HOLDERS[step] || [STEP_ROLE[step]]; return s.players.filter(p => p.alive && rs.includes(p.role)); };
@@ -92,6 +114,7 @@ export const STEP_TEXT = {
   medium: ['🕯️', 'Bà Đồng thắp nến, gọi hồn người đã khuất…'],
   cupid: ['💘', 'Thần Tình Yêu thức dậy, bắn mũi tên ghép đôi…'],
   guard: ['🛡️', 'Bảo Vệ thức dậy, chọn người để che chở…'],
+  hunter: ['🏹', 'Thợ Săn thức dậy, ghim sẵn một mục tiêu…'],
   seer: ['🔮', 'Tiên Tri thức dậy, nhìn vào quả cầu…'],
   wolves: ['🐺', 'Bầy Sói thức dậy, chọn con mồi…'],
   wolves2: ['🐾', 'Sói Con đã chết – bầy Sói nổi điên, cắn thêm người nữa!'],
@@ -137,7 +160,7 @@ export function createGame(playerList, opts = {}) {
     extra, rec: [],
   };
   delete s.opts.forceRole;
-  for (const p of s.players) { const f = ROLES[faceRole(p.role)]; note(s, p.id, `Bạn là ${f.emoji} ${f.name}. ${f.short}`); }
+  for (const p of s.players) { const f = ROLES[faceRole(p.role)]; note(s, p.id, `Bạn là ${f.emoji} ${f.name}. ${p.role === 'hunter' && o.hunter === 'pin' ? HUNTER_PIN : f.short}`); }
   if (extra) { const th = s.players.find(p => p.role === 'thief'); if (th) note(s, th.id, `🃏 2 lá thừa: ${extra.map(r => ROLES[faceRole(r)].emoji + ' ' + ROLES[faceRole(r)].name).join(' và ')}. Đêm 1 được lấy 1 lá.`); }
   rec(s, 'deal', { roles: Object.fromEntries(s.players.map(p => [p.id, p.role])), extra: extra ? extra.slice() : null });
   const wolves = s.players.filter(p => isWolfRole(p.role));
@@ -150,13 +173,15 @@ export function createGame(playerList, opts = {}) {
 function countRoles(list) { const c = {}; for (const r of list) c[r] = (c[r] || 0) + 1; return c; }
 
 // ---------------- ĐÊM ----------------
+export const HUNTER_PIN = 'Mỗi đêm ghim trước 1 người: nếu bạn chết ngay trong đêm đó, người bị ghim chết theo. Bị treo cổ ban ngày thì không kéo được ai.';
 function startNight(s) {
   s.phase = 'night';
-  s.night = { guard: null, seer: null, cupid: null, wolfVotes: {}, wolfFirm: {}, victims: [], save: null, poison: null, acted: {} };
+  s.night = { guard: null, pin: null, seer: null, cupid: null, wolfVotes: {}, wolfFirm: {}, victims: [], save: null, poison: null, acted: {} };
   const st = [];
   if (s.day === 1 && has(s, 'thief')) st.push('thief');
   if (s.day === 1 && inGame(s, 'cupid')) st.push('cupid');
   if (inGame(s, 'guard')) st.push('guard');
+  if (s.opts.hunter === 'pin' && inGame(s, 'hunter')) st.push('hunter');
   if (inGame(s, 'seer') || inGame(s, 'lunatic')) st.push('seer');
   if (inGame(s, 'medium')) st.push('medium');
   st.push('wolves');
@@ -184,7 +209,8 @@ function nextStep(s) {
   if (s.step === 'witch' && !s.stepFake) {
     const w = holderAlive(s, 'witch');
     const v = s.night.victims;
-    note(s, w.id, v.length ? `🩸 Đêm ${s.day}: Sói cắn ${v.map(x => nm(s, x)).join(' và ')}.` : `🌙 Đêm ${s.day}: không ai bị sói cắn.`);
+    if (s.opts.witchBlind && !s.potions.save) note(s, w.id, `🌫️ Đêm ${s.day}: bình cứu đã dùng nên bạn không còn biết Sói cắn ai.`);
+    else note(s, w.id, v.length ? `🩸 Đêm ${s.day}: Sói cắn ${v.map(x => nm(s, x)).join(' và ')}.` : `🌙 Đêm ${s.day}: không ai bị sói cắn.`);
   }
 }
 function stepActors(s) {
@@ -207,7 +233,7 @@ export function wolfLeader(s) {
   for (const t of order) if (cnt[t] > bc) { best = t; bc = cnt[t]; }
   return best;
 }
-export function wolfTargets(s) { return alive(s).filter(p => !isWolfRole(p.role) && !s.night.victims.includes(p.id)).map(p => p.id); }
+export function wolfTargets(s) { return alive(s).filter(p => (s.opts.wolfSelf || !isWolfRole(p.role)) && !s.night.victims.includes(p.id)).map(p => p.id); }
 function finishWolves(s, byTimeout) {
   const ws = alive(s).filter(p => isWolfRole(p.role));
   let t = null;
@@ -216,7 +242,10 @@ function finishWolves(s, byTimeout) {
     const cnt = {}; for (const v of votes) cnt[v] = (cnt[v] || 0) + 1;
     const top = Math.max(...Object.values(cnt));
     const tops = Object.keys(cnt).filter(k => cnt[k] === top);
-    t = tops.length === 1 ? tops[0] : (byTimeout ? pick(tops) : wolfLeader(s));
+    t = tops.length === 1 ? tops[0] : s.opts.wolfTie === 'none' ? null : (byTimeout && !s.opts.fixedNight ? pick(tops) : wolfLeader(s));
+  } else if (byTimeout && s.opts.afkAuto && ws.length && !Object.keys(s.night.wolfVotes).length) { // cả bầy ngủ quên: hệ thống chọn giúp (không bao giờ chọn Sói)
+    const pool = wolfTargets(s).filter(id => !isWolfRole(P(s, id).role)); t = pool.length ? pick(pool) : null;
+    if (t) for (const w of ws) note(s, w.id, `⏰ Đêm ${s.day}: cả bầy không chọn kịp – hệ thống đã tự chọn ${nm(s, t)}.`);
   }
   rec(s, 'bite', { t: t && P(s, t) && P(s, t).alive ? t : null, votes: { ...s.night.wolfVotes }, extra: s.step === 'wolves2' });
   if (t && P(s, t) && P(s, t).alive) {
@@ -246,9 +275,13 @@ function resolveNight(s) {
   s.lastGuard = n.guard;
   s.deaths = [];
   for (const [id, cause] of deaths) kill(s, id, cause);
+  if (s.opts.hunter === 'pin' && n.pin) { // Thợ Săn chết trong đêm (bất kể vì sao) → người bị ghim chết theo
+    const h = s.players.find(p => p.role === 'hunter' && !p.alive && s.deaths.some(d => d.id === p.id));
+    if (h && P(s, n.pin) && P(s, n.pin).alive) { rec(s, 'shot', { by: h.id, t: n.pin, pin: 1 }); kill(s, n.pin, 'shot'); }
+  }
   s.phase = 'dawn'; s.step = null; s.stepFake = false;
   newPhase(s);
-  ev(s, 'dawn', { deaths: s.deaths.slice() });
+  ev(s, 'dawn', { deaths: s.deaths.map(d => ({ id: d.id, cause: pubCause(s, P(s, d.id)) })) });
   if (!s.deaths.length) { log(s, `🌤 Sáng ngày ${s.day}: đêm qua bình yên, không ai chết.`, 'day'); sys(s, 'all', '🐓 Ò ó o! Trời sáng – đêm qua bình yên, không ai chết.'); }
   else {
     const txt = s.deaths.map(d => deathText(s, d)).join('; ');
@@ -259,20 +292,23 @@ function resolveNight(s) {
 function deathText(s, d) {
   const p = P(s, d.id);
   const role = s.opts.reveal ? ` (${ROLES[p.role].emoji} ${ROLES[p.role].name})` : '';
-  const why = { wolf: 'đã chết trong đêm', poison: 'đã chết trong đêm', love: 'chết theo người yêu 💔', shot: 'trúng tên của Thợ Săn 🏹', hang: 'bị treo cổ' }[d.cause] || 'đã chết';
+  const hush = s.opts.secretDeath && P(s, d.id).atNight;
+  const why = hush ? 'đã chết trong đêm' : { wolf: 'đã chết trong đêm', poison: 'đã chết trong đêm', love: 'chết theo người yêu 💔', shot: 'trúng tên của Thợ Săn 🏹', hang: 'bị treo cổ' }[d.cause] || 'đã chết';
   return `${p.name}${role} ${why}`;
 }
 
+// nguyên nhân chết mà người CÒN SỐNG được thấy (luật "chết kín": chết trong đêm chỉ là 'night')
+const pubCause = (s, p) => s.opts.secretDeath && p.atNight ? 'night' : p.cause;
 // chết + dây chuyền (người yêu, Thợ Săn, Sói Con)
 function kill(s, id, cause) {
   const p = P(s, id); if (!p || !p.alive) return;
-  p.alive = false; p.cause = cause; p.diedDay = s.day;
+  p.alive = false; p.cause = cause; p.diedDay = s.day; p.atNight = s.phase === 'night';
   if (s.opts.reveal) p.revealed = true;
   rec(s, 'die', { id, cause });
   if (p.role === 'lunatic') note(s, id, '👓 Hoá ra bạn là ÔNG GIÀ LẨM CẨM! Mấy lần "soi" vừa rồi toàn bốc đại 😅');
   s.deaths.push({ id, cause });
-  ev(s, 'death', { id, cause, role: s.opts.reveal ? p.role : null });
-  if (p.role === 'hunter' && cause !== 'poison') s.hunterQueue.push(id);
+  ev(s, 'death', { id, cause: pubCause(s, p), role: s.opts.reveal ? p.role : null });
+  if (p.role === 'hunter' && cause !== 'poison' && s.opts.hunter !== 'pin') s.hunterQueue.push(id);
   if (p.role === 'cub') s.cubRevenge = true;
   if (p.lover) { const l = P(s, p.lover); if (l && l.alive) kill(s, l.id, 'love'); }
 }
@@ -424,7 +460,7 @@ export function actors(s) {
 export function phaseMs(s) {
   const o = s.opts;
   switch (s.phase) {
-    case 'night': return s.stepFake ? 3500 + Math.floor(rand() * 3500) : (s.step === 'wolves' || s.step === 'wolves2' ? o.nightTime * 1600 : s.step === 'witch' ? o.nightTime * 1200 : o.nightTime * 1000);
+    case 'night': return s.stepFake && !o.fixedNight ? 3500 + Math.floor(rand() * 3500) : (s.step === 'wolves' || s.step === 'wolves2' ? o.nightTime * 1600 : s.step === 'witch' ? o.nightTime * 1200 : o.nightTime * 1000);
     case 'dawn': return 6500 + s.deaths.length * 1200;
     case 'day': return o.dayTime * 1000;
     case 'vote': return o.voteTime * 1000;
@@ -434,12 +470,24 @@ export function phaseMs(s) {
   }
 }
 
+// luật "hết giờ thì máy chọn giúp": chọn ngẫu nhiên một hành động hợp lệ và báo riêng cho người đó. Phù Thủy, Kẻ Trộm thì coi như bỏ qua.
+function autoAct(s, id) {
+  const p = P(s, id), al = alive(s), others = al.filter(q => q.id !== id); let a = null, txt = '';
+  if (s.step === 'guard') { const pool = al.filter(q => q.id !== s.lastGuard); if (pool.length) { const t = pick(pool); a = { type: 'guard', target: t.id }; txt = t.name; } }
+  else if (s.step === 'seer') { const pool = others.filter(q => !(q.id in p.seen)); const t = pick(pool.length ? pool : others); if (t) { a = { type: 'seer', target: t.id }; txt = t.name; } }
+  else if (s.step === 'hunter') { const t = pick(others); if (t) { a = { type: 'hunter', target: t.id }; txt = t.name; } }
+  else if (s.step === 'medium') { const ts = mediumTargets(s, p); if (ts.length) { const t = pick(ts); a = { type: 'medium', target: t }; txt = nm(s, t); } }
+  else if (s.step === 'cupid' && al.length >= 2) { const x = pick(al), y = pick(al.filter(q => q !== x)); a = { type: 'cupid', targets: [x.id, y.id] }; txt = `${x.name} ❤ ${y.name}`; }
+  if (!a) return;
+  note(s, id, `⏰ Đêm ${s.day}: bạn không thao tác kịp – hệ thống đã tự chọn ${txt}.`);
+  s.noAdvance = true; try { applyAction(s, id, a); } finally { delete s.noAdvance; }
+}
 // hết giờ pha: chốt những gì đã có
 export function timeout(s) {
   switch (s.phase) {
     case 'night':
       if (s.step === 'wolves' || s.step === 'wolves2') finishWolves(s, true);
-      else for (const id of stepActors(s)) rec(s, 'idle', { by: id, step: s.step });
+      else for (const id of stepActors(s)) { rec(s, 'idle', { by: id, step: s.step }); if (s.opts.afkAuto) autoAct(s, id); }
       nextStep(s); return true;
     case 'dawn': afterDeaths(s, 'day'); return true;
     case 'day': startVote(s); return true;
@@ -477,7 +525,7 @@ export function applyAction(s, pid, a) {
   if (s.phase === 'ended') return { ok: false, reason: 'Ván đã kết thúc.' };
   const acts = actors(s);
   switch (a.type) {
-    case 'thief': case 'cupid': case 'guard': case 'seer': case 'medium': case 'witch': case 'skip': {
+    case 'thief': case 'cupid': case 'guard': case 'hunter': case 'seer': case 'medium': case 'witch': case 'skip': {
       if (s.phase !== 'night') return { ok: false, reason: 'Chưa tới lúc.' };
       const step = s.step;
       if (!acts.includes(pid) || (a.type !== 'skip' && a.type !== step) || step === 'wolves' || step === 'wolves2') return { ok: false, reason: 'Chưa tới lượt bạn.' };
@@ -507,6 +555,10 @@ export function applyAction(s, pid, a) {
         if (!t || !t.alive) return { ok: false, reason: 'Chọn người còn sống.' };
         if (a.target === s.lastGuard) return { ok: false, reason: 'Không được bảo vệ cùng 1 người 2 đêm liền.' };
         n.guard = a.target; note(s, pid, `🛡️ Đêm ${s.day}: bạn bảo vệ ${t.name}.`); rec(s, 'guard', { by: pid, t: t.id });
+      } else if (a.type === 'hunter') {
+        const t = P(s, a.target);
+        if (!t || !t.alive || t.id === pid) return { ok: false, reason: 'Ghim 1 người khác còn sống.' };
+        n.pin = t.id; note(s, pid, `🏹 Đêm ${s.day}: bạn ghim ${t.name}. Nếu đêm nay bạn chết, ${t.name} chết theo.`); rec(s, 'pin', { by: pid, t: t.id });
       } else if (a.type === 'seer') {
         const t = P(s, a.target);
         if (!t || !t.alive || t.id === pid) return { ok: false, reason: 'Chọn 1 người khác còn sống.' };
@@ -534,7 +586,7 @@ export function applyAction(s, pid, a) {
         rec(s, 'witch', { by: pid, save, poison });
       }
       n.acted[pid] = true; bump(s);
-      if (!stepActors(s).length) nextStep(s);
+      if (!stepActors(s).length && !s.opts.fixedNight && !s.noAdvance) nextStep(s); /* đêm kín giờ: chờ hết giờ mới sang lượt kế */
       return { ok: true };
     }
     case 'wolf': {
@@ -546,7 +598,7 @@ export function applyAction(s, pid, a) {
       // tất cả sói đã chọn và thống nhất → xong
       const ws = alive(s).filter(q => isWolfRole(q.role));
       const vals = ws.map(w => s.night.wolfVotes[w.id]);
-      if (ws.every(w => w.id in s.night.wolfVotes) && vals.every(v => v === vals[0])) { finishWolves(s, false); nextStep(s); }
+      if (!s.opts.fixedNight && ws.every(w => w.id in s.night.wolfVotes) && vals.every(v => v === vals[0])) { finishWolves(s, false); nextStep(s); }
       return { ok: true };
     }
     case 'ready': {
@@ -618,7 +670,7 @@ export function viewFor(s, pid) {
     myTurn: acts.includes(pid),
     players: s.players.map(p => {
       const lv = me && (p.id === me.lover || (me.lover && p.id === me.id) || all || (me.role === 'cupid' && s.lovers && s.lovers.includes(p.id)));
-      return { id: p.id, name: p.name, isBot: p.isBot, alive: p.alive, cause: p.alive ? null : p.cause, diedDay: p.diedDay, role: knownRole(s, me, p), revealed: p.revealed, idiotOut: p.idiotOut, lover: lv ? p.lover : null };
+      return { id: p.id, name: p.name, isBot: p.isBot, alive: p.alive, cause: p.alive ? null : all ? p.cause : pubCause(s, p), diedDay: p.diedDay, role: knownRole(s, me, p), revealed: p.revealed, idiotOut: p.idiotOut, lover: lv ? p.lover : null };
     }),
     potions: me && (me.role === 'witch' || all) ? s.potions : null,
     lastGuard: me && (me.role === 'guard' || all) ? s.lastGuard : null,
@@ -626,7 +678,7 @@ export function viewFor(s, pid) {
     chat: s.chat.filter(c => c.ch === 'all' || (c.ch === 'wolf' && (all || (me && isWolfRole(me.role)))) || (c.ch === 'ghost' && all) || (c.ch === 'love' && (all || (me && me.lover)))).slice(-150),
     channels: chatChannels(s, me),
     claims: s.claims, winner: s.winner, mixedLove: all ? s.mixedLove : (me && me.lover ? s.mixedLove : undefined),
-    condemned: s.condemned, hunter: s.phase === 'hunter' ? s.hunterQueue[0] : null, deaths: s.phase === 'dawn' ? s.deaths : null,
+    condemned: s.condemned, hunter: s.phase === 'hunter' ? s.hunterQueue[0] : null, deaths: s.phase === 'dawn' ? (all ? s.deaths : s.deaths.map(d => ({ id: d.id, cause: pubCause(s, P(s, d.id)) }))) : null,
     history: s.opts.voteMode === 'open' || all ? s.history.slice(-6) : [],
     rec: s.phase === 'ended' ? s.rec : undefined,
   };
@@ -634,7 +686,8 @@ export function viewFor(s, pid) {
   if (s.phase === 'night' && s.night) {
     const n = s.night;
     if (me && isWolfRole(me.role) || all) { v.wolfVotes = n.wolfVotes; v.wolfTargets = wolfTargets(s); }
-    if (me && me.role === 'witch' && s.step === 'witch' || all) v.victims = n.victims;
+    if (me && me.role === 'witch' && s.step === 'witch' && !(s.opts.witchBlind && !s.potions.save) || all) v.victims = n.victims;
+    if (me && me.role === 'hunter' || all) v.pin = n.pin;
     if (all) v.nightInfo = { guard: n.guard, seer: n.seer, save: n.save, poison: n.poison };
   }
   if (s.dayInfo && (s.phase === 'day' || s.phase === 'vote')) v.dayInfo = { ready: s.dayInfo.ready, accuse: s.dayInfo.accuse };

@@ -1,6 +1,7 @@
 // Unit test các tương tác khó: node masoi/test/unit.mjs
-import { createGame, applyAction, actors, timeout, viewFor, P, roleList, setRandom, isWolfRole } from '../js/engine.js?v=3';
-import { botAction } from '../js/bot.js?v=3';
+import { createGame, applyAction, actors, timeout, viewFor, P, roleList, setRandom, isWolfRole } from '../js/engine.js?v=4';
+import * as eng from '../js/engine.js?v=4';
+import { botAction } from '../js/bot.js?v=4';
 
 let pass = 0, failN = 0;
 const ok = (c, msg) => { if (c) pass++; else { failN++; console.log('  ✗', msg); } };
@@ -377,7 +378,7 @@ test('Ván tập: ép vai cho người chơi', () => {
 });
 
 test('Thả emoji: ban đêm cấm, ban ngày cả làng thấy, hồn ma chỉ hồn ma thấy', async () => {
-  const { Host, MS_PHRASES } = await import('../js/net.js?v=10');
+  const { Host, MS_PHRASES } = await import('../js/net.js?v=11');
   const got = [];
   const h = new Host('Chủ', { onLobby() {}, onState() {}, onError() {}, onReact: m => got.push(m) }, true);
   h.addBot(5); h.opts.auto = false; h.opts.roles = { wolf: 1 };
@@ -396,6 +397,70 @@ test('Thả emoji: ban đêm cấm, ban ngày cả làng thấy, hồn ma chỉ 
   ok(h.react(dead.id, '💀'), 'hồn ma thả được');
   ok(!got.length && !sent[h.players[2].id].length && sent[h.players[1].id].length === 1, 'chỉ hồn ma thấy (người sống không nhận)');
   h.destroy();
+});
+
+// ---------- luật theo góp ý: ghim mù, sói hoà phiếu, phù thủy mù, đêm kín giờ, máy chọn giúp, chết kín ----------
+const { suggestRoles } = await import('../js/engine.js?v=4');
+test('Gợi ý bộ vai: 3 bộ hợp lệ cho mọi số người 5–16', () => {
+  for (let n = 5; n <= 16; n++) for (const g of suggestRoles(n)) { const r = roleList(n, g.roles); ok(r.ok, `${n} người – bộ ${g.id}: ${r.reason}`); ok(r.list.filter(x => x !== 'villager').length <= n + 2, 'không quá số lá'); }
+});
+test('Thợ Săn ghim mù: chết trong đêm thì người bị ghim chết theo; bị treo thì không', () => {
+  let s = mk(BASE, { hunter: 'pin' });
+  act(s, 'p1', { type: 'guard', target: 'p1' }); eq(s.step, 'hunter', 'có lượt Thợ Săn ghim');
+  deny(s, 'p5', { type: 'hunter', target: 'p5' }, 'không tự ghim mình');
+  act(s, 'p5', { type: 'hunter', target: 'p0' }); eq(viewFor(s, 'p5').pin, 'p0', 'Thợ Săn thấy người mình ghim'); ok(viewFor(s, 'p3').pin === undefined, 'người khác không thấy');
+  act(s, 'p0', { type: 'wolf', target: 'p5' }); act(s, 'p2', { type: 'skip' });
+  eq(s.phase, 'dawn', 'trời sáng, không có pha bắn'); ok(!P(s, 'p5').alive && !P(s, 'p0').alive, 'Thợ Săn chết, người bị ghim chết theo'); eq(s.hunterQueue.length, 0, 'không xếp hàng bắn');
+  s = mk(BASE, { hunter: 'pin' }); // bị độc cũng kéo theo
+  act(s, 'p1', { type: 'guard', target: 'p1' }); act(s, 'p5', { type: 'hunter', target: 'p3' }); act(s, 'p0', { type: 'wolf', target: null }); act(s, 'p2', { type: 'witch', poison: 'p5' });
+  ok(!P(s, 'p5').alive && !P(s, 'p3').alive, 'bị độc trong đêm vẫn kéo người bị ghim');
+  s = mk(BASE, { hunter: 'pin' }); // sống qua đêm rồi bị treo: không kéo ai
+  act(s, 'p1', { type: 'guard', target: 'p1' }); act(s, 'p5', { type: 'hunter', target: 'p0' }); act(s, 'p0', { type: 'wolf', target: 'p3' }); act(s, 'p2', { type: 'skip' });
+  until(s, 'day'); allReady(s); voteAll(s, 'p5'); until(s, 'night', 6);
+  ok(!P(s, 'p5').alive && P(s, 'p0').alive, 'Thợ Săn bị treo, người bị ghim vẫn sống');
+});
+test('Sói hoà phiếu → không ai bị cắn; Sói được cắn Sói khi bật luật', () => {
+  const R = ['wolf', 'wolf', 'witch', 'villager', 'villager', 'villager', 'villager'];
+  let s = mk(R, { wolfTie: 'none' });
+  act(s, 'p0', { type: 'wolf', target: 'p3' }); act(s, 'p1', { type: 'wolf', target: 'p4' }); timeout(s);
+  eq(s.night.victims, [], 'hoà → không ai bị cắn');
+  s = mk(R, {}); deny(s, 'p0', { type: 'wolf', target: 'p1' }, 'mặc định không cắn được Sói');
+  s = mk(R, { wolfSelf: true }); act(s, 'p0', { type: 'wolf', target: 'p1' }); act(s, 'p1', { type: 'wolf', target: 'p1' }); eq(s.night.victims, ['p1'], 'cắn được Sói');
+});
+test('Phù Thủy hết bình cứu thì không biết ai bị cắn', () => {
+  const s = mk(BASE, { witchBlind: true });
+  act(s, 'p1', { type: 'guard', target: 'p1' }); act(s, 'p0', { type: 'wolf', target: 'p3' }); ok(viewFor(s, 'p2').victims.includes('p3'), 'còn bình cứu: thấy'); act(s, 'p2', { type: 'witch', save: 'p3' });
+  until(s, 'day'); allReady(s); voteAll(s, 'skip'); until(s, 'night', 6);
+  act(s, 'p1', { type: 'guard', target: 'p0' }); act(s, 'p0', { type: 'wolf', target: 'p4' }); eq(s.step, 'witch', 'vẫn có lượt Phù Thủy (còn bình độc)');
+  ok(!viewFor(s, 'p2').victims, 'hết bình cứu: không thấy nạn nhân'); ok(P(s, 'p2').notes.some(n => n.txt.includes('không còn biết')), 'có ghi chú giải thích');
+});
+test('Đêm kín giờ: chọn xong vẫn chờ hết giờ, lượt vai đã chết dài như thật', () => {
+  const s = mk(BASE, { fixedNight: true, nightTime: 20 });
+  act(s, 'p1', { type: 'guard', target: 'p3' }); eq(s.step, 'guard', 'chưa sang lượt kế'); ok(!viewFor(s, 'p1').myTurn, 'đã chọn xong');
+  timeout(s); eq(s.step, 'wolves', 'hết giờ mới sang Sói'); act(s, 'p0', { type: 'wolf', target: 'p1' }); eq(s.step, 'wolves', 'Sói chọn xong vẫn chờ'); timeout(s); eq(s.night.victims, ['p1'], 'chốt mục tiêu khi hết giờ');
+  P(s, 'p2').alive = false; s.step = 'wolves'; timeout(s); eq(s.step, 'witch', 'vẫn gọi Phù Thủy'); ok(s.stepFake, 'lượt giả');
+  const { phaseMs } = eng; eq(phaseMs(s), 20 * 1200, 'lượt giả dài đúng bằng lượt thật');
+});
+test('Hết giờ máy chọn giúp + báo riêng; bầy Sói ngủ quên vẫn có mục tiêu (không phải Sói)', () => {
+  const s = mk(BASE, { afkAuto: true });
+  timeout(s); ok(s.night.guard, 'Bảo Vệ được chọn giúp'); ok(P(s, 'p1').notes.some(n => n.txt.includes('hệ thống đã tự chọn')), 'Bảo Vệ được báo');
+  eq(s.step, 'wolves', 'sang lượt Sói'); timeout(s); eq(s.night.victims.length, 1, 'Sói có mục tiêu'); ok(s.night.victims[0] !== 'p0', 'không tự cắn');
+  timeout(s); eq(s.night.poison, null, 'Phù Thủy không bị chọn giúp'); eq(s.phase, 'dawn', 'trời sáng');
+  const s2 = mk(BASE, {}); timeout(s2); eq(s2.night.guard, null, 'mặc định: không chọn giúp');
+});
+test('Chết kín: người sống không biết nguyên nhân chết trong đêm, hồn ma thì biết', () => {
+  const s = mk(BASE, { secretDeath: true });
+  act(s, 'p1', { type: 'guard', target: 'p1' }); act(s, 'p0', { type: 'wolf', target: 'p3' }); act(s, 'p2', { type: 'witch', poison: 'p4' });
+  eq(viewFor(s, 'p1').players.find(p => p.id === 'p4').cause, 'night', 'người sống chỉ thấy "chết trong đêm"'); eq(viewFor(s, 'p1').deaths.map(d => d.cause), ['night', 'night'], 'bảng báo tử cũng kín');
+  eq(viewFor(s, 'p4').players.find(p => p.id === 'p4').cause, 'poison', 'hồn ma biết');
+  ok(s.ev.filter(e => e.k === 'death').every(e => e.cause === 'night'), 'sự kiện không lộ');
+});
+test('Bot chơi được trọn ván với bộ luật quản trò', async () => {
+  for (let g = 0; g < 40; g++) {
+    const n = 6 + g % 9, s = createGame(Array.from({ length: n }, (_, i) => ({ id: 'b' + i, name: 'B' + i, isBot: true })), { hunter: 'pin', wolfTie: 'none', wolfSelf: true, witchBlind: true, fixedNight: g % 2 === 0, afkAuto: true, secretDeath: true });
+    let k = 0; while (s.phase !== 'ended' && k++ < 4000) { const as = actors(s); let did = false; for (const id of as) { const a = botAction(s, id); if (a && applyAction(s, id, a).ok) { did = true; break; } } if (!did) timeout(s); }
+    ok(s.phase === 'ended', `ván ${g} (${n} người) phải kết thúc`); ok(s.hunterQueue.length === 0, 'không có pha bắn ở luật ghim');
+  }
 });
 await Promise.all(pending);
 console.log(`\n${pass} kiểm tra đạt, ${failN} lỗi`);

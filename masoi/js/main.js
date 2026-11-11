@@ -1,14 +1,14 @@
-import { Host, Client, MAX, MIN, loadSnapshot, session, MS_PHRASES, REACT_PHASES } from './net.js?v=10';
+import { Host, Client, MAX, MIN, loadSnapshot, session, MS_PHRASES, REACT_PHASES } from './net.js?v=11';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
-import { ROLES, ROLE_ORDER, STEP_TEXT, TEAM_NAME, roleList, presetRoles, isWolfRole, DEFAULT_OPTS } from './engine.js?v=3';
-import { openReplay, replayFollowUpdate } from './replay.js?v=4';
-import { coachCheck, coachHide, coachTipEnd } from './coach.js?v=4';
-import { roleCardSVG, cardBackSVG, roleChip, roleDot, bambooSVG, dinhSVG, hillsSVG, starsHTML, firefliesHTML, heroSVG } from './art.js?v=3';
+import { ROLES, ROLE_ORDER, STEP_TEXT, TEAM_NAME, roleList, presetRoles, suggestRoles, HUNTER_PIN, isWolfRole, DEFAULT_OPTS } from './engine.js?v=4';
+import { openReplay, replayFollowUpdate } from './replay.js?v=5';
+import { coachCheck, coachHide, coachTipEnd } from './coach.js?v=5';
+import { roleCardSVG, cardBackSVG, roleChip, roleDot, bambooSVG, dinhSVG, hillsSVG, starsHTML, firefliesHTML, heroSVG } from './art.js?v=4';
 import * as fx from './fx.js?v=4';
-import { openGuide } from './guide.js?v=5';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=114';
+import { openGuide } from './guide.js?v=6';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=115';
 import { syncPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 
 const $ = s => document.querySelector(s);
@@ -126,7 +126,20 @@ const OPT_SEL = {
   dayTime: ['☀️ Thời gian thảo luận', 'Ai cũng sẵn sàng thì vào bầu sớm.', [60, 90, 120, 180, 240, 300].map(n => [n, n < 120 ? n + ' giây' : n / 60 + ' phút'])],
   voteTime: ['⏳ Thời gian bỏ phiếu', '', [20, 30, 40, 60, 90].map(n => [n, n + ' giây'])],
   nightTime: ['🌙 Thời gian mỗi vai ban đêm', 'Sói được gấp rưỡi.', [15, 20, 25, 30, 45].map(n => [n, n + ' giây'])],
+  hunter: ['🏹 Thợ Săn', 'Ghim mù: mỗi đêm ghim trước 1 người, chỉ kéo theo khi chết ngay trong đêm đó.', [['shot', 'Chết thì bắn 1 người'], ['pin', 'Ghim mù mỗi đêm']]],
+  wolfTie: ['🐺 Sói chọn không thống nhất', '', [['first', 'Cắn người được chọn trước'], ['none', 'Không ai bị cắn']]],
 };
+// luật bật/tắt (theo góp ý "chơi như có quản trò thật")
+const OPT_CHK = {
+  fixedNight: ['⏱️ Đêm kín giờ', 'Mỗi vai luôn chạy đủ giờ, kể cả vai đã chết – không ai đoán được vai nào còn sống. Đêm sẽ dài hơn.'],
+  secretDeath: ['🤫 Chết kín', 'Sáng ra chỉ báo ai chết, không lộ vì Sói, thuốc độc, tình yêu hay bị ghim.'],
+  witchBlind: ['🌫️ Phù Thủy mù', 'Dùng bình cứu rồi thì các đêm sau không còn biết Sói cắn ai.'],
+  afkAuto: ['🎲 Hết giờ máy chọn giúp', 'Vai chưa kịp chọn sẽ được chọn ngẫu nhiên (trừ Phù Thủy) và báo riêng cho người đó.'],
+  wolfSelf: ['🐺 Sói được cắn Sói', 'Cho mấy pha "tự cắn" để lừa cả làng.'],
+};
+const STYLE_GM = { hunter: 'pin', wolfTie: 'none', fixedNight: true, secretDeath: true, witchBlind: true, afkAuto: true, wolfSelf: true };
+const STYLE_FUN = Object.fromEntries(Object.keys(STYLE_GM).map(k => [k, DEFAULT_OPTS[k]]));
+const sameRoles = (a, b) => ROLE_ORDER.every(r => r === 'villager' || (+a[r] || 0) === (+b[r] || 0));
 function renderLobby() {
   if (!lobby) return;
   const ps = lobby.players, o = lobby.opts, n = ps.length, dis = isHost ? '' : 'disabled';
@@ -148,11 +161,22 @@ function renderLobby() {
   $$('#roles [data-ri]').forEach(b => b.onclick = () => { fx.sfx.click(); net.setRole(b.dataset.ri, (+lobby.opts.roles[b.dataset.ri] || 0) + 1); });
   const wolves = rl.list.filter(isWolfRole).length;
   $('#role-sum').textContent = rl.ok ? `🐺 ${wolves} Sói · 🧑‍🌾 ${n - wolves} người khác${rl.extra ? ' · 🃏 +2 lá thừa' : ''}` : '';
+  // gợi ý bộ vai theo số người
+  const sg = $('#suggest');
+  if (sg) {
+    const list = suggestRoles(n).filter(g => roleList(n, g.roles).ok);
+    sg.innerHTML = n < 5 ? '' : `<b class="sg-t">💡 Gợi ý cho ${n} người</b><div class="sg-list">${list.map(g => `<button type="button" data-sg="${g.id}" aria-pressed="${sameRoles(g.roles, o.roles)}" ${dis}><b>${g.emoji} ${g.name}</b><small>${g.desc}</small><i>${presetSummary(g.roles)}</i></button>`).join('')}</div>`;
+    $$('#suggest [data-sg]').forEach(b => b.onclick = () => { const g = suggestRoles(lobby.players.length).find(x => x.id === b.dataset.sg); if (!g) return; fx.sfx.ok(); if (g.id === 'std') net.setOpt('auto', true); else net.applyPreset(g.roles); toast(`${g.emoji} Đã chọn bộ “${g.name}”`); });
+  }
   renderPresets();
   $('#role-err').textContent = rl.ok ? '' : '⚠️ ' + rl.reason;
   $('#opts').innerHTML = `<label class="opt"><input type="checkbox" data-opt="reveal" ${o.reveal ? 'checked' : ''} ${dis}><span><b>🪦 Lộ vai khi chết</b><small>Tắt: chỉ biết ai chết, không biết là ai.</small></span></label>` +
     Object.entries(OPT_SEL).map(([k, [t, sub, list]]) => `<label class="opt"><span><b>${t}</b>${sub ? `<small>${sub}</small>` : ''}</span><select data-opt="${k}" ${dis}>${list.map(([v, l]) => `<option value="${v}" ${String(o[k]) === String(v) ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`).join('');
+  const gm = Object.entries(STYLE_GM).every(([k, v]) => o[k] === v), fun = Object.entries(STYLE_FUN).every(([k, v]) => o[k] === v);
+  $('#opts').innerHTML = `<div class="opt style"><span><b>🎩 Kiểu chơi</b><small>Quản trò: Thợ Săn ghim mù, Sói hoà phiếu thì nhịn, đêm kín giờ, chết kín, Phù Thủy mù, hết giờ máy chọn giúp.</small></span><div class="seg2"><button type="button" data-style="fun" aria-pressed="${fun}" ${dis}>🎲 Vui vẻ</button><button type="button" data-style="gm" aria-pressed="${gm}" ${dis}>🎩 Quản trò</button></div></div>` + $('#opts').innerHTML +
+    Object.entries(OPT_CHK).map(([k, [t, sub]]) => `<label class="opt"><input type="checkbox" data-opt="${k}" ${o[k] ? 'checked' : ''} ${dis}><span><b>${t}</b><small>${sub}</small></span></label>`).join('');
   $$('#opts [data-opt]').forEach(i => i.onchange = () => net.setOpt(i.dataset.opt, i.type === 'checkbox' ? i.checked : i.value));
+  $$('#opts [data-style]').forEach(b => b.onclick = () => { fx.sfx.click(); for (const [k, v] of Object.entries(b.dataset.style === 'gm' ? STYLE_GM : STYLE_FUN)) net.setOpt(k, v); toast(b.dataset.style === 'gm' ? '🎩 Đã bật bộ luật Quản trò' : '🎲 Về bộ luật Vui vẻ'); });
   $('#btn-start').style.display = isHost ? '' : 'none';
   $('#btn-start').disabled = !rl.ok;
   $('#wait-msg').style.display = isHost ? 'none' : '';
@@ -160,7 +184,7 @@ function renderLobby() {
 $('#opt-auto').onchange = e => net && net.setOpt('auto', e.target.checked);
 // ---------- bộ vai đã lưu của hội (localStorage, chỉ chủ phòng) ----------
 const PRESET_KEY = 'bgvn-masoi-presets';
-const RULE_KEYS = ['reveal', 'voteMode', 'tie', 'doubleSave', 'dayTime', 'voteTime', 'nightTime'];
+const RULE_KEYS = ['reveal', 'voteMode', 'tie', 'doubleSave', 'dayTime', 'voteTime', 'nightTime', 'hunter', 'wolfTie', 'fixedNight', 'secretDeath', 'witchBlind', 'afkAuto', 'wolfSelf'];
 const loadPresets = () => { try { const a = JSON.parse(ls.get(PRESET_KEY) || '[]'); return Array.isArray(a) ? a.filter(x => x && x.name && x.roles) : []; } catch (e) { return []; } };
 const savePresets = a => ls.set(PRESET_KEY, JSON.stringify(a.slice(0, 12)));
 function presetSummary(roles) { return ROLE_ORDER.filter(r => r !== 'villager' && roles[r]).map(r => ROLES[r].emoji + (roles[r] > 1 ? '×' + roles[r] : '')).join(''); }
@@ -218,7 +242,7 @@ function peekHTML() {
   if (m.role === 'witch' && view.potions) extra.push(`🧪 Bình cứu: <b>${view.potions.save ? 'còn' : 'hết'}</b> · ☠️ Bình độc: <b>${view.potions.poison ? 'còn' : 'hết'}</b>`);
   if (m.role === 'elder') extra.push(m.elderHit ? '👴 Đã mất mạng phụ' : '👴 Còn mạng phụ');
   if (m.idiotOut) extra.push('🤪 Đã lộ – không được bỏ phiếu');
-  return roleCardSVG(m.role) + `<div class="pk-txt">${R.short}${extra.length ? '<br>' + extra.join('<br>') : ''}</div>`;
+  return roleCardSVG(m.role) + `<div class="pk-txt">${m.role === 'hunter' && view && view.opts.hunter === 'pin' ? HUNTER_PIN : R.short}${extra.length ? '<br>' + extra.join('<br>') : ''}</div>`;
 }
 function peek(on) {
   if (on && !me()) return;
@@ -335,6 +359,7 @@ function myStepText(v) {
   switch (v.step) {
     case 'cupid': return '<b>Bạn là Thần Tình Yêu 💘</b> – chạm chọn 2 người để ghép đôi.';
     case 'guard': return '<b>Bạn là Bảo Vệ 🛡️</b> – chạm chọn người để che chở đêm nay.';
+    case 'hunter': return '<b>Bạn là Thợ Săn 🏹</b> – ghim sẵn 1 người. Nếu đêm nay bạn chết, người đó chết theo.';
     case 'seer': return '<b>Bạn là Tiên Tri 🔮</b> – chạm chọn người để soi.';
     case 'wolves': case 'wolves2': return `<b>Bầy Sói đi săn 🐺</b> – chạm vào con mồi. Cả bầy phải thống nhất${v.step === 'wolves2' ? ' (lượt cắn thêm!)' : ''}.`;
     case 'witch': return '<b>Bạn là Phù Thủy 🧪</b> – cứu, đầu độc, hay đi ngủ?';
@@ -369,7 +394,7 @@ function canPick(mode, p) {
     case 'poison': return p.id !== myId;
     case 'accuse': return p.id !== myId;
     case 'vote': return p.id !== myId && v.vote && v.vote.candidates.includes(p.id);
-    case 'hunter': return true;
+    case 'hunter': return p.id !== myId;
   }
   return false;
 }
@@ -417,7 +442,7 @@ function renderSeats() {
     if (known) b.push(`<span class="${publicRole || ghost ? '' : 'priv'}">${roleDot(known)}</span>`.replace('<span class="">', '<span>'));
     else if (m && m.seen && m.seen[p.id]) { const r = m.seen[p.id]; b.push(`<span class="rdot priv" style="--c:${r === 'wolf' ? '#c0392b' : r === 'village' ? '#3f8f4f' : '#6b7280'}" title="${m.role === 'medium' ? 'Kết quả gọi hồn' : 'Kết quả soi'}">${r === 'wolf' ? '🐺' : r === 'village' ? '✓' : '?'}</span>`); }
     let sub = '';
-    if (!p.alive) sub = { wolf: 'bị cắn', poison: 'chết đêm', love: 'chết vì tình', shot: 'trúng tên', hang: 'bị treo' }[p.cause] || 'đã chết';
+    if (!p.alive) sub = { night: 'chết đêm', wolf: 'bị cắn', poison: 'chết đêm', love: 'chết vì tình', shot: 'trúng tên', hang: 'bị treo' }[p.cause] || 'đã chết';
     else if (p.idiotOut) sub = '🤪 mất phiếu';
     else if (v.phase === 'vote' && v.vote && v.vote.votes && v.vote.votes[p.id]) sub = '→ ' + (v.vote.votes[p.id] === 'skip' ? 'bỏ qua' : pname(v.vote.votes[p.id]));
     else if (v.phase === 'vote' && v.vote && v.vote.voted.includes(p.id)) sub = '✓ đã bầu';
@@ -479,6 +504,7 @@ function renderAct() {
       mine = true;
       if (v.step === 'cupid') { hint = sel.length ? `💘 ${sel.map(pname).join(' ❤ ')}${sel.length < 2 ? ' + …' : ''}` : 'Chọn 2 người (được chọn chính mình).'; btns.push(B('a-cupid', '💘 Ghép đôi', 'pri', sel.length !== 2), B('a-skip', 'Bỏ qua')); }
       else if (v.step === 'guard') { hint = sel[0] ? `🛡️ Bảo vệ <b>${esc(pname(sel[0]))}</b>` : `Chọn người để bảo vệ${v.lastGuard ? ` (không được chọn lại ${esc(pname(v.lastGuard))})` : ''}.`; btns.push(B('a-guard', '🛡️ Bảo vệ', 'pri', !sel[0]), B('a-skip', 'Bỏ qua')); }
+      else if (v.step === 'hunter') { hint = sel[0] ? `🏹 Ghim <b>${esc(pname(sel[0]))}</b>` : 'Chạm vào người bạn muốn ghim đêm nay.'; btns.push(B('a-pin', '🏹 Ghim', 'red', !sel[0]), B('a-skip', 'Không ghim')); }
       else if (v.step === 'thief') {
         const ex = v.extra || [];
         hint = `🃏 2 lá thừa: ${ex.map(r => `<b>${ROLES[r].emoji} ${ROLES[r].name}</b>`).join(' và ')}. Lấy 1 lá (thành vai đó) hoặc giữ nguyên.`;
@@ -493,7 +519,7 @@ function renderAct() {
         btns.push(B('a-nobite', '🙅 Không cắn ai'));
       } else if (v.step === 'witch') {
         const vic = v.victims || [], pot = v.potions || {};
-        hint = (vic.length ? `🩸 Sói vừa cắn: <b>${vic.map(x => esc(pname(x))).join(', ')}</b>` : '🌙 Đêm nay không ai bị cắn.') + (witch.mode === 'poison' ? '<br>☠️ Chạm vào người cần đầu độc' + (witch.poison ? `: <b>${esc(pname(witch.poison))}</b>` : '…') : '');
+        hint = (v.opts.witchBlind && !pot.save ? '🌫️ Bình cứu đã dùng – bạn không còn biết Sói cắn ai.' : vic.length ? `🩸 Sói vừa cắn: <b>${vic.map(x => esc(pname(x))).join(', ')}</b>` : '🌙 Đêm nay không ai bị cắn.') + (witch.mode === 'poison' ? '<br>☠️ Chạm vào người cần đầu độc' + (witch.poison ? `: <b>${esc(pname(witch.poison))}</b>` : '…') : '');
         if (pot.save) for (const x of vic) btns.push(B('a-save-' + x, (witch.save === x ? '✅ ' : '🧪 ') + 'Cứu ' + esc(pname(x)), witch.save === x ? 'green' : ''));
         if (pot.poison) btns.push(B('a-poison', witch.poison ? `☠️ Độc: ${esc(pname(witch.poison))}` : '☠️ Đầu độc…', witch.mode === 'poison' ? 'purple' : ''));
         btns.push(B('a-witch', witch.save || witch.poison ? '✨ Xong' : '😴 Không làm gì', 'pri'));
@@ -543,6 +569,7 @@ function renderAct() {
   on('a-cupid', () => { send({ type: 'cupid', targets: sel.slice() }); fx.sfx.heart(); });
   on('a-guard', () => { send({ type: 'guard', target: sel[0] }); fx.sfx.shield(); });
   on('a-seer', () => { send({ type: 'seer', target: sel[0] }); });
+  on('a-pin', () => { send({ type: 'hunter', target: sel[0] }); });
   on('a-nobite', () => send({ type: 'wolf', target: null }));
   (v.victims || []).forEach(x => on('a-save-' + x, () => { witch.save = witch.save === x ? null : x; fx.sfx.potion(); render(); }));
   on('a-poison', () => { witch.mode = witch.mode === 'poison' ? null : 'poison'; if (!witch.mode) witch.poison = null; render(); });
@@ -557,7 +584,7 @@ function renderAct() {
   on('a-again', () => { closeModal(); net.restart(); });
 }
 // ban đêm chưa tới lượt: nói rõ cho người mới là mình có việc gì không, đã xong hay sắp tới lượt
-const NIGHT_ORDER = ['thief', 'cupid', 'guard', 'seer', 'medium', 'wolves', 'witch'];
+const NIGHT_ORDER = ['thief', 'cupid', 'guard', 'hunter', 'seer', 'medium', 'wolves', 'witch'];
 function nightWaitText(v, m) {
   const mine = isWolfRole(m.role) ? 'wolves' : NIGHT_ORDER.includes(m.role) ? m.role : null;
   // không ghi tên vai ra đây: chơi chung phòng, người ngồi cạnh liếc màn hình là lộ
@@ -646,7 +673,7 @@ function announce(html, hold = 4200) {
   n.onclick = () => n.remove();
   $('#fx-layer').appendChild(n); setTimeout(() => n.remove(), hold + 600);
 }
-const CAUSE_TXT = { wolf: 'đã chết trong đêm', poison: 'đã chết trong đêm', love: 'chết theo người yêu 💔', shot: 'trúng tên 🏹', hang: 'bị treo cổ' };
+const CAUSE_TXT = { night: 'đã chết trong đêm', wolf: 'đã chết trong đêm', poison: 'đã chết trong đêm', love: 'chết theo người yêu 💔', shot: 'trúng tên 🏹', hang: 'bị treo cổ' };
 const tomb = (d, i) => { const p = pl(d.id); const r = d.role || (p && p.revealed ? p.role : null); return `<div class="tomb" style="animation-delay:${i * 0.25}s"><div class="stone">${r ? ROLES[r].emoji : '🪦'}</div><b>${esc(pname(d.id))}</b><small>${r ? ROLES[r].name : CAUSE_TXT[d.cause] || ''}</small></div>`; };
 function playEvents(evs) {
   let t = 0;

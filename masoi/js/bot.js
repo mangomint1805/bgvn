@@ -1,5 +1,5 @@
 // Bot Ma Sói: nghi ngờ đơn giản (ai bị chỉ điểm nhiều, bị khai là Sói, bị bầu nhiều), sói thì che giấu và cắn người nguy hiểm.
-import { P, alive, actors, isWolfRole, ROLES, wolfTargets, wolfLeader, voteCandidates, canVote, mediumTargets } from './engine.js?v=3';
+import { P, alive, actors, isWolfRole, ROLES, wolfTargets, wolfLeader, voteCandidates, canVote, mediumTargets } from './engine.js?v=4';
 
 let rnd = Math.random;
 export function setBotRandom(f) { rnd = f; }
@@ -79,6 +79,10 @@ export function botAction(s, pid) {
         const t = claimed.length && rnd() < 0.7 ? pick(claimed) : (rnd() < 0.25 && opts.includes(me) ? me : pick(opts));
         return { type: 'guard', target: t.id };
       }
+      if (st === 'hunter') { // ghim người đáng ngờ nhất (không ghim người yêu)
+        const pool = others.filter(p => p.id !== me.lover); if (!pool.length) return { type: 'skip' };
+        return { type: 'hunter', target: ranked(s, me, pool.map(p => p.id))[0][0] };
+      }
       if (st === 'seer') {
         const un = others.filter(p => !(p.id in me.seen) && !(me.lover === p.id));
         const pool = un.length ? un : others;
@@ -87,8 +91,8 @@ export function botAction(s, pid) {
         return { type: 'seer', target: rnd() < 0.6 ? r[0][0] : pick(pool).id };
       }
       if (st === 'wolves' || st === 'wolves2') {
-        const tg = wolfTargets(s).filter(id => id !== me.lover);
-        const all = wolfTargets(s);
+        const all = wolfTargets(s).filter(id => !isWolf(P(s, id))); /* luật cho Sói cắn Sói: bot không bao giờ tự cắn đồng bọn */
+        const tg = all.filter(id => id !== me.lover);
         const lead = wolfLeader(s);
         if (lead && (tg.includes(lead) || (!tg.length && all.includes(lead)))) return { type: 'wolf', target: lead };
         if (!tg.length) return { type: 'wolf', target: all.length ? all[0] : null };

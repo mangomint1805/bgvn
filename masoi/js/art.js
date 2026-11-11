@@ -1,5 +1,5 @@
 // Hình vẽ tay 100% bằng SVG: cảnh làng quê (đình, rặng tre, cây đa, nhà tranh), lá vai, mặt sau lá (hoa văn trống đồng).
-import { ROLES } from './engine.js?v=3';
+import { ROLES } from './engine.js?v=4';
 
 // ngẫu nhiên có hạt giống – để cảnh vẽ ra lần nào cũng giống nhau
 function seeded(seed) { let x = seed >>> 0; return () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; }

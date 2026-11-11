@@ -1,6 +1,6 @@
 // 🎞️ Xem lại cuối ván: dòng thời gian Chia vai → Đêm 1 → Ngày 1 → … (lộ hết vai, phiếu từng người).
 // Chủ phòng có thể "chiếu" cho cả hội: lướt tới trang nào thì máy mọi người theo trang đó.
-import { ROLES, TEAM_NAME } from './engine.js?v=3';
+import { ROLES, TEAM_NAME } from './engine.js?v=4';
 import * as fx from './fx.js?v=4';
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -67,7 +67,8 @@ export function buildSegments(v) {
         break;
       }
       case 'idiot': I('🤪', `${pill(r.id)} bị treo… nhưng là <b>Kẻ Ngốc</b> – được tha, mất quyền bầu`); break;
-      case 'shot': I('🏹', `${pill(r.by)} (Thợ Săn) ${r.t ? `bắn kéo theo ${pill(r.t)}` : 'hạ nỏ, không bắn ai'}`); break;
+      case 'pin': I('🏹', `${pill(r.by)} (Thợ Săn) ghim ${pill(r.t)}`); break;
+      case 'shot': I('🏹', r.pin ? `${pill(r.by)} (Thợ Săn) chết trong đêm → ${pill(r.t)} bị ghim nên chết theo` : `${pill(r.by)} (Thợ Săn) ${r.t ? `bắn kéo theo ${pill(r.t)}` : 'hạ nỏ, không bắn ai'}`); break;
       case 'win': I('🏁', `<b>${r.team === 'draw' ? 'HOÀ!' : esc(TEAM_NAME[r.team]) + ' THẮNG!'}</b> ${esc(r.reason)}`, 'win'); break;
     }
   }

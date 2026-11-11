@@ -1,6 +1,6 @@
 // Hướng dẫn luật Ma Sói (tiếng Việt)
-import { ROLES, ROLE_ORDER } from './engine.js?v=3';
-import { roleCardSVG } from './art.js?v=3';
+import { ROLES, ROLE_ORDER } from './engine.js?v=4';
+import { roleCardSVG } from './art.js?v=4';
 import { gp, ill } from '../../shared/ui/guidepics.js?v=1';
 import { GI, GV } from './guide-img.js?v=1';
 
