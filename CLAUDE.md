@@ -19,6 +19,10 @@ Chủ web: Minto. Trả lời bằng tiếng Việt, xưng "em", gọi "anh". Kh
 - Có thay đổi người chơi thấy được thì thêm patch note lên **đầu** `shared/patchnotes.js` (id `YYYYMMDD-n`), rồi tăng `patchnotes.js?v` trong `shared/ui/news.js` và `news.js?v` ở các `main.js`.
 - Giao diện phải dùng tốt trên **điện thoại** (390px) lẫn máy tính. Phông có chữ Việt đầy đủ: kiểm tra chữ Đ/ư/ơ trước khi đổi phông.
 
+## Hình ảnh
+- Icon ô game ở trang chủ: `node tools/icons/make-icons.mjs && node tools/icons/fit.mjs` → `shared/img/icons/<game>.svg` (tự vẽ bằng code). Sửa icon thì tăng `?v` ở `index.html`.
+- Ảnh xem trước khi share link: chạy máy chủ tĩnh `:8811` rồi `node tools/og/make-og.mjs [game…]` → `shared/img/og/<game>.jpg` (lấy hình + chữ từ ô game ở trang chủ).
+
 ## Kiểm tra trước khi push
 - Tự động: `bash tools/qa/run.sh [game…]` chạy máy chủ tĩnh `:8811` + `wrangler dev :8787` rồi test mọi game. Ảnh chụp nằm ở `tools/qa/out/`, phải mở xem chứ đừng chỉ đọc ✅.
 - Thủ công: xem `tools/qa/CHECKLIST.md`.

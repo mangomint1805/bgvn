@@ -6,7 +6,7 @@ import { JUDGE_TEXT } from './engine.js?v=7';
 import { Host, Client, loadSnapshot, session, MAX, MIN, TQ_PHRASES, TRAIN_OPTS } from './net.js?v=12';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=106';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=107';
 import { syncPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 import { portrait, blankPortrait, cardHTML, backHTML, generalCardHTML, kindTag, iconsFor, emoOf } from './art.js?v=9';
 import * as fx from './fx.js?v=8';

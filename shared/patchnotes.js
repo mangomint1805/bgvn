@@ -6,6 +6,10 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261111-4', date: '11/11/2026', game: 'all', title: 'Icon game mới toanh', items: [
+    '🎨 Vẽ lại hình minh hoạ cho 13 game ở trang chủ: mèo ôm bom, sói làng, cờ trận Ngụy–Thục–Ngô, phố Sài Gòn…',
+    '🖼️ Ảnh xem trước khi share link từng game cũng đổi theo hình mới.',
+  ] },
   { id: '20261111-3', date: '11/11/2026', game: 'all', title: 'Báo khi máy chủ quá đông', items: [
     '🎮 Cạnh số người online giờ có thêm số người đang chơi và số phòng, cập nhật tức thì.',
     '⚠️ Ngày nào BGVN đông quá làm máy chủ chính sắp/đã hết lượt miễn phí, web sẽ hiện thông báo – lúc đó vào phòng có thể chậm hơn, máy chủ mở lại lúc 7h sáng.',

@@ -67,7 +67,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:36px}
 .tile .info p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .tile .info .tags{margin-top:auto}
 .uno .art{top:96px!important;height:0!important}
-.tile:not(.bang):not(.uno) .art{padding-top:44px;box-sizing:border-box}
+.tile:not(.bang):not(.uno) .art{padding-top:44px;box-sizing:border-box}.tile .art:has(.ic){padding:46px 0 4px!important;align-items:center!important}
 .masoi .art{padding-bottom:4px}
 .bacao{background:radial-gradient(circle at 50% 30%,#d94b4b,#9c1f2a 60%,#5c0f18)}.bacao h2{font-family:'Baloo 2';font-size:44px;color:#fff;text-shadow:3px 3px 0 #0005}.bacao .art{position:absolute;inset:0 0 40% 0;display:flex;align-items:center;justify-content:center}
 .bacao .art span{display:grid;place-items:center;width:64px;height:92px;margin:0 -8px;background:#fff;border-radius:10px;box-shadow:0 6px 14px #0004;font:800 28px 'Baloo 2',sans-serif;color:#222}.bacao .art span:nth-child(1){transform:rotate(-14deg) translateY(8px)}.bacao .art span:nth-child(2){color:#d32f2f;transform:translateY(-6px)}.bacao .art span:nth-child(3){transform:rotate(14deg) translateY(8px);background:#ffe14d}
@@ -125,6 +125,9 @@ footer a{color:inherit}
 @media (max-width:560px){.bar{flex-direction:column;align-items:stretch}.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}.acts .news{width:100%;padding:8px 10px}.filter{align-self:center}}
 @media (max-width:420px){.bar{margin-top:-24px}.filter button{padding:6px 10px;font-size:13px}.news{font-size:15px}}
 @media (prefers-reduced-motion:reduce){.play.resume{animation:none}}
+.tile .art .ic{display:block;height:100%;max-width:68%;margin:0 auto;object-fit:contain;animation:tb 3.2s ease-in-out infinite;pointer-events:none}
+.tile:hover .art .ic{animation-duration:1.4s}
+@media (prefers-reduced-motion:reduce){.tile .art .ic{animation:none}}
 </style>
 </head>
 <body>
@@ -168,91 +171,91 @@ footer a{color:inherit}
     </a>
     <a class="tile typhu" href="typhu/" data-game="typhu" data-min="2" data-max="6">
       <span class="newtag" data-news="typhu">MỚI</span>
-      <div class="art"><span>🏙️</span><span>🎲</span><span>💰</span></div>
+      <div class="art"><img class="ic" src="shared/img/icons/typhu.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Cờ Tỷ Phú</h2><p>Bàn cờ 3D 40 ô đường Sài Gòn: mua đất, xây nhà lên Landmark, đấu giá, giao dịch, mua lại đất 🏙️</p>
         <div class="tags"><i>2–6 người</i><i>3D</i><i>Nhân vật tự tạo</i><i>Có bot</i></div></div>
     </a>
     <a class="tile scribble" href="scribble/" data-game="scribble" data-min="2" data-max="12">
       <span class="newtag" data-news="scribble">MỚI</span>
-      <div class="art"><span>🎨</span><span>✏️</span><span>🤔</span></div>
+      <div class="art"><img class="ic" src="shared/img/icons/scribble.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Scribble it!</h2><p>Vẽ bậy – đoán bừa: Đoán hình kiểu skribbl và Tam sao thất bản kiểu Gartic Phone 😂</p>
         <div class="tags"><i>2–12 người</i><i>2 chế độ</i><i>Có Tướng Liên Minh</i></div></div>
     </a>
     <a class="tile meono" href="meono/" data-game="meono" data-min="2" data-max="8">
       <span class="newtag" data-news="meono">MỚI</span>
-      <div class="art"><span>🐱</span><span>💣</span><span>🙅</span></div>
+      <div class="art"><img class="ic" src="shared/img/icons/meono.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Mèo Nổ</h2><p>Bốc bài hồi hộp: né Mèo Nổ, gỡ bom rồi nhét lại cho đứa khác, hô KHÔNG! đúng lúc 💥</p>
         <div class="tags"><i>2–8 người</i><i>Hồi hộp</i><i>Có bot</i></div></div>
     </a>
     <a class="tile tamquoc" href="tamquoc/" data-game="tamquoc" data-min="2" data-max="8">
       <span class="newtag" data-news="tamquoc">MỚI</span>
-      <div class="art"><span>魏</span><span>蜀</span><span>吳</span></div>
+      <div class="art"><img class="ic" src="shared/img/icons/tamquoc.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Tam Quốc Sát</h2><p>Chúa công, Trung thần, Phản tặc, Nội gián – 25 võ tướng Ngụy Thục Ngô Quần, Sát – Né – Đào ⚔️</p>
         <div class="tags"><i>2–8 người</i><i>Vai trò ẩn</i><i>Có bot</i></div></div>
     </a>
     <a class="tile masoi" href="masoi/" data-game="masoi" data-min="5" data-max="16">
       <span class="newtag" data-news="masoi">MỚI</span>
-      <div class="art"><span>🎋</span><span>🐺</span><span>🏮</span></div>
+      <div class="art"><img class="ic" src="shared/img/icons/masoi.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Ma Sói</h2><p>Làng quê đêm trăng: Sói, Tiên tri, Bảo vệ, Phù thủy, Thợ săn, Cupid… máy làm quản trò, ai cũng dùng điện thoại riêng 🌕</p>
         <div class="tags"><i>5–16 người</i><i>12 vai</i><i>Có bot</i></div></div>
     </a>
     <a class="tile camel" href="camel/" data-game="camel" data-min="2" data-max="8">
       <span class="newtag" data-news="camel">MỚI</span>
-      <div class="art"><span>🐪</span><span>🔺</span><span>🐫</span></div>
+      <div class="art"><img class="ic" src="shared/img/icons/camel.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Đua Lạc Đà</h2><p>Lạc đà 3D cõng nhau chạy loạn – đoán con về nhất bằng xu ảo, ai giàu nhất thắng! 🏜️</p>
         <div class="tags"><i>2–8 người</i><i>3D</i><i>Đoán vui</i></div></div>
     </a>
     <a class="tile cangua" href="cangua/" data-game="cangua" data-min="2" data-max="4">
       <span class="newtag" data-news="cangua">MỚI</span>
-      <div class="art"><span>🐴</span><span>🎲</span><span>🏁</span></div>
+      <div class="art"><img class="ic" src="shared/img/icons/cangua.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Cờ cá ngựa</h2><p>Cờ cá ngựa 3D: đổ đôi xuất chuồng, đá ngựa bạn bay về chuồng, chơi online hoặc với bot 🐴💨</p>
         <div class="tags"><i>2–4 người</i><i>3D</i><i>Đá nhau</i></div></div>
     </a>
     <a class="tile tienlen" href="tienlen/" data-game="tienlen" data-min="2" data-max="4">
       <span class="newtag" data-news="tienlen">MỚI</span>
-      <div class="art"><span>2♠</span><span>2♣</span><span>2♦</span><span>2♥</span></div>
+      <div class="art"><img class="ic" src="shared/img/icons/tienlen.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Tiến Lên miền Nam</h2><p>Chặt heo, tới trắng, thối heo, cóng – chip ảo, có bot 3 cấp 🐷🔪</p>
         <div class="tags"><i>2–4 người</i><i>Chặt heo</i><i>Chip ảo</i></div></div>
     </a>
     <a class="tile catte" href="catte/" data-game="catte" data-min="2" data-max="6">
       <span class="newtag" data-news="catte">MỚI</span>
-      <div class="art"><span>A♣</span><span>úp</span><span>K♥</span></div>
+      <div class="art"><img class="ic" src="shared/img/icons/catte.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Cát tê</h2><p>6 lá, 6 vòng: đè hay úp, không ăn vòng nào là chết, ăn vòng cuối là tới! ☠️</p>
         <div class="tags"><i>2–6 người</i><i>Đè / úp</i><i>Chip ảo</i></div></div>
     </a>
     <a class="tile bacao" href="bacao/" data-game="bacao" data-min="2" data-max="8">
       <span class="newtag" data-news="bacao">MỚI</span>
-      <div class="art"><span>J♠</span><span>Q♥</span><span>K♣</span></div>
+      <div class="art"><img class="ic" src="shared/img/icons/bacao.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Ba Cào</h2><p>Bài cào 3 lá: nặn bài hồi hộp, ba tây, sáp – có cái hoặc chơi gà 👑</p>
         <div class="tags"><i>2–8 người</i><i>Hên xui</i><i>Chip ảo</i></div></div>
     </a>
     <a class="tile xidach" href="xidach/" data-game="xidach" data-min="2" data-max="8">
       <span class="newtag" data-news="xidach">MỚI</span>
-      <div class="art"><span>A♥</span><span>K♠</span><span>21</span></div>
+      <div class="art"><img class="ic" src="shared/img/icons/xidach.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Xì dách</h2><p>Xì dách kiểu Việt: rút hay dằn, xì bàn, ngũ linh, nhà cái xét bài – chip ảo chơi vui 🃏</p>
         <div class="tags"><i>2–8 người</i><i>Nhà cái</i><i>Chip ảo</i></div></div>
     </a>
     <a class="tile poker" href="poker/" data-game="poker" data-min="2" data-max="9">
       <span class="newtag" data-news="poker">MỚI</span>
-      <div class="art"><span>A♠</span><span>A♥</span><span>chip</span></div>
+      <div class="art"><img class="ic" src="shared/img/icons/poker.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Poker</h2><p>Texas Hold'em không giới hạn: tố, bịp, tất tay cùng hội bạn bằng chip ảo 😎</p>
         <div class="tags"><i>2–9 người</i><i>Bluff</i><i>Chip ảo</i></div></div>
     </a>
     <a class="tile solitaire" href="solitaire/" data-game="solitaire" data-min="1" data-max="1">
       <span class="newtag" data-news="solitaire">MỚI</span>
-      <div class="art"><span>K♠</span><span>Q♥</span><span>J♣</span><span>10♦</span></div>
+      <div class="art"><img class="ic" src="shared/img/icons/solitaire.svg?v=1" alt="" draggable="false"></div>
       <span class="play">Chơi ▶</span>
       <div class="info"><h2>Xếp bài</h2><p>Xếp bài cổ điển như Solitaire Windows: rút 1/3, điểm Vegas, gợi ý, bài nảy khi thắng 🃏</p>
         <div class="tags"><i>1 người</i><i>Bài Tây</i><i>Thư giãn</i></div></div>
