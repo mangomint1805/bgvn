@@ -20,8 +20,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@500;600;700;800&family=Patrick+Hand&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/scribble.css?v=7">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+<link rel="stylesheet" href="/shared/ui/shell.css?v=1">
 </head>
 <body>
+<div id="bgvn-splash" aria-hidden="true"><i></i><b></b></div><script>(function(){var s=document.getElementById("bgvn-splash");function h(){if(!s)return;var x=s;s=null;x.className="out";setTimeout(function(){x.remove()},320)}addEventListener("load",h);addEventListener("pageshow",h);setTimeout(h,4500)})()</script>
 <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
   <!-- nét "tay run": làm méo nhẹ viền khung cho giống vẽ tay -->
   <filter id="wob" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="4.5"/></filter>
@@ -31,7 +33,7 @@
 
 <!-- TRANG CHỦ -->
 <section id="screen-home" class="screen active">
-  <a class="back-hub" href="../">← Bàn chơi BGVN</a>
+  <a class="back-hub bgvn-chip" href="../" aria-label="Về trang chủ BGVN" title="Về trang chủ BGVN"><img src="/favicon.svg?v=1" alt="" width="26" height="26"><span>BGVN</span></a>
   <div class="home-card"><i class="spiral" aria-hidden="true"></i>
     <div class="doodles" aria-hidden="true">
       <svg viewBox="0 0 320 110" class="hero-svg">
@@ -152,7 +154,8 @@
 <div class="snd-pop" id="snd-pop" hidden><button class="chip" id="sp-sfx">🔊 Hiệu ứng</button><button class="chip" id="sp-music">🎵 Nhạc nền</button><button class="chip news-btn" id="sp-news">📝 Có gì mới</button></div>
 <div class="toast" id="toast" role="status"></div>
 <div id="fx-layer"></div>
-<script type="module" src="js/main.js?v=20"></script>
-<script type="module" src="../shared/ui/homebtn.js?v=12"></script>
+<script type="module" src="js/main.js?v=21"></script>
+<script type="module" src="../shared/ui/homebtn.js?v=13"></script>
+<script type="module" src="/shared/ui/feel.js?v=1"></script>
 </body>
 </html>

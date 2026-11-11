@@ -20,8 +20,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/poker.css?v=2">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+<link rel="stylesheet" href="/shared/ui/shell.css?v=1">
 </head>
 <body>
+<div id="bgvn-splash" aria-hidden="true"><i></i><b></b></div><script>(function(){var s=document.getElementById("bgvn-splash");function h(){if(!s)return;var x=s;s=null;x.className="out";setTimeout(function(){x.remove()},320)}addEventListener("load",h);addEventListener("pageshow",h);setTimeout(h,4500)})()</script>
 <!-- chất bài vẽ bằng SVG (không phụ thuộc font emoji) -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="su-h" viewBox="0 0 100 100"><path d="M50 90C22 68 5 52 5 31 5 15 17 5 30 5c9 0 16 5 20 13 4-8 11-13 20-13 13 0 25 10 25 26 0 21-17 37-45 59z"/></symbol>
@@ -33,7 +35,7 @@
 
 <!-- TRANG CHỦ -->
 <section id="screen-home" class="screen active">
-  <a class="back-hub" href="../">← Bàn chơi BGVN</a>
+  <a class="back-hub bgvn-chip" href="../" aria-label="Về trang chủ BGVN" title="Về trang chủ BGVN"><img src="/favicon.svg?v=1" alt="" width="26" height="26"><span>BGVN</span></a>
   <div class="home-card">
     <div class="hero" id="hero" aria-hidden="true"></div>
     <h1 class="logo">Poker <span>Hold'em</span></h1>
@@ -114,7 +116,8 @@
 <div class="modal" id="modal"><div class="modal-box" id="modal-box"></div></div>
 <div class="toast" id="toast" role="status"></div>
 <div id="fx-layer"></div>
-<script type="module" src="js/main.js?v=14"></script>
-<script type="module" src="../shared/ui/homebtn.js?v=12"></script>
+<script type="module" src="js/main.js?v=15"></script>
+<script type="module" src="../shared/ui/homebtn.js?v=13"></script>
+<script type="module" src="/shared/ui/feel.js?v=1"></script>
 </body>
 </html>

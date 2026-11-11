@@ -28,9 +28,11 @@ export function openSettings() {
   ov.innerHTML = `<div class="st-box" role="dialog" aria-modal="true"><button class="st-x" aria-label="Đóng">✕</button><h2>⚙️ Cài đặt</h2>
     <div class="st-sec"><h3>👤 Tên của bạn</h3><input type="text" id="st-name" maxlength="20" placeholder="Tên hiện khi vào phòng" value="">
       <p style="margin:6px 0 0;font-size:12.5px;color:#8a7f96">${u ? 'Đang đăng nhập: ' + esc(u.name) + (u.admin ? ' · 🛠️ quản trị viên' : '') : 'Tự điền sẵn ở mọi game. Đăng nhập để giữ tên trên mọi máy.'}</p></div>
-    <div class="st-sec"><h3>🔊 Âm thanh</h3>
+    <div class="st-sec"><h3>🔊 Âm thanh &amp; cảm giác</h3>
       <label class="st-row"><input type="checkbox" id="st-music" ${musicOn ? 'checked' : ''}><span>Nhạc nền ở mọi game<small>Tắt/bật một lần cho tất cả game (vẫn chỉnh riêng trong từng game được)</small></span></label>
-      <label class="st-row"><input type="checkbox" id="st-mute" ${ls.get('bgvn-mute-all') === '1' ? 'checked' : ''}><span>Tắt hết nhạc nền<small>Dùng khi đang ở chỗ cần yên lặng</small></span></label></div>
+      <label class="st-row"><input type="checkbox" id="st-mute" ${ls.get('bgvn-mute-all') === '1' ? 'checked' : ''}><span>Tắt hết nhạc nền<small>Dùng khi đang ở chỗ cần yên lặng</small></span></label>
+      <label class="st-row"><input type="checkbox" id="st-uisfx" ${ls.get('bgvn-ui-sfx') === '0' ? '' : 'checked'}><span>Tiếng bấm nút<small>Tiếng "tách" nhỏ ở trang chủ, hộp thoại, cài đặt</small></span></label>
+      <label class="st-row"><input type="checkbox" id="st-haptic" ${ls.get('bgvn-haptic') === '0' ? '' : 'checked'}><span>Rung nhẹ khi bấm<small>Chỉ trên điện thoại có hỗ trợ rung</small></span></label></div>
     <div class="st-sec"><h3>🌐 Chơi online</h3>
       <label class="st-row"><input type="checkbox" id="st-pub" ${ls.get('bgvn-pub-default') === '1' ? 'checked' : ''}><span>Tạo phòng là tự công khai<small>Phòng mới tự hiện ở Sảnh chung (vẫn tắt được trong phòng)</small></span></label>
       <label class="st-row"><input type="checkbox" id="st-online" ${ls.get('bgvn-hide-online') === '1' ? '' : 'checked'}><span>Hiện số người đang online</span></label></div>
@@ -45,6 +47,8 @@ export function openSettings() {
   $('#st-name').onchange = e => { const v = e.target.value.trim().slice(0, 20); ls.set('bgvn-name', v); if (auth.user() && v.length >= 2) auth.rename(v); };
   $('#st-music').onchange = e => GAMES.forEach(g => ls.set('bgvn-music-' + g, e.target.checked ? '1' : '0'));
   $('#st-mute').onchange = e => ls.set('bgvn-mute-all', e.target.checked ? '1' : '0');
+  $('#st-uisfx').onchange = e => ls.set('bgvn-ui-sfx', e.target.checked ? '1' : '0');
+  $('#st-haptic').onchange = e => ls.set('bgvn-haptic', e.target.checked ? '1' : '0');
   $('#st-pub').onchange = e => ls.set('bgvn-pub-default', e.target.checked ? '1' : '0');
   $('#st-online').onchange = e => { ls.set('bgvn-hide-online', e.target.checked ? '0' : '1'); document.querySelectorAll('#online').forEach(el => { el.style.display = e.target.checked ? '' : 'none'; }); };
   $('#st-clear').onclick = async () => {

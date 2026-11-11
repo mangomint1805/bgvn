@@ -22,11 +22,13 @@
 <meta name="color-scheme" content="light dark">
 <script>/* 🌓 đặt chế độ tối ngay từ đầu (khỏi nháy trắng): 'sol-dark' = auto | light | dark */
 (function(){var p='auto';try{p=localStorage.getItem('sol-dark')||'auto'}catch(e){}var d=p==='dark'||(p!=='light'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);if(d){document.documentElement.classList.add('dark');document.documentElement.style.colorScheme='dark'}})();</script>
+<link rel="stylesheet" href="/shared/ui/shell.css?v=1">
 </head>
 <body>
+<div id="bgvn-splash" aria-hidden="true"><i></i><b></b></div><script>(function(){var s=document.getElementById("bgvn-splash");function h(){if(!s)return;var x=s;s=null;x.className="out";setTimeout(function(){x.remove()},320)}addEventListener("load",h);addEventListener("pageshow",h);setTimeout(h,4500)})()</script>
 <div id="app">
   <header class="top">
-    <a class="back-hub" href="../">← Bàn chơi BGVN</a>
+    <a class="back-hub bgvn-chip" href="../" aria-label="Về trang chủ BGVN" title="Về trang chủ BGVN"><img src="/favicon.svg?v=1" alt="" width="26" height="26"><span>BGVN</span></a>
     <button class="vbtn" id="btn-variant" title="Tuỳ chọn ván"><span id="v-icon">🃏</span><b id="v-name">Xếp bài cổ điển</b><small id="v-opt"></small><i>▾</i></button>
     <div class="info">
       <button class="chip deal" id="btn-deal" title="Chọn số ván">Ván <b id="deal-no">#1</b></button>
@@ -56,7 +58,8 @@
 <div class="modal" id="modal"><div class="modal-box" id="modal-box" role="dialog" aria-modal="true"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <canvas id="win-canvas" hidden></canvas>
-<script type="module" src="js/main.js?v=13"></script>
+<script type="module" src="js/main.js?v=14"></script>
 <script type="module" src="../shared/net/presence.js?v=5"></script>
+<script type="module" src="/shared/ui/feel.js?v=1"></script>
 </body>
 </html>

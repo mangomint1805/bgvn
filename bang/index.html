@@ -17,12 +17,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Rye&family=Bevan&family=Oswald:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css?v=15">
 <link rel="icon" href="/favicon.svg?v=1" type="image/svg+xml"><link rel="apple-touch-icon" href="/shared/img/brand/apple-touch-icon.png?v=1"><link rel="manifest" href="/manifest.webmanifest?v=1"><meta name="apple-mobile-web-app-title" content="BGVN"><meta name="mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="/shared/ui/shell.css?v=1">
 </head>
 <body>
+<div id="bgvn-splash" aria-hidden="true"><i></i><b></b></div><script>(function(){var s=document.getElementById("bgvn-splash");function h(){if(!s)return;var x=s;s=null;x.className="out";setTimeout(function(){x.remove()},320)}addEventListener("load",h);addEventListener("pageshow",h);setTimeout(h,4500)})()</script>
 
 <!-- ===== Màn hình chính ===== -->
 <section id="screen-home" class="screen active">
-  <a href="../" style="position:absolute;left:14px;top:12px;z-index:5;background:#fffc;color:#3a2a1a;text-decoration:none;font-weight:700;padding:6px 12px;border-radius:999px;box-shadow:0 4px 12px #0003;font-size:14px">← Bàn chơi BGVN</a>
+  <a class="bgvn-chip" href="../" style="position:absolute;left:14px;top:12px;z-index:5" aria-label="Về trang chủ BGVN" title="Về trang chủ BGVN"><img src="/favicon.svg?v=1" alt="" width="26" height="26"><span>BGVN</span></a>
   <div class="home-box">
     <h1 class="logo">CÀ ĐÙNG!</h1>
     <p class="tagline">Cuộc chiến Viễn Tây – chơi online với bạn bè</p>
@@ -38,7 +40,7 @@
           <button id="btn-join" class="btn">Vào phòng</button>
         </div>
         <button id="btn-offline" class="btn ghost small">Chơi một mình với bot (offline)</button>
-      <button id="btn-lobby" class="btn ghost small" type="button" onclick="import('../shared/ui/lobby.js?v=3').then(m=>m.openLobby('bang'))">🌐 Phòng công khai &amp; chat</button>
+      <button id="btn-lobby" class="btn ghost small" type="button" onclick="import('../shared/ui/lobby.js?v=4').then(m=>m.openLobby('bang'))">🌐 Phòng công khai &amp; chat</button>
       </div>
       <div class="theme-pick" id="theme-pick"></div>
       <div class="theme-pick" id="speed-pick"></div>
@@ -121,8 +123,9 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
-<script type="module" src="js/main.js?v=30"></script>
-<script type="module" src="../shared/ui/homebtn.js?v=12"></script>
+<script type="module" src="js/main.js?v=31"></script>
+<script type="module" src="../shared/ui/homebtn.js?v=13"></script>
 <script type="module" src="../shared/net/presence.js?v=5"></script>
+<script type="module" src="/shared/ui/feel.js?v=1"></script>
 </body>
 </html>

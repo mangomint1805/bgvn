@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="vi">
+<html lang="vi" data-ui-sfx="1">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,8 +19,10 @@ section{background:#fff;border-radius:20px;padding:6px 20px 12px;margin:14px 0;b
 h2{font:800 21px "Baloo 2",Nunito,sans-serif;margin:12px 0 4px}
 ul{padding-left:20px}li{margin:4px 0}a{color:#2f5fd0}
 </style>
+<link rel="stylesheet" href="/shared/ui/shell.css?v=1">
 </head>
-<body><main><a class="back" href="../">← Bàn chơi BGVN</a>
+<body>
+<div id="bgvn-splash" aria-hidden="true"><i></i><b></b></div><script>(function(){var s=document.getElementById("bgvn-splash");function h(){if(!s)return;var x=s;s=null;x.className="out";setTimeout(function(){x.remove()},320)}addEventListener("load",h);addEventListener("pageshow",h);setTimeout(h,4500)})()</script><main><a class="back bgvn-chip" href="../" aria-label="Về trang chủ BGVN" title="Về trang chủ BGVN"><img src="/favicon.svg?v=1" alt="" width="26" height="26"><span>BGVN</span></a>
 <h1>📄 Điều khoản sử dụng</h1><p class="muted">Áp dụng cho boardgamevui.com · cập nhật 10/11/2026</p>
 <section><h2>Chơi vui là chính</h2><ul>
 <li>BGVN miễn phí, phi thương mại, làm để chơi cùng bạn bè. Web có thể thay đổi, tạm ngưng hoặc lỗi bất cứ lúc nào, không có bảo đảm nào kèm theo.</li>
@@ -35,4 +37,5 @@ ul{padding-left:20px}li{margin:4px 0}a{color:#2f5fd0}
 <li>BGVN không liên kết với chủ sở hữu các trò chơi gốc. Nguồn tranh, phông chữ, thư viện ghi ở trang <a href="../credits/">Credits</a>.</li>
 <li>Tin nhắn bạn gửi là của bạn, nhưng bạn cho phép BGVN hiển thị chúng cho người khác trong Sảnh.</li></ul></section>
 <p class="muted">Xem thêm: <a href="../privacy/">Chính sách riêng tư</a></p>
-</main></body></html>
+</main><script type="module" src="/shared/ui/feel.js?v=1"></script>
+</body></html>

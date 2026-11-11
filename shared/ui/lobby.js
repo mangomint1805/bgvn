@@ -2,7 +2,7 @@
 // mountLobby(el, { game }) – game = null: sảnh tổng (mọi game, kênh chat "Chung" + kênh game đang lọc)
 // openLobby(game) – mở dạng hộp nổi (dùng trong trang game)
 import { WS, auth, guestId, myName } from '../net/api.js?v=1';
-import { openLogin } from './account.js?v=3';
+import { openLogin } from './account.js?v=4';
 import { promptBox, chooseBox } from './dialog.js?v=1';
 
 const ROOT = new URL('../../', import.meta.url).href;

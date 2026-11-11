@@ -1,0 +1,29 @@
+/* 🧩 Khung chung BGVN – nạp ở MỌI trang (trang chủ, trang phụ, từng game):
+   chuyển trang mượt, màn hình chờ có logo, nút "BGVN" về trang chủ, hiệu ứng nhấn nút. */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:.16s ease-in both bgvn-vt-out}
+::view-transition-new(root){animation:.26s cubic-bezier(.2,.9,.3,1) both bgvn-vt-in}
+@keyframes bgvn-vt-out{to{opacity:0;transform:scale(.985)}}
+@keyframes bgvn-vt-in{from{opacity:0;transform:translateY(10px)}}
+
+/* màn hình chờ: chỉ hiện khi trang tải lâu hơn ~0,35 giây */
+#bgvn-splash{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;background:#fff7ef;opacity:0;pointer-events:none;animation:bgvn-sp-in .2s .35s forwards}
+#bgvn-splash.out{animation:none;opacity:0;transition:opacity .3s}
+#bgvn-splash i{display:block;width:92px;height:92px;background:url("/favicon.svg?v=1") center/contain no-repeat;animation:bgvn-sp-b 1s cubic-bezier(.3,0,.3,1) infinite;filter:drop-shadow(0 14px 14px #ff4d6a55)}
+#bgvn-splash b{position:absolute;left:50%;top:calc(50% + 74px);transform:translateX(-50%);width:120px;height:6px;border-radius:999px;background:#2a23401a;overflow:hidden}
+#bgvn-splash b::after{content:"";position:absolute;inset:0;width:40%;border-radius:999px;background:linear-gradient(90deg,#ff4d6a,#ffb23d);animation:bgvn-sp-l 1s ease-in-out infinite}
+@keyframes bgvn-sp-in{to{opacity:1;pointer-events:auto}}
+@keyframes bgvn-sp-b{0%,100%{transform:translateY(0) rotate(-6deg) scale(1,1)}45%{transform:translateY(-22px) rotate(8deg) scale(.97,1.03)}90%{transform:translateY(0) rotate(-6deg) scale(1.06,.94)}}
+@keyframes bgvn-sp-l{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+
+/* nút về trang chủ: giống nhau ở mọi game và trang phụ */
+.bgvn-chip{display:inline-flex!important;align-items:center!important;gap:7px!important;padding:5px 14px 5px 6px!important;min-height:38px!important;box-sizing:border-box!important;border-radius:999px!important;background:#fff!important;color:#2a2340!important;font:800 15.5px/1 "Baloo 2",Nunito,system-ui,sans-serif!important;letter-spacing:.5px!important;text-decoration:none!important;text-shadow:none!important;border:1.5px solid #2a23401a!important;box-shadow:0 6px 16px -8px #2a234077!important;transition:transform .15s!important;width:auto!important}
+.bgvn-chip img{width:26px;height:26px;display:block;transition:transform .3s cubic-bezier(.2,1.6,.4,1)}
+.bgvn-chip:hover{transform:translateY(-1px)}.bgvn-chip:hover img{transform:rotate(14deg) scale(1.1)}
+.bgvn-chip:active{transform:scale(.96)}
+
+/* cảm giác nhấn: mọi nút lún nhẹ khi bấm (game nào có hiệu ứng riêng thì vẫn giữ) */
+@media (hover:hover){button:not(:disabled),a.btn,.btn{-webkit-tap-highlight-color:transparent}}
+button,a,.tile{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid #7b61ff;outline-offset:2px;border-radius:8px}
+@media (prefers-reduced-motion:reduce){::view-transition-old(root),::view-transition-new(root){animation:none}#bgvn-splash i,#bgvn-splash b::after{animation:none}}

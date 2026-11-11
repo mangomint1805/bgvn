@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="vi">
+<html lang="vi" data-ui-sfx="1">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -53,11 +53,13 @@ footer a{color:inherit}
 @media (max-width:640px){.row{grid-template-columns:1fr}.game h2{font-size:24px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
+<link rel="stylesheet" href="/shared/ui/shell.css?v=1">
 </head>
 <body>
+<div id="bgvn-splash" aria-hidden="true"><i></i><b></b></div><script>(function(){var s=document.getElementById("bgvn-splash");function h(){if(!s)return;var x=s;s=null;x.className="out";setTimeout(function(){x.remove()},320)}addEventListener("load",h);addEventListener("pageshow",h);setTimeout(h,4500)})()</script>
 <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div>
 <main>
-  <a class="back" href="../">← Bàn chơi BGVN</a>
+  <a class="back bgvn-chip" href="../" aria-label="Về trang chủ BGVN" title="Về trang chủ BGVN"><img src="/favicon.svg?v=1" alt="" width="26" height="26"><span>BGVN</span></a>
   <h1>⚙️ <span>Luật mặc định</span></h1>
   <p class="sub">Tuỳ chọn được chọn sẵn khi tạo phòng mới ở từng game – đọc trực tiếp từ file <code>luat-mac-dinh.js</code>. Trang này chỉ để xem; trong sảnh chủ phòng vẫn đổi được như thường.</p>
   <div class="status" id="status">⏳ Đang đọc file luật…</div>
@@ -151,5 +153,6 @@ function rowHTML(r, cfg, live) {
   $('#games').innerHTML = games.map(g => `<section class="game" id="g-${esc(g.key)}"><h2>${esc(g.title)} <small>${g.rows.filter(r => !r.group).length} tuỳ chọn</small></h2>${g.notes.length ? `<p class="note">${esc(g.notes.join(' '))}</p>` : ''}${g.rows.map(r => rowHTML({ ...r, path: r.group ? r.path : [g.key, ...r.path.slice(1)] }, cfg, !err)).join('')}</section>`).join('') || '<p class="loading">Không đọc được nội dung nào.</p>';
 })();
 </script>
+<script type="module" src="/shared/ui/feel.js?v=1"></script>
 </body>
 </html>

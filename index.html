@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="vi">
+<html lang="vi" data-ui-sfx="1">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -193,8 +193,10 @@ main{max-width:1080px;padding:28px 16px 32px}
  .foot-top{grid-template-columns:1fr 1fr}.foot-brand{grid-column:1/-1}}
 @media (max-width:480px){.wm small{display:none}.wm{font-size:25px}.brand .mark{width:38px;height:38px}.nav-in{gap:8px;padding:8px 12px}.hero h1{font-size:clamp(28px,8.6vw,36px)}.facts{font-size:13px;gap:4px 10px}.facts li+li::before{margin-right:6px}.btn-main{padding:10px 18px;font-size:20px}.btn-sub{padding:6px 14px}.hero .sub{font-size:16.5px}.btn-main,.btn-sub{flex:1;justify-content:center;align-items:center;text-align:center}.psel{font-size:0}.psel select{font-size:13.5px}}
 </style>
+<link rel="stylesheet" href="/shared/ui/shell.css?v=1">
 </head>
 <body>
+<div id="bgvn-splash" aria-hidden="true"><i></i><b></b></div><script>(function(){var s=document.getElementById("bgvn-splash");function h(){if(!s)return;var x=s;s=null;x.className="out";setTimeout(function(){x.remove()},320)}addEventListener("load",h);addEventListener("pageshow",h);setTimeout(h,4500)})()</script>
 <i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="blob b4"></i>
 <header class="nav" id="nav">
   <div class="nav-in">
@@ -381,9 +383,9 @@ function fitTitles(){document.querySelectorAll('.grid .tile .info h2,.hero-card 
 addEventListener('load',fitTitles);addEventListener('resize',()=>{clearTimeout(fitTitles.t);fitTitles.t=setTimeout(fitTitles,120)});document.fonts&&document.fonts.ready.then(fitTitles);
 </script>
 <script type="module" src="shared/ui/feedback.js?v=4"></script>
-<script type="module">import { mountAccount } from "./shared/ui/account.js?v=3"; import { mountOnline } from "./shared/net/presence.js?v=5"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=2").then(m => m.openSettings());</script>
+<script type="module">import { mountAccount } from "./shared/ui/account.js?v=4"; import { mountOnline } from "./shared/net/presence.js?v=5"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=3").then(m => m.openSettings());</script>
 <script type="module">
-import { openNews, newsBadge } from './shared/ui/news.js?v=109';
+import { openNews, newsBadge } from './shared/ui/news.js?v=110';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 const json = k => { try { return JSON.parse(ls.get(k)); } catch (e) { return null; } };
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
@@ -395,7 +397,7 @@ const nav = $('#nav'), onScroll = () => nav.classList.toggle('stuck', scrollY > 
 if (!ls.get('bgvn-visited')) {
   ls.set('bgvn-visited', String(Date.now()));
   let old = false; try { old = Object.keys(localStorage).some(k => k.startsWith('bgvn-news-seen-') || k.startsWith('bgvn-session-') || k === 'bgvn-name'); } catch (e) {}
-  if (!old) import('./shared/patchnotes.js?v=68').then(m => { ['all', ...tiles.map(t => t.dataset.game)].forEach(g => { const id = m.latestId(g === 'all' ? null : g); if (id) ls.set('bgvn-news-seen-' + g, id); }); });
+  if (!old) import('./shared/patchnotes.js?v=69').then(m => { ['all', ...tiles.map(t => t.dataset.game)].forEach(g => { const id = m.latestId(g === 'all' ? null : g); if (id) ls.set('bgvn-news-seen-' + g, id); }); });
   else marks();
 } else marks();
 function marks() { $$('#btn-news,#btn-news-m').forEach(b => newsBadge(b, null)); $$('.grid .newtag[data-news]').forEach(t => newsBadge(t, t.dataset.news)); }
@@ -457,5 +459,6 @@ $$('.filter button').forEach(x => x.onclick = () => { cat = x.dataset.c; applyFi
 $('#pf').onchange = e => { pf = e.target.value; applyFilter(); };
 applyFilter();
 </script>
+<script type="module" src="/shared/ui/feel.js?v=1"></script>
 </body>
 </html>

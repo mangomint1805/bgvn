@@ -6,6 +6,12 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261111-6', date: '11/11/2026', game: 'all', title: 'Mời bạn bằng mã QR + chuyển trang mượt', items: [
+    '📨 Trong phòng chờ có nút "Mời bạn (mã QR)": bạn bè ngồi cạnh chỉ cần giơ camera quét là vào phòng. Trên điện thoại có luôn nút Chia sẻ qua Zalo, Messenger…',
+    '✨ Chuyển giữa các trang mượt hơn, tải lâu thì có màn hình chờ với bé xúc xắc nhún nhảy.',
+    '🙂 Nút "BGVN" về trang chủ giờ giống nhau ở mọi game.',
+    '📳 Bấm nút có rung nhẹ (điện thoại) và tiếng "tách" nhỏ ở trang chủ – tắt được trong ⚙️ Cài đặt.',
+  ] },
   { id: '20261111-5', date: '11/11/2026', game: 'all', title: 'BGVN khoác áo mới', items: [
     '🙂 Logo mới: bé xúc xắc biết cười – có luôn trên tab trình duyệt và khi "Thêm vào màn hình chính" (mở lên như một app thật).',
     '🏠 Trang chủ làm lại: game nổi bật ở đầu trang, mục 🔥 Đang hot theo số người đang chơi thật, lọc theo loại game (Tiệc tùng / Bàn cờ / Game bài).',

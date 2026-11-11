@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="vi">
+<html lang="vi" data-ui-sfx="1">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -44,11 +44,13 @@ details summary{cursor:pointer;font-weight:800;min-height:32px;list-style-positi
 footer{text-align:center;color:var(--muted);font-size:13px;margin-top:26px}
 @media (max-width:420px){section h2{font-size:22px}.imgs{grid-template-columns:1fr}}
 </style>
+<link rel="stylesheet" href="/shared/ui/shell.css?v=1">
 </head>
 <body>
+<div id="bgvn-splash" aria-hidden="true"><i></i><b></b></div><script>(function(){var s=document.getElementById("bgvn-splash");function h(){if(!s)return;var x=s;s=null;x.className="out";setTimeout(function(){x.remove()},320)}addEventListener("load",h);addEventListener("pageshow",h);setTimeout(h,4500)})()</script>
 <i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="blob b4"></i>
 <main>
-  <a class="back" href="../">← Bàn chơi BGVN</a>
+  <a class="back bgvn-chip" href="../" aria-label="Về trang chủ BGVN" title="Về trang chủ BGVN"><img src="/favicon.svg?v=1" alt="" width="26" height="26"><span>BGVN</span></a>
   <h1>📜 <span>Credits</span></h1>
   <p class="sub">BGVN là dự án fan-made phi thương mại. Trang này ghi nguồn mọi tranh, phông chữ, thư viện mà web dùng, và cảm ơn những người đã chia sẻ chúng 💖</p>
 
@@ -102,6 +104,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:26px}
   <section id="code"><h2>🧰 Thư viện & dịch vụ</h2><div class="body">
     <ul>
       <li><a href="https://threejs.org/" target="_blank" rel="noopener"><b>three.js</b></a> r160 – vẽ 3D (Cờ Tỷ Phú, Cờ Cá Ngựa, Đua Lạc Đà) <span class="pill oss">MIT</span></li>
+      <li><a href="https://github.com/kazuhikoarase/qrcode-generator" target="_blank" rel="noopener"><b>qrcode-generator</b></a> 1.4.4 (Kazuhiko Arase) – vẽ mã QR mời bạn vào phòng <span class="pill oss">MIT</span></li>
       <li><a href="https://peerjs.com/" target="_blank" rel="noopener"><b>PeerJS</b></a> 1.5.4 – nối máy với máy (dự phòng) <span class="pill oss">MIT</span></li>
       <li><a href="https://github.com/mqttjs/MQTT.js" target="_blank" rel="noopener"><b>MQTT.js</b></a> 5.10.1 – đường nối dự phòng <span class="pill oss">MIT</span></li>
       <li><a href="https://firebase.google.com/" target="_blank" rel="noopener"><b>Firebase JS SDK</b></a> 10.12.2 – đường nối dự phòng <span class="pill oss">Apache 2.0</span></li>
@@ -137,5 +140,6 @@ try {
   document.getElementById('tq-list').innerHTML = list.map(([k, v]) => `<div class="it"><img src="../tamquoc/img/${k}.jpg?v=${v.v || 6}" alt="" loading="lazy"><div><b>${esc(v.for || k)}</b><a href="${esc(v.u)}" target="_blank" rel="noopener">${esc(v.t)}</a><br><span class="muted">${esc(v.a)}${v.d ? ' · ' + esc(v.d) : ''} · ${esc(v.l)}</span></div></div>`).join('');
 } catch (e) { document.getElementById('tq-list').innerHTML = '<p class="muted">Không tải được danh sách – xem trong Hướng dẫn của Tam Quốc Sát.</p>'; }
 </script>
+<script type="module" src="/shared/ui/feel.js?v=1"></script>
 </body>
 </html>

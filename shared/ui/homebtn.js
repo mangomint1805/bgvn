@@ -45,7 +45,7 @@ const GAME = location.pathname.replace(/\/+$/, '').split('/').pop();
   const b = document.createElement('button'); b.type = 'button'; b.className = 'bgvn-lobbybtn';
   b.innerHTML = '🌐 Phòng công khai & chat';
   b.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:46px;margin:10px 0 4px;border:0;border-radius:999px;cursor:pointer;font:800 16px "Baloo 2",Nunito,system-ui,sans-serif;color:#fff;background:linear-gradient(90deg,#7b61ff,#3d8bff);box-shadow:0 8px 18px -10px #3d8bffaa';
-  b.onclick = () => import('./lobby.js?v=3').then(m => m.openLobby(GAME));
+  b.onclick = () => import('./lobby.js?v=4').then(m => m.openLobby(GAME));
   ft.before(b);
   const on = document.createElement('p'); on.hidden = true; on.style.cssText = 'text-align:center;margin:4px 0 8px;font:700 13px Nunito,system-ui,sans-serif;opacity:.85';
   b.after(on);
@@ -79,4 +79,17 @@ function pubToggle() {
     if (wantPublic) { wantPublic = false; try { sessionStorage.removeItem('bgvn-pub-next'); sessionStorage.setItem(key, on ? '1' : '0'); } catch (e) {} }
   }
 }
-setInterval(pubToggle, 1000);
+// 📨 Nút "Mời bạn (QR)" ngay dưới mã phòng – ai trong phòng cũng thấy (chủ phòng lẫn khách)
+function inviteBtn() {
+  const codeEl = document.querySelector('#room-code, #lobby-code'); let b = document.getElementById('bgvn-invite');
+  const code = codeEl ? (codeEl.textContent || '').trim() : '';
+  const anchor = codeEl && (document.getElementById('code-box') || codeEl);
+  if (!anchor || !anchor.offsetParent || !/^[A-Z0-9]{5}$/.test(code)) { if (b) b.remove(); return; }
+  if (b && b.previousElementSibling === anchor) return;
+  if (b) b.remove();
+  b = document.createElement('button'); b.id = 'bgvn-invite'; b.type = 'button'; b.textContent = '📨 Mời bạn (mã QR)';
+  b.style.cssText = 'display:flex';
+  import('./invite.js?v=1').then(m => { m.inviteCss(); b.onclick = () => { const c = (document.querySelector('#room-code, #lobby-code').textContent || '').trim(); m.openInvite({ code: c, url: location.origin + location.pathname + '?room=' + encodeURIComponent(c) }); }; });
+  anchor.after(b);
+}
+setInterval(() => { pubToggle(); inviteBtn(); }, 1000);

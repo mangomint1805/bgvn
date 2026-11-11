@@ -7,7 +7,7 @@ import { Board3D } from './scene3d.js?v=5';
 import * as fx from './fx.js?v=3';
 import { guideHTML } from './guide.js?v=4';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=109';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=110';
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
