@@ -6,7 +6,7 @@ import { masterMove, masterReady, masterOff } from './master.js?v=1';
 import { PUZZLES } from './puzzles.js?v=1';
 import { gameKit, $, $$, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=2';
 import { confirmBox, promptBox, toast as tip } from '../../shared/ui/dialog.js?v=1';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=115';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=116';
 
 const LV = { easy: ['🌱 Dễ', 'Mới tập chơi'], normal: ['⚔️ Vừa', 'Biết đánh, có sơ hở'], hard: ['🔥 Khó', 'Tính trước 4–5 nước'], master: ['👑 Đại sư', 'Động cơ Fairy-Stockfish'] };
 const GLYPH = { han: { K: '帥', A: '仕', E: '相', R: '俥', H: '傌', C: '炮', P: '兵', k: '將', a: '士', e: '象', r: '車', h: '馬', c: '砲', p: '卒' }, viet: { K: 'Tướng', A: 'Sĩ', E: 'Tượng', R: 'Xe', H: 'Mã', C: 'Pháo', P: 'Tốt' } };
@@ -50,13 +50,37 @@ const NET = makeNet({
 
 // ---------- âm thanh nhỏ ----------
 let ac = null;
+// Tiếng quân cờ tổng hợp theo CHẤT LIỆU của theme: một cú gõ = tiếng chạm (nhiễu lọc, rất ngắn) + vài tần số ngân riêng của vật liệu.
+// [tần số ngân (Hz)], thời gian ngân (s), [lọc nhiễu: kiểu, Hz], độ dài tiếng chạm (s), âm lượng chạm, âm lượng ngân
+const MATERIAL = {
+  go: { modes: [540, 1210, 2050], ring: .07, noise: ['lowpass', 2600], hit: .028, nGain: .5, mGain: .22 },   /* gỗ sáng: "cạch" ấm, tắt nhanh */
+  mun: { modes: [310, 720, 1480], ring: .1, noise: ['lowpass', 1700], hit: .035, nGain: .55, mGain: .3 },    /* gỗ mun đặc: trầm, chắc */
+  ngoc: { modes: [2150, 3380, 5300], ring: .2, noise: ['highpass', 3000], hit: .012, nGain: .16, mGain: .2 }, /* ngọc: "keng" trong, ngân dài */
+  giay: { modes: [190, 420], ring: .05, noise: ['lowpass', 850], hit: .06, nGain: .5, mGain: .16 },          /* quân dẹt trên giấy: "bộp" êm */
+  da: { modes: [1450, 2950, 4300], ring: .045, noise: ['bandpass', 3600], hit: .014, nGain: .5, mGain: .2 }, /* đá: "tách" sắc, khô */
+  dao: { modes: [1750, 2650, 4150], ring: .13, noise: ['highpass', 2200], hit: .014, nGain: .2, mGain: .18 }, /* sứ: "tinh" nhẹ */
+  dem: { modes: [1250, 1880, 2510], ring: .28, noise: ['highpass', 4000], hit: .01, nGain: .08, mGain: .17 }, /* pha lê: ngân lâu như chuông gió */
+};
+let noiseBuf = null;
+function knock(m, at, gain = 1, pitch = 1) {
+  if (!noiseBuf) { noiseBuf = ac.createBuffer(1, ac.sampleRate * .12, ac.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+  const out = ac.createGain(); out.gain.value = gain * .6; /* chừa khoảng để 2 tiếng chồng nhau không vỡ */ out.connect(ac.destination);
+  const n = ac.createBufferSource(), f = ac.createBiquadFilter(), ng = ac.createGain(); n.buffer = noiseBuf; f.type = m.noise[0]; f.frequency.value = m.noise[1] * pitch; f.Q.value = .8;
+  ng.gain.setValueAtTime(m.nGain, at); ng.gain.exponentialRampToValueAtTime(.0001, at + m.hit); n.connect(f).connect(ng).connect(out); n.start(at); n.stop(at + m.hit + .02);
+  m.modes.forEach((hz, i) => { const o = ac.createOscillator(), g = ac.createGain(), len = m.ring / (1 + i * .7); o.type = 'sine'; o.frequency.setValueAtTime(hz * pitch * 1.03, at); o.frequency.exponentialRampToValueAtTime(hz * pitch, at + .02);
+    g.gain.setValueAtTime(.0001, at); g.gain.exponentialRampToValueAtTime(m.mGain / (1 + i * .8), at + .004); g.gain.exponentialRampToValueAtTime(.0001, at + len + .01); o.connect(g).connect(out); o.start(at); o.stop(at + len + .03); });
+}
 function beep(kind) {
   if (!sound) return;
   try {
     ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume();
-    const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(), F = { move: [420, 180, .09, 'triangle'], cap: [260, 90, .16, 'square'], check: [880, 1320, .22, 'sine'], end: [523, 1046, .5, 'sine'] }[kind];
+    const t = ac.currentTime, m = MATERIAL[document.body.dataset.theme] || MATERIAL.go;
+    if (kind === 'pick') return knock(m, t, .35, 1.35);                                   /* nhấc quân: chạm khẽ */
+    if (kind === 'move') return knock(m, t, 1, 1);                                        /* đặt quân xuống bàn */
+    if (kind === 'cap') { knock(m, t, 1.25, .92); knock(m, t + .075, .6, 1.22); return; } /* ăn quân: đập mạnh + quân bị ăn văng ra */
+    const o = ac.createOscillator(), g = ac.createGain(), F = { check: [880, 1320, .22, 'sine'], end: [523, 1046, .5, 'sine'] }[kind]; if (!F) return;
     o.type = F[3]; o.frequency.setValueAtTime(F[0], t); o.frequency.exponentialRampToValueAtTime(F[1], t + F[2]);
-    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(kind === 'cap' ? .12 : .16, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + F[2] + .05);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.14, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + F[2] + .05);
     o.connect(g).connect(ac.destination); o.start(t); o.stop(t + F[2] + .08);
   } catch (e) {}
 }
@@ -165,7 +189,7 @@ boardEl.addEventListener('click', e => {
   const q = e.target.closest('.sq'), v = ui.view; if (!q || !v || !canMove(v)) return;
   const i = +q.dataset.i, p = v.board[i], side = v.turn;
   if (sel != null && hints.includes(i)) { const from = sel; sel = null; hints = []; ui.actAs(turnPlayer(v).id, { type: 'move', from, to: i }); if (ui.view === v) render(v); /* chủ phòng: nước đi đã vẽ xong ngay trong actAs, đừng vẽ lại bàn cũ */ return; }
-  if (p && E.sideOf(p) === side) { sel = i; hints = E.legalMoves(v.board.slice(), side, i).map(m => m % 100); if (!hints.length) tip(v.check ? 'Đang bị chiếu – quân này không giải chiếu được.' : 'Quân này đang kẹt, không đi được.', 1800); }
+  if (p && E.sideOf(p) === side) { sel = i; beep('pick'); hints = E.legalMoves(v.board.slice(), side, i).map(m => m % 100); if (!hints.length) tip(v.check ? 'Đang bị chiếu – quân này không giải chiếu được.' : 'Quân này đang kẹt, không đi được.', 1800); }
   else { sel = null; hints = []; }
   render(v);
 });
@@ -200,7 +224,7 @@ $('#btn-guide').onclick = $('#btn-guide-home').onclick = openGuide;
 // 🎨 theme bàn cờ – chỉ đổi trên máy mình
 const THEMES = [['go', 'Gỗ sáng'], ['mun', 'Gỗ mun'], ['ngoc', 'Ngọc bích'], ['giay', 'Giấy dó'], ['da', 'Cờ đá'], ['dao', 'Hoa đào'], ['dem', 'Đêm trăng']];
 let theme = THEMES.some(t => t[0] === ls.get('cotuong-theme')) ? ls.get('cotuong-theme') : 'go';
-const setTheme = t => { theme = t; ls.set('cotuong-theme', t); document.body.dataset.theme = t; }; setTheme(theme);
+const setTheme = (t, hear) => { theme = t; ls.set('cotuong-theme', t); document.body.dataset.theme = t; if (hear) beep('move'); /* nghe thử tiếng quân của chất liệu mới */ }; setTheme(theme);
 function openTheme() {
   const draw = () => {
     ui.openModal(`<h2>🎨 Giao diện bàn cờ</h2><div class="th-grid">${THEMES.map(([k, n]) => `<button type="button" data-th="${k}" aria-pressed="${theme === k}"><span class="th-prev" data-theme-prev="${k}"><i class="r">${style === 'han' ? '帥' : style === 'pic' ? picSvg('K') : 'T'}</i><i class="b">${style === 'han' ? '將' : style === 'pic' ? picSvg('H') : 'T'}</i></span>${n}</button>`).join('')}</div>
@@ -210,7 +234,7 @@ function openTheme() {
     $('#m-close').onclick = ui.closeModal;
   };
   draw();
-  $('#modal-box').onclick = e => { const b = e.target.closest('[data-th],[data-style],[data-font]'); if (!b || !$('.th-grid')) return; if (b.dataset.th) setTheme(b.dataset.th); else if (b.dataset.font) { font = FONTS.find(f => f[0] === b.dataset.font) || FONTS[0]; ls.set('cotuong-font', font[0]); applyFont(); setStyle(style); } else setStyle(b.dataset.style); draw(); if (ui.lobby && !ui.view) renderLobby(ui.lobby, ui); };
+  $('#modal-box').onclick = e => { const b = e.target.closest('[data-th],[data-style],[data-font]'); if (!b || !$('.th-grid')) return; if (b.dataset.th) setTheme(b.dataset.th, true); else if (b.dataset.font) { font = FONTS.find(f => f[0] === b.dataset.font) || FONTS[0]; ls.set('cotuong-font', font[0]); applyFont(); setStyle(style); } else setStyle(b.dataset.style); draw(); if (ui.lobby && !ui.view) renderLobby(ui.lobby, ui); };
 }
 $('#btn-style').onclick = openTheme;
 const drawSound = () => { $('#btn-sound').textContent = sound ? '🔊' : '🔇'; }; drawSound();
