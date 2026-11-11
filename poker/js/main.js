@@ -3,7 +3,7 @@ import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=111';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=112';
 import { OPT_CHOICES } from './engine.js?v=2';
 import { evaluate, preflopTier, TIER_TXT } from './eval.js?v=1';
 import * as fx from './pfx.js?v=2';

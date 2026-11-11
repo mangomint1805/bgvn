@@ -6,6 +6,11 @@ export const GAMES = {
   xidach: '🃏 Xì dách', poker: '♠️ Poker', tienlen: '🐷 Tiến Lên', catte: '🂡 Cát tê', cangua: '🐴 Cờ cá ngựa', camel: '🐪 Đua Lạc Đà', solitaire: '🃏 Xếp bài', bacao: '👑 Ba Cào',
 };
 export const NOTES = [
+  { id: '20261111-8', date: '11/11/2026', game: 'all', title: 'Chơi công bằng', items: [
+    '⚖️ Trang mới "Chơi công bằng" (cuối trang chủ): bài xáo ngẫu nhiên thế nào, bot biết những gì, kèm số liệu hàng nghìn ván thử.',
+    '🤖 Đã soát lại toàn bộ bot của 13 game: bot không nhìn bài người khác, không nhắm riêng vào người thật.',
+    '🎴 UNÔ: bot bớt "soi" hơn – quên hô UNO thì chỉ khoảng một nửa số lần bị bot bắt, và bạn có thêm vài giây để kịp bấm.',
+  ] },
   { id: '20261111-7', date: '11/11/2026', game: 'all', title: 'Hồ sơ, cấp độ và thành tích', items: [
     '🏅 Mỗi người chơi có hồ sơ riêng: số ván đã chơi, số ván thắng, tỉ lệ thắng, chuỗi thắng dài nhất – tính cho cả 15 game.',
     '⭐ Chơi là lên cấp: từ Tân binh tới Truyền kỳ (mỗi ván +10 điểm, thắng +20 điểm nữa).',

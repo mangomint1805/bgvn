@@ -29,7 +29,7 @@ let fail = 0;
 const res = (g, ok, msg) => { if (!ok) fail++; console.log(`${ok ? '✅' : '❌'} ${g.padEnd(10)} ${msg}`); };
 
 // trang chủ + các trang phụ
-for (const path of ['', 'sanh/', 'credits/', 'privacy/', 'terms/', 'luat/', 'quantri/']) {
+for (const path of ['', 'sanh/', 'credits/', 'privacy/', 'terms/', 'luat/', 'quantri/', 'congbang/']) {
   const p = await page(); await p.goto(`${WEB}/${path}?cf=${CF}`).catch(e => p.errs.push(String(e))); await p.waitForTimeout(800);
   res('/' + path, !p.errs.length, p.errs.join(' | ') || 'tải ổn'); await p.context().close();
 }

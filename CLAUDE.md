@@ -37,6 +37,10 @@ Chủ web: Minto. Trả lời bằng tiếng Việt, xưng "em", gọi "anh". Kh
 - Chạy local: thêm `?cf=ws://127.0.0.1:8787` vào URL để client dùng máy chủ local (giá trị được nhớ trong localStorage `bgvn-cf`; xoá đi để quay về máy chủ thật).
 - `server/.dev.vars` (ADMIN_KEY để test) **không bao giờ được commit**.
 
+## Bot và tính công bằng
+- Bot chỉ được dùng bài của chính nó + thông tin công khai trên bàn. **Không** đọc bài người khác, thứ tự chồng bài hay vai bí mật; **không** viết luật phân biệt người thật với bot (`isBot`) trong `bot.js`.
+- Sửa bot hay luật chia bài thì chạy `node tools/fair/fair.mjs` (bot giống nhau đấu nhau, mỗi ghế phải thắng xấp xỉ nhau) và cập nhật số ở trang `congbang/` nếu lệch đáng kể.
+
 ## Những điều anh đã dặn – luôn giữ
 - **Không dùng tên bạn bè thật** của anh cho bot, ví dụ hay nội dung web. Tên bot dễ thương (Mochi, Bơ, Pudding…), và trong cùng một bàn các tên phải **khác chữ cái đầu** vì avatar hiện chữ cái đầu.
 - **Ảnh/tranh:** chỉ dùng hình tự vẽ bằng code, tranh thuộc phạm vi công cộng hoặc có giấy phép rõ ràng, và ghi nguồn ở `credits/`. Không dùng art game thương mại hay tranh còn bản quyền. Ngoại lệ: ảnh Hoàng Nguyệt Anh do anh tự tạo bằng AI, không cần ghi credit.

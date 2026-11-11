@@ -139,12 +139,14 @@ export class Host {
   scheduleBots() {
     clearTimeout(this.botTimer); this.deadline = null;
     const s = this.state; if (!s || s.phase !== 'playing') return;
-    // bot có thể bắt lỗi quên hô UNO
-    if (s.unoWatch && !this.catchTimer) {
+    // bot có thể bắt lỗi quên hô UNO – mỗi lần ai đó quên chỉ "tung xúc xắc" MỘT lần: ~50% có bot để ý, và chậm 2–4 giây để người chơi kịp bấm UNO
+    const ck = s.unoWatch ? s.unoWatch + '|' + s.turnCount : null;
+    if (ck && this.catchKey !== ck && !this.catchTimer) {
+      this.catchKey = ck;
       const bots = this.players.filter(p => p.isBot && p.id !== s.unoWatch && !s.players.find(q => q.id === p.id).out);
-      if (bots.length && Math.random() < 0.6) {
+      if (bots.length && Math.random() < 0.5) {
         const b = bots[Math.floor(Math.random() * bots.length)];
-        this.catchTimer = setTimeout(() => { this.catchTimer = null; const a = this.state && botCatch(this.state, b.id); if (a) this.act(b.id, a); }, (900 + Math.random() * 1400) * S());
+        this.catchTimer = setTimeout(() => { this.catchTimer = null; const a = this.state && botCatch(this.state, b.id); if (a) this.act(b.id, a); }, (2000 + Math.random() * 2000) * S());
       }
     }
     const pid = s.owe ? s.owe.player : s.pending ? s.pending.player : current(s).id;
