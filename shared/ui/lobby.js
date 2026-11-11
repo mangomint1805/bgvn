@@ -1,8 +1,8 @@
 // 🌐 Sảnh chung: phòng công khai + chat (lọc chửi thề ở máy chủ) + báo cáo.
 // mountLobby(el, { game }) – game = null: sảnh tổng (mọi game, kênh chat "Chung" + kênh game đang lọc)
 // openLobby(game) – mở dạng hộp nổi (dùng trong trang game)
-import { WS, auth, guestId, myName } from '../net/api.js?v=4';
-import { openLogin } from './account.js?v=9';
+import { WS, auth, guestId, myName } from '../net/api.js?v=5';
+import { openLogin } from './account.js?v=10';
 import { promptBox, chooseBox } from './dialog.js?v=1';
 
 const ROOT = new URL('../../', import.meta.url).href;

@@ -1,8 +1,8 @@
 // ☁️ Đồng bộ hồ sơ (số ván, thành tích, hình đại diện) theo TÀI KHOẢN: đăng nhập ở máy khác là thấy lại.
 // Máy chủ giữ tổng; mỗi máy chỉ gửi PHẦN CHƠI THÊM kể từ lần đồng bộ trước (không cộng trùng, gửi lại vẫn an toàn nhờ mã `op`).
 // Khách (không đăng nhập) không gửi gì – hồ sơ vẫn nằm trên máy như cũ.
-import { auth, API } from '../net/api.js?v=4';
-import { load, ACHS, totals } from './stats.js?v=5';
+import { auth, API } from '../net/api.js?v=5';
+import { load, ACHS, totals } from './stats.js?v=6';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 const META = 'bgvn-stats-sync', STATS = 'bgvn-stats', AV = 'bgvn-avatar';
 const meta = () => { try { return JSON.parse(ls.get(META)) || null; } catch (e) { return null; } };

@@ -154,6 +154,6 @@ function rowHTML(r, cfg, live) {
   $('#games').innerHTML = games.map(g => `<section class="game" id="g-${esc(g.key)}"><h2>${esc(g.title)} <small>${g.rows.filter(r => !r.group).length} tuỳ chọn</small></h2>${g.notes.length ? `<p class="note">${esc(g.notes.join(' '))}</p>` : ''}${g.rows.map(r => rowHTML({ ...r, path: r.group ? r.path : [g.key, ...r.path.slice(1)] }, cfg, !err)).join('')}</section>`).join('') || '<p class="loading">Không đọc được nội dung nào.</p>';
 })();
 </script>
-<script type="module" src="../shared/ui/feel.js?v=5"></script>
+<script type="module" src="../shared/ui/feel.js?v=6"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 // Giao diện Xếp bài cổ điển (Klondike): vẽ bàn, kéo-thả / chạm, hoàn tác, gợi ý, tự xếp, bộ giải, thống kê, lưu ván
 import { VARIANTS, newGame, defaultOpts, optsKey, optsName, scoreStart, liveScore, timeBonus, passesLeft, SCORE_NONE, SCORE_VEGAS } from './variants.js?v=1';
 import { apply, canMove, legalMoves, autoMoves, greedyFinish, key, hintMove, idsOf, isSeq, isRed, cardName, top } from './core.js?v=1';
-import { record } from '../../shared/ui/stats.js?v=5';
+import { record } from '../../shared/ui/stats.js?v=6';
 import { solve } from './solver.js?v=1';
 import { faceHTML, backHTML, drawCard, THEMES, getTheme, setTheme, previewHTML } from './cards.js?v=6';
 import * as fx from './sfx.js?v=1';

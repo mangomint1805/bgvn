@@ -422,8 +422,8 @@ main{max-width:1080px;padding:28px 16px 32px}
 function fitTitles(){document.querySelectorAll('.grid .tile .info h2,.hero-card .tile .info h2').forEach(h=>{h.style.fontSize='';let f=parseFloat(getComputedStyle(h).fontSize);while(h.scrollWidth>h.clientWidth&&f>22){f-=1;h.style.fontSize=f+'px'}})}
 addEventListener('load',fitTitles);addEventListener('resize',()=>{clearTimeout(fitTitles.t);fitTitles.t=setTimeout(fitTitles,120)});document.fonts&&document.fonts.ready.then(fitTitles);
 </script>
-<script type="module" src="shared/ui/feedback.js?v=6"></script>
-<script type="module">import { mountAccount } from "./shared/ui/account.js?v=9"; import { mountOnline } from "./shared/net/presence.js?v=8"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} import("./shared/ui/profile.js?v=4").then(async m => { const st = await import("./shared/ui/stats.js?v=5"); m.profileCss(); const b = document.getElementById("btn-prof"), d = () => { b.innerHTML = m.avatarHTML(42) + `<span class="lv">${st.level().lv}</span>`; }; d(); addEventListener("bgvn-avatar", d); addEventListener("bgvn-stats", d); b.onclick = () => m.openProfile(); }); document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=8").then(m => m.openSettings());</script>
+<script type="module" src="shared/ui/feedback.js?v=7"></script>
+<script type="module">import { mountAccount } from "./shared/ui/account.js?v=10"; import { mountOnline } from "./shared/net/presence.js?v=9"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} import("./shared/ui/profile.js?v=5").then(async m => { const st = await import("./shared/ui/stats.js?v=6"); m.profileCss(); const b = document.getElementById("btn-prof"), d = () => { b.innerHTML = m.avatarHTML(42) + `<span class="lv">${st.level().lv}</span>`; }; d(); addEventListener("bgvn-avatar", d); addEventListener("bgvn-stats", d); b.onclick = () => m.openProfile(); }); document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=9").then(m => m.openSettings());</script>
 <script type="module">
 import { openNews, newsBadge } from './shared/ui/news.js?v=121';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
@@ -516,6 +516,6 @@ applyFilter();
   }, 1100);
 })();
 </script>
-<script type="module" src="./shared/ui/feel.js?v=5"></script>
+<script type="module" src="./shared/ui/feel.js?v=6"></script>
 </body>
 </html>

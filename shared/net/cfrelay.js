@@ -3,7 +3,7 @@
 // Thử máy chủ khác: ?cf=ws://127.0.0.1:8787 (lưu lại trong máy) · tắt: ?cf=0
 const DEFAULT = 'wss://api.boardgamevui.com';
 // Địa chỉ dự phòng của cùng máy chủ (bgvn-rooms.<tài khoản>.workers.dev) – dùng khi tên miền riêng gặp sự cố. Để trống = tắt.
-const FALLBACK = '';
+const FALLBACK = 'wss://bgvn-rooms.boardgamevui.workers.dev';
 let alt = null, probing = null;
 try { const a = JSON.parse(sessionStorage.getItem('bgvn-cf-alt')); if (a && a.u === FALLBACK && Date.now() - a.t < 15 * 60e3) alt = a.u; } catch (e) {}
 const ping = (u, ms = 4000) => { const c = new AbortController(), t = setTimeout(() => c.abort(), ms); return fetch(u.replace(/^ws/, 'http') + '/health', { signal: c.signal, cache: 'no-store' }).then(r => r.ok).catch(() => false).finally(() => clearTimeout(t)); };

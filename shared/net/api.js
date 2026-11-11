@@ -1,5 +1,5 @@
 // Gọi máy chủ BGVN (Cloudflare): tài khoản, sảnh chung. Đăng nhập là TUỲ CHỌN – khách vẫn chơi bình thường.
-import { cfHttp, cfProbe } from './cfrelay.js?v=3';
+import { cfHttp, cfProbe } from './cfrelay.js?v=4';
 
 export const API = () => cfHttp();
 export const WS = () => cfHttp().replace(/^http/, 'ws');

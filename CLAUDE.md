@@ -37,7 +37,7 @@ Chủ web: Minto. Trả lời bằng tiếng Việt, xưng "em", gọi "anh". Kh
 ## Khi tên miền gặp sự cố
 - Tên miền `boardgamevui.com` (nhà đăng ký P.A Việt Nam) bị khoá thì cả web lẫn `api.boardgamevui.com` biến mất. Kiểm tra: `curl -sL https://rdap.verisign.com/com/v1/domain/boardgamevui.com` (trạng thái `client hold` = bị khoá; chỉ nhà đăng ký gỡ được).
 - Chạy tạm: xoá file `CNAME` rồi push → web ở `https://mangomint1805.github.io/bgvn/` (mọi đường dẫn trong trang đã là tương đối). Khi tên miền sống lại thì tạo lại `CNAME` (nội dung `boardgamevui.com`).
-- Máy chủ: `shared/net/cfrelay.js` có hằng `FALLBACK` (địa chỉ `bgvn-rooms.<tài khoản>.workers.dev`, đã bật `workers_dev` trong `server/wrangler.jsonc`). Khi nối địa chỉ chính thất bại, client tự dò và chuyển sang dự phòng (`cfProbe`). `FALLBACK` để trống = tắt.
+- Máy chủ: `shared/net/cfrelay.js` có hằng `FALLBACK` (= `wss://bgvn-rooms.boardgamevui.workers.dev`, đã bật `workers_dev` trong `server/wrangler.jsonc`). Khi nối địa chỉ chính thất bại, client tự dò và chuyển sang dự phòng (`cfProbe`). `FALLBACK` để trống = tắt.
 - Lỗi JS phía người chơi: `shared/ui/errlog.js` (feel.js nạp) gửi `POST /err`, xem ở tab "🐞 Lỗi web" của trang Quản trị.
 
 ## Kiểm tra trước khi push

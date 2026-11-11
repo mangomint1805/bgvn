@@ -33,12 +33,12 @@ const mo = new MutationObserver(muts => { for (const m of muts) for (const n of 
 mo.observe(document.body, { childList: true, subtree: true });
 
 // 💌 Góp ý / ☕ Ủng hộ: thêm link vào chân trang của game (dùng shared/ui/feedback.js)
-import('./feedback.js?v=6').then(() => {
+import('./feedback.js?v=7').then(() => {
   const ft = [...document.querySelectorAll('footer, p.note')].find(e => /fan-made/i.test(e.textContent));
   const box = document.createElement('p'); box.className = 'bgvn-fbline';
   box.style.cssText = 'text-align:center;font-size:13px;margin:6px 0 0;opacity:.9';
   box.innerHTML = '<a href="#" data-profile style="color:inherit">🏅 Hồ sơ &amp; thành tích</a> · <a href="#" data-feedback style="color:inherit">💌 Góp ý / báo lỗi</a> · <a href="#" data-donate style="color:inherit">☕ Ủng hộ chủ web</a>';
-  box.querySelector('[data-profile]').onclick = e => { e.preventDefault(); import('./profile.js?v=4').then(m => m.openProfile()); };
+  box.querySelector('[data-profile]').onclick = e => { e.preventDefault(); import('./profile.js?v=5').then(m => m.openProfile()); };
   if (ft) ft.after(box);
 }).catch(() => {});
 
@@ -50,11 +50,11 @@ const GAME = location.pathname.replace(/\/+$/, '').split('/').pop();
   const b = document.createElement('button'); b.type = 'button'; b.className = 'bgvn-lobbybtn';
   b.innerHTML = '🌐 Phòng công khai & chat';
   b.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:46px;margin:10px 0 4px;border:0;border-radius:999px;cursor:pointer;font:800 16px "Baloo 2",Nunito,system-ui,sans-serif;color:#fff;background:linear-gradient(90deg,#7b61ff,#3d8bff);box-shadow:0 8px 18px -10px #3d8bffaa';
-  b.onclick = () => import('./lobby.js?v=9').then(m => m.openLobby(GAME));
+  b.onclick = () => import('./lobby.js?v=10').then(m => m.openLobby(GAME));
   ft.before(b);
   const on = document.createElement('p'); on.hidden = true; on.style.cssText = 'text-align:center;margin:4px 0 8px;font:700 13px Nunito,system-ui,sans-serif;opacity:.85';
   b.after(on);
-  import('../net/presence.js?v=8').then(m => { let hide = false; try { hide = localStorage.getItem('bgvn-hide-online') === '1'; } catch (e) {} if (!hide) m.mountOnline(on); }).catch(() => {});
+  import('../net/presence.js?v=9').then(m => { let hide = false; try { hide = localStorage.getItem('bgvn-hide-online') === '1'; } catch (e) {} if (!hide) m.mountOnline(on); }).catch(() => {});
 })();
 
 // 🌐 Công khai phòng: hiện công tắc cạnh mã phòng (chỉ chủ phòng online)

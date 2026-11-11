@@ -1,9 +1,9 @@
 // Lớp mạng Ma Sói: chủ phòng giữ state + đồng hồ quản trò, người vào chỉ gửi action. Kết nối dùng chung shared/net/room.js
 import { createGame, applyAction, viewFor, actors, timeout, phaseMs, DEFAULT_OPTS, presetRoles, roleList, ROLES, MAX_PLAYERS, MIN_PLAYERS, P, isWolfRole } from './engine.js?v=4';
 import { botAction, botDayPlan, botWolfLine, botGhostLine, botLastWords } from './bot.js?v=4';
-import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=8';
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=9';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
-import { watch } from '../../shared/ui/stats.js?v=5';
+import { watch } from '../../shared/ui/stats.js?v=6';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 // câu chọc riêng của Ma Sói (bảng thả emoji – shared/ui/react.js)
