@@ -17,7 +17,7 @@ const ROOT = new URL('../../', import.meta.url).href;
 let lib = null;
 const loadQr = () => lib || (lib = new Promise((res, rej) => { if (window.qrcode) return res(window.qrcode); const s = document.createElement('script'); s.src = ROOT + 'shared/vendor/qrcode.js?v=1'; s.onload = () => res(window.qrcode); s.onerror = rej; document.head.append(s); }));
 export function inviteCss() { if (document.getElementById('iv-css')) return; const s = document.createElement('style'); s.id = 'iv-css'; s.textContent = CSS; document.head.append(s); }
-export async function openInvite({ code, url, title = document.title.split(/[–|-]/)[0].trim() }) {
+export async function openInvite({ code, url, title = document.title.split(/[–|-]/)[0].trim().replace(/ online$/i, '') }) {
   inviteCss(); document.getElementById('iv-ov')?.remove();
   const ov = document.createElement('div'); ov.className = 'iv-ov'; ov.id = 'iv-ov';
   ov.innerHTML = `<div class="iv-box" role="dialog" aria-modal="true" aria-label="Mời bạn vào phòng"><button class="iv-x" aria-label="Đóng">✕</button><h2>📨 Mời bạn vào phòng</h2><p>Quét mã bằng camera điện thoại, hoặc gửi link.</p>

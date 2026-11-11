@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /quantri/
+
+Sitemap: https://boardgamevui.com/sitemap.xml

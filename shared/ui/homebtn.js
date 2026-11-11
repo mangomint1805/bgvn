@@ -94,7 +94,7 @@ function inviteBtn() {
   if (b) b.remove();
   b = document.createElement('button'); b.id = 'bgvn-invite'; b.type = 'button'; b.textContent = '📨 Mời bạn (mã QR)';
   b.style.cssText = 'display:flex';
-  import('./invite.js?v=1').then(m => { m.inviteCss(); b.onclick = () => { const c = (document.querySelector('#room-code, #lobby-code').textContent || '').trim(); m.openInvite({ code: c, url: location.origin + location.pathname + '?room=' + encodeURIComponent(c) }); }; });
+  import('./invite.js?v=2').then(m => { m.inviteCss(); b.onclick = () => { const c = (document.querySelector('#room-code, #lobby-code').textContent || '').trim(); m.openInvite({ code: c, url: location.origin + location.pathname + '?room=' + encodeURIComponent(c) }); }; });
   anchor.after(b);
 }
 setInterval(() => { pubToggle(); inviteBtn(); }, 1000);
