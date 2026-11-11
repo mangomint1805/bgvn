@@ -3,7 +3,7 @@ import { makeNet } from '../../shared/net/simplenet.js?v=1';
 import * as E from './engine.js?v=1';
 import { gameKit, $, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=2';
 import { confirmBox, promptBox, toast as tip } from '../../shared/ui/dialog.js?v=1';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=118';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=119';
 
 const TOPIC = Object.fromEntries(E.TOPICS.map(t => [t.id, t])); TOPIC.tuviet = { id: 'tuviet', e: '✍️', name: 'Tự viết' };
 const KIND = { t: ['💬', 'THẬT'], d: ['🔥', 'THÁCH'] };
@@ -35,17 +35,17 @@ function renderLobby(info, ui) {
     if (c.length) host.opts.custom = c; if (saved || c.length) { host.pushLobby(); return; } }
   $('#pcount').textContent = `${info.players.length} người`;
   $('#plist').innerHTML = info.players.map(p => `<li class="${p.connected ? '' : 'off'}">${avatar(p.name)}<span class="nm">${esc(cleanName(p.name))}${p.local ? ' <small>· cùng máy</small>' : p.id === 'host' ? ' <small>· chủ phòng</small>' : ''}</span>${ui.isHost && p.id !== 'host' ? `<button class="x" data-rm="${p.id}" aria-label="Mời ${esc(p.name)} ra">✕</button>` : ''}</li>`).join('');
-  $('#add-box').innerHTML = ui.isHost && info.players.length < NET.MAX ? `<div class="row-btns"><button class="btn" id="btn-addlocal">＋ Thêm người chơi cùng máy</button></div>` : '';
+  $('#add-box').innerHTML = ui.isHost && info.players.length < NET.MAX ? `<div class="row-btns"><button class="btn" id="btn-addlocal">+ Thêm người chơi cùng máy</button></div>` : '';
   $('#ccount').textContent = `${n.t} Thật · ${n.d} Thách`;
   $('#topics').innerHTML = E.TOPICS.map(t => `<button type="button" data-topic="${t.id}" aria-pressed="${o.topics.includes(t.id)}" ${dis}><i>${t.e}</i><span>${t.name}<small>${t.desc}</small></span></button>`).join('');
   const seg = (key, items) => `<div class="seg">${items.map(([v, nm]) => `<button type="button" data-opt="${key}" data-v="${v}" aria-pressed="${o[key] === v}" ${dis}>${nm}</button>`).join('')}</div>`;
   $('#opts').innerHTML = `${ui.isHost ? '<div class="row-btns"><button class="chip" id="btn-all">Chọn hết</button><button class="chip" id="btn-none">Bỏ chọn</button></div>' : ''}
-    <div class="opt"><b>🌶️ Độ lầy</b><div class="lv">${Object.entries(E.LEVELS).map(([k, [e, nm, d]]) => `<button type="button" data-opt="level" data-v="${k}" aria-pressed="${o.level === +k}" ${dis}>${e} ${nm}<small>${d}</small></button>`).join('')}</div></div>
+    <div class="opt"><b>🌶️ Độ lầy</b><div class="lv">${Object.entries(E.LEVELS).map(([k, [e, nm, d]]) => `<button type="button" data-opt="level" data-v="${k}" aria-pressed="${o.level === +k}" ${dis}><i>${e}</i>${nm}<small>${d}</small></button>`).join('')}</div></div>
     <div class="opt"><b>🔁 Thứ tự lượt</b>${seg('order', [['turn', 'Lần lượt'], ['random', 'Ngẫu nhiên']])}</div>
     <div class="opt"><b>🏁 Số vòng</b>${seg('rounds', [[3, '3 vòng'], [5, '5 vòng'], [8, '8 vòng'], [0, 'Chơi tới khi dừng']])}</div>
     <div class="opt"><b>🙈 Lượt bỏ qua mỗi người</b>${seg('skips', [[0, 'Không cho'], [1, '1'], [2, '2'], [3, '3'], [-1, 'Thoải mái']])}</div>
     <div class="opt"><b>✍️ Câu tự viết <small style="display:inline">(${o.custom.length}/${E.MAX_CUSTOM})</small></b>
-      ${ui.isHost ? '<div class="row-btns"><button class="btn sm" data-new="t">＋ Câu Thật</button><button class="btn sm" data-new="d">＋ Câu Thách</button></div>' : ''}
+      ${ui.isHost ? '<div class="row-btns"><button class="btn sm" data-new="t">+ Câu Thật</button><button class="btn sm" data-new="d">+ Câu Thách</button></div>' : ''}
       ${o.custom.length ? `<ul class="cus">${o.custom.map((c, i) => `<li><b class="${c.k}">${KIND[c.k][1]}</b><span>${esc(c.text)}</span>${ui.isHost ? `<button data-del="${i}" aria-label="Xoá câu này">✕</button>` : ''}</li>`).join('')}</ul>` : '<small>Nhóm bạn có câu "đặc sản" riêng? Chủ phòng thêm vào đây, game sẽ trộn chung với bộ có sẵn.</small>'}</div>`;
   $('#btn-start').style.display = ui.isHost ? '' : 'none'; $('#btn-start').disabled = info.players.length < 2;
   $('#wait-msg').style.display = ui.isHost ? 'none' : '';

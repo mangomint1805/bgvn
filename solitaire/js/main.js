@@ -6,7 +6,7 @@ import { solve } from './solver.js?v=1';
 import { faceHTML, backHTML, drawCard, THEMES, getTheme, setTheme, previewHTML } from './cards.js?v=6';
 import * as fx from './sfx.js?v=1';
 import { guideHTML } from './guide.js?v=6';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=118';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=119';
 import { rulesFor } from '../../shared/rules.js?v=1';
 // ⚙️ Mặc định cho máy CHƯA từng chơi (luat-mac-dinh.js ở gốc repo). Máy đã chơi thì nhớ tuỳ chọn ván gần nhất ('sol-opts')
 // và nút tự đưa lên đích ('sol-auto') – lựa chọn riêng của máy thắng file luật.

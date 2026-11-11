@@ -7,6 +7,10 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261111-14', date: '11/11/2026', game: 'thathaythach', title: 'Thật hay Thách: chỉnh lại giao diện', items: [
+    '🎨 Hình đầu trang không còn đè lên tên game; chữ cái trong vòng tròn người chơi nằm đúng giữa.',
+    '👥 Vòng sáng quanh người tới lượt không bị cắt mất phần trên; các ô "Độ lầy" đều nhau.',
+  ] },
   { id: '20261111-13', date: '11/11/2026', game: 'tienlen', title: 'Tiến Lên: gợi ý xoay ngang', items: [
     '📱 Vào bàn bằng điện thoại cầm dọc sẽ có lời nhắc nhỏ: xoay ngang máy thì bàn rộng, 13 lá xếp thoáng hơn.',
     '🤖 Máy Android có thêm nút "Xoay ngang" (toàn màn hình). iPhone thì bật xoay màn hình rồi nghiêng máy.',

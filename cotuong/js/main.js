@@ -6,7 +6,7 @@ import { masterMove, masterReady, masterOff } from './master.js?v=1';
 import { PUZZLES } from './puzzles.js?v=1';
 import { gameKit, $, $$, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=2';
 import { confirmBox, promptBox, toast as tip } from '../../shared/ui/dialog.js?v=1';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=118';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=119';
 
 const LV = { easy: ['🌱 Dễ', 'Mới tập chơi'], normal: ['⚔️ Vừa', 'Biết đánh, có sơ hở'], hard: ['🔥 Khó', 'Tính trước 4–5 nước'], master: ['👑 Đại sư', 'Động cơ Fairy-Stockfish'] };
 const GLYPH = { han: { K: '帥', A: '仕', E: '相', R: '俥', H: '傌', C: '炮', P: '兵', k: '將', a: '士', e: '象', r: '車', h: '馬', c: '砲', p: '卒' }, viet: { K: 'Tướng', A: 'Sĩ', E: 'Tượng', R: 'Xe', H: 'Mã', C: 'Pháo', P: 'Tốt' } };
@@ -94,7 +94,7 @@ function renderLobby(info, ui) {
   $('#plist').innerHTML = seated.map(row).join('') + extra.map((p, i) => row(p, i + 2)).join('');
   const bot = seated.find(p => p.isBot);
   $('#add-box').innerHTML = !ui.isHost ? '' : (seated.length < 2 || bot ? `<div class="opt"><b>🤖 Sức cờ của máy</b><div class="lv">${Object.entries(LV).map(([k, [n, d]]) => `<button type="button" data-lv="${k}" aria-pressed="${(bot ? bot.level : botLevel) === k}">${n}<small>${d}</small></button>`).join('')}</div></div>` : '')
-    + (seated.length < 2 ? `<div class="row-btns"><button class="btn" id="btn-addbot">＋ Thêm máy</button><button class="btn" id="btn-addlocal">＋ Người chơi cùng máy</button></div>` : '');
+    + (seated.length < 2 ? `<div class="row-btns"><button class="btn" id="btn-addbot">+ Thêm máy</button><button class="btn" id="btn-addlocal">+ Người chơi cùng máy</button></div>` : '');
   const o = info.opts, dis = ui.isHost ? '' : 'disabled';
   $('#opts').innerHTML = `<div class="opt"><b>🔴 Ai cầm quân Đỏ (đi trước)</b><div class="seg">${[['host', 'Chủ phòng'], ['guest', 'Người kia'], ['random', 'Ngẫu nhiên']].map(([v, n]) => `<button type="button" data-first="${v}" aria-pressed="${o.first === v}" ${dis}>${n}</button>`).join('')}</div></div>
     <div class="opt"><b>字 Mặt quân cờ</b>${STYLE_SEG()}<small>Chưa quen chữ Hán thì chọn Chữ Việt hoặc Hình vẽ. Chỉ đổi trên máy bạn.</small></div>

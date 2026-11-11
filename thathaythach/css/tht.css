@@ -1,7 +1,7 @@
 /* 🎯 Thật hay Thách – giao diện riêng (khung chung ở shared/ui/gamekit.css) */
 :root{--acc:#7b5cff;--acc2:#ff5c9a;--bg:#f5efff;--line:#e4daf5;--t1:#2f7bff;--t2:#19c3c9;--d1:#ff4d6a;--d2:#ff9a3d}
 body{background:radial-gradient(900px 500px at 10% -10%,#ffe0ef 0,transparent 60%),radial-gradient(800px 520px at 100% 0,#dfe7ff 0,transparent 60%),var(--bg)}
-.home-card .hero{height:130px}
+.home-card .hero{height:150px;margin-bottom:14px}.home-card .hero img{height:100%;width:auto;max-width:100%}
 #screen-game.active{display:flex;flex-direction:column;height:100dvh}
 .round{font:800 15px "Baloo 2",Nunito,sans-serif;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:6px 14px;min-height:42px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .arena{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;gap:10px;padding:4px 12px max(10px,env(safe-area-inset-bottom));width:100%;max-width:640px;margin:0 auto}
@@ -12,14 +12,14 @@ body{background:radial-gradient(900px 500px at 10% -10%,#ffe0ef 0,transparent 60
 .topics button i{font-style:normal;font-size:22px;flex:none}.topics button small{display:block;font-weight:700;color:var(--muted);font-size:11.5px;line-height:1.2}
 .topics button[aria-pressed=true]{border-color:var(--acc);background:#f3efff;box-shadow:0 0 0 2px #7b5cff33}.topics button:disabled{cursor:default}.topics button:not(:disabled):active{transform:scale(.97)}
 .lv{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.lv button{border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:7px 6px;text-align:center;cursor:pointer;font:800 14px Nunito,sans-serif;color:var(--ink)}
-.lv button small{display:block;font-weight:700;color:var(--muted);font-size:11.5px;line-height:1.25}.lv button[aria-pressed=true]{border-color:var(--acc);box-shadow:0 0 0 2px #7b5cff33;background:#f3efff}.lv button:disabled{cursor:default;opacity:.75}
+.lv button i{display:block;font-style:normal;font-size:20px;line-height:1.2}.lv button small{display:block;font-weight:700;color:var(--muted);font-size:11.5px;line-height:1.25}.lv button[aria-pressed=true]{border-color:var(--acc);box-shadow:0 0 0 2px #7b5cff33;background:#f3efff}.lv button:disabled{cursor:default;opacity:.75}
 .cus{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:5px;max-height:170px;overflow:auto}
 .cus li{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:5px 8px;font-weight:700;font-size:13.5px}
 .cus li span{flex:1;min-width:0}.cus li b{flex:none;font-size:11.5px;padding:2px 7px;border-radius:999px;color:#fff}.cus li b.t{background:var(--t1)}.cus li b.d{background:var(--d1)}
 .cus li button{flex:none;width:28px;height:28px;border-radius:50%;border:0;background:#ffe3e6;color:#c0263b;font-weight:800;cursor:pointer}
 
 /* dải người chơi */
-.seats{display:flex;gap:8px;overflow-x:auto;max-width:100%;padding:6px 4px 4px;scrollbar-width:none}.seats::-webkit-scrollbar{display:none}
+.seats{display:flex;gap:8px;overflow-x:auto;max-width:100%;padding:12px 6px 4px;scrollbar-width:none}.seats::-webkit-scrollbar{display:none}
 .seat{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;width:62px;opacity:.72;transition:opacity .2s,transform .2s;position:relative}
 .seat .gk-av{box-shadow:0 0 0 3px #fff}.seat b{font:800 12px Nunito,sans-serif;max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .seat small{font:800 11px Nunito,sans-serif;color:var(--muted)}
@@ -29,7 +29,7 @@ body{background:radial-gradient(900px 500px at 10% -10%,#ffe0ef 0,transparent 60
 /* sân khấu: chọn Thật/Thách và lá câu hỏi */
 .stage{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;perspective:1200px}
 .who{text-align:center;font:800 24px "Baloo 2",Nunito,sans-serif;line-height:1.2}.who small{display:block;font:700 14.5px Nunito,sans-serif;color:var(--muted);margin-top:2px}
-.who .gk-av{display:flex;margin:0 auto 8px;box-shadow:0 0 0 4px #fff,0 10px 22px -10px #2a2340}
+.who .gk-av{display:grid;place-items:center;margin:0 auto 8px;box-shadow:0 0 0 4px #fff,0 10px 22px -10px #2a2340}
 .pick{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(460px,100%)}
 .pick button{border:0;border-radius:26px;min-height:150px;color:#fff;cursor:pointer;font:800 27px "Baloo 2",Nunito,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 18px 30px -18px #2a2340,inset 0 -5px 0 #0000001f;transition:transform .14s}
 .pick button i{font-style:normal;font-size:40px}.pick button small{font:700 13px Nunito,sans-serif;opacity:.9}

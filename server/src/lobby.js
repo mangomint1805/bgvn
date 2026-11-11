@@ -59,9 +59,12 @@ export class Lobby extends DurableObject {
     const live = this.liveNow();
     const days = [];
     for (let i = 6; i >= 0; i--) { const a = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - i), x = sum(a, a + 864e5); days.push({ day: a, gbs: Math.round(x.ms / 1000 * GB), req: x.req }); }
+    // 24 giờ gần nhất theo từng giờ (để xem khung giờ nào đông)
+    const h0 = Math.floor(t / 3600e3) - 23, byH = new Map(this.sql.exec('SELECT b / 6 AS h, SUM(ms) AS ms, SUM(req) AS req FROM usage10 WHERE b >= ? GROUP BY b / 6', h0 * 6).toArray().map(x => [Number(x.h), x]));
+    const hours = []; for (let h = h0; h < h0 + 24; h++) { const x = byH.get(h); hours.push({ h: h * 3600e3, gbs: Math.round((x ? x.ms : 0) / 1000 * GB), req: x ? x.req : 0 }); }
     const peak = this.sql.exec('SELECT v FROM stat WHERE k = ?', 'peak:' + new Date(start).toISOString().slice(0, 10)).toArray()[0]?.v || 0;
     return { ...out, per: P.per, gbs: Math.round(gbs), req, limGbs: P.gbs, limReq: P.req, rate: Math.round(rate), eta, roomHoursLeft: Math.max(0, Math.round(left / GB / 3600 * 10) / 10),
-      roomsLive: live.rooms, playersLive: live.players, online: this.online(), peak, days };
+      roomsLive: live.rooms, playersLive: live.players, online: this.online(), peak, days, hours };
   }
   // ---------- phòng công khai ----------
   rooms() {
