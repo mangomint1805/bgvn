@@ -2,6 +2,11 @@
 // Trong ván chơi mỗi game có âm thanh riêng nên ở đó chỉ rung, không kêu thêm.
 // Tắt trong ⚙️ Cài đặt: bgvn-ui-sfx = '0' (tiếng), bgvn-haptic = '0' (rung); "Tắt hết nhạc nền" không ảnh hưởng tiếng nút.
 import './inapp.js?v=1'; /* nhắc mở bằng Safari/Chrome khi đang ở trình duyệt nhúng của Zalo, Facebook… */
+// Giao diện chung (hộp thoại, thông báo nổi, hồ sơ, tin mới…) viết bằng Nunito + Baloo 2. Game nào không tự nạp 2 phông này thì nạp giúp,
+// kẻo chữ Việt rơi về phông máy và mỗi chữ một kiểu.
+{ const have = f => [...document.querySelectorAll('link[href*="fonts.googleapis.com"]')].some(l => l.href.includes('family=' + f)), need = [];
+  if (!have('Nunito')) need.push('family=Nunito:wght@600;700;800'); if (!have('Baloo+2')) need.push('family=Baloo+2:wght@700;800');
+  if (need.length) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?' + need.join('&') + '&display=swap'; document.head.append(l); } }
 const on = k => { try { return localStorage.getItem(k) !== '0'; } catch (e) { return true; } };
 const SHARED = '.dg-box,.st-box,.ac-box,.ac-menu,.bgvn-news,.lb,.lb-ov,#bgvn-fb,.bgvn-chip,[data-ui-sfx]';
 let ac = null, last = 0;
