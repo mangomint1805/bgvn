@@ -103,7 +103,7 @@ ${body}
 <nav class="gp-more"><h2>Luật các game khác</h2><p>${others}</p></nav>
 </main>
 <footer class="gp-foot"><a href="../../">BGVN – Board Game Vui</a> · <a href="../../gioi-thieu/">Giới thiệu</a> · <a href="../../credits/">Credits</a> · <a href="../../privacy/">Riêng tư</a></footer>
-<script type="module" src="../../shared/ui/feel.js?v=${V_FEEL}"></script>
+<script type="module" async src="../../shared/ui/feel.js?v=${V_FEEL}"></script>
 </body>
 </html>
 `;
