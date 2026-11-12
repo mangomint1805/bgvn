@@ -5,7 +5,7 @@ import { botAction, botWants } from './bot.js?v=1';
 import { masterMove, masterReady, masterOff } from './master.js?v=1';
 import { PUZZLES } from './puzzles.js?v=1';
 import { today, state as dailyState, markSolved } from './today.js?v=1';
-import { gameKit, $, $$, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=2';
+import { gameKit, $, $$, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=3';
 import { confirmBox, promptBox, toast as tip } from '../../shared/ui/dialog.js?v=1';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=122';
 
@@ -89,7 +89,7 @@ function beep(kind) {
 // ---------- phòng chờ ----------
 let botLevel = ls.get('cotuong-level') || 'normal';
 function renderLobby(info, ui) {
-  const host = ui.isHost ? ui.net.raw : null, seated = info.players.slice(0, 2), extra = info.players.slice(2);
+  const host = ui.isHost && ui.net ? ui.net.raw : null, seated = info.players.slice(0, 2), extra = info.players.slice(2);
   $('#pcount').textContent = `${Math.min(2, info.players.length)}/2`;
   const row = (p, i) => `<li class="${p.connected ? '' : 'off'}">${avatar(p.name)}<span class="nm">${esc(cleanName(p.name))}${p.isBot ? ` <small>· máy ${LV[p.level || info.opts.level][0]}</small>` : p.local ? ' <small>· cùng máy</small>' : p.id === 'host' ? ' <small>· chủ phòng</small>' : ''}${i > 1 ? ' <small>· xem</small>' : ''}</span>${ui.isHost && p.id !== 'host' ? `<button class="x" data-rm="${p.id}" aria-label="Mời ${esc(p.name)} ra">✕</button>` : ''}</li>`;
   $('#plist').innerHTML = seated.map(row).join('') + extra.map((p, i) => row(p, i + 2)).join('');

@@ -29,9 +29,10 @@ export function gameKit({ game, net: N, onLobby, onState, offline }) {
   $('#name').value = ls.get('bgvn-name') || '';
 
   const handlers = {
-    onLobby(info, code, started) { if (ui.gone) return; /* tin tới trễ sau khi đã rời phòng */ ui.lobby = info; ui.code = code; $('#room-code').textContent = code; if (!started) { ui.view = null; if (!$('#screen-lobby').classList.contains('active')) ui.show('screen-lobby'); } onLobby && onLobby(info, ui, started); },
+    onLobby(info, code, started) { if (ui.gone) return; /* tin tới trễ sau khi đã rời phòng */ if (!ui.net) { queueMicrotask(() => ui.net && handlers.onLobby(info, code, started)); return; } /* Host báo phòng ngay trong lúc khởi tạo, trước khi ui.net được gán */ ui.lobby = info; ui.code = code; $('#room-code').textContent = code; if (!started) { ui.view = null; if (!$('#screen-lobby').classList.contains('active')) ui.show('screen-lobby'); } onLobby && onLobby(info, ui, started); },
     onState(v) {
       if (ui.gone) return;
+      if (!ui.net) { queueMicrotask(() => ui.net && handlers.onState(v)); return; }
       if (!v) { ui.view = null; ui.closeModal(); ui.show('screen-lobby'); onLobby && ui.lobby && onLobby(ui.lobby, ui, false); onState && onState(null, null, ui); return; }
       const prev = ui.view; ui.view = v; if (!$('#screen-game').classList.contains('active')) ui.show('screen-game');
       onState && onState(v, prev, ui);

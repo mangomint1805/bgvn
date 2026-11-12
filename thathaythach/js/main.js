@@ -1,7 +1,7 @@
 // 🎯 Thật hay Thách – giao diện. Luật ở engine.js, bộ câu hỏi ở cards.js, phòng/mạng dùng shared/net/simplenet.js.
 import { makeNet } from '../../shared/net/simplenet.js?v=7';
 import * as E from './engine.js?v=1';
-import { gameKit, $, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=2';
+import { gameKit, $, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=3';
 import { confirmBox, promptBox, toast as tip } from '../../shared/ui/dialog.js?v=1';
 import { openNews, newsBadge } from '../../shared/ui/news.js?v=122';
 
@@ -29,7 +29,7 @@ function beep(kind) {
 let customLoaded = false;
 const myCustom = () => { try { const a = JSON.parse(ls.get('tht-custom') || '[]'); return E.optOk('custom', a) ? a : []; } catch (e) { return []; } };
 function renderLobby(info, ui) {
-  const host = ui.isHost ? ui.net.raw : null, o = info.opts, dis = ui.isHost ? '' : 'disabled', n = E.countCards(o);
+  const host = ui.isHost && ui.net ? ui.net.raw : null, o = info.opts, dis = ui.isHost ? '' : 'disabled', n = E.countCards(o);
   if (host && !customLoaded) { customLoaded = true; const c = myCustom(), saved = (() => { try { return JSON.parse(ls.get('tht-opts') || 'null'); } catch (e) { return null; } })(); /* nhớ luật bàn + câu tự viết của lần trước */
     if (saved) for (const k of ['topics', 'level', 'order', 'rounds', 'skips']) if (k in saved && E.optOk(k, saved[k])) host.opts[k] = saved[k];
     if (c.length) host.opts.custom = c; if (saved || c.length) { host.pushLobby(); return; } }
