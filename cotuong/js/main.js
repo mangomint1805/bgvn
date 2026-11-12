@@ -7,7 +7,7 @@ import { PUZZLES } from './puzzles.js?v=1';
 import { today, state as dailyState, markSolved } from './today.js?v=1';
 import { gameKit, $, $$, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=3';
 import { confirmBox, promptBox, toast as tip } from '../../shared/ui/dialog.js?v=1';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=122';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=124';
 
 const LV = { easy: ['🌱 Dễ', 'Mới tập chơi'], normal: ['⚔️ Vừa', 'Biết đánh, có sơ hở'], hard: ['🔥 Khó', 'Tính trước 4–5 nước'], master: ['👑 Đại sư', 'Động cơ Fairy-Stockfish'] };
 const GLYPH = { han: { K: '帥', A: '仕', E: '相', R: '俥', H: '傌', C: '炮', P: '兵', k: '將', a: '士', e: '象', r: '車', h: '馬', c: '砲', p: '卒' }, viet: { K: 'Tướng', A: 'Sĩ', E: 'Tượng', R: 'Xe', H: 'Mã', C: 'Pháo', P: 'Tốt' } };
@@ -177,14 +177,30 @@ function renderBars(v) {
   bar(bottomSide === 'r' ? 'b' : 'r', $('#p-top')); bar(bottomSide, $('#p-bot'));
   const t = $('#turn'), mine = canMove(v);
   t.className = 'turn' + (mine ? ' me' : '');
-  t.innerHTML = v.phase === 'ended' ? '🏁 Hết ván' : `<i class="${v.turn}"></i>${v.puzzle && mine ? `🧩 Chiếu bí trong ${v.puzzle.n} nước` : mine ? (v.players.every(p => ui.controls(p.id) && !p.isBot) ? `Lượt ${esc(cleanName(tp.name))}` : 'Tới lượt bạn') : `Lượt ${esc(cleanName(tp.name))}`}${v.check ? ' · bị chiếu!' : ''}`;
+  t.innerHTML = v.phase === 'ended' ? '🏁 Hết ván' : `${v.puzzle && mine ? '' : `<i class="${v.turn}"></i>`}<span title="${v.puzzle ? `Chiếu bí trong ${v.puzzle.n} nước` : ''}">${v.puzzle && mine ? `🧩 Bí ${v.puzzle.n} nước` : mine ? (v.players.every(p => ui.controls(p.id) && !p.isBot) ? `Lượt ${esc(cleanName(tp.name))}` : 'Tới lượt bạn') : `Lượt ${esc(cleanName(tp.name))}`}${v.check ? ' · bị chiếu!' : ''}</span>`;
   // nút hành động
   const a = actor(v), opp = a && v.players.find(p => p !== a), box = $('#acts');
   if (v.spec || !a) { box.innerHTML = ''; return; }
   if (v.phase === 'ended') { box.innerHTML = ui.isHost ? `<button class="btn pri" data-a="again">🔁 ${v.puzzle ? 'Thử lại' : 'Ván mới (đổi màu quân)'}</button><button class="btn" data-a="lobby">${v.puzzle ? '🧩 Cờ thế khác' : 'Về phòng chờ'}</button>` : '<p class="wait" style="margin:4px">Chờ chủ phòng mở ván mới…</p>'; return; }
   if (v.offer && v.offer !== a.side && ui.controls(a.id)) { box.innerHTML = `<button class="btn pri" data-a="draw">🤝 Đồng ý hoà</button><button class="btn" data-a="drawNo">Đánh tiếp</button>`; return; }
   if (v.undo && v.undo.by !== a.side) { box.innerHTML = `<button class="btn pri" data-a="undoOk">↩️ Cho đi lại</button><button class="btn" data-a="undoNo">Không cho</button>`; return; }
-  box.innerHTML = `<button class="btn sm" data-a="undo" ${v.nMoves ? '' : 'disabled'}>↩️ ${v.undo ? 'Đang xin…' : 'Đi lại'}</button><button class="btn sm" data-a="draw" ${v.puzzle ? 'disabled' : ''}>🤝 ${v.offer === a.side ? 'Đã cầu hoà' : 'Cầu hoà'}</button><button class="btn sm" data-a="resign">🏳️ Xin thua</button>`;
+  box.innerHTML = `<button class="btn sm" data-a="undo" ${v.nMoves ? '' : 'disabled'}>↩️ ${v.undo ? 'Đang xin…' : 'Đi lại'}</button>${v.puzzle ? '<button class="btn sm" data-a="hint">💡 Gợi ý</button>' : `<button class="btn sm" data-a="draw">🤝 ${v.offer === a.side ? 'Đã cầu hoà' : 'Cầu hoà'}</button>`}<button class="btn sm" data-a="resign">🏳️ Xin thua</button>`;
+}
+// 💡 Gợi ý cờ thế: bấm lần 1 chỉ quân cần đi, lần 2 chỉ luôn ô đến (tự tìm nước chiếu bí từ thế đang có)
+let hintAt = null;
+function mateMove(b, n) {
+  const mv = (m, fn) => { const f = Math.floor(m / 100), t = m % 100, cap = b[t]; b[t] = b[f]; b[f] = ''; const r = fn(); b[f] = b[t]; b[t] = cap; return r; };
+  const forced = n => { for (const m of E.legalMoves(b, 'r')) if (mv(m, () => E.inCheck(b, 'b') && E.legalMoves(b, 'b').every(x => mv(x, () => n > 1 && forced(n - 1) != null)))) return m; return null; };
+  for (let k = 1; k <= n; k++) { const m = forced(k); if (m != null) return m; }
+  return null;
+}
+function showHint(v) {
+  if (!v.puzzle || !canMove(v)) return;
+  const left = v.puzzle.n - Math.floor(v.nMoves / 2), m = mateMove(v.board.slice(), Math.max(1, left));
+  if (m == null) { tip('Thế này không còn chiếu bí kịp nữa – bấm ↩️ Đi lại để thử hướng khác nha'); return; }
+  const from = Math.floor(m / 100), to = m % 100, again = hintAt === v.seq + ':' + from;
+  sel = from; hints = again ? [to] : E.legalMoves(v.board.slice(), 'r', from).map(x => x % 100); hintAt = v.seq + ':' + from;
+  render(v); tip(again ? `💡 Đi ${E.NAME[v.board[from].toUpperCase()]} tới ô đang sáng` : `💡 Thử đi quân ${E.NAME[v.board[from].toUpperCase()]} đang chọn – bấm Gợi ý lần nữa để xem ô đến`);
 }
 boardEl.addEventListener('click', e => {
   const q = e.target.closest('.sq'), v = ui.view; if (!q || !v || !canMove(v)) return;
@@ -199,6 +215,7 @@ $('#acts').addEventListener('click', async e => {
   if (k === 'again') { const h = ui.net.raw; if (v.puzzle) return v.puzzle.daily ? startDaily() : startPuzzle(PUZZLES.find(p => p.id === v.puzzle.id)); h.restart(); h.setOpt('first', v.players[0].side === 'r' ? 'guest' : 'host'); h.start(); return; }
   if (k === 'lobby') { if (v.puzzle) { ui.leave(); openPuzzles(); } else ui.net.raw.restart(); return; }
   if (!a) return;
+  if (k === 'hint') return showHint(v);
   if (k === 'resign' && !(await confirmBox('Ván này sẽ tính là thua.', { title: '🏳️ Xin thua?', ok: 'Xin thua', cancel: 'Đánh tiếp', danger: true }))) return;
   ui.actAs(a.id, { type: k });
 });

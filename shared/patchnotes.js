@@ -7,6 +7,10 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261112-4', date: '12/11/2026', game: 'cotuong', title: '💡 Gợi ý cho Cờ thế', items: [
+    '💡 Bí quá thì bấm "Gợi ý": lần 1 sáng quân nên đi, lần 2 sáng luôn ô cần tới.',
+    '🔤 Sửa dòng lượt đi bị cắt chữ trên điện thoại màn nhỏ.',
+  ] },
   { id: '20261112-3', date: '12/11/2026', game: 'all', title: '📸 Khoe kết quả + 📅 Cờ thế hôm nay', items: [
     '📸 Thắng ván hay có thành tích mới sẽ hiện nút "Khoe": web vẽ sẵn một tấm ảnh đẹp có tên, cấp độ và link để gửi Zalo, Facebook rủ hội bạn vào chơi.',
     '📅 Cờ tướng có "Cờ thế hôm nay": mỗi ngày một bài chiếu bí mới, giải liên tục để giữ chuỗi ngày 🔥. Trang chủ cũng có ô Thử thách hôm nay.',
