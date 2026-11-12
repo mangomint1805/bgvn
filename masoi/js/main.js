@@ -157,8 +157,8 @@ function renderLobby() {
     return `<div class="rrow ${c ? '' : 'off'} ${r === 'villager' ? 'vill' : ''}" style="--c:${ROLES[r].color}"><span class="re">${ROLES[r].emoji}</span><span class="rn">${ROLES[r].name}<small>${r === 'villager' ? 'Tự lấp chỗ trống' : esc(ROLES[r].short)}</small></span>
       <button data-rd="${r}" ${dis} aria-label="Bớt ${ROLES[r].name}">−</button><b class="cnt">${c}</b><button data-ri="${r}" ${dis} aria-label="Thêm ${ROLES[r].name}">+</button></div>`;
   }).join('');
-  $$('#roles [data-rd]').forEach(b => b.onclick = () => { fx.sfx.click(); net.setRole(b.dataset.rd, (+lobby.opts.roles[b.dataset.rd] || 0) - 1); });
-  $$('#roles [data-ri]').forEach(b => b.onclick = () => { fx.sfx.click(); net.setRole(b.dataset.ri, (+lobby.opts.roles[b.dataset.ri] || 0) + 1); });
+  $$('#roles [data-rd]').forEach(b => b.onclick = () => { fx.sfx.click(); net && net.setRole(b.dataset.rd, (+lobby.opts.roles[b.dataset.rd] || 0) - 1); });
+  $$('#roles [data-ri]').forEach(b => b.onclick = () => { fx.sfx.click(); net && net.setRole(b.dataset.ri, (+lobby.opts.roles[b.dataset.ri] || 0) + 1); });
   const wolves = rl.list.filter(isWolfRole).length;
   $('#role-sum').textContent = rl.ok ? `🐺 ${wolves} Sói · 🧑‍🌾 ${n - wolves} người khác${rl.extra ? ' · 🃏 +2 lá thừa' : ''}` : '';
   // gợi ý bộ vai theo số người
@@ -166,7 +166,7 @@ function renderLobby() {
   if (sg) {
     const list = suggestRoles(n).filter(g => roleList(n, g.roles).ok);
     sg.innerHTML = n < 5 ? '' : `<b class="sg-t">💡 Gợi ý cho ${n} người</b><div class="sg-list">${list.map(g => `<button type="button" data-sg="${g.id}" aria-pressed="${sameRoles(g.roles, o.roles)}" ${dis}><b>${g.emoji} ${g.name}</b><small>${g.desc}</small><i>${presetSummary(g.roles)}</i></button>`).join('')}</div>`;
-    $$('#suggest [data-sg]').forEach(b => b.onclick = () => { const g = suggestRoles(lobby.players.length).find(x => x.id === b.dataset.sg); if (!g) return; fx.sfx.ok(); if (g.id === 'std') net.setOpt('auto', true); else net.applyPreset(g.roles); toast(`${g.emoji} Đã chọn bộ “${g.name}”`); });
+    $$('#suggest [data-sg]').forEach(b => b.onclick = () => { const g = suggestRoles(lobby.players.length).find(x => x.id === b.dataset.sg); if (!g || !net) return; fx.sfx.ok(); if (g.id === 'std') net && net.setOpt('auto', true); else net && net.applyPreset(g.roles); toast(`${g.emoji} Đã chọn bộ “${g.name}”`); });
   }
   renderPresets();
   $('#role-err').textContent = rl.ok ? '' : '⚠️ ' + rl.reason;
@@ -175,8 +175,8 @@ function renderLobby() {
   const gm = Object.entries(STYLE_GM).every(([k, v]) => o[k] === v), fun = Object.entries(STYLE_FUN).every(([k, v]) => o[k] === v);
   $('#opts').innerHTML = `<div class="opt style"><span><b>🎩 Kiểu chơi</b><small>Quản trò: Thợ Săn ghim mù, Sói hoà phiếu thì nhịn, đêm kín giờ, chết kín, Phù Thủy mù, hết giờ máy chọn giúp.</small></span><div class="seg2"><button type="button" data-style="fun" aria-pressed="${fun}" ${dis}>🎲 Vui vẻ</button><button type="button" data-style="gm" aria-pressed="${gm}" ${dis}>🎩 Quản trò</button></div></div>` + $('#opts').innerHTML +
     Object.entries(OPT_CHK).map(([k, [t, sub]]) => `<label class="opt"><input type="checkbox" data-opt="${k}" ${o[k] ? 'checked' : ''} ${dis}><span><b>${t}</b><small>${sub}</small></span></label>`).join('');
-  $$('#opts [data-opt]').forEach(i => i.onchange = () => net.setOpt(i.dataset.opt, i.type === 'checkbox' ? i.checked : i.value));
-  $$('#opts [data-style]').forEach(b => b.onclick = () => { fx.sfx.click(); for (const [k, v] of Object.entries(b.dataset.style === 'gm' ? STYLE_GM : STYLE_FUN)) net.setOpt(k, v); toast(b.dataset.style === 'gm' ? '🎩 Đã bật bộ luật Quản trò' : '🎲 Về bộ luật Vui vẻ'); });
+  $$('#opts [data-opt]').forEach(i => i.onchange = () => net && net.setOpt(i.dataset.opt, i.type === 'checkbox' ? i.checked : i.value));
+  $$('#opts [data-style]').forEach(b => b.onclick = () => { fx.sfx.click(); for (const [k, v] of Object.entries(b.dataset.style === 'gm' ? STYLE_GM : STYLE_FUN)) net && net.setOpt(k, v); toast(b.dataset.style === 'gm' ? '🎩 Đã bật bộ luật Quản trò' : '🎲 Về bộ luật Vui vẻ'); });
   $('#btn-start').style.display = isHost ? '' : 'none';
   $('#btn-start').disabled = !rl.ok;
   $('#wait-msg').style.display = isHost ? 'none' : '';
@@ -196,7 +196,7 @@ function renderPresets() {
   box.innerHTML = `<div class="ps-head"><b>💾 Bộ vai của hội</b><button class="chip sm" id="ps-save">＋ Lưu bộ đang chọn</button></div>` +
     (list.length ? `<div class="ps-list">${list.map((x, i) => `<div class="ps"><button class="ps-use" data-ps="${i}" title="Dùng bộ này"><b>${esc(x.name)}</b><small>${presetSummary(x.roles)}${x.n ? ` · lưu lúc ${x.n} người` : ''}</small></button><button class="x" data-psx="${i}" aria-label="Xoá ${esc(x.name)}">✕</button></div>`).join('')}</div>` : '<p class="ps-empty">Chưa lưu bộ nào. Chỉnh vai + luật xong bấm “Lưu” để lần sau chọn lại 1 chạm.</p>');
   $('#ps-save').onclick = savePresetModal;
-  $$('#presets [data-ps]').forEach(b => b.onclick = () => { const x = loadPresets()[+b.dataset.ps]; if (!x) return; fx.sfx.ok(); net.applyPreset(x.roles, x.opts); toast(`✅ Đã chọn bộ “${x.name}”`); });
+  $$('#presets [data-ps]').forEach(b => b.onclick = () => { const x = loadPresets()[+b.dataset.ps]; if (!x) return; fx.sfx.ok(); net && net.applyPreset(x.roles, x.opts); toast(`✅ Đã chọn bộ “${x.name}”`); });
   $$('#presets [data-psx]').forEach(b => b.onclick = () => { const a = loadPresets(); const x = a[+b.dataset.psx]; if (!x) return; openModal(`<h2>Xoá bộ vai?</h2><p class="ctr">Xoá “<b>${esc(x.name)}</b>” khỏi máy này?</p><div class="btns"><button class="btn" onclick="__closeModal()">Thôi</button><button class="btn red" id="psx-ok">Xoá</button></div>`); $('#psx-ok').onclick = () => { a.splice(+b.dataset.psx, 1); savePresets(a); closeModal(); renderPresets(); }; });
 }
 function savePresetModal() {
@@ -677,7 +677,7 @@ const CAUSE_TXT = { night: 'đã chết trong đêm', wolf: 'đã chết trong �
 const tomb = (d, i) => { const p = pl(d.id); const r = d.role || (p && p.revealed ? p.role : null); return `<div class="tomb" style="animation-delay:${i * 0.25}s"><div class="stone">${r ? ROLES[r].emoji : '🪦'}</div><b>${esc(pname(d.id))}</b><small>${r ? ROLES[r].name : CAUSE_TXT[d.cause] || ''}</small></div>`; };
 function playEvents(evs) {
   let t = 0;
-  const at = (ms, f) => setTimeout(f, ms);
+  const at = (ms, f) => setTimeout(() => { if (view) f(); }, ms); /* đã rời ván (view = null) thì bỏ qua hiệu ứng còn hẹn giờ */
   const hasDawn = evs.some(e => e.k === 'dawn');
   for (const e of evs) {
     switch (e.k) {

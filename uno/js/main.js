@@ -430,7 +430,7 @@ function animate(a, b) {
     landing = true; renderDiscard(a.top);
     let rot = 0; for (const ch of b.top.id) rot = (rot * 17 + ch.charCodeAt(0)) % 360;
     fx.fly(cardHTML(b.top), from, $('#discard'), { duration: 420, rotate: (rot % 24) - 12, scale: 96 / 84, onEnd: () => {
-      landing = false; renderDiscard(view.top); fx.pop($('#discard .ucard'));
+      landing = false; if (!view) return; /* đã rời ván lúc lá bài còn đang bay */ renderDiscard(view.top); fx.pop($('#discard .ucard'));
       playSfx(b.top); fx.burst($('#discard'), b.top.color, b.top.type === 'n' ? 10 : 24);
       bannerFor(b.top, b, fxKinds);
     } });

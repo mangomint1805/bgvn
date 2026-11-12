@@ -2,7 +2,7 @@
 // Trong ván chơi mỗi game có âm thanh riêng nên ở đó chỉ rung, không kêu thêm.
 // Tắt trong ⚙️ Cài đặt: bgvn-ui-sfx = '0' (tiếng), bgvn-haptic = '0' (rung); "Tắt hết nhạc nền" không ảnh hưởng tiếng nút.
 import './inapp.js?v=1'; /* nhắc mở bằng Safari/Chrome khi đang ở trình duyệt nhúng của Zalo, Facebook… */
-import './errlog.js?v=4'; /* ghi lỗi JS về máy chủ cho chủ web */
+import './errlog.js?v=5'; /* ghi lỗi JS về máy chủ cho chủ web */
 /* 📈 Thống kê lượt xem của Cloudflare Web Analytics (không cookie, không theo dõi cá nhân) – chỉ chạy trên tên miền thật */
 if (location.hostname === 'boardgamevui.com' && !navigator.webdriver && !document.querySelector('script[data-cf-beacon]')) {
   const b = document.createElement('script'); b.defer = true; b.src = 'https://static.cloudflareinsights.com/beacon.min.js';
