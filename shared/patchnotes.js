@@ -7,6 +7,9 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261112-5', date: '12/11/2026', game: 'cotuong', title: '🔉 Tiếng quân cờ êm hơn', items: [
+    '🔉 Tiếng đặt quân, ăn quân và chiếu tướng giờ trầm và êm hơn, không còn chói tai (cả 7 kiểu bàn).',
+  ] },
   { id: '20261112-4', date: '12/11/2026', game: 'cotuong', title: '💡 Gợi ý cho Cờ thế', items: [
     '💡 Bí quá thì bấm "Gợi ý": lần 1 sáng quân nên đi, lần 2 sáng luôn ô cần tới.',
     '🔤 Sửa dòng lượt đi bị cắt chữ trên điện thoại màn nhỏ.',

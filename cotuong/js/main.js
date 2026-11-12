@@ -7,7 +7,7 @@ import { PUZZLES } from './puzzles.js?v=1';
 import { today, state as dailyState, markSolved } from './today.js?v=1';
 import { gameKit, $, $$, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=3';
 import { confirmBox, promptBox, toast as tip } from '../../shared/ui/dialog.js?v=1';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=125';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=126';
 
 const LV = { easy: ['🌱 Dễ', 'Mới tập chơi'], normal: ['⚔️ Vừa', 'Biết đánh, có sơ hở'], hard: ['🔥 Khó', 'Tính trước 4–5 nước'], master: ['👑 Đại sư', 'Động cơ Fairy-Stockfish'] };
 const GLYPH = { han: { K: '帥', A: '仕', E: '相', R: '俥', H: '傌', C: '炮', P: '兵', k: '將', a: '士', e: '象', r: '車', h: '馬', c: '砲', p: '卒' }, viet: { K: 'Tướng', A: 'Sĩ', E: 'Tượng', R: 'Xe', H: 'Mã', C: 'Pháo', P: 'Tốt' } };
@@ -54,22 +54,22 @@ let ac = null;
 // Tiếng quân cờ tổng hợp theo CHẤT LIỆU của theme: một cú gõ = tiếng chạm (nhiễu lọc, rất ngắn) + vài tần số ngân riêng của vật liệu.
 // [tần số ngân (Hz)], thời gian ngân (s), [lọc nhiễu: kiểu, Hz], độ dài tiếng chạm (s), âm lượng chạm, âm lượng ngân
 const MATERIAL = {
-  go: { modes: [540, 1210, 2050], ring: .07, noise: ['lowpass', 2600], hit: .028, nGain: .5, mGain: .22 },   /* gỗ sáng: "cạch" ấm, tắt nhanh */
-  mun: { modes: [310, 720, 1480], ring: .1, noise: ['lowpass', 1700], hit: .035, nGain: .55, mGain: .3 },    /* gỗ mun đặc: trầm, chắc */
-  ngoc: { modes: [2150, 3380, 5300], ring: .2, noise: ['highpass', 3000], hit: .012, nGain: .16, mGain: .2 }, /* ngọc: "keng" trong, ngân dài */
+  go: { modes: [430, 960, 1620], ring: .08, noise: ['lowpass', 1500], hit: .03, nGain: .32, mGain: .22 },   /* gỗ sáng: "cạch" ấm, tắt nhanh */
+  mun: { modes: [290, 660, 1250], ring: .1, noise: ['lowpass', 1150], hit: .035, nGain: .36, mGain: .28 },    /* gỗ mun đặc: trầm, chắc */
+  ngoc: { modes: [1500, 2380, 3700], ring: .18, noise: ['bandpass', 2200], hit: .014, nGain: .1, mGain: .16 }, /* ngọc: "keng" trong, ngân dài */
   giay: { modes: [190, 420], ring: .05, noise: ['lowpass', 850], hit: .06, nGain: .5, mGain: .16 },          /* quân dẹt trên giấy: "bộp" êm */
-  da: { modes: [1450, 2950, 4300], ring: .045, noise: ['bandpass', 3600], hit: .014, nGain: .5, mGain: .2 }, /* đá: "tách" sắc, khô */
-  dao: { modes: [1750, 2650, 4150], ring: .13, noise: ['highpass', 2200], hit: .014, nGain: .2, mGain: .18 }, /* sứ: "tinh" nhẹ */
-  dem: { modes: [1250, 1880, 2510], ring: .28, noise: ['highpass', 4000], hit: .01, nGain: .08, mGain: .17 }, /* pha lê: ngân lâu như chuông gió */
+  da: { modes: [820, 1750, 2700], ring: .05, noise: ['bandpass', 1900], hit: .018, nGain: .3, mGain: .18 }, /* đá: "tách" sắc, khô */
+  dao: { modes: [1250, 1950, 3050], ring: .12, noise: ['bandpass', 1700], hit: .016, nGain: .12, mGain: .15 }, /* sứ: "tinh" nhẹ */
+  dem: { modes: [1050, 1580, 2110], ring: .26, noise: ['bandpass', 2400], hit: .012, nGain: .05, mGain: .14 }, /* pha lê: ngân lâu như chuông gió */
 };
 let noiseBuf = null;
 function knock(m, at, gain = 1, pitch = 1) {
   if (!noiseBuf) { noiseBuf = ac.createBuffer(1, ac.sampleRate * .12, ac.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
-  const out = ac.createGain(); out.gain.value = gain * .6; /* chừa khoảng để 2 tiếng chồng nhau không vỡ */ out.connect(ac.destination);
-  const n = ac.createBufferSource(), f = ac.createBiquadFilter(), ng = ac.createGain(); n.buffer = noiseBuf; f.type = m.noise[0]; f.frequency.value = m.noise[1] * pitch; f.Q.value = .8;
+  const out = ac.createGain(), soft = ac.createBiquadFilter(); out.gain.value = gain * .45; /* chừa khoảng để 2 tiếng chồng nhau không vỡ */ soft.type = 'lowpass'; soft.frequency.value = 3800; soft.Q.value = .5; /* cắt bớt tần số cao cho đỡ chói tai */ out.connect(soft).connect(ac.destination);
+  const n = ac.createBufferSource(), f = ac.createBiquadFilter(), ng = ac.createGain(); n.buffer = noiseBuf; f.type = m.noise[0]; f.frequency.value = m.noise[1] * pitch; f.Q.value = .6;
   ng.gain.setValueAtTime(m.nGain, at); ng.gain.exponentialRampToValueAtTime(.0001, at + m.hit); n.connect(f).connect(ng).connect(out); n.start(at); n.stop(at + m.hit + .02);
   m.modes.forEach((hz, i) => { const o = ac.createOscillator(), g = ac.createGain(), len = m.ring / (1 + i * .7); o.type = 'sine'; o.frequency.setValueAtTime(hz * pitch * 1.03, at); o.frequency.exponentialRampToValueAtTime(hz * pitch, at + .02);
-    g.gain.setValueAtTime(.0001, at); g.gain.exponentialRampToValueAtTime(m.mGain / (1 + i * .8), at + .004); g.gain.exponentialRampToValueAtTime(.0001, at + len + .01); o.connect(g).connect(out); o.start(at); o.stop(at + len + .03); });
+    g.gain.setValueAtTime(.0001, at); g.gain.exponentialRampToValueAtTime(m.mGain / (1 + i * 1.1), at + .007); g.gain.exponentialRampToValueAtTime(.0001, at + len + .01); o.connect(g).connect(out); o.start(at); o.stop(at + len + .03); });
 }
 function beep(kind) {
   if (!sound) return;
@@ -78,10 +78,10 @@ function beep(kind) {
     const t = ac.currentTime, m = MATERIAL[document.body.dataset.theme] || MATERIAL.go;
     if (kind === 'pick') return knock(m, t, .35, 1.35);                                   /* nhấc quân: chạm khẽ */
     if (kind === 'move') return knock(m, t, 1, 1);                                        /* đặt quân xuống bàn */
-    if (kind === 'cap') { knock(m, t, 1.25, .92); knock(m, t + .075, .6, 1.22); return; } /* ăn quân: đập mạnh + quân bị ăn văng ra */
-    const o = ac.createOscillator(), g = ac.createGain(), F = { check: [880, 1320, .22, 'sine'], end: [523, 1046, .5, 'sine'] }[kind]; if (!F) return;
+    if (kind === 'cap') { knock(m, t, 1.1, .9); knock(m, t + .075, .45, 1.12); return; } /* ăn quân: đập mạnh + quân bị ăn văng ra */
+    const o = ac.createOscillator(), g = ac.createGain(), F = { check: [660, 990, .22, 'sine'], end: [440, 880, .5, 'sine'] }[kind]; if (!F) return;
     o.type = F[3]; o.frequency.setValueAtTime(F[0], t); o.frequency.exponentialRampToValueAtTime(F[1], t + F[2]);
-    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.14, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + F[2] + .05);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.09, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + F[2] + .05);
     o.connect(g).connect(ac.destination); o.start(t); o.stop(t + F[2] + .08);
   } catch (e) {}
 }
