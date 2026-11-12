@@ -9,7 +9,7 @@ if (location.hostname === 'boardgamevui.com' && !navigator.webdriver && !documen
   b.setAttribute('data-cf-beacon', '{"token": "853e19cc344441d28703e0fe5bb866f0"}'); document.head.append(b);
 }
 /* màn 🎓 Học chơi nhanh – chỉ nạp ở trang game (có nút Hướng dẫn) */
-if (document.querySelector('#btn-guide-home, #btn-guide')) import('./tutorial.js?v=1').catch(() => {});
+if (document.querySelector('#btn-guide-home, #btn-guide')) import('./tutorial.js?v=4').catch(() => {});
 // Giao diện chung (hộp thoại, thông báo nổi, hồ sơ, tin mới…) viết bằng Nunito + Baloo 2. Game nào không tự nạp 2 phông này thì nạp giúp,
 // kẻo chữ Việt rơi về phông máy và mỗi chữ một kiểu.
 { const have = f => [...document.querySelectorAll('link[href*="fonts.googleapis.com"]')].some(l => l.href.includes('family=' + f)), need = [];

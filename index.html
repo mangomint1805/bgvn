@@ -198,7 +198,7 @@ main{max-width:1080px;padding:28px 16px 32px}
 .foot nav{display:flex;flex-direction:column;gap:8px}.foot h3{margin:4px 0 4px;font:800 13px Nunito,sans-serif;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
 .foot nav a{color:var(--ink);text-decoration:none;font-weight:800;font-size:15px}.foot nav a:hover{text-decoration:underline}
 .foot-note{margin:26px 0 0;font-size:12.5px;line-height:1.6;color:#8d84a3}
-@media (max-width:860px){.links{display:none}.hero{grid-template-columns:1fr;gap:22px;margin-top:6px}.hero-card{min-height:0;max-width:440px;width:100%;margin:6px auto 0}.hero-card .tile{min-height:300px;transform:none}.hero-card .feat{left:8px}
+@media (max-width:860px){.links{display:none}.hero{grid-template-columns:1fr;gap:22px;margin-top:6px}.hero-card{min-height:300px;max-width:440px;width:100%;margin:6px auto 0}.hero-card .tile{min-height:300px;transform:none}.hero-card .feat{left:8px}
  .hot-row{flex-wrap:nowrap;overflow-x:auto;margin:12px -16px 0;padding:0 16px 10px;scrollbar-width:none}.hot-row::-webkit-scrollbar{display:none}.hot-chip{flex:none}
  .quick{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 24px;padding:2px 16px 8px;scrollbar-width:none}.quick::-webkit-scrollbar{display:none}
  .quick>*{position:relative;flex:none;font:800 14px Nunito,sans-serif;color:var(--ink);background:#fff;border:1.5px solid #ecdfd0;border-radius:999px;padding:9px 16px;min-height:42px;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center}
@@ -250,7 +250,7 @@ main{max-width:1080px;padding:28px 16px 32px}
 <main>
   <section class="hero">
     <div class="hero-txt">
-      <p class="online" id="online" hidden></p>
+      <p class="online" id="online" style="visibility:hidden">&nbsp;</p>
       <h1>Board game tiếng Việt.<br><span>Mở link là chơi.</span></h1>
       <p class="sub">Rủ hội bạn vào chung một phòng, hoặc chơi với bot. Không cần cài app, không cần đăng ký, miễn phí.</p>
       <div class="cta">
@@ -258,7 +258,7 @@ main{max-width:1080px;padding:28px 16px 32px}
         <a class="btn-sub" href="sanh/">🌐 Sảnh chung<small>tìm phòng · chat</small></a>
       </div>
       <ul class="facts"><li><b>17</b> game</li><li><b>2–16</b> người</li><li>Điện thoại &amp; máy tính</li></ul>
-      <a class="daily" id="daily" href="cotuong/?daily=1" hidden><i>📅</i><span><b>Thử thách hôm nay</b><small id="daily-sub">Cờ thế · chiếu bí</small></span><em>Giải ▶</em></a>
+      <a class="daily" id="daily" href="cotuong/?daily=1"><i>📅</i><span><b>Thử thách hôm nay</b><small id="daily-sub">Cờ thế · chiếu bí</small></span><em>Giải ▶</em></a>
     </div>
     <div class="hero-card" id="hero-card" aria-live="polite"></div>
   </section>
@@ -427,9 +427,9 @@ function fitTitles(){document.querySelectorAll('.grid .tile .info h2,.hero-card 
 addEventListener('load',fitTitles);addEventListener('resize',()=>{clearTimeout(fitTitles.t);fitTitles.t=setTimeout(fitTitles,120)});document.fonts&&document.fonts.ready.then(fitTitles);
 </script>
 <script type="module" src="shared/ui/feedback.js?v=7"></script>
-<script type="module">import { mountAccount } from "./shared/ui/account.js?v=12"; import { mountOnline } from "./shared/net/presence.js?v=9"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} import("./shared/ui/profile.js?v=7").then(async m => { const st = await import("./shared/ui/stats.js?v=8"); m.profileCss(); const b = document.getElementById("btn-prof"), d = () => { b.innerHTML = m.avatarHTML(42) + `<span class="lv">${st.level().lv}</span>`; }; d(); addEventListener("bgvn-avatar", d); addEventListener("bgvn-stats", d); b.onclick = () => m.openProfile(); }); document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=11").then(m => m.openSettings());</script>
+<script type="module">import { mountAccount } from "./shared/ui/account.js?v=12"; import { mountOnline } from "./shared/net/presence.js?v=12"; mountAccount(document.getElementById("acct")); mountOnline(document.getElementById("online")); try { if (localStorage.getItem("bgvn-hide-online") === "1") document.getElementById("online").style.display = "none"; } catch (e) {} import("./shared/ui/profile.js?v=7").then(async m => { const st = await import("./shared/ui/stats.js?v=8"); m.profileCss(); const b = document.getElementById("btn-prof"), d = () => { b.innerHTML = m.avatarHTML(42) + `<span class="lv">${st.level().lv}</span>`; }; d(); addEventListener("bgvn-avatar", d); addEventListener("bgvn-stats", d); b.onclick = () => m.openProfile(); }); document.getElementById("btn-set").onclick = () => import("./shared/ui/settings.js?v=11").then(m => m.openSettings());</script>
 <script type="module">
-import { openNews, newsBadge } from './shared/ui/news.js?v=128';
+import { openNews, newsBadge } from './shared/ui/news.js?v=129';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 const json = k => { try { return JSON.parse(ls.get(k)); } catch (e) { return null; } };
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
@@ -445,7 +445,7 @@ const nav = $('#nav'), onScroll = () => nav.classList.toggle('stuck', scrollY > 
 if (!ls.get('bgvn-visited')) {
   ls.set('bgvn-visited', String(Date.now()));
   let old = false; try { old = Object.keys(localStorage).some(k => k.startsWith('bgvn-news-seen-') || k.startsWith('bgvn-session-') || k === 'bgvn-name'); } catch (e) {}
-  if (!old) import('./shared/patchnotes.js?v=87').then(m => { ['all', ...tiles.map(t => t.dataset.game)].forEach(g => { const id = m.latestId(g === 'all' ? null : g); if (id) ls.set('bgvn-news-seen-' + g, id); }); });
+  if (!old) import('./shared/patchnotes.js?v=88').then(m => { ['all', ...tiles.map(t => t.dataset.game)].forEach(g => { const id = m.latestId(g === 'all' ? null : g); if (id) ls.set('bgvn-news-seen-' + g, id); }); });
   else marks();
 } else marks();
 function marks() { $$('#btn-news,#btn-news-m').forEach(b => newsBadge(b, null)); $$('.grid .newtag[data-news]').forEach(t => newsBadge(t, t.dataset.news)); }
@@ -522,6 +522,6 @@ applyFilter();
   }, 1100);
 })();
 </script>
-<script type="module" src="./shared/ui/feel.js?v=9"></script>
+<script type="module" src="./shared/ui/feel.js?v=12"></script>
 </body>
 </html>

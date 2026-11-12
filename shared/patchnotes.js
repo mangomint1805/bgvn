@@ -7,6 +7,11 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261112-7', date: '12/11/2026', game: 'all', title: '⚡ Mượt hơn trên máy tính & điện thoại', items: [
+    '⚡ Trang chủ không còn bị nhảy chữ, nhảy ô lúc mới mở (số người online, ô Thử thách hôm nay, ô game nổi bật đã giữ chỗ sẵn).',
+    '🎓 Màn Học chơi nhanh hiện ra là có ngay hình, không còn giật khung.',
+    '🎲 Cờ Tỷ Phú, Cờ cá ngựa, Đua Lạc Đà: bấm Bắt đầu là có phản hồi ngay ("Đang dọn bàn…") thay vì đứng hình.',
+  ] },
   { id: '20261112-6', date: '12/11/2026', game: 'typhu', title: '😱 Emoji cảm xúc trên bàn cờ', items: [
     '😱 Quân cờ giờ biết biểu cảm: 😰 vào nhà người ta mà thiếu tiền, 😭 trả tiền thuê đau ví (chủ nhà thì 🤑), 😍 mua đất, 😎 đổ đôi, 😈 mua lại, 🤩 xây landmark, 😱 đi tù, 😵 phá sản… cả bàn đều thấy.',
   ] },

@@ -40,19 +40,19 @@ h1 span{background:linear-gradient(90deg,#7b61ff,#3d8bff,#2fc76f);-webkit-backgr
 <main>
   <div class="top"><a class="back bgvn-chip" href="../" aria-label="Về trang chủ BGVN" title="Về trang chủ BGVN"><img src="../favicon.svg?v=1" alt="" width="26" height="26"><span>BGVN</span></a><h1>🌐 <span>Sảnh chung</span></h1><div id="acct"></div></div>
   <p class="sub">Tìm phòng công khai để vào chơi cùng người lạ, hoặc tạo phòng rồi bật <b>🌐 Công khai</b> để rủ thêm người 🥰</p>
-  <p class="online" id="online" hidden></p>
+  <p class="online" id="online" style="visibility:hidden">&nbsp;</p>
   <div id="lobby"></div>
 </main>
 <script type="module">
 import { mountAccount } from '../shared/ui/account.js?v=12';
 import { mountLobby } from '../shared/ui/lobby.js?v=12';
-import { mountOnline } from '../shared/net/presence.js?v=9';
+import { mountOnline } from '../shared/net/presence.js?v=12';
 mountOnline(document.getElementById('online'));
 mountAccount(document.getElementById('acct'));
 const g = new URLSearchParams(location.search).get('game');
 const L = mountLobby(document.getElementById('lobby'), {});
 if (g) setTimeout(() => document.querySelector(`.lb-gf button[data-g="${CSS.escape(g)}"]`)?.click(), 0);
 </script>
-<script type="module" src="../shared/ui/feel.js?v=9"></script>
+<script type="module" src="../shared/ui/feel.js?v=12"></script>
 </body>
 </html>

@@ -41,7 +41,7 @@ const DOT = c => `<i style="display:inline-block;width:9px;height:9px;border-rad
 // hiển thị "🟢 N người đang online · 🎮 M đang chơi" vào phần tử el (cập nhật tức thì)
 export function mountOnline(el, fmt = (n, lv) => `${DOT('#2fc76f')}<b>${n}</b> đang online` + (lv && lv.players ? `<span style="margin:0 8px;opacity:.45">·</span>🎮 <b>${lv.players}</b> đang chơi ở <b>${lv.rooms}</b> phòng` : '')) {
   startPresence();
-  const draw = () => { const n = window.__bgvnOnline; if (n == null) { el.hidden = true; return; } el.hidden = false; el.innerHTML = fmt(n, window.__bgvnLive); };
+  const draw = () => { const n = window.__bgvnOnline; el.hidden = false; if (n == null) { el.style.visibility = 'hidden'; if (!el.textContent.trim()) el.innerHTML = '&nbsp;'; return; } el.style.visibility = ''; el.innerHTML = fmt(n, window.__bgvnLive); }; /* chưa có số thì giữ chỗ (ẩn bằng visibility) để trang không bị giật khi số hiện ra */
   draw(); addEventListener('bgvn-online', draw); addEventListener('bgvn-live', draw);
 }
 startPresence();

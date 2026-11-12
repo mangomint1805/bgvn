@@ -24,10 +24,13 @@ const CSS = `.bgvn-tut{position:fixed;inset:0;z-index:96;display:flex;align-item
 .bgvn-tut-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:4px 14px;border-radius:999px;border:0;cursor:pointer;font:800 14px Nunito,system-ui,sans-serif;color:#3a2300;background:linear-gradient(135deg,#ffe27a,#ffb020);box-shadow:0 6px 14px -8px #7a4a00;margin:4px;flex:none;align-self:center;white-space:nowrap}
 @media (prefers-reduced-motion:reduce){.bgvn-tut{transition:none}}`;
 let cssOn = false, open = false;
+const pre = {};
+function preload(src) { if (!src) return Promise.resolve(); if (!pre[src]) { const im = new Image(); im.decoding = 'async'; im.src = src; pre[src] = (im.decode ? im.decode() : new Promise(r => { im.onload = r; })).catch(() => {}); } return pre[src]; }
 export async function openTutorial() {
   if (open) return; open = true;
   let T; try { T = (await import('../tutorials.js?v=1')).TUT[GAME]; } catch (e) {}
   if (!T || !T.steps.length) { open = false; return; }
+  await Promise.race([preload(T.steps[0].img), new Promise(r => setTimeout(r, 700))]); /* chờ ảnh bước 1 tải xong (tối đa 0,7 giây) để hộp hiện ra là đủ hình, không bị giật */
   if (!cssOn) { cssOn = true; const st = document.createElement('style'); st.textContent = CSS; document.head.append(st); }
   ls.set('bgvn-tut-' + GAME, '1');
   const el = document.createElement('div'); el.className = 'bgvn-tut'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Học chơi nhanh ' + T.name);
@@ -40,7 +43,7 @@ export async function openTutorial() {
     const s = T.steps[i], last = i === n - 1;
     el.innerHTML = `<div class="bx"><div class="hd"><b>🎓 Học chơi ${T.name}<small>${n} bước · chưa tới 1 phút</small></b><button class="x" type="button">${last ? 'Đóng' : 'Bỏ qua'}</button></div>
 <div class="dots">${T.steps.map((_, k) => `<i class="${k <= i ? 'on' : ''}"></i>`).join('')}</div>
-<div class="sl"><span class="no">Bước ${i + 1}/${n}</span>${s.img ? `<img src="${s.img}" width="${s.w}" height="${s.h}" alt="${(s.alt || '').replace(/"/g, '&quot;')}">` : `<div class="ic">${s.icon || '🎲'}</div>`}<p>${s.html}</p></div>
+<div class="sl"><span class="no">Bước ${i + 1}/${n}</span>${s.img ? `<img src="${s.img}" width="${s.w}" height="${s.h}" style="aspect-ratio:${s.w}/${s.h};width:min(100%, calc(min(46vh,380px) * ${(s.w / s.h).toFixed(3)}))" decoding="async" alt="${(s.alt || '').replace(/"/g, '&quot;')}">` : `<div class="ic">${s.icon || '🎲'}</div>`}<p>${s.html}</p></div>
 <div class="ft"><button class="bk" type="button" ${i ? '' : 'disabled'} aria-label="Bước trước">◀</button>${last
       ? (bot && cta ? `<button class="go" type="button" data-a="bot">${cta}</button>` : `<button class="go" type="button" data-a="ok">Hiểu rồi, chơi thôi! 👌</button>`) + `<button class="full" type="button" data-a="guide">📖 Xem luật đầy đủ</button>`
       : `<button class="go" type="button" data-a="next">Tiếp ▶</button>`}</div></div>`;
@@ -53,7 +56,7 @@ export async function openTutorial() {
       if (a === 'guide') setTimeout(() => { const g = $('#btn-guide-home') || $('#btn-guide'); g ? g.click() : (location.href = 'huong-dan/'); }, 220);
     });
     // nạp sẵn ảnh bước kế cho mượt
-    const nx = T.steps[i + 1]; if (nx && nx.img) { const im = new Image(); im.src = nx.img; }
+    const nx = T.steps[i + 1]; if (nx && nx.img) preload(nx.img);
   }
   // vuốt trái/phải để chuyển bước
   let x0 = null; el.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
@@ -76,6 +79,7 @@ function init() {
   if (ls.get('bgvn-tut-' + GAME) || navigator.webdriver || /[?&]room=/.test(location.search)) return;
   let played = !!ls.get('bgvn-session-' + GAME); try { played = played || (ls.get('bgvn-stats') || '').includes('"' + GAME + '"'); } catch (e) {}
   if (played) { ls.set('bgvn-tut-' + GAME, '1'); return; }
+  import('../tutorials.js?v=1').then(m => { const T = m.TUT[GAME]; if (T && T.steps[0]) preload(T.steps[0].img); }).catch(() => {}); /* tải trước ảnh bước 1 trong lúc chờ */
   setTimeout(() => {
     const home = $('#screen-home'); if (home && !home.classList.contains('active')) return;
     const shown = e => { const c = getComputedStyle(e); return c.display !== 'none' && c.visibility !== 'hidden' && c.opacity !== '0' && c.pointerEvents !== 'none' && e.getBoundingClientRect().width > 0; };

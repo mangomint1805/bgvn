@@ -9,7 +9,7 @@ import { Board3D, DIE_COLORS } from './scene3d.js?v=2';
 import * as fx from './fx.js?v=2';
 import { guideHTML } from './guide.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=128';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=129';
 
 const GAME = 'camel';
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
@@ -127,7 +127,10 @@ function renderLobby() {
   $('#btn-start').style.display = isHost ? '' : 'none'; $('#wait-msg').style.display = isHost ? 'none' : '';
 }
 $('#btn-addbot').onclick = () => { fx.sfx.click(); net && net.addBot(); };
-$('#btn-start').onclick = () => { fx.actx(); net && net.start(); };
+$('#btn-start').onclick = () => { /* dựng bàn 3D khá nặng: đổi nút sang "đang dọn bàn" và cho màn hình vẽ lại trước, rồi mới bắt đầu – bấm thấy phản hồi ngay */
+  fx.actx(); const b = $('#btn-start'); if (!net || b.disabled) return; const t = b.innerHTML; b.disabled = true; b.textContent = '⏳ Đang dọn bàn…';
+  requestAnimationFrame(() => setTimeout(() => { b.disabled = false; b.innerHTML = t; net && net.start(); }, 0));
+};
 
 // ================= VÁN CHƠI =================
 let B = null, flat = false, shown = null, seenEv = 0, busy = false, deadlineAt = 0, endShown = false, logOpen = false, trayN = 0, lastTurnPid = null;

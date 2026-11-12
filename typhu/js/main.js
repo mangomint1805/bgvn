@@ -15,7 +15,7 @@ import { OPTIONS, PRESETS, buildAvatar, portrait } from '../../shared/js/avatar3
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=128';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=129';
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -252,7 +252,10 @@ $('#btn-addlocal').onclick = () => {
     <div class="mbtns">${btn('modal', '＋ Thêm', () => { const nm = $('#loc-name').value.trim() || PRESETS[pick].name; net.addLocal(nm, cleanAvatar(PRESETS[pick])); closeModal(); }, 'pri')}</div>`);
   draw(); setTimeout(() => $('#loc-name') && $('#loc-name').focus(), 50);
 };
-$('#btn-start').onclick = () => { fx.actx(); net && net.start(); };
+$('#btn-start').onclick = () => { /* dựng bàn 3D khá nặng: đổi nút sang "đang dọn bàn" và cho màn hình vẽ lại trước, rồi mới bắt đầu – bấm thấy phản hồi ngay */
+  fx.actx(); const b = $('#btn-start'); if (!net || b.disabled) return; const t = b.innerHTML; b.disabled = true; b.textContent = '⏳ Đang dọn bàn…';
+  requestAnimationFrame(() => setTimeout(() => { b.disabled = false; b.innerHTML = t; net && net.start(); }, 0));
+};
 
 // ================= VÁN CHƠI =================
 let B = null, shown = null, seenEv = 0, busy = false, deadlineAt = 0, winShown = false, logOpen = false;

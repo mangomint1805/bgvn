@@ -3,7 +3,7 @@ import { makeNet } from '../../shared/net/simplenet.js?v=7';
 import * as E from './engine.js?v=1';
 import { gameKit, $, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=3';
 import { confirmBox, promptBox, toast as tip } from '../../shared/ui/dialog.js?v=1';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=128';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=129';
 
 const TOPIC = Object.fromEntries(E.TOPICS.map(t => [t.id, t])); TOPIC.tuviet = { id: 'tuviet', e: '✍️', name: 'Tự viết' };
 const KIND = { t: ['💬', 'THẬT'], d: ['🔥', 'THÁCH'] };
