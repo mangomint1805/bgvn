@@ -302,3 +302,10 @@ input:focus{border-color:var(--acc)}
 #panel .raise-pv{background:#fff6d6;border:1px solid #ffd54a;border-radius:10px;padding:5px 9px;margin-top:4px}
 @media (prefers-reduced-motion:reduce){#rollfab{animation:none}}
 @media (max-height:560px){#rollfab{width:84px;bottom:10px}#rollfab .ic{font-size:30px}#rollfab .tx{font-size:11px}#rollfab .pw{display:none}}
+
+/* 😱 emoji cảm xúc bật lên trên đầu quân cờ */
+.emo-pop{position:fixed;font:clamp(52px,13vw,76px)/1 "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;transform:translate(-50%,-50%) scale(0);animation:emo-pop 2.4s cubic-bezier(.3,1.4,.5,1) forwards;filter:drop-shadow(0 5px 8px #0005)}
+.emo-pop.shiver{animation:emo-pop 2.4s cubic-bezier(.3,1.4,.5,1) forwards,emo-shiver .14s linear .3s 12}
+@keyframes emo-pop{0%{transform:translate(-50%,-50%) scale(0) rotate(-20deg);opacity:0}14%{transform:translate(-50%,-50%) scale(1.15) rotate(5deg);opacity:1}24%{transform:translate(-50%,-50%) scale(1) rotate(0)}85%{transform:translate(-50%,-62%) scale(1);opacity:1}100%{transform:translate(-50%,-80%) scale(.8);opacity:0}}
+@keyframes emo-shiver{0%,100%{margin-left:0}25%{margin-left:-3px}75%{margin-left:3px}}
+@media (prefers-reduced-motion:reduce){.emo-pop.shiver{animation:emo-pop 2.4s ease-out forwards}}

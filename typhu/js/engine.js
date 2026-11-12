@@ -371,7 +371,7 @@ function charge(s, p, to, then, why, tile) {
   const nextTag = then === 'buyback' ? 'buyback:' + tile : then;
   if (p.cash >= amt) { payOut(s, p, to, why); cont(s, nextTag); return; }
   s.stage = 'debt'; s.debt = { amount: amt, to, then: nextTag, why };
-  ev(s, { t: 'debt', pid: p.id, amt }); log(s, `😰 ${p.name} thiếu tiền! Cần ${money(amt)} – bán nhà/thế chấp hoặc phá sản.`);
+  ev(s, { t: 'debt', pid: p.id, amt, why }); log(s, `😰 ${p.name} thiếu tiền! Cần ${money(amt)} – bán nhà/thế chấp hoặc phá sản.`);
 }
 // người KHÔNG tới lượt bị buộc trả (thẻ sinh nhật...): tự bán nhà/thế chấp, vẫn thiếu thì phá sản
 function forcePay(s, payer, toPid, amt, why) {

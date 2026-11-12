@@ -7,6 +7,9 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261112-6', date: '12/11/2026', game: 'typhu', title: '😱 Emoji cảm xúc trên bàn cờ', items: [
+    '😱 Quân cờ giờ biết biểu cảm: 😰 vào nhà người ta mà thiếu tiền, 😭 trả tiền thuê đau ví (chủ nhà thì 🤑), 😍 mua đất, 😎 đổ đôi, 😈 mua lại, 🤩 xây landmark, 😱 đi tù, 😵 phá sản… cả bàn đều thấy.',
+  ] },
   { id: '20261112-5', date: '12/11/2026', game: 'cotuong', title: '🔉 Tiếng quân cờ êm hơn', items: [
     '🔉 Tiếng đặt quân, ăn quân và chiếu tướng giờ trầm và êm hơn, không còn chói tai (cả 7 kiểu bàn).',
   ] },

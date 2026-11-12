@@ -1,21 +1,21 @@
 // Cờ Tỷ Phú Sài Gòn – giao diện: trang chủ, tạo nhân vật, sảnh, ván chơi 3D, hoạt ảnh sự kiện.
 import { hintsAllowed, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
-import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=65';
+import { Host, Client, MAX, loadSnapshot, session, cleanAvatar, TYPHU_PHRASES } from './net.js?v=67';
 import { createReactions, EMOJIS as REACT_EMOJIS } from '../../shared/ui/react.js?v=2';
 import {
   setData, TILES, GROUPS, GROUP_LIST, STATION_RENT, money, rentOf, canBuild, canSell, canMortgage, canUnmortgage, houseCost, mortgageValue,
   unmortgageCost, travelOk, buildBlock, tradable, tradeError, buybackPrice, netWorth, tilesOf, ownsGroup, JAIL_FINE, MAX_TRADES, isProp,
   tradeImpact, tradeSideValue, planRaise, raiseSummary,
-} from './engine.js?v=55';
+} from './engine.js?v=57';
 import { Board3D, THEMES } from './scene3d.js?v=56';
 import * as fx from './fx.js?v=50';
-import { guideHTML } from './guide.js?v=55';
+import { guideHTML } from './guide.js?v=57';
 import { OPTIONS, PRESETS, buildAvatar, portrait } from '../../shared/js/avatar3d.js';
 import * as THREE from '../../shared/lib/three.module.min.js';
 import { OrbitControls } from '../../shared/lib/OrbitControls.js';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=126';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=128';
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -366,7 +366,7 @@ async function animate(e, v) {
       const bi = curBatch.indexOf(e), mv = !e.util && bi >= 0 ? curBatch.slice(bi + 1).find(x => x.t === 'roll' || (x.t === 'move' && x.pid === e.pid)) : null;
       const dest = mv && mv.t === 'move' && mv.kind !== 'jail' && mv.from !== mv.to ? mv.to : null;
       await centerDice(e.d, isMine(e.pid) && rollPower != null ? rollPower : 0.5, dest, () => { if (dest != null) setMark('move', dest, '📍 ' + tileName(dest), '#ffd54a'); }); rollPower = null;
-      if (e.d[0] === e.d[1] && !e.util) { fx.banner('Đôi! 🎲🎲', 'gold sm'); }
+      if (e.d[0] === e.d[1] && !e.util) { fx.banner('Đôi! 🎲🎲', 'gold sm'); emo(e.pid, '😎'); }
       await sleep(150 * k()); break;
     }
     case 'move': await moveAnim(e); break;
@@ -374,7 +374,7 @@ async function animate(e, v) {
     case 'salary': fx.sfx.cash(); B.coins(null, e.pid, 5); B.floatAt(e.pid, '+' + money(e.amt), '#1aa86a'); flashPc(e.pid); await sleep(300 * k()); break;
     case 'buy': case 'sold': {
       if (!e.pid) { fx.banner('Không ai mua 🤷', 'sm'); await sleep(500 * k()); break; }
-      fx.sfx.buy(); B.fireworks(e.tile, 2, [pc(e.pid), '#ffd54a']); B.floatAt(e.tile, '🏷️ ' + money(e.amt), pc(e.pid));
+      fx.sfx.buy(); emo(e.pid, '😍'); B.fireworks(e.tile, 2, [pc(e.pid), '#ffd54a']); B.floatAt(e.tile, '🏷️ ' + money(e.amt), pc(e.pid));
       if (e.t === 'sold') fx.banner(`🔨 ${nm(v, e.pid)} chốt ${money(e.amt)}!`, 'sm');
       partialProp(e.tile, { owner: e.pid, h: 0, mort: false }, v);
       await sleep(650 * k()); break;
@@ -384,27 +384,27 @@ async function animate(e, v) {
       B.coins(e.from, e.to || null, Math.min(12, 3 + Math.round(e.amt / 60)));
       B.floatAt(e.from, '-' + money(e.amt), '#e53935');
       if (e.to) setTimeout(() => B.floatAt(e.to, '+' + money(e.amt), '#1aa86a'), 450 * k());
-      if (big && e.why === 'rent') { B.shake(Math.min(0.4, 0.1 + e.amt / 2500)); fx.sfx.ouch(); fx.shakeEl(pcEl(e.from)); if (e.amt >= 600) fx.banner('💸 Đau ví!', 'red sm'); }
+      if (big && e.why === 'rent') { B.shake(Math.min(0.4, 0.1 + e.amt / 2500)); fx.sfx.ouch(); fx.shakeEl(pcEl(e.from)); emo(e.from, e.amt >= 600 ? '😭' : '😩', 'shiver'); if (e.to) setTimeout(() => emo(e.to, '🤑'), 450 * k()); if (e.amt >= 600) fx.banner('💸 Đau ví!', 'red sm'); }
       else fx.sfx.pay();
       flashPc(e.from); if (e.to) flashPc(e.to);
       await sleep(700 * k()); break;
     }
-    case 'gain': fx.sfx.cash(); B.coins(null, e.pid, 5); B.floatAt(e.pid, '+' + money(e.amt), '#1aa86a'); flashPc(e.pid); await sleep(500 * k()); break;
+    case 'gain': fx.sfx.cash(); emo(e.pid, '🤑'); B.coins(null, e.pid, 5); B.floatAt(e.pid, '+' + money(e.amt), '#1aa86a'); flashPc(e.pid); await sleep(500 * k()); break;
     case 'card': await showCard(e, v); break;
-    case 'jail': break;
-    case 'free': fx.sfx.unlock(); B.floatAt(e.pid, '🔓 Ra tù', '#1aa86a'); await sleep(300 * k()); break;
-    case 'debt': fx.sfx.bad(); if (isMine(e.pid)) fx.banner('😰 Thiếu tiền!', 'red sm'); break;
+    case 'jail': emo(e.pid, '😱', 'shiver'); break;
+    case 'free': fx.sfx.unlock(); emo(e.pid, '🥳'); B.floatAt(e.pid, '🔓 Ra tù', '#1aa86a'); await sleep(300 * k()); break;
+    case 'debt': fx.sfx.bad(); if (e.why === 'rent') emo(e.pid, '😰', 'shiver'); if (isMine(e.pid)) fx.banner('😰 Thiếu tiền!', 'red sm'); break;
     case 'auction': fx.sfx.auction(); fx.banner('🔨 Đấu giá!', 'gold'); B.pulse(e.tile, 1); await sleep(450 * k()); break;
     case 'bid': fx.sfx.bid(); B.floatAt(e.pid, '🙋 ' + money(e.amt), '#ff7a1a'); await sleep(150 * k()); break;
     case 'pass': B.floatAt(e.pid, 'Bỏ', '#8d99ae'); break;
     case 'buyback': {
-      fx.sfx.takeover(); fx.banner('💥 MUA LẠI!', 'red'); B.shake(0.25); B.coins(e.pid, e.from, 8);
+      fx.sfx.takeover(); fx.banner('💥 MUA LẠI!', 'red'); emo(e.pid, '😈'); if (e.from) emo(e.from, '😱', 'shiver'); B.shake(0.25); B.coins(e.pid, e.from, 8);
       B.floatAt(e.tile, '💥 ' + money(e.amt), pc(e.pid)); partialProp(e.tile, { ...(shown.props[e.tile] || { h: 0, mort: false }), owner: e.pid }, v);
       B.fireworks(e.tile, 3, [pc(e.pid)]); await sleep(900 * k()); break;
     }
     case 'build': {
       partialProp(e.tile, { ...(shown.props[e.tile] || {}), h: e.h, owner: e.pid, mort: false }, v);
-      if (e.h === 5) { fx.sfx.landmark(); fx.banner('🏛️ LANDMARK!', 'gold'); B.fireworks(e.tile, 6); fx.confetti(70); B.shake(0.12); await sleep(900 * k()); }
+      if (e.h === 5) { fx.sfx.landmark(); fx.banner('🏛️ LANDMARK!', 'gold'); emo(e.pid, '🤩'); B.fireworks(e.tile, 6); fx.confetti(70); B.shake(0.12); await sleep(900 * k()); }
       else { fx.sfx.build(); B.floatAt(e.tile, '🏠 -' + money(e.amt), '#ff7a1a'); await sleep(250 * k()); }
       break;
     }
@@ -415,7 +415,7 @@ async function animate(e, v) {
     case 'offer': fx.sfx.notify(); if (isMine(e.to)) fx.banner('🤝 Có kèo giao dịch!', 'sm'); break;
     case 'reject': fx.sfx.bad(); toast(`🙅 ${nm(v, e.to)} từ chối giao dịch.`); break;
     case 'traded': fx.sfx.trade(); fx.banner('🤝 Chốt kèo!', 'green'); await sleep(500 * k()); break;
-    case 'bankrupt': fx.sfx.bankrupt(); fx.banner(`💀 ${nm(v, e.pid)} phá sản!`, 'red sm'); B.shake(0.3); await sleep(1000 * k()); break;
+    case 'bankrupt': fx.sfx.bankrupt(); emo(e.pid, '😵', 'shiver'); fx.banner(`💀 ${nm(v, e.pid)} phá sản!`, 'red sm'); B.shake(0.3); await sleep(1000 * k()); break;
   }
 }
 // cập nhật tạm 1 ô trên bàn 3D giữa chuỗi hoạt ảnh (để cờ/nhà hiện đúng lúc)
@@ -936,6 +936,19 @@ function tourTile() {
   const me = mineIds(v).map(id => P(v, id)).find(p => p && !p.out); const from = me ? me.pos : 0;
   for (let k = 1; k < 40; k++) { const i = (from + k) % 40; if (TILES[i].type === 'city') return i; }
   return 1;
+}
+// 😱 Emoji cảm xúc to bật lên trên đầu quân cờ (ai trong bàn cũng thấy) – cho ván chơi sống động
+const emoLast = {};
+function emo(pid, ch, cls = '') {
+  if (!B || !B.pawnPos || !B.camera || !pid) return;
+  const r = $('#game3d').getBoundingClientRect(), p = B.pawnPos(pid).project(B.camera);
+  const vis = p.z <= 1 && Math.abs(p.x) <= 1.05 && Math.abs(p.y) <= 1.05;
+  const x = vis ? r.left + (p.x + 1) / 2 * r.width : r.left + r.width / 2, y = vis ? r.top + (1 - p.y) / 2 * r.height : r.top + r.height * .4;
+  const t = Date.now(), dx = t - (emoLast[pid] || 0) < 900 ? 46 : 0; emoLast[pid] = t; /* 2 emoji liền nhau trên cùng 1 quân thì lệch sang bên */
+  let L = document.getElementById('fx-layer'); if (!L) { L = document.createElement('div'); L.id = 'fx-layer'; document.body.appendChild(L); }
+  const el = document.createElement('div'); el.className = 'emo-pop ' + cls; el.textContent = ch;
+  el.style.left = Math.min(innerWidth - 40, Math.max(40, x + dx)) + 'px'; el.style.top = Math.max(56, y - 56) + 'px';
+  L.appendChild(el); setTimeout(() => el.remove(), 2400);
 }
 function tileRect(i) {
   if (!B || i == null) return null;

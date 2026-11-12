@@ -1,5 +1,5 @@
 // Hướng dẫn luật Cờ Tỷ Phú Sài Gòn (tiếng Việt)
-import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=55';
+import { TILES, GROUP_LIST, STATION_RENT, SALARY, JAIL_FINE, money } from './engine.js?v=57';
 import { gp, ill } from '../../shared/ui/guidepics.js?v=1';
 import { GI, GV } from './guide-img.js?v=1';
 // ô bàn cờ thu nhỏ (tự vẽ bằng CSS) để minh hoạ các loại ô
