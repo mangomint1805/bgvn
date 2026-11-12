@@ -238,6 +238,7 @@ function render() {
   if (v.phase === 'ended') showWin(v); else if (modalKey === 'win') closeModal();
 }
 function renderDiscard() {
+  if (!view) return; /* thẻ bay xong lúc đã rời ván (view = null) */
   const top = view.discardTop || [];
   $('#discard').innerHTML = top.length ? top.map((c, i) => { let h = 0; for (const ch of c.id) h = (h * 17 + ch.charCodeAt(0)) % 360; return cardHTML(c, i === top.length - 1 ? 'top' : 'under', `style="--rot:${(h % 22) - 11}deg"`); }).join('') : '<div class="empty-pile"><svg viewBox="0 0 60 30" class="fishbone" aria-hidden="true"><path d="M6 15 h40 M14 7 l4 8 l-4 8 M24 6 l4 9 l-4 9 M34 7 l4 8 l-4 8" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M46 15 l10 -8 v16 z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><circle cx="6" cy="15" r="4" fill="currentColor"/></svg>Bỏ bài</div>';
 }
