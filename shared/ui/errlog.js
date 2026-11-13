@@ -2,11 +2,21 @@
 // Không gửi gì về người chơi ngoài: game, câu báo lỗi, file:dòng, địa chỉ trang (bỏ mã phòng) và loại trình duyệt.
 // Tiết kiệm hạn mức: mỗi lần mở trang gửi tối đa 3 lỗi, cùng một lỗi mỗi máy chỉ gửi 1 lần/ngày, bỏ qua lỗi mạng và lỗi của tiện ích trình duyệt.
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
-const SKIP = /^Script error\.?$|ResizeObserver loop|Failed to fetch|Load failed|NetworkError|Importing a module script failed|dynamically imported module|AbortError|The operation was aborted|NotAllowedError|play\(\) (request|failed)|extension:\/\/|QuotaExceeded|zaloJSV2|iabjs:|Java object is gone|view transition|skipTransition|InvalidStateError|@context|isReCreate|M_ID|_META|IABInnerFrame/i; /* lỗi do trình duyệt nhúng (Zalo, Facebook) hoặc tiện ích trình duyệt chèn vào, không phải lỗi của web */
+const SKIP = /^Script error\.?$|ResizeObserver loop|Failed to fetch|Load failed|NetworkError|Importing a module script failed|dynamically imported module|AbortError|The operation was aborted|NotAllowedError|play\(\) (request|failed)|extension:\/\/|QuotaExceeded|zaloJSV2|iabjs:|Java object is gone|view transition|skipTransition|InvalidStateError|@context|isReCreate|M_ID|_META|IABInnerFrame|Error creating WebGL context/i; /* lỗi do trình duyệt nhúng (Zalo, Facebook) hoặc tiện ích trình duyệt chèn vào, không phải lỗi của web */
 const day = new Date().toISOString().slice(0, 10);
 let sent = 0, seen = {};
 try { const o = JSON.parse(ls.get('bgvn-errs') || '{}'); if (o.d === day) seen = o.k || {}; } catch (e) {}
+// Trình duyệt quá cũ không hiểu cú pháp mới (?. / ??) → cả game không chạy. Không sửa được từ phía web, nên hiện dải nhắc cập nhật thay vì để màn hình đứng im.
+let oldShown = false;
+function oldBrowser() {
+  if (oldShown || !document.body) return; oldShown = true;
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;left:8px;right:8px;top:8px;z-index:99999;background:#2a2340;color:#fff;border-radius:14px;padding:12px 14px;font:700 14px/1.4 Nunito,system-ui,sans-serif;box-shadow:0 10px 30px -8px #000a;text-align:center';
+  d.textContent = '😢 Trình duyệt này hơi cũ nên BGVN chưa chạy được. Bạn cập nhật Chrome / Safari (hoặc mở bằng trình duyệt khác) rồi vào lại nha!';
+  document.body.appendChild(d);
+}
 function report(msg, at) {
+  if (/SyntaxError: Unexpected token [?.]/.test(String(msg || ''))) { oldBrowser(); return; }
   msg = String(msg || '').slice(0, 300); at = String(at || '').replace(location.origin, '').replace(/\?v=\d+/g, '').slice(0, 160);
   if (!msg || SKIP.test(msg) || SKIP.test(at) || sent >= 3 || navigator.webdriver || !/^https:/.test(location.protocol)) return;
   const k = (msg + '|' + at).slice(0, 120); if (seen[k]) return;

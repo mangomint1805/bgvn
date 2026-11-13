@@ -172,7 +172,7 @@ $('#btn-log-close').onclick = () => $('#log').classList.remove('open');
 // ---------- gửi hành động ----------
 function send(a) { if (!net) return; if (isHost) net.act('host', a); else net.act(a); }
 const me = () => view && view.players.find(p => p.id === myId);
-const pname = id => clean((view.players.find(p => p.id === id) || {}).name || '?');
+const pname = id => clean(((view ? view.players : []).find(p => p.id === id) || {}).name || '?'); /* view = null khi đã rời ván mà hiệu ứng còn chạy */
 const isMyTurn = () => view && view.phase === 'playing' && view.players[view.turn].id === myId && !view.pending && !view.window;
 const risk = v => v.peek && v.peek.length ? (v.peek[0].t === 'bomb' ? 1 : 0) : v.bombsLeft / Math.max(1, v.deckCount);
 
