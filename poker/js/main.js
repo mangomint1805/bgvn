@@ -100,13 +100,13 @@ function renderLobby() {
   const ps = lobby.players, o = lobby.opts;
   $('#pcount').textContent = `${ps.length}/${MAX}`;
   $('#plist').innerHTML = ps.map(p => `<li>${avatar(p.name)}<span>${esc(clean(p.name))}${p.isBot ? ' 🤖' : ''}${p.id === myId ? ' <small>(bạn)</small>' : ''}${p.id === 'host' ? ' 👑' : ''}${!p.connected ? ' <small>📴</small>' : ''}</span>${isHost && p.id !== 'host' ? `<button class="x" data-rm="${p.id}" aria-label="Mời ra">✕</button>` : ''}</li>`).join('');
-  $$('#plist [data-rm]').forEach(b => b.onclick = () => net.removePlayer(b.dataset.rm));
+  $$('#plist [data-rm]').forEach(b => b.onclick = () => net && net.removePlayer(b.dataset.rm));
   $('#btn-addbot').style.display = isHost && ps.length < MAX ? '' : 'none';
   $('#opts').innerHTML = Object.entries(OPT_UI).map(([k, [title, lab, desc]]) => {
     const btns = OPT_CHOICES[k].map(v => `<button class="opt ${o[k] === v ? 'on' : ''}" data-k="${k}" data-v="${v}" ${isHost ? '' : 'disabled'}>${typeof lab === 'function' ? lab(v) : lab[v]}</button>`).join('');
     return `<div class="opt-row"><b>${title}</b><div class="opt-btns">${btns}</div>${desc ? `<small>${desc[o[k]]}</small>` : ''}</div>`;
   }).join('');
-  $$('#opts [data-k]').forEach(b => b.onclick = () => net.setOpt(b.dataset.k, b.dataset.v));
+  $$('#opts [data-k]').forEach(b => b.onclick = () => net && net.setOpt(b.dataset.k, b.dataset.v));
   $('#btn-start').style.display = isHost ? '' : 'none';
   $('#wait-msg').style.display = isHost ? 'none' : '';
 }
@@ -405,8 +405,8 @@ function onAct(a) {
   fx.actx();
   if (a === 'rebuy') { send({ type: 'rebuy' }); fx.sfx.rebuy(); return; }
   if (a === 'next') { if (isHost) net.nextNow(); return; }
-  if (a === 'again') { closeModal(); net.restart(); net.start(); return; }
-  if (a === 'lobby') { closeModal(); net.restart(); return; }
+  if (a === 'again') { closeModal(); net && net.restart(); net && net.start(); return; }
+  if (a === 'lobby') { closeModal(); net && net.restart(); return; }
   if (!L) return;
   if (a === 'fold') {
     if (L.canCheck && Date.now() > foldArmed) { foldArmed = Date.now() + 2500; toast('Đang được Xem miễn phí mà! Bấm Bỏ bài lần nữa nếu chắc 🤨'); return; }

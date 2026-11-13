@@ -87,7 +87,7 @@ const handlers = {
 function startHost(offline) {
   fx.actx(); fx.musicResumeIfOn();
   net = new Host(myName(), handlers, offline); isHost = true; myId = 'host';
-  if (offline) { session.save(GAME, { role: 'host', code: 'OFFLINE' }); net.addBot(); net.addBot(); net.addBot(); }
+  if (offline) { session.save(GAME, { role: 'host', code: 'OFFLINE' }); net && net.addBot(); net && net.addBot(); net && net.addBot(); }
   $('#code-box').style.display = offline ? 'none' : '';
   show('screen-lobby'); renderLobby();
 }
@@ -118,10 +118,10 @@ function renderLobby() {
   $('#pcount').textContent = `${ps.length}/${MAX}`;
   $('#plist').innerHTML = ps.map((p, i) => {
     const tag = p.id === 'host' ? '👑 Chủ phòng' : p.isBot ? '🤖 Bot' : p.connected ? '🌐 Online' : '📴 Mất kết nối';
-    return `<li><span class="av" style="background:${PCOL[i % 8]}33">${p.isBot ? '🤖' : '🐪'}</span><div><b>${esc(p.name)}</b>${p.id === myId ? ' <small>(bạn)</small>' : ''}<br><small>${tag}</small></div>${isHost && p.id !== 'host' ? `<button class="x" ${fnAttr('lobby', () => net.removePlayer(p.id))} aria-label="Mời ra">✕</button>` : ''}</li>`;
+    return `<li><span class="av" style="background:${PCOL[i % 8]}33">${p.isBot ? '🤖' : '🐪'}</span><div><b>${esc(p.name)}</b>${p.id === myId ? ' <small>(bạn)</small>' : ''}<br><small>${tag}</small></div>${isHost && p.id !== 'host' ? `<button class="x" ${fnAttr('lobby', () => net && net.removePlayer(p.id))} aria-label="Mời ra">✕</button>` : ''}</li>`;
   }).join('');
   $('#opts').innerHTML = OPTS.map(([key, name, list, hint]) => `<div class="opt"><b>${name}</b><div class="seg">${list.map(([v, n]) =>
-    `<button class="${lobby.opts[key] === v ? 'on' : ''}" ${isHost ? fnAttr('lobby', () => net.setOpt(key, v)) : 'disabled'}>${n}</button>`).join('')}</div>${hint ? `<small>${hint}</small>` : ''}</div>`).join('') +
+    `<button class="${lobby.opts[key] === v ? 'on' : ''}" ${isHost ? fnAttr('lobby', () => net && net.setOpt(key, v)) : 'disabled'}>${n}</button>`).join('')}</div>${hint ? `<small>${hint}</small>` : ''}</div>`).join('') +
     `<div class="opt"><b>🪙 Tiền</b><small>Mỗi người 3 xu ảo. Vé chặng 5/3/2/2 · cược chung cuộc 8/5/3/2/1 · sai −1. Chơi vui bằng xu ảo, không cá cược tiền thật.</small></div>`;
   $('#btn-addbot').style.display = isHost ? '' : 'none'; $('#btn-addbot').disabled = ps.length >= MAX;
   $('#btn-start').style.display = isHost ? '' : 'none'; $('#wait-msg').style.display = isHost ? 'none' : '';
@@ -400,7 +400,7 @@ function renderPanel() {
   if (v.phase === 'ended') {
     const r = v.result;
     el.innerHTML = `<div class="line"><span>🏆 <b>${CAMEL[r.win].name}</b> về nhất · 🐢 <b>${CAMEL[r.lose].name}</b> về bét. ${r.winners.includes(v.me) ? '<b>Bạn thắng!</b> 🤑' : `${esc(r.winners.map(id => nm(v, id)).join(', '))} thắng.`}</span></div>
-      <div class="btns">${btn('panel', '🏆 Xem kết quả', () => showEnd(v), 'gold')}${isHost ? btn('panel', '🔁 Đua ván mới', () => net.restart(), 'pri') : ''}</div>`;
+      <div class="btns">${btn('panel', '🏆 Xem kết quả', () => showEnd(v), 'gold')}${isHost ? btn('panel', '🔁 Đua ván mới', () => net && net.restart(), 'pri') : ''}</div>`;
     if (!flat) B.markSpaces([]);
     return;
   }
@@ -464,7 +464,7 @@ function showEnd(v) {
       <h3 style="margin:10px 0 2px">🂠 Lật bài cược chung cuộc</h3><table class="sum-tbl">${betRows(r.winBets, '🏆')}${betRows(r.loseBets, '🐢')}</table>
       <h3 style="margin:10px 0 2px">🪙 Bảng xu</h3><table class="sum-tbl">${order.map((p, i) => `<tr class="${isMine(p.id) ? 'me' : ''}"><td>${i + 1}.</td><td><b>${esc(nm(v, p.id))}</b>${r.winners.includes(p.id) ? ' 👑' : ''}</td><td>🪙 ${p.coins}</td></tr>`).join('')}</table>
       <p class="note" style="text-align:center">Chơi vui bằng xu ảo, không cá cược tiền thật.</p>
-      <div class="mbtns">${isHost ? btn('modal', '🔁 Đua ván mới', () => { closeModal(); net.restart(); }, 'pri') : ''}${btn('modal', '🗺️ Xem đường đua', closeModal, 'ghost')}${btn('modal', '🏠 Về trang chủ', leave, 'ghost')}</div>`, 'wide', 'end');
+      <div class="mbtns">${isHost ? btn('modal', '🔁 Đua ván mới', () => { closeModal(); net && net.restart(); }, 'pri') : ''}${btn('modal', '🗺️ Xem đường đua', closeModal, 'ghost')}${btn('modal', '🏠 Về trang chủ', leave, 'ghost')}</div>`, 'wide', 'end');
   }, 900 * k());
 }
 

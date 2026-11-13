@@ -65,7 +65,7 @@ function startHost(offline) {
   fx.actx(); fx.musicResumeIfOn();
   if (net && net.leave) net.leave();
   net = new Host(myName(), handlers, offline); isHost = true; myId = 'host';
-  if (offline) { session.save(GAME, { role: 'host', code: 'OFFLINE' }); net.addBot(); net.addBot(); net.addBot(); }
+  if (offline) { session.save(GAME, { role: 'host', code: 'OFFLINE' }); net && net.addBot(); net && net.addBot(); net && net.addBot(); }
   $('#code-box').style.display = offline ? 'none' : '';
   show('screen-lobby');
 }
@@ -86,7 +86,7 @@ $('#btn-leave-lobby').onclick = leave;
 $('#btn-leave').onclick = () => openModal(`<h2>Rời bàn?</h2><p style="text-align:center">${isHost ? 'Bạn là chủ phòng – rời đi là cả bàn giải tán. Muốn đổi luật thì bấm <b>Về sảnh</b> (giữ nguyên chip).' : 'Bạn có thể vào lại bằng mã phòng.'}</p><div class="btns"><button class="btn" onclick="__closeModal()">Ở lại</button>${isHost ? '<button class="btn" id="m-lobby">🏠 Về sảnh</button>' : ''}<button class="btn red" id="m-leave">Rời bàn</button></div>`);
 document.addEventListener('click', e => {
   if (e.target.id === 'm-leave') leave();
-  if (e.target.id === 'm-lobby' && isHost && net) { closeModal(); net.restart(); }
+  if (e.target.id === 'm-lobby' && isHost && net) { closeModal(); net && net.restart(); }
 });
 $('#btn-copy').onclick = () => { const url = inviteUrl($('#room-code').textContent); navigator.clipboard?.writeText(url).then(() => toast('Đã chép link mời 📋'), () => toast(url)); };
 
@@ -119,12 +119,12 @@ function renderLobby() {
   $('#plist').innerHTML = ps.map(p => `<li>${avatar(p.name)}<span class="nm">${esc(p.name)}${p.id === myId ? ' <small>(bạn)</small>' : ''}${p.id === 'host' ? ' <small>· chủ phòng</small>' : ''}${!p.connected ? ' 📴' : ''}${p.chips != null ? `<br><small>💰 ${fmt(p.chips)} chip</small>` : ''}</span>
     ${isHost ? `<button class="mk ${caiFixed === p.id ? 'on' : ''}" data-cai="${p.id}" title="Cho làm cái">👑${caiFixed === p.id ? ' Cái' : ''}</button>` : caiFixed === p.id ? '<span class="mk on">👑 Cái</span>' : ''}
     ${isHost && p.id !== 'host' ? `<button class="x" data-rm="${p.id}" aria-label="Mời ra">✕</button>` : ''}</li>`).join('');
-  $$('#plist [data-rm]').forEach(b => b.onclick = () => net.removePlayer(b.dataset.rm));
-  $$('#plist [data-cai]').forEach(b => b.onclick = () => net.setOpt('caiId', b.dataset.cai));
+  $$('#plist [data-rm]').forEach(b => b.onclick = () => net && net.removePlayer(b.dataset.rm));
+  $$('#plist [data-cai]').forEach(b => b.onclick = () => net && net.setOpt('caiId', b.dataset.cai));
   $('#btn-addbot').style.display = isHost && ps.length < MAX ? '' : 'none';
   $('#btn-reset-chips').style.display = isHost && ps.some(p => p.chips != null) ? '' : 'none';
   $('#opts').innerHTML = OPT_UI.map(([k, label, ch]) => `<div class="opt"><b>${label}</b><div class="seg">${ch.map(([v, t]) => `<button data-k="${k}" data-v="${String(v)}" class="${o[k] === v ? 'on' : ''}" ${dis}>${t}</button>`).join('')}</div>${OPT_DESC[k] ? `<small>${OPT_DESC[k](o)}</small>` : ''}</div>`).join('');
-  $$('#opts [data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k; const v = OPT_CHOICES[k].find(x => String(x) === b.dataset.v); net.setOpt(k, v); });
+  $$('#opts [data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k; const v = OPT_CHOICES[k].find(x => String(x) === b.dataset.v); net && net.setOpt(k, v); });
   $('#btn-start').style.display = isHost ? '' : 'none';
   $('#wait-msg').style.display = isHost ? 'none' : '';
 }

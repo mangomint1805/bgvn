@@ -91,7 +91,7 @@ function startHost(offline) {
   fx.actx(); fx.musicResumeIfOn();
   if (net) (net.leave ? net.leave() : net.destroy());
   net = new Host(myName(), handlers, offline); isHost = true; myId = 'host';
-  if (offline) { session.save('tienlen', { role: 'host', code: 'OFFLINE' }); net.addBot(); net.addBot(); net.addBot(); }
+  if (offline) { session.save('tienlen', { role: 'host', code: 'OFFLINE' }); net && net.addBot(); net && net.addBot(); net && net.addBot(); }
   $('#code-box').style.display = offline ? 'none' : '';
   show('screen-lobby');
 }
@@ -126,7 +126,7 @@ function renderLobby() {
   $('#pcount').textContent = `${ps.length}/${MAX}`;
   $('#plist').innerHTML = ps.map(p => `<li>${avatar(p.name)}<span class="pn">${esc(clean(p.name))}${p.isBot ? ' 🤖' : ''}${p.id === myId ? ' <small>(bạn)</small>' : ''}${p.id === 'host' ? ' 👑' : ''}${!p.connected ? ' <small>📴</small>' : ''}<small class="pc-chips">🪙 ${fmt(p.chips)}</small></span>
     ${p.isBot ? `<button class="chip sm lvl" data-lvl="${p.id}" ${dis} title="Đổi độ khó">${LEVELS[p.level || 'normal']}</button>` : ''}${isHost && p.id !== 'host' ? `<button class="x" data-rm="${p.id}" aria-label="Mời ra">✕</button>` : ''}</li>`).join('');
-  $$('#plist [data-rm]').forEach(b => b.onclick = () => net.removePlayer(b.dataset.rm));
+  $$('#plist [data-rm]').forEach(b => b.onclick = () => net && net.removePlayer(b.dataset.rm));
   const LV = Object.keys(LEVELS);
   $$('#plist [data-lvl]').forEach(b => b.onclick = () => { const p = ps.find(x => x.id === b.dataset.lvl); net.setBotLevel(p.id, LV[(LV.indexOf(p.level || 'normal') + 1) % LV.length]); });
   $('#btn-addbot').style.display = isHost && ps.length < MAX ? '' : 'none';
@@ -137,10 +137,10 @@ function renderLobby() {
     <div class="opt-line"><b>🐷 Về heo</b><div class="seg wrap">${Object.entries(VE_HEO).map(([k, t]) => `<button class="chip ${(o.veHeo || DEFAULT_OPTS.veHeo) === k ? 'on' : ''}" data-vh="${k}" ${dis}>${t}</button>`).join('')}</div></div>
     <div class="opt-line"><b>⏱ Giờ mỗi lượt</b><div class="seg">${TURN_TIMES.map(t => `<button class="chip ${o.turnTime === t ? 'on' : ''}" data-tt="${t}" ${dis}>${t}s</button>`).join('')}</div></div>
     <p class="opt-note">Heo đen ${o.bet} · heo đỏ ${2 * o.bet} · tứ quý ${4 * o.bet} chip… chi tiết trong 📖 Hướng dẫn.</p>`;
-  $$('#opts [data-bet]').forEach(b => b.onclick = () => net.setOpt('bet', +b.dataset.bet));
-  $$('#opts [data-vh]').forEach(b => b.onclick = () => net.setOpt('veHeo', b.dataset.vh));
-  $$('#opts [data-tt]').forEach(b => b.onclick = () => net.setOpt('turnTime', +b.dataset.tt));
-  $$('#opts [data-opt]').forEach(i => i.onchange = () => net.setOpt(i.dataset.opt, i.checked));
+  $$('#opts [data-bet]').forEach(b => b.onclick = () => net && net.setOpt('bet', +b.dataset.bet));
+  $$('#opts [data-vh]').forEach(b => b.onclick = () => net && net.setOpt('veHeo', b.dataset.vh));
+  $$('#opts [data-tt]').forEach(b => b.onclick = () => net && net.setOpt('turnTime', +b.dataset.tt));
+  $$('#opts [data-opt]').forEach(i => i.onchange = () => net && net.setOpt(i.dataset.opt, i.checked));
   $('#btn-start').style.display = isHost ? '' : 'none';
   $('#btn-start').textContent = lobby.gameNo ? `▶ Chia ván ${lobby.gameNo + 1}` : '▶ Chia bài';
   $('#wait-msg').style.display = isHost ? 'none' : '';
@@ -529,8 +529,8 @@ function showEnd(v) {
       <div class="btns">${btns}</div></div>`, 'end-box', 'end');
     $('#modal-box').dataset.g = String(v2.gameNo);
     renderEndBeg();
-    const ag = $('#m-again'); if (ag) ag.onclick = () => { closeModal(); net.restart(); net.start(); };
-    const lb = $('#m-lobby'); if (lb) lb.onclick = () => { closeModal(); net.restart(); };
+    const ag = $('#m-again'); if (ag) ag.onclick = () => { closeModal(); net && net.restart(); net && net.start(); };
+    const lb = $('#m-lobby'); if (lb) lb.onclick = () => { closeModal(); net && net.restart(); };
   }, (v.toiTrang ? 2600 : 1700));
 }
 function renderEndBeg() {

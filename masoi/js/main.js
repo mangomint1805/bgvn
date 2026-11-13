@@ -94,7 +94,7 @@ function startHost(offline) {
   fx.actx(); fx.musicResumeIfOn();
   if (net && net.leave) net.leave();
   net = new Host(myName(), handlers, offline); isHost = true; myId = 'host';
-  if (offline) { session.save(GAME, { role: 'host', code: 'OFFLINE' }); net.addBot(7); }
+  if (offline) { session.save(GAME, { role: 'host', code: 'OFFLINE' }); net && net.addBot(7); }
   $('#code-box').style.display = offline ? 'none' : '';
   show('screen-lobby');
 }
@@ -145,7 +145,7 @@ function renderLobby() {
   const ps = lobby.players, o = lobby.opts, n = ps.length, dis = isHost ? '' : 'disabled';
   $('#pcount').textContent = `${n}/${MAX}`;
   $('#plist').innerHTML = ps.map(p => `<li class="${p.id === myId ? 'me' : ''}">${avatar(p.name, p.isBot)}<span class="pn">${esc(clean(p.name))}</span>${p.id === myId || p.id === 'host' || !p.connected ? `<span class="tg">${p.id === myId ? '<small>(bạn)</small>' : ''}${p.id === 'host' ? '👑' : ''}${!p.connected ? '📴' : ''}</span>` : ''}${isHost && p.id !== 'host' ? `<button class="x" data-rm="${p.id}" aria-label="Mời ra">✕</button>` : ''}</li>`).join('');
-  $$('#plist [data-rm]').forEach(b => b.onclick = () => net.removePlayer(b.dataset.rm));
+  $$('#plist [data-rm]').forEach(b => b.onclick = () => net && net.removePlayer(b.dataset.rm));
   $('#btn-addbot').style.display = isHost && n < MAX ? '' : 'none';
   $('#btn-fill').style.display = isHost && n < 8 ? '' : 'none';
   $('#btn-fill').textContent = `🤖 Thêm ${8 - n} bot cho đủ 8`;
@@ -581,7 +581,7 @@ function renderAct() {
   on('a-shoot', () => send({ type: 'shoot', target: sel[0] }));
   on('a-noshoot', () => send({ type: 'shoot', target: null }));
   on('a-result', endModal);
-  on('a-again', () => { closeModal(); net.restart(); });
+  on('a-again', () => { closeModal(); net && net.restart(); });
 }
 // ban đêm chưa tới lượt: nói rõ cho người mới là mình có việc gì không, đã xong hay sắp tới lượt
 const NIGHT_ORDER = ['thief', 'cupid', 'guard', 'hunter', 'seer', 'medium', 'wolves', 'witch'];
@@ -747,7 +747,7 @@ function endModal() {
     <div class="endgrid">${v.players.map(p => `<div class="ec ${ids.has(p.id) ? 'won' : 'lose'}">${roleCardSVG(p.role)}<div class="nm">${ids.has(p.id) ? '🏆 ' : ''}${esc(clean(p.name))}${p.alive ? '' : ' 💀'}${p.lover ? ' 💘' : ''}</div></div>`).join('')}</div>
     ${coachTipEnd(ctx())}
     <div class="btns"><button class="btn purple" id="e-replay">🎞️ Xem lại cả ván</button>${isHost ? '<button class="btn pri" id="e-again">🔁 Chơi ván mới</button>' : ''}<button class="btn" onclick="__closeModal()">Xem bàn</button></div>`, 'wide', 'end');
-  const b = $('#e-again'); if (b) b.onclick = () => { closeModal(); net.restart(); };
+  const b = $('#e-again'); if (b) b.onclick = () => { closeModal(); net && net.restart(); };
   $('#e-replay').onclick = () => openReplay(ctx(), 0);
 }
 // ---------- thả emoji / chọc nhau (shared/ui/react.js) ----------

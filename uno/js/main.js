@@ -64,7 +64,7 @@ function startHost(offline) {
   if (net && net.leave) net.leave();
   net = new Host(myName(), handlers, offline); isHost = true; myId = 'host';
   if (offline) session.save('uno', { role: 'host', code: 'OFFLINE' });
-  if (offline) { net.addBot(); net.addBot(); net.addBot(); }
+  if (offline) { net && net.addBot(); net && net.addBot(); net && net.addBot(); }
   $('#code-box').style.display = offline ? 'none' : '';
   show('screen-lobby');
 }
@@ -106,12 +106,12 @@ function renderLobby() {
   const ps = lobby.players;
   $('#pcount').textContent = `${ps.length}/${MAX}`;
   $('#plist').innerHTML = ps.map(p => `<li>${avatar(p.name)}<span>${esc(p.name)}${p.id === myId ? ' <small>(bạn)</small>' : ''}${p.id === 'host' ? ' 👑' : ''}${!p.connected ? ' <small>📴</small>' : ''}</span>${isHost && p.id !== 'host' ? `<button class="x" data-rm="${p.id}">✕</button>` : ''}</li>`).join('');
-  $$('#plist [data-rm]').forEach(b => b.onclick = () => net.removePlayer(b.dataset.rm));
+  $$('#plist [data-rm]').forEach(b => b.onclick = () => net && net.removePlayer(b.dataset.rm));
   $('#btn-addbot').style.display = isHost ? '' : 'none';
   $('#modes').innerHTML = Object.entries(MODES).map(([k, m]) => `<button class="mode ${lobby.mode === k ? 'on' : ''}" data-mode="${k}" ${isHost ? '' : 'disabled'}><b>${k === 'nomercy' ? '💀 ' : k === 'house' ? '🔥 ' : '🎴 '}${m.name}</b><small>${MODE_DESC[k]}</small></button>`).join('');
-  $$('#modes [data-mode]').forEach(b => b.onclick = () => net.setMode(b.dataset.mode));
+  $$('#modes [data-mode]').forEach(b => b.onclick = () => net && net.setMode(b.dataset.mode));
   $('#rules').innerHTML = Object.entries(RULE_INFO).map(([k, [t, d]]) => `<label class="rule"><input type="checkbox" data-rule="${k}" ${lobby.rules[k] ? 'checked' : ''} ${isHost ? '' : 'disabled'}><span><b>${t}</b><small>${d}</small></span></label>`).join('');
-  $$('#rules [data-rule]').forEach(i => i.onchange = () => net.setRule(i.dataset.rule, i.checked));
+  $$('#rules [data-rule]').forEach(i => i.onchange = () => net && net.setRule(i.dataset.rule, i.checked));
   renderMatchOpt();
   $('#btn-start').style.display = isHost ? '' : 'none';
   $('#wait-msg').style.display = isHost ? 'none' : '';
@@ -123,9 +123,9 @@ function renderMatchOpt() {
   $('#match-opt').innerHTML = `<label class="rule"><input type="checkbox" id="match-on" ${m.on ? 'checked' : ''} ${dis}><span><b>🏆 Tính điểm tới ${m.target}</b><small>Chơi nhiều ván. Hết ván, người về nhất cộng điểm theo bài còn trên tay người khác (số = mặt số, lá chức năng 20, Đổi màu/+4/lá mở rộng 50). Ai đạt ${m.target} điểm trước là vô địch!</small></span></label>
     <div class="targets ${m.on ? '' : 'off'}"><span>Mục tiêu:</span>${MATCH_TARGETS.map(t => `<button class="chip ${m.target === t ? 'on' : ''}" data-target="${t}" ${dis}>${t}</button>`).join('')}</div>
     ${m.on && m.round ? `<div class="lobby-score"><b>Bảng điểm sau ${m.round} ván</b>${scoreRows(m, lobby.players)}${isHost ? '<button class="chip sm" id="match-reset">🧹 Xoá điểm, chơi lại từ đầu</button>' : ''}</div>` : ''}`;
-  const on = $('#match-on'); if (on) on.onchange = () => net.setMatch(on.checked, m.target);
-  $$('#match-opt [data-target]').forEach(b => b.onclick = () => net.setMatch(true, +b.dataset.target));
-  const rs = $('#match-reset'); if (rs) rs.onclick = () => net.resetMatch();
+  const on = $('#match-on'); if (on) on.onchange = () => net && net.setMatch(on.checked, m.target);
+  $$('#match-opt [data-target]').forEach(b => b.onclick = () => net && net.setMatch(true, +b.dataset.target));
+  const rs = $('#match-reset'); if (rs) rs.onclick = () => net && net.resetMatch();
 }
 // các hàng bảng điểm: tên, (điểm ván vừa rồi), tổng, thanh tiến độ tới mục tiêu
 function scoreRows(m, players, withLast = false) {
@@ -405,8 +405,8 @@ function showWin(v) {
     openModal(`<div class="win">${head}${body}
       <div class="btns">${isHost ? `<button class="btn pri" id="m-again">${again}</button><button class="btn" id="m-lobby">Về sảnh</button>` : `<p>Chờ chủ phòng mở ${m && !champ ? 'ván tiếp' : 'ván mới'}…</p>`}</div></div>`, '', 'win');
     if (champ) { fx.fireworks(9); fx.confetti(); }
-    const ag = $('#m-again'); if (ag) ag.onclick = () => { closeModal(); net.restart(); net.start(); };
-    const lb = $('#m-lobby'); if (lb) lb.onclick = () => { closeModal(); net.restart(); };
+    const ag = $('#m-again'); if (ag) ag.onclick = () => { closeModal(); net && net.restart(); net && net.start(); };
+    const lb = $('#m-lobby'); if (lb) lb.onclick = () => { closeModal(); net && net.restart(); };
   }, 1400 * fx.S());
 }
 

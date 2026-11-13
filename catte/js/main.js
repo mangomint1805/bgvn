@@ -63,7 +63,7 @@ function startHost(offline) {
   fx.actx(); fx.musicResumeIfOn();
   if (net && net.leave) net.leave();
   net = new Host(myName(), handlers, offline); isHost = true; myId = 'host';
-  if (offline) { session.save(GAME, { role: 'host', code: 'OFFLINE' }); net.addBot(); net.addBot(); net.addBot(); }
+  if (offline) { session.save(GAME, { role: 'host', code: 'OFFLINE' }); net && net.addBot(); net && net.addBot(); net && net.addBot(); }
   $('#code-box').style.display = offline ? 'none' : '';
   show('screen-lobby');
 }
@@ -101,7 +101,7 @@ function renderLobby() {
   const ps = lobby.players, o = lobby.opts;
   $('#pcount').textContent = `${ps.length}/${MAX}`;
   $('#plist').innerHTML = ps.map(p => `<li><div class="av" style="background:${avColor(p.name)}">${initial(p.name)}</div><span>${esc(clean(p.name))}${p.isBot ? ' 🤖' : ''}${p.id === myId ? ' <small>(bạn)</small>' : ''}${p.id === 'host' ? ' 👑' : ''}${!p.connected ? ' <small>📴</small>' : ''}${p.chips != null ? ` <small class="chipn">🪙${fmt(p.chips)}</small>` : ''}</span>${isHost && p.id !== 'host' ? `<button class="x" data-rm="${p.id}" aria-label="Mời ra">✕</button>` : ''}</li>`).join('');
-  $$('#plist [data-rm]').forEach(b => b.onclick = () => net.removePlayer(b.dataset.rm));
+  $$('#plist [data-rm]').forEach(b => b.onclick = () => net && net.removePlayer(b.dataset.rm));
   $('#btn-addbot').style.display = isHost && ps.length < MAX ? '' : 'none';
   const dis = isHost ? '' : 'disabled';
   const sel_ = (k, label, sub, fmtv) => `<label class="opt"><span><b>${label}</b><small>${sub}</small></span><select data-opt="${k}" ${dis}>${OPT_CHOICES[k].map(v => `<option value="${v}" ${String(o[k]) === String(v) ? 'selected' : ''}>${fmtv(v)}</option>`).join('')}</select></label>`;
@@ -111,7 +111,7 @@ function renderLobby() {
     sel_('showdown', '🔥 Vòng 5', 'Chưng: chọn lá úp cùng lúc rồi lật.', v => v === 'chung' ? '🤫 Chưng bài' : '👀 Đánh lần lượt') +
     sel_('turnTime', '⏱ Đồng hồ mỗi lượt', 'Hết giờ máy đánh giùm.', v => v + ' giây') +
     Object.entries(OPT_TXT).map(([k, [t, sub]]) => `<label class="opt"><input type="checkbox" data-opt="${k}" ${o[k] ? 'checked' : ''} ${dis}><span><b>${t}</b><small>${sub}</small></span></label>`).join('');
-  $$('#opts [data-opt]').forEach(i => i.onchange = () => net.setOpt(i.dataset.opt, i.type === 'checkbox' ? i.checked : i.value));
+  $$('#opts [data-opt]').forEach(i => i.onchange = () => net && net.setOpt(i.dataset.opt, i.type === 'checkbox' ? i.checked : i.value));
   $('#btn-start').style.display = isHost ? '' : 'none';
   $('#wait-msg').style.display = isHost ? 'none' : '';
 }
@@ -386,7 +386,7 @@ function showResult(force = false) {
     <div class="btns">${btns}</div><p class="note">🎈 Chip ảo, chơi cho vui – không có giá trị thật.</p></div>`, 'wide', 'result');
   const b = id => $('#' + id);
   if (b('r-next')) b('r-next').onclick = () => { closeModal(); net.nextHand(); };
-  if (b('r-lobby')) b('r-lobby').onclick = () => { closeModal(); net.restart(); };
+  if (b('r-lobby')) b('r-lobby').onclick = () => { closeModal(); net && net.restart(); };
   if (b('r-refill')) b('r-refill').onclick = () => { send({ type: 'refill' }); fx.sfx.chips(8); b('r-refill').remove(); };
   b('r-close').onclick = closeModal;
 }

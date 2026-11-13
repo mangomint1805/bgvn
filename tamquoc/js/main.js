@@ -130,7 +130,7 @@ function renderLobby() {
   const ul = $('#plist'); ul.innerHTML = '';
   lobby.forEach((p, i) => {
     const li = el('li', '', `<span class="av" style="background:${AVC[i % AVC.length]}">${esc((p.name || '?').replace(' 🤖', '').slice(0, 1).toUpperCase())}</span><span class="nm">${esc(p.name)}${p.id === 'host' ? ' <small>👑 chủ phòng</small>' : ''}${p.id === myId ? ' <small>(bạn)</small>' : ''}${p.connected === false ? ' <small class="off">(mất kết nối)</small>' : ''}</span>`);
-    if (isHost && p.id !== 'host') { const b = el('button', 'x', '✕'); b.title = p.isBot ? 'Xoá bot' : 'Mời ra'; b.onclick = () => net.removePlayer(p.id); li.appendChild(b); }
+    if (isHost && p.id !== 'host') { const b = el('button', 'x', '✕'); b.title = p.isBot ? 'Xoá bot' : 'Mời ra'; b.onclick = () => net && net.removePlayer(p.id); li.appendChild(b); }
     ul.appendChild(li);
   });
   const n = lobby.length;
@@ -726,7 +726,7 @@ function renderActions() {
   if (v.phase === 'ended') {
     box.appendChild(el('div', 'winner', winText(v.winner)));
     add('📋 Kết quả', '', showResults);
-    if (isHost) add('🔁 Về phòng chờ', 'pri', () => net.restart());
+    if (isHost) add('🔁 Về phòng chờ', 'pri', () => net && net.restart());
     return;
   }
   if (!m) return;
@@ -898,7 +898,7 @@ function showResults() {
     <div class="res-list">${v.players.map(p => `<div class="res-row${side(p.role) === v.winner ? ' win' : ''}${!p.alive ? ' dead' : ''}"><div class="res-ava">${p.general ? portrait(p.general) : blankPortrait()}</div><div><b>${esc(p.name)}${p.id === myId ? ' (bạn)' : ''}</b><small>${p.general ? GENERALS[p.general].name : ''}${p.alive ? '' : ' · ☠ tử trận'}</small></div>${roleChip(p)}</div>`).join('')}</div>
     <div class="row">${isHost ? '<button class="btn pri" id="r-again">🔁 Về phòng chờ</button>' : ''}<button class="btn" id="r-close">Xem bàn</button></div></div>`);
   modalSig = 'info';
-  $('#r-close').onclick = closeModal; if ($('#r-again')) $('#r-again').onclick = () => { closeModal(); net.restart(); };
+  $('#r-close').onclick = closeModal; if ($('#r-again')) $('#r-again').onclick = () => { closeModal(); net && net.restart(); };
 }
 
 // ---- nhật ký ----

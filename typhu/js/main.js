@@ -190,7 +190,7 @@ const handlers = {
 function startHost(offline) {
   fx.actx(); fx.musicResumeIfOn();
   net = new Host(meProfile(), handlers, offline); isHost = true; myId = 'host';
-  if (offline) { session.save('typhu', { role: 'host', code: 'OFFLINE' }); net.addBot(); net.addBot(); net.addBot(); }
+  if (offline) { session.save('typhu', { role: 'host', code: 'OFFLINE' }); net && net.addBot(); net && net.addBot(); net && net.addBot(); }
   $('#code-box').style.display = offline ? 'none' : '';
   show('screen-lobby'); renderLobby();
 }
@@ -233,11 +233,11 @@ function renderLobby() {
   $('#pcount').textContent = `${ps.length}/${MAX}`;
   $('#plist').innerHTML = ps.map(p => {
     const tag = p.id === 'host' ? '👑 Chủ phòng' : p.isBot ? '🤖 Máy' : p.local ? '🎮 Cùng máy' : p.connected ? '🌐 Online' : '📴 Mất kết nối';
-    return `<li><img src="${pic(p.avatar, 88)}" alt=""><div><b>${esc(p.name)}</b>${p.id === myId ? ' <small>(bạn)</small>' : ''}<br><small>${tag}</small></div>${isHost && p.id !== 'host' ? `<button class="x" ${fnAttr('lobby', () => net.removePlayer(p.id))} aria-label="Mời ra">✕</button>` : ''}</li>`;
+    return `<li><img src="${pic(p.avatar, 88)}" alt=""><div><b>${esc(p.name)}</b>${p.id === myId ? ' <small>(bạn)</small>' : ''}<br><small>${tag}</small></div>${isHost && p.id !== 'host' ? `<button class="x" ${fnAttr('lobby', () => net && net.removePlayer(p.id))} aria-label="Mời ra">✕</button>` : ''}</li>`;
   }).join('');
   const offline = net && net.offline;
   $('#opts').innerHTML = OPTS.filter(o => !(o[4] && offline)).map(([k, name, list, hint]) => `<div class="opt"><b>${name}</b><div class="seg">${list.map(([v, n]) =>
-    `<button class="${lobby.opts[k] === v ? 'on' : ''}" ${isHost ? fnAttr('lobby', () => net.setOpt(k, v)) : 'disabled'}>${n}</button>`).join('')}</div>${hint ? `<small>${hint}</small>` : ''}</div>`).join('');
+    `<button class="${lobby.opts[k] === v ? 'on' : ''}" ${isHost ? fnAttr('lobby', () => net && net.setOpt(k, v)) : 'disabled'}>${n}</button>`).join('')}</div>${hint ? `<small>${hint}</small>` : ''}</div>`).join('');
   $('#btn-addbot').style.display = $('#btn-addlocal').style.display = isHost ? '' : 'none';
   $('#btn-addbot').disabled = $('#btn-addlocal').disabled = ps.length >= MAX;
   $('#btn-start').style.display = isHost ? '' : 'none'; $('#wait-msg').style.display = isHost ? 'none' : '';
@@ -560,7 +560,7 @@ function renderPanel() {
     const w = P(v, v.winner);
     lines.push(head(v.winner, `🏆 <b>${esc(w ? w.name : '?')}</b> thắng ván này!`));
     btns.push(btn('panel', '🏆 Xem kết quả', () => showWin(v), 'gold main'));
-    if (isHost) btns.push(btn('panel', '🔁 Ván mới', () => net.restart(), 'pri'));
+    if (isHost) btns.push(btn('panel', '🔁 Ván mới', () => net && net.restart(), 'pri'));
     el.innerHTML = lines.join('') + `<div class="btns">${btns.join('')}</div>`; return;
   }
   const actor = v.actor, A = P(v, actor), mine = isMine(actor), who = youOr(v, actor), me = mine ? actor : null;
@@ -1047,7 +1047,7 @@ function showWin(v) {
     openModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><div class="win"><div class="trophy">🏆</div>${w ? `<img src="${pic(w.avatar, 200)}" alt="">` : ''}
       <h2>${esc(w ? w.name : '?')} THẮNG!</h2><p style="margin:0;font-weight:700">${why}</p>
       <ol>${v.ranks.map(id => { const p = P(v, id); return p ? `<li>${esc(p.name)} – ${p.out ? 'phá sản' : '💎 ' + money(v.worth[id] || 0)}</li>` : ''; }).join('')}</ol></div>
-      <div class="mbtns">${isHost ? btn('modal', '🔁 Ván mới', () => { closeModal(); net.restart(); }, 'pri') : ''}${btn('modal', '🗺️ Xem bàn cờ', closeModal, 'ghost')}${btn('modal', '🏠 Về trang chủ', leave, 'ghost')}</div>`, '', 'win');
+      <div class="mbtns">${isHost ? btn('modal', '🔁 Ván mới', () => { closeModal(); net && net.restart(); }, 'pri') : ''}${btn('modal', '🗺️ Xem bàn cờ', closeModal, 'ghost')}${btn('modal', '🏠 Về trang chủ', leave, 'ghost')}</div>`, '', 'win');
   }, w ? 2200 * k() : 300);
 }
 

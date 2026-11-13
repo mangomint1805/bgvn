@@ -135,7 +135,7 @@ function openSolo() {
     fx.actx(); fx.musicResumeIfOn();
     if (net && net.offline) net.restart();
     else { if (net) net.leave(); net = new Host(myName(), handlers, null, true); isHost = true; myId = 'host'; }
-    net.setOpts({ mode: 'gartic', gmode: 'solo', frames: fr, fps, drawTime: dt }); net.start();
+    net.setOpts({ mode: 'gartic', gmode: 'solo', frames: fr, fps, drawTime: dt }); net && net.start();
   };
 }
 $('#btn-solo').onclick = openSolo;
@@ -177,12 +177,12 @@ function renderLobby() {
   $('#pcount').textContent = `${ps.length}/${mx}`;
   $('#code-box').style.display = net && net.offline ? 'none' : '';
   $('#plist').innerHTML = ps.map(p => `<li>${avatar(p.name)}<span class="nm">${esc(p.name)}${p.id === myId ? ' <small>(bạn)</small>' : ''}${p.id === 'host' ? ' 👑' : ''}${!p.connected ? ' <small>📴</small>' : ''}</span>${isHost && p.id !== 'host' ? `<button class="x" data-rm="${p.id}" aria-label="Mời ra">✕</button>` : ''}</li>`).join('');
-  $$('#plist [data-rm]').forEach(b => b.onclick = () => net.removePlayer(b.dataset.rm));
+  $$('#plist [data-rm]').forEach(b => b.onclick = () => net && net.removePlayer(b.dataset.rm));
   const online = ps.filter(p => p.connected).length;
   const solo = o.mode === 'gartic' && o.gmode === 'solo', need = solo ? 1 : 2;
   $('#lobby-tip').innerHTML = online < need ? '👋 Cần ít nhất <b>2 người</b>. Gửi mã phòng hoặc bấm <b>Chép link mời</b> cho hội bạn nhé! (Chỉ có mình bạn? Chọn Tam sao thất bản › <b>Một mình</b>.)' : online > mx ? `⚠️ Chế độ này tối đa <b>${mx} người</b> – chọn <b>🎉 Đông vui</b> để chơi tới ${MAX} người.` : `Đủ người rồi, quẩy thôi! (tối đa ${mx} người)`;
   $('#modes').innerHTML = Object.entries(MODE_INFO).map(([k, [t, d]]) => `<button class="mode ${o.mode === k ? 'on' : ''}" data-mode="${k}" ${isHost ? '' : 'disabled'}><b>${t}</b><small>${d}</small></button>`).join('');
-  $$('#modes [data-mode]').forEach(b => b.onclick = () => net.setOpts({ mode: b.dataset.mode }));
+  $$('#modes [data-mode]').forEach(b => b.onclick = () => net && net.setOpts({ mode: b.dataset.mode }));
   renderSettings();
   $('#btn-start').style.display = isHost ? '' : 'none';
   $('#btn-start').textContent = online < need ? '▶ Bắt đầu (cần ≥ 2 người)' : `▶ Bắt đầu ${o.mode === 'gartic' ? GMODES[o.gmode].icon + ' ' + GMODES[o.gmode].name : MODE_INFO[o.mode][0].slice(2)}`;
@@ -232,7 +232,7 @@ function renderSettings() {
   }
   box.innerHTML = h;
   if (!isHost) return;
-  $$('#settings [data-r]').forEach(b => b.onclick = () => net.setOpts({ rounds: o.rounds + +b.dataset.r }));
+  $$('#settings [data-r]').forEach(b => b.onclick = () => net && net.setOpts({ rounds: o.rounds + +b.dataset.r }));
   $$('#settings [data-gm]').forEach(b => b.onclick = () => { net.setOpts({ gmode: b.dataset.gm }); fx.sfx.pop(); });
   $$('#settings [data-cs]').forEach(b => b.onclick = () => { const n = Math.max(2, Math.min(20, o.cSteps + +b.dataset.cs)); const ks = o.cKinds.slice(0, n); while (ks.length < n) ks.push(ks.length % 2 ? 'draw' : 'text'); net.setOpts({ cSteps: n, cKinds: ks }); });
   $$('#settings [data-fr]').forEach(b => b.onclick = () => {
@@ -242,22 +242,22 @@ function renderSettings() {
     const cur = o.frames ? frameCount(o, n) : 0, list = [0]; for (let x = FRAMES_ANIM[0]; x <= FRAMES_ANIM[1]; x++) list.push(x);
     net.setOpts({ frames: list[clampN(list.indexOf(cur) + d, 0, list.length - 1)] });
   });
-  $$('#settings [data-gs]').forEach(b => b.onclick = () => net.setOpts({ gSize: clampN(o.gSize + +b.dataset.gs, GSIZE[0], GSIZE[1]) }));
+  $$('#settings [data-gs]').forEach(b => b.onclick = () => net && net.setOpts({ gSize: clampN(o.gSize + +b.dataset.gs, GSIZE[0], GSIZE[1]) }));
   $$('#settings [data-ra]').forEach(b => b.onclick = () => { net.setOpts({ revealAuto: +b.dataset.ra }); fx.sfx.pop(); });
-  const fpsEl = $('#s-fps'); if (fpsEl) { fpsEl.oninput = () => { $('#s-fps-v').textContent = fpsEl.value + ' khung/giây'; }; fpsEl.onchange = () => net.setOpts({ fps: +fpsEl.value }); }
+  const fpsEl = $('#s-fps'); if (fpsEl) { fpsEl.oninput = () => { $('#s-fps-v').textContent = fpsEl.value + ' khung/giây'; }; fpsEl.onchange = () => net && net.setOpts({ fps: +fpsEl.value }); }
   $$('#settings [data-ck]').forEach(b => b.onclick = () => { const ks = o.cKinds.slice(), i = +b.dataset.ck, L = ['text', 'draw', 'frame']; ks[i] = L[(L.indexOf(ks[i]) + 1) % 3]; net.setOpts({ cKinds: ks }); });
   $$('#settings [data-cat]').forEach(b => b.onclick = () => { const k = b.dataset.cat; const cats = o.cats.includes(k) ? o.cats.filter(x => x !== k) : [...o.cats, k]; if (!cats.length && !o.custom.length) { toast('Chọn ít nhất 1 chủ đề nha'); return; } net.setOpts({ cats }); });
   for (const [id, k] of [['s-draw', 'drawTime'], ['s-text', 'textTime'], ['s-ctime', 'cTime']]) {
     const el = $('#' + id); if (!el) continue;
     el.oninput = () => { $('#' + id + '-v').textContent = el.value + ' giây'; };
-    el.onchange = () => net.setOpts({ [k]: +el.value });
+    el.onchange = () => net && net.setOpts({ [k]: +el.value });
   }
   const ta = $('#s-custom');
   if (ta) {
-    let t; ta.oninput = () => { clearTimeout(t); t = setTimeout(() => net.setOpts({ custom: parseCustom(ta.value) }), 700); };
+    let t; ta.oninput = () => { clearTimeout(t); t = setTimeout(() => net && net.setOpts({ custom: parseCustom(ta.value) }), 700); };
     ta.onblur = () => { clearTimeout(t); net.setOpts({ custom: parseCustom(ta.value) }); setTimeout(() => { if (settingsPending) { settingsKey = ''; renderSettings(); } }, 0); };
   }
-  const only = $('#s-only'); if (only) only.onchange = () => net.setOpts({ onlyCustom: only.checked });
+  const only = $('#s-only'); if (only) only.onchange = () => net && net.setOpts({ onlyCustom: only.checked });
 }
 $('#btn-start').onclick = () => { fx.actx(); if (net && isHost) net.start(); };
 
@@ -392,7 +392,7 @@ function renderOverlay(v) {
   }
   ov.hidden = !h; ov.innerHTML = h;
   $$('#g-overlay [data-i]').forEach(b => b.onclick = () => { fx.sfx.choose(); net.act({ type: 'choose', idx: +b.dataset.i }); });
-  const sk = $('#ov-skip'); if (sk) sk.onclick = () => net.act({ type: 'skip' });
+  const sk = $('#ov-skip'); if (sk) sk.onclick = () => net && net.act({ type: 'skip' });
   const rs = $('#ov-res'); if (rs) rs.onclick = () => showResults(view);
 }
 function showResults(v) {
@@ -402,7 +402,7 @@ function showResults(v) {
   openModal(`<h2 class="center">🏆 Bảng vàng</h2><div class="podium">${pod}</div>
     <ol class="final">${ps.map((p, i) => `<li class="${p.id === myId ? 'me' : ''}"><span>${i + 1}</span>${avatar(p.name)}<b>${esc(p.name)}</b><em>${p.score}</em></li>`).join('')}</ol>
     <div class="m-btns">${isHost ? '<button class="btn pri" id="m-again">🔁 Ván mới</button>' : '<p class="muted">Đợi chủ phòng mở ván mới…</p>'}<button class="btn" data-close>Đóng</button></div>`, 'results');
-  const a = $('#m-again'); if (a) a.onclick = () => { closeModal(); net.restart(); };
+  const a = $('#m-again'); if (a) a.onclick = () => { closeModal(); net && net.restart(); };
 }
 $('#g-form').addEventListener('submit', e => {
   e.preventDefault(); const inp = $('#g-input'), t = inp.value.trim(); if (!t || !net) return;
@@ -690,9 +690,9 @@ function renderReveal(v, p) {
           <span class="seg-w"><span class="seg-l">Tự chiếu</span><div class="seg" role="group" aria-label="Tự chiếu">${REVEAL_AUTO.map(x => `<button class="sg ${r.auto === x ? 'on' : ''}" data-ra="${x}" aria-label="${x ? x + ' giây' : 'Bấm tay'}">${x ? x + 's' : 'Tắt'}</button>`).join('')}</div></span></div>
         <div class="rv-links">${G && gj < G - 1 ? `<button class="link" id="t-skipg">⏭️ Bỏ qua nhóm ${gj + 1}</button>` : ''}<button class="link" id="t-skip">Bỏ qua, xem album luôn</button></div>`
       : `<p class="muted center">${status ? `<b class="rv-st">${status}</b> · ` : 'Chủ phòng đang bấm tiếp… '}${v.gmode === 'score' ? 'chấm 👍/👎 từng bước nào!' : 'thả cảm xúc đi nào 😂🔥💀'}</p>`;
-    const nx = $('#t-next'); if (nx) nx.onclick = () => net.act({ type: 'next' });
-    const sk = $('#t-skip'); if (sk) sk.onclick = () => net.act({ type: 'skipReveal' });
-    const sg = $('#t-skipg'); if (sg) sg.onclick = () => net.act({ type: 'skipGroup' });
+    const nx = $('#t-next'); if (nx) nx.onclick = () => net && net.act({ type: 'next' });
+    const sk = $('#t-skip'); if (sk) sk.onclick = () => net && net.act({ type: 'skipReveal' });
+    const sg = $('#t-skipg'); if (sg) sg.onclick = () => net && net.act({ type: 'skipGroup' });
     const pa = $('#t-pause'); if (pa) pa.onclick = () => { fx.sfx.pop(); net.act({ type: 'pause', on: !r.paused }); };
     $$('#t-bar [data-ra]').forEach(b => b.onclick = () => { fx.sfx.pop(); net.act({ type: 'autoReveal', sec: +b.dataset.ra }); });
   } else {

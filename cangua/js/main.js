@@ -82,7 +82,7 @@ const handlers = {
 function startHost(offline) {
   fx.actx(); fx.musicResumeIfOn();
   net = new Host(meProfile(), handlers, offline); isHost = true; myId = 'host';
-  if (offline) { session.save('cangua', { role: 'host', code: 'OFFLINE' }); net.addBot(); net.addBot(); net.addBot(); }
+  if (offline) { session.save('cangua', { role: 'host', code: 'OFFLINE' }); net && net.addBot(); net && net.addBot(); net && net.addBot(); }
   $('#code-box').style.display = offline ? 'none' : '';
   show('screen-lobby'); renderLobby();
 }
@@ -129,10 +129,10 @@ function renderLobby() {
   $('#pcount').textContent = `${ps.length}/${MAX}`;
   $('#plist').innerHTML = ps.map(p => {
     const tag = p.id === 'host' ? '👑 Chủ phòng' : p.isBot ? '🤖 Bot' : p.connected ? '🌐 Online' : '📴 Mất kết nối';
-    return `<li><span class="av">${p.isBot ? '🤖' : '🐴'}</span><div><b>${esc(p.name)}</b>${p.id === myId ? ' <small>(bạn)</small>' : ''}<br><small>${tag}</small></div>${isHost && p.id !== 'host' ? `<button class="x" ${fnAttr('lobby', () => net.removePlayer(p.id))} aria-label="Mời ra">✕</button>` : ''}</li>`;
+    return `<li><span class="av">${p.isBot ? '🤖' : '🐴'}</span><div><b>${esc(p.name)}</b>${p.id === myId ? ' <small>(bạn)</small>' : ''}<br><small>${tag}</small></div>${isHost && p.id !== 'host' ? `<button class="x" ${fnAttr('lobby', () => net && net.removePlayer(p.id))} aria-label="Mời ra">✕</button>` : ''}</li>`;
   }).join('');
   $('#opts').innerHTML = OPTS.filter(o => !o[4] || o[4](lobby.opts, offline)).map(([key, name, list, hint]) => `<div class="opt"><b>${name}</b><div class="seg">${list.map(([v, n]) =>
-    `<button class="${lobby.opts[key] === v ? 'on' : ''}" ${isHost ? fnAttr('lobby', () => net.setOpt(key, v)) : 'disabled'}>${n}</button>`).join('')}</div>${hint ? `<small>${typeof hint === 'function' ? hint(lobby.opts) || '' : hint}</small>` : ''}</div>`).join('');
+    `<button class="${lobby.opts[key] === v ? 'on' : ''}" ${isHost ? fnAttr('lobby', () => net && net.setOpt(key, v)) : 'disabled'}>${n}</button>`).join('')}</div>${hint ? `<small>${typeof hint === 'function' ? hint(lobby.opts) || '' : hint}</small>` : ''}</div>`).join('');
   $('#btn-addbot').style.display = isHost ? '' : 'none'; $('#btn-addbot').disabled = ps.length >= MAX;
   $('#btn-start').style.display = isHost ? '' : 'none'; $('#wait-msg').style.display = isHost ? 'none' : '';
 }
@@ -390,7 +390,7 @@ function renderPanel() {
   const head = (p, text) => `<div class="line"><span class="dot" style="--pc:${p.color}"></span><span>${text}</span>${dice}</div>`;
   if (v.phase === 'over') {
     const w = P(v, v.winner);
-    el.innerHTML = head(w, `🏆 <b>${youOr(v, w.id)}</b> ${isMine(w.id) ? 'thắng rồi! Đỉnh nóc 🔥' : 'thắng ván này!'}`) + `<div class="btns">${btn('panel', '🏆 Xem kết quả', () => showWin(v), 'gold')}${isHost ? btn('panel', '🔁 Ván mới', () => net.restart(), 'pri') : ''}</div>`;
+    el.innerHTML = head(w, `🏆 <b>${youOr(v, w.id)}</b> ${isMine(w.id) ? 'thắng rồi! Đỉnh nóc 🔥' : 'thắng ván này!'}`) + `<div class="btns">${btn('panel', '🏆 Xem kết quả', () => showWin(v), 'gold')}${isHost ? btn('panel', '🔁 Ván mới', () => net && net.restart(), 'pri') : ''}</div>`;
     return;
   }
   const c = cur(v), mine = isMine(c.id), who = youOr(v, c.id);
@@ -437,7 +437,7 @@ function showWin(v) {
     openModal(`<button class="close-x" data-close aria-label="Đóng">✕</button><div class="win"><div class="trophy">🏆</div>
       <h2>${esc(w ? nm(v, w.id) : '?')} THẮNG!</h2><p style="margin:0;font-weight:700">${isMine(w.id) ? 'Ngựa nhà mình chạy như gió 🐎💨' : 'Ván sau phục thù nha 😤'}</p>
       <ol>${v.ranks.map(id => { const p = P(v, id); return `<li style="--pc:${p.color}"><i></i>${esc(nm(v, id))} – 🏁${p.horses.filter(x => x > GATE).length}/4 · 🦶 đá ${p.kicks} · bị đá ${p.kicked}</li>`; }).join('')}</ol></div>
-      <div class="mbtns">${isHost ? btn('modal', '🔁 Ván mới', () => { closeModal(); net.restart(); }, 'pri') : ''}${btn('modal', '🗺️ Xem bàn', closeModal, 'ghost')}${btn('modal', '🏠 Về trang chủ', leave, 'ghost')}</div>`, '', 'win');
+      <div class="mbtns">${isHost ? btn('modal', '🔁 Ván mới', () => { closeModal(); net && net.restart(); }, 'pri') : ''}${btn('modal', '🗺️ Xem bàn', closeModal, 'ghost')}${btn('modal', '🏠 Về trang chủ', leave, 'ghost')}</div>`, '', 'win');
   }, w ? 1800 * k() : 300);
 }
 

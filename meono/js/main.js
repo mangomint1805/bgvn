@@ -101,7 +101,7 @@ function startHost(offline) {
   fx.actx(); fx.musicResumeIfOn();
   if (net && net.leave) net.leave();
   net = new Host(myName(), handlers, offline); isHost = true; myId = 'host';
-  if (offline) { session.save(GAME, { role: 'host', code: 'OFFLINE' }); net.addBot(); net.addBot(); net.addBot(); }
+  if (offline) { session.save(GAME, { role: 'host', code: 'OFFLINE' }); net && net.addBot(); net && net.addBot(); net && net.addBot(); }
   $('#code-box').style.display = offline ? 'none' : '';
   show('screen-lobby');
 }
@@ -130,7 +130,7 @@ function renderLobby() {
   const ps = lobby.players, o = lobby.opts;
   $('#pcount').textContent = `${ps.length}/${MAX}`;
   $('#plist').innerHTML = ps.map(p => `<li>${avatar(p.name)}<span>${esc(clean(p.name))}${p.isBot ? ' 🤖' : ''}${p.id === myId ? ' <small>(bạn)</small>' : ''}${p.id === 'host' ? ' 👑' : ''}${!p.connected ? ' <small>📴</small>' : ''}</span>${isHost && p.id !== 'host' ? `<button class="x" data-rm="${p.id}" aria-label="Mời ra">✕</button>` : ''}</li>`).join('');
-  $$('#plist [data-rm]').forEach(b => b.onclick = () => net.removePlayer(b.dataset.rm));
+  $$('#plist [data-rm]').forEach(b => b.onclick = () => net && net.removePlayer(b.dataset.rm));
   $('#btn-addbot').style.display = isHost && ps.length < MAX ? '' : 'none';
   const dis = isHost ? '' : 'disabled';
   $('#opts').innerHTML = `
@@ -138,7 +138,7 @@ function renderLobby() {
       <select data-opt="turnTime" ${dis}>${[30, 45, 60, 90].map(n => `<option value="${n}" ${+o.turnTime === n ? 'selected' : ''}>${n} giây</option>`).join('')}</select></label>
     <label class="opt"><input type="checkbox" data-opt="expansion" ${o.expansion ? 'checked' : ''} ${dis}><span><b>🪄 Thêm Cải Mệnh & Móc Đáy</b><small>Tắt để chơi bộ cơ bản.</small></span></label>
     <label class="opt ${o.chaos ? 'hot' : ''}"><input type="checkbox" data-opt="chaos" ${o.chaos ? 'checked' : ''} ${dis}><span><b>🌀 Bộ bài Hỗn loạn</b><small>Gấp đôi Đổ Vỏ${o.expansion ? ', Móc Đáy' : ''}, nhiều HUỶ KÈO! & Xào Bài hơn, thêm 1 Gỡ Bom. Bớt mèo thường.</small></span></label>`;
-  $$('#opts [data-opt]').forEach(i => i.onchange = () => net.setOpt(i.dataset.opt, i.type === 'checkbox' ? i.checked : i.value));
+  $$('#opts [data-opt]').forEach(i => i.onchange = () => net && net.setOpt(i.dataset.opt, i.type === 'checkbox' ? i.checked : i.value));
   const n = Math.max(2, ps.length), plan = deckPlan(n, o);
   const total = Object.values(plan).reduce((a, b) => a + b, 0);
   $('#deck-info').innerHTML = `🃏 ${n} người${o.chaos ? ' · <b>🌀 Hỗn loạn</b>' : ''}: bộ ${total} lá, <b>${plan.bomb} Mèo Nổ</b>, ${plan.defuse} Gỡ Bom, ${plan.attack} Đổ Vỏ, ${plan.nope} HUỶ KÈO!. Mỗi người 1 Gỡ Bom + 7 lá.`;
@@ -458,8 +458,8 @@ function showWin(v) {
       ${badges}${table}
       <div class="btns">${isHost ? '<button class="btn pri" id="m-again">🔁 Ván mới</button><button class="btn" id="m-lobby">Về sảnh</button>' : '<p>Chờ chủ phòng mở ván mới…</p>'}</div></div>`, 'wide', 'win');
     if (aw.length) setTimeout(() => fx.sfx.awards(), 300);
-    const ag = $('#m-again'); if (ag) ag.onclick = () => { closeModal(); net.restart(); net.start(); };
-    const lb = $('#m-lobby'); if (lb) lb.onclick = () => { closeModal(); net.restart(); };
+    const ag = $('#m-again'); if (ag) ag.onclick = () => { closeModal(); net && net.restart(); net && net.start(); };
+    const lb = $('#m-lobby'); if (lb) lb.onclick = () => { closeModal(); net && net.restart(); };
   }, 3400 * fx.S());
 }
 

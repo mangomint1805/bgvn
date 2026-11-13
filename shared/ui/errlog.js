@@ -2,7 +2,7 @@
 // Không gửi gì về người chơi ngoài: game, câu báo lỗi, file:dòng, địa chỉ trang (bỏ mã phòng) và loại trình duyệt.
 // Tiết kiệm hạn mức: mỗi lần mở trang gửi tối đa 3 lỗi, cùng một lỗi mỗi máy chỉ gửi 1 lần/ngày, bỏ qua lỗi mạng và lỗi của tiện ích trình duyệt.
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
-const SKIP = /^Script error\.?$|ResizeObserver loop|Failed to fetch|Load failed|NetworkError|Importing a module script failed|dynamically imported module|AbortError|The operation was aborted|NotAllowedError|play\(\) (request|failed)|extension:\/\/|QuotaExceeded|zaloJSV2|iabjs:|Java object is gone|view transition|skipTransition|InvalidStateError|@context|isReCreate|M_ID/i; /* lỗi do trình duyệt nhúng (Zalo, Facebook) hoặc tiện ích trình duyệt chèn vào, không phải lỗi của web */
+const SKIP = /^Script error\.?$|ResizeObserver loop|Failed to fetch|Load failed|NetworkError|Importing a module script failed|dynamically imported module|AbortError|The operation was aborted|NotAllowedError|play\(\) (request|failed)|extension:\/\/|QuotaExceeded|zaloJSV2|iabjs:|Java object is gone|view transition|skipTransition|InvalidStateError|@context|isReCreate|M_ID|_META|IABInnerFrame/i; /* lỗi do trình duyệt nhúng (Zalo, Facebook) hoặc tiện ích trình duyệt chèn vào, không phải lỗi của web */
 const day = new Date().toISOString().slice(0, 10);
 let sent = 0, seen = {};
 try { const o = JSON.parse(ls.get('bgvn-errs') || '{}'); if (o.d === day) seen = o.k || {}; } catch (e) {}

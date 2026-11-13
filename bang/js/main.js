@@ -220,7 +220,7 @@ function renderLobby(code) {
   const ul = $('#lobby-players'); ul.innerHTML = '';
   lobby.forEach((p, i) => {
     const li = el('li', '', `<span>${i + 1}. ${esc(p.name)}${p.id === 'host' ? ' 👑' : ''}${p.connected === false ? ' <span class="off">(mất kết nối)</span>' : ''}</span>`);
-    if (isHost && p.id !== 'host') { const b = el('button', 'btn small ghost', p.isBot ? 'Xoá bot' : 'Mời ra'); b.onclick = () => net.removePlayer(p.id); li.appendChild(b); }
+    if (isHost && p.id !== 'host') { const b = el('button', 'btn small ghost', p.isBot ? 'Xoá bot' : 'Mời ra'); b.onclick = () => net && net.removePlayer(p.id); li.appendChild(b); }
     ul.appendChild(li);
   });
   if (isHost) { $('#btn-start').disabled = lobby.length < 4 || lobby.length > 7; $('#btn-add-bot').disabled = lobby.length >= 7; $('#lobby-msg').textContent = `${lobby.length}/7 người. ${lobby.length < 4 ? 'Cần thêm ' + (4 - lobby.length) + ' người hoặc bot.' : 'Sẵn sàng!'}`; }
@@ -484,7 +484,7 @@ function renderActions() {
   if (v.phase === 'ended') {
     const names = { law: 'Phe Cảnh sát', outlaw: 'Tội phạm', renegade: 'Kẻ hai mặt' };
     a.appendChild(el('div', 'winner', `🏆 ${names[v.winner]} thắng!`));
-    if (isHost) { const b = el('button', 'btn primary', 'Về phòng chờ'); b.onclick = () => net.restart(); a.appendChild(b); }
+    if (isHost) { const b = el('button', 'btn primary', 'Về phòng chờ'); b.onclick = () => net && net.restart(); a.appendChild(b); }
     return;
   }
   if (!m.alive) { a.appendChild(el('div', 'muted', 'Bạn đã bị loại – ngồi xem tiếp nhé')); return; }
