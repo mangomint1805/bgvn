@@ -22,11 +22,11 @@ const CFG = rulesFor('masoi', {
   auto: DEFAULT_OPTS.auto, roles: Object.fromEntries(ROLE_KEYS.map(r => [r, +DEFAULT_OPTS.roles[r] || 0])),
   reveal: DEFAULT_OPTS.reveal, voteMode: DEFAULT_OPTS.voteMode, tie: DEFAULT_OPTS.tie, doubleSave: DEFAULT_OPTS.doubleSave,
   dayTime: DEFAULT_OPTS.dayTime, voteTime: DEFAULT_OPTS.voteTime, nightTime: DEFAULT_OPTS.nightTime,
-  vanTap: { reveal: true, dayTime: 180, voteTime: 60, nightTime: 45 },
+  vanTap: { dayTime: 180, voteTime: 60, nightTime: 45 },
 }, {
   auto: B2, roles: Object.fromEntries(ROLE_KEYS.map(r => [r, r === 'wolf' ? { min: 0, max: 6 } : [0, 1]])),
   reveal: B2, voteMode: ['open', 'secret'], tie: ['revote', 'none'], doubleSave: ['live', 'die'], dayTime: DAY_T, voteTime: VOTE_T, nightTime: NIGHT_T,
-  vanTap: { reveal: B2, dayTime: DAY_T, voteTime: VOTE_T, nightTime: NIGHT_T },
+  vanTap: { dayTime: DAY_T, voteTime: VOTE_T, nightTime: NIGHT_T },
 });
 const cfgOpts = () => { const { vanTap, roles, ...o } = CFG; return { ...JSON.parse(JSON.stringify(DEFAULT_OPTS)), ...o, roles: Object.fromEntries(Object.entries(roles).filter(([, n]) => n > 0)) }; };
 const BOT_NAMES = ['Kẹo', 'Xôi', 'Gấu Bông', 'Đậu', 'Nấm', 'Sữa', 'Mochi', 'Pudding', 'Mít', 'Tôm', 'Bí', 'Cốm', 'Xoài', 'Ổi', 'Chè', 'Na'];
@@ -152,7 +152,8 @@ export class Host {
     if (!this.offline) return;
     this.players = this.players.filter(p => p.id === 'host');
     this.addBot(5);
-    this.opts = { ...JSON.parse(JSON.stringify(DEFAULT_OPTS)), auto: false, roles: { wolf: 1, seer: 1, guard: 1, witch: 1 }, ...CFG.vanTap, tutorial: true };
+    const reveal = !!this.opts.reveal; /* giữ đúng lựa chọn "Lộ vai khi chết" của chủ phòng – trước đây ván tập tự bật lên dù đang tắt */
+    this.opts = { ...JSON.parse(JSON.stringify(DEFAULT_OPTS)), auto: false, roles: { wolf: 1, seer: 1, guard: 1, witch: 1 }, ...CFG.vanTap, reveal, tutorial: true };
     this.tut = { seen: [], off: false };
     const mine = ['seer', 'guard', 'witch', 'wolf'][Math.floor(Math.random() * 4)];
     this.start({ forceRole: { host: mine } });

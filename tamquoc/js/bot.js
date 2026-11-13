@@ -1,5 +1,5 @@
 // Bot Tam Quốc Sát: đoán phe qua "ấn tượng" công khai (s.lean), chơi theo vai trò, dùng kỹ năng.
-import { getPlayer, current, alivePlayers, top, distance, inRange, attackRange, hasSkill, weaponOf, armorOf, cardModes, activeSkills, responseOptions, useOptions, orderFrom, effSuit } from './engine.js?v=7';
+import { getPlayer, current, alivePlayers, top, distance, inRange, attackRange, hasSkill, weaponOf, armorOf, cardModes, activeSkills, responseOptions, useOptions, orderFrom, effSuit } from './engine.js?v=9';
 import { CARD_INFO, GENERALS, isRed, isBlack } from './cards.js?v=7';
 
 const R = () => Math.random();

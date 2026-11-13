@@ -7,7 +7,7 @@ import { PUZZLES } from './puzzles.js?v=1';
 import { today, state as dailyState, markSolved } from './today.js?v=1';
 import { gameKit, $, $$, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=3';
 import { confirmBox, promptBox, toast as tip } from '../../shared/ui/dialog.js?v=1';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=131';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=133';
 
 const LV = { easy: ['🌱 Dễ', 'Mới tập chơi'], normal: ['⚔️ Vừa', 'Biết đánh, có sơ hở'], hard: ['🔥 Khó', 'Tính trước 4–5 nước'], master: ['👑 Đại sư', 'Động cơ Fairy-Stockfish'] };
 const GLYPH = { han: { K: '帥', A: '仕', E: '相', R: '俥', H: '傌', C: '炮', P: '兵', k: '將', a: '士', e: '象', r: '車', h: '馬', c: '砲', p: '卒' }, viet: { K: 'Tướng', A: 'Sĩ', E: 'Tượng', R: 'Xe', H: 'Mã', C: 'Pháo', P: 'Tốt' } };

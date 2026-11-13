@@ -98,7 +98,7 @@ ${roleTable()}
 <p class="g-note">Bị <b>Sát</b> thì cần đánh ra 1 <b>Né</b>, không có thì mất 1 máu. Nếu không còn lá đỡ được, máy tự cho bạn chịu đòn ngay khỏi phải chờ.</p></section>
 
 <section id="g-trick"><h3>6. Cẩm nang (dùng ngay)</h3><div class="g-grid">${tricks.map(row).join('')}</div>
-<p class="g-note"><b>Vô giải khả kích:</b> mỗi khi một cẩm nang sắp có tác dụng lên <i>một người</i> (Nam man / Vạn tiễn / Đào viên / Ngũ cốc tính riêng từng người), ai có Vô giải sẽ được hỏi trong khoảng 3 giây. Vô giải cũng bị Vô giải khác huỷ được – chồng bao nhiêu lớp cũng được, số lớp lẻ là cẩm nang bị huỷ.</p></section>
+<p class="g-note"><b>Vô giải khả kích:</b> mỗi khi một cẩm nang sắp có tác dụng lên <i>một người</i> (Nam man / Vạn tiễn / Đào viên / Ngũ cốc tính riêng từng người), ai có Vô giải sẽ được hỏi trong khoảng 5 giây. Vô giải cũng bị Vô giải khác huỷ được – chồng bao nhiêu lớp cũng được, số lớp lẻ là cẩm nang bị huỷ.</p></section>
 
 <section id="g-delay"><h3>7. Cẩm nang trì hoãn</h3><div class="g-grid">${delay.map(row).join('')}</div>
 <p class="g-note">Lá trì hoãn nằm trong <b>vùng phán định</b> (hiện ngay dưới tên người chơi) và chỉ có tác dụng ở pha Phán định của người đó. Mỗi người chỉ có tối đa 1 lá cùng tên. Vô giải cũng huỷ được lá trì hoãn (khi phán định); Thiểm điện bị huỷ thì vẫn chuyền sang người kế tiếp.</p></section>
@@ -155,7 +155,7 @@ ${Object.keys(KINGDOMS).map(k => byK(k, true).length ? `<h4 class="g-kd" style="
 <li><b>Tạo phòng</b> rồi gửi mã 5 ký tự (hoặc link) cho bạn bè. 2–8 người, thiếu thì thêm bot. Chủ phòng giữ tab mở suốt ván.</li>
 <li><b>Bấm lá sáng màu</b> để dùng; nếu lá có nhiều cách dùng (VD Quan Vũ dùng lá đỏ như Sát) sẽ hiện nút chọn. Sau đó bấm vào <b>ghế sáng viền đỏ</b> để chọn mục tiêu.</li>
 <li>Nhấn giữ (điện thoại) hoặc rê chuột (máy tính) vào lá để xem mô tả đầy đủ. Bấm vào ghế để xem tướng, kỹ năng, trang bị của người đó.</li>
-<li><b>Đồng hồ:</b> 60 giây cho pha Ra bài, 20 giây cho mỗi lần đáp trả, 3 giây cho cửa sổ Vô giải. Hết giờ máy tự quyết thay; treo máy 2 lần liền thì bot đánh hộ tới khi bạn bấm lại.</li>
+<li><b>Đồng hồ:</b> 60 giây cho pha Ra bài, 30 giây cho mỗi lần đáp trả, 5 giây cho cửa sổ Vô giải. Hết giờ máy tự quyết thay; treo máy 2 lần liền thì bot đánh hộ tới khi bạn bấm lại.</li>
 <li>Rớt mạng hay lỡ tải lại trang? Mở lại trang là tự vào lại đúng chỗ ngồi; trong lúc vắng mặt bot sẽ đánh thay. Chủ phòng tải lại cũng giữ nguyên ván.</li>
 <li>Không có lá đỡ thì máy tự cho chịu đòn luôn – không ai biết bạn hết Né đâu… trừ khi bạn hét lên 😅.</li>
 </ul></section>

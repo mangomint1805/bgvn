@@ -7,6 +7,10 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261113-3', date: '13/11/2026', game: 'all', title: '💌 Sửa theo góp ý của mọi người', items: [
+    '🐺 Ma Sói: 🎓 Ván tập giờ giữ đúng lựa chọn "Lộ vai khi chết" của bạn (trước đây tự bật lên dù đang tắt).',
+    '⚔️ Tam Quốc Sát: thong thả hơn – 30 giây để đáp trả (trước 20), 5 giây cho Vô giải (trước 3), bot ra bài chậm lại một nhịp. Muốn chậm nữa thì chọn ⏱ Chậm trong cài đặt.',
+  ] },
   { id: '20261113-2', date: '13/11/2026', game: 'tienlen', title: '👑 Bot Tiến Lên khôn hơn', items: [
     '😈 Bot Cao thủ giờ biết "đánh thử trong đầu" vài chục ván trước khi ra bài – khó ăn hơn hẳn.',
     '👑 Thêm cấp Huyền thoại: nghĩ kỹ nhất, thắng nhất nhiều gấp rưỡi bot thường. Bấm vào nhãn độ khó cạnh tên bot để đổi.',

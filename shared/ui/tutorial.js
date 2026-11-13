@@ -28,7 +28,7 @@ const pre = {};
 function preload(src) { if (!src) return Promise.resolve(); if (!pre[src]) { const im = new Image(); im.decoding = 'async'; im.src = src; pre[src] = (im.decode ? im.decode() : new Promise(r => { im.onload = r; })).catch(() => {}); } return pre[src]; }
 export async function openTutorial() {
   if (open) return; open = true;
-  let T; try { T = (await import('../tutorials.js?v=1')).TUT[GAME]; } catch (e) {}
+  let T; try { T = (await import('../tutorials.js?v=2')).TUT[GAME]; } catch (e) {}
   if (!T || !T.steps.length) { open = false; return; }
   await Promise.race([preload(T.steps[0].img), new Promise(r => setTimeout(r, 700))]); /* chờ ảnh bước 1 tải xong (tối đa 0,7 giây) để hộp hiện ra là đủ hình, không bị giật */
   if (!cssOn) { cssOn = true; const st = document.createElement('style'); st.textContent = CSS; document.head.append(st); }
@@ -79,7 +79,7 @@ function init() {
   if (ls.get('bgvn-tut-' + GAME) || navigator.webdriver || /[?&]room=/.test(location.search)) return;
   let played = !!ls.get('bgvn-session-' + GAME); try { played = played || (ls.get('bgvn-stats') || '').includes('"' + GAME + '"'); } catch (e) {}
   if (played) { ls.set('bgvn-tut-' + GAME, '1'); return; }
-  import('../tutorials.js?v=1').then(m => { const T = m.TUT[GAME]; if (T && T.steps[0]) preload(T.steps[0].img); }).catch(() => {}); /* tải trước ảnh bước 1 trong lúc chờ */
+  import('../tutorials.js?v=2').then(m => { const T = m.TUT[GAME]; if (T && T.steps[0]) preload(T.steps[0].img); }).catch(() => {}); /* tải trước ảnh bước 1 trong lúc chờ */
   setTimeout(() => {
     const home = $('#screen-home'); if (home && !home.classList.contains('active')) return;
     const shown = e => { const c = getComputedStyle(e); return c.display !== 'none' && c.visibility !== 'hidden' && c.opacity !== '0' && c.pointerEvents !== 'none' && e.getBoundingClientRect().width > 0; };

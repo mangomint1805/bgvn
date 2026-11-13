@@ -177,8 +177,6 @@ export const TUT = {
  },
  "tamquoc": {
   "name": "Tam Quốc Sát Việt",
-  "intro": "",
-  "bot": true,
   "steps": [
    {
     "img": "img/guide/q-home.webp?v=1",

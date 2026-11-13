@@ -1,14 +1,14 @@
 // Lớp mạng Tam Quốc Sát: host giữ state + chạy engine, client chỉ gửi action. Kết nối dùng chung ở shared/net/room.js
-import { createGame, applyAction, viewFor, top, getPlayer, NULL_TIME } from './engine.js?v=7';
-import { botAction } from './bot.js?v=7';
-import { coachHint } from './coach.js?v=7';
+import { createGame, applyAction, viewFor, top, getPlayer, NULL_TIME } from './engine.js?v=9';
+import { botAction } from './bot.js?v=9';
+import { coachHint } from './coach.js?v=9';
 import { S } from './fx.js?v=8';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=9';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
 import { watch } from '../../shared/ui/stats.js?v=8';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
-export const TURN_TIME = 60, PROMPT_TIME = 20, PICK_TIME = 30; // giây: hết giờ thì máy tự đánh thay (chống treo máy)
+export const TURN_TIME = 60, PROMPT_TIME = 30, PICK_TIME = 30; // giây: hết giờ thì máy tự đánh thay (chống treo máy)
 // ⚙️ Luật mặc định khi tạo phòng mới (luat-mac-dinh.js ở gốc repo); tapChoi = khi bấm nút 🎓 Tập chơi
 const B2 = [true, false];
 const CFG = rulesFor('tamquoc', { exp: true, expGen: true, training: false, tapChoi: { exp: false, expGen: false } }, { exp: B2, expGen: B2, training: B2, tapChoi: { exp: B2, expGen: B2 } });
@@ -166,7 +166,7 @@ export class Host {
     const humans = who.filter(p => !autos.includes(p));
     if (autos.length) {
       const p = autos[0]; const pid = p.id;
-      const base = ask.type === 'nullify' ? 500 + Math.random() * 500 : ask.type === 'general' ? 380 : ask.type === 'play' ? 950 : 750;
+      const base = ask.type === 'nullify' ? 500 + Math.random() * 500 : ask.type === 'general' ? 380 : ask.type === 'play' ? 1150 : 900; /* bot đi chậm lại chút cho người chơi kịp nhìn */
       const wait = p.isBot ? Math.max(Math.round(base * S() * (this.opts.training ? 1.5 : 1)), (this.graceUntil || 0) - Date.now()) : p.afk >= 2 && p.connected ? 2500 : 5000;
       this.botTimer = setTimeout(() => {
         if (!this.state) return;

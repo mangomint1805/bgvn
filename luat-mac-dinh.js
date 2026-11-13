@@ -163,7 +163,6 @@ export default {
     voteTime: 40, // Thời gian bỏ phiếu — Số giây để bầu. · Chọn: 20 = 20 giây | 30 = 30 giây | 40 = 40 giây | 60 = 60 giây | 90 = 90 giây
     nightTime: 25, // Thời gian mỗi vai ban đêm — Sói được gấp rưỡi. · Chọn: 15 = 15 giây | 20 = 20 giây | 25 = 25 giây | 30 = 30 giây | 45 = 45 giây
     vanTap: { // 🎓 Ván tập cho người mới (nút Ván tập, chơi offline 6 người)
-      reveal: true, // Ván tập: lộ vai khi chết — Áp dụng cho nút 🎓 Ván tập. · Chọn: true = Bật | false = Tắt
       dayTime: 180, // Ván tập: thời gian thảo luận — Áp dụng cho nút 🎓 Ván tập. · Chọn: 60 = 60 giây | 90 = 90 giây | 120 = 2 phút | 180 = 3 phút | 240 = 4 phút | 300 = 5 phút
       voteTime: 60, // Ván tập: thời gian bỏ phiếu — Áp dụng cho nút 🎓 Ván tập. · Chọn: 20 = 20 giây | 30 = 30 giây | 40 = 40 giây | 60 = 60 giây | 90 = 90 giây
       nightTime: 45, // Ván tập: thời gian mỗi vai ban đêm — Áp dụng cho nút 🎓 Ván tập. · Chọn: 15 = 15 giây | 20 = 20 giây | 25 = 25 giây | 30 = 30 giây | 45 = 45 giây

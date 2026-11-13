@@ -2,18 +2,18 @@
 import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, SUIT_SYMBOL, SUIT_NAME, cardLabel, cardName, rankLabel, rolesFor, infoOf } from './cards.js?v=7';
-import { JUDGE_TEXT } from './engine.js?v=7';
-import { Host, Client, loadSnapshot, session, MAX, MIN, TQ_PHRASES, TRAIN_OPTS } from './net.js?v=20';
+import { JUDGE_TEXT } from './engine.js?v=9';
+import { Host, Client, loadSnapshot, session, MAX, MIN, TQ_PHRASES, TRAIN_OPTS } from './net.js?v=22';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=131';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=133';
 import { syncPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 import { portrait, blankPortrait, cardHTML, backHTML, generalCardHTML, kindTag, iconsFor, emoOf } from './art.js?v=9';
 import * as fx from './fx.js?v=8';
 import { musicToggle, musicIsOn, musicVolume, musicResumeIfOn, musicIntensity, musicStinger } from './music.js?v=8';
-import { openGuide as guide } from './guide.js?v=10';
+import { openGuide as guide } from './guide.js?v=12';
 import { SKILL_HELP, SKILL_TYPE } from './skillhelp.js?v=7';
-import { PHASE_HELP } from './coach.js?v=7';
+import { PHASE_HELP } from './coach.js?v=9';
 
 const GAME = 'tamquoc';
 const $ = s => document.querySelector(s);

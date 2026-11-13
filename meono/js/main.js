@@ -7,7 +7,7 @@ import { CARD, CATS, NAMEABLE, classify, needsTarget, cardName, deckPlan, isCat,
 import { cardHTML, catSVG, bombSVG, cardIcon, mascotSVG, tint } from './cards.js?v=8';
 import * as fx from './mfx.js?v=9';
 import { openGuide } from './guide.js?v=10';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=131';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=133';
 import { startPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 setSpeedFn(fx.S);
 

@@ -1,7 +1,7 @@
 // Mô phỏng hàng trăm ván toàn bot: đếm ván kẹt/lỗi, kiểm tra bảo toàn bài, thống kê phe thắng.
 // Chạy: node tamquoc/test/sim.mjs [số ván=400] [exp: on|off|mix=mix]
-import { createGame, applyAction, top, countCards, viewFor } from '../js/engine.js?v=7';
-import { botAction } from '../js/bot.js?v=7';
+import { createGame, applyAction, top, countCards, viewFor } from '../js/engine.js?v=9';
+import { botAction } from '../js/bot.js?v=9';
 
 const GAMES = +(process.argv[2] || 400);
 const MAX_STEPS = 40000;
