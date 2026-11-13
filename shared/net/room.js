@@ -18,7 +18,7 @@ const NO_CHAT = ['masoi', 'scribble'];
 const gameOf = ns => String(ns || '').replace(/^bgvn-/, '');
 const chatOn = ns => !NO_CHAT.includes(gameOf(ns));
 const chatText = t => String(t == null ? '' : t).replace(/\s+/g, ' ').trim().slice(0, 140);
-function chatUi(api) { try { window.__bgvnChat = api; import('../ui/roomchat.js?v=1').then(m => m.mountRoomChat(api)).catch(() => {}); } catch (e) {} }
+function chatUi(api) { try { window.__bgvnChat = api; import('../ui/roomchat.js?v=2').then(m => m.mountRoomChat(api)).catch(() => {}); } catch (e) {} }
 const chatBuf = []; /* tin gần đây – để hộp chat nạp xong muộn vẫn có đủ */
 function chatEmit(m) { if (m.reset) chatBuf.length = 0; else { chatBuf.push(m); if (chatBuf.length > 40) chatBuf.shift(); } try { dispatchEvent(new CustomEvent('bgvn-chat', { detail: m })); } catch (e) {} }
 

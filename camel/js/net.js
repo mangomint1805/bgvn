@@ -1,7 +1,7 @@
 // Lớp mạng Đua Lạc Đà: chủ phòng giữ state (host-authoritative), người vào chỉ gửi action. Kết nối dùng chung shared/net/room.js
 import { createGame, applyAction, viewFor, DEFAULT_OPTS, MAX_PLAYERS, MIN_PLAYERS, CAMEL } from './engine.js?v=1';
 import { botAction } from './bot.js?v=1';
-import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=11';
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=12';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
 import { watch } from '../../shared/ui/stats.js?v=8';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';

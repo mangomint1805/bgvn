@@ -1,8 +1,8 @@
-import { Host, Client, MAX, loadSnapshot, session, UNO_PHRASES } from './net.js?v=37';
+import { Host, Client, MAX, loadSnapshot, session, UNO_PHRASES } from './net.js?v=38';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=135';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=136';
 import { startPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 import { MODES, COLOR_NAME, cardText, DRAW_VALUE, CARD_NAME, MATCH_TARGETS, deckTypes } from './engine.js?v=21';
 import * as fx from './ufx.js?v=20';

@@ -10,7 +10,7 @@ const CSS = `
 .brc-tab b:empty{display:none}
 .brc-peek{position:fixed;left:44px;z-index:25;max-width:min(260px,calc(100vw - 60px));background:#2a2340;color:#fff;border-radius:14px;padding:7px 11px;font:700 13px/1.3 Nunito,sans-serif;box-shadow:0 10px 24px -8px #2a2340aa;pointer-events:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;animation:brc-in .2s ease-out}
 .brc-peek i{font-style:normal;color:#ffb23d;font-weight:800}
-.brc-box{position:fixed;left:8px;bottom:8px;z-index:60;width:min(340px,calc(100vw - 16px));height:min(420px,62vh);background:#fff7ef;color:#2a2340;border-radius:20px;box-shadow:0 18px 40px -12px #2a2340aa,0 2px 8px #2a234022;display:flex;flex-direction:column;overflow:hidden;font:700 14px/1.35 Nunito,sans-serif;animation:brc-in .18s ease-out}
+.brc-box{position:fixed;left:8px;bottom:8px;z-index:95;width:min(340px,calc(100vw - 16px));height:min(420px,62vh);background:#fff7ef;color:#2a2340;border-radius:20px;box-shadow:0 18px 40px -12px #2a2340aa,0 2px 8px #2a234022;display:flex;flex-direction:column;overflow:hidden;font:700 14px/1.35 Nunito,sans-serif;animation:brc-in .18s ease-out}
 .brc-head{display:flex;align-items:center;gap:8px;padding:9px 8px 9px 14px;background:linear-gradient(90deg,#ff4d6a,#ff7a45,#ffb23d);color:#fff;font:800 15px/1 "Baloo 2",Nunito,sans-serif}
 .brc-head span{flex:1}
 .brc-head button{width:32px;height:32px;border:0;border-radius:50%;background:#ffffff33;color:#fff;font-size:16px;cursor:pointer}
@@ -23,6 +23,10 @@ const CSS = `
 .brc-form input{flex:1;min-width:0;border:2px solid #eadfd2;border-radius:999px;padding:8px 13px;font:700 16px/1.2 Nunito,sans-serif;color:#2a2340;background:#fffdfb;outline:none}
 .brc-form input:focus{border-color:#ff7a45}
 .brc-form button{flex:none;width:42px;height:42px;border:0;border-radius:50%;background:#ff7a45;color:#fff;font-size:18px;cursor:pointer}
+/* điện thoại: hộp chat gọn, nằm phía TRÊN màn hình – không che bài trên tay, và bàn phím bật lên cũng không che mất tin nhắn */
+@media (max-width:640px){.brc-box{left:8px;right:8px;top:8px;bottom:auto;width:auto;height:min(250px,34vh);border-radius:18px}.brc-head{padding:5px 6px 5px 12px;font-size:14px}.brc-head button{width:28px;height:28px;font-size:14px}.brc-list{padding:7px 8px;gap:4px}.brc-m{padding:4px 9px;font-size:13.5px}.brc-form{padding:6px}.brc-form input{padding:6px 12px}.brc-form button{width:38px;height:38px}}
+/* điện thoại xoay ngang: cột hẹp bên trái, cao hết màn hình */
+@media (max-height:480px) and (orientation:landscape){.brc-box{left:8px;right:auto;top:8px;bottom:8px;width:min(300px,46vw);height:auto}}
 @keyframes brc-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.brc-box,.brc-peek{animation:none}}
 `;
