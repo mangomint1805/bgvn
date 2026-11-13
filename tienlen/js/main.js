@@ -1,11 +1,11 @@
-import { Host, Client, MAX, loadSnapshot, session, TL_PHRASES, BEG_LIMIT } from './net.js?v=18';
+import { Host, Client, MAX, loadSnapshot, session, TL_PHRASES, BEG_LIMIT } from './net.js?v=19';
 import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=130';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=131';
 import { classify, legalPlays, badFinish, VE_HEO, comboName, comboKind, rankOf, HEO, BETS, TURN_TIMES, DEFAULT_OPTS, START_CHIPS, TOI_TRANG, isHang, cardName } from './engine.js?v=5';
-import { rankPlays, splitHand, LEVELS } from './bot.js?v=6';
+import { rankPlays, splitHand, LEVELS } from './bot.js?v=7';
 import { cardHTML } from './cards.js?v=6';
 import { guideHTML } from './guide.js?v=7';
 import * as fx from './tfx.js?v=6';

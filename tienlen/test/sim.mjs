@@ -1,6 +1,6 @@
 // Mô phỏng bot vs bot + kiểm tra luật: node tienlen/test/sim.mjs 500
 import { createGame, applyAction, current, classify, beats, legalPlays, toiTrangOf, thoiValue, isChop, mustAutoPass, legalFor, badFinish, cardName, START_CHIPS, DEFAULT_OPTS, setRandom } from '../js/engine.js?v=5';
-import { botAction, LEVELS } from '../js/bot.js?v=6';
+import { botAction, LEVELS } from '../js/bot.js?v=7';
 
 let fails = 0;
 const eq = (a, b, m) => { if (JSON.stringify(a) !== JSON.stringify(b)) { fails++; console.log('❌', m, '→', JSON.stringify(a), '≠', JSON.stringify(b)); } };

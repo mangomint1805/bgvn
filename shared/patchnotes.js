@@ -7,6 +7,11 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261113-2', date: '13/11/2026', game: 'tienlen', title: '👑 Bot Tiến Lên khôn hơn', items: [
+    '😈 Bot Cao thủ giờ biết "đánh thử trong đầu" vài chục ván trước khi ra bài – khó ăn hơn hẳn.',
+    '👑 Thêm cấp Huyền thoại: nghĩ kỹ nhất, thắng nhất nhiều gấp rưỡi bot thường. Bấm vào nhãn độ khó cạnh tên bot để đổi.',
+    '🙈 Bot vẫn chơi sạch: không nhìn bài ai, chỉ dựa vào bài mình, lá đã đánh và số lá mỗi người còn.',
+  ] },
   { id: '20261113-1', date: '13/11/2026', game: 'all', title: '✅ Máy chủ vẫn khoẻ re', items: [
     '✅ Sửa thông báo "máy chủ hết lượt miễn phí" hiện nhầm mấy hôm nay – thật ra máy chủ chính vẫn chạy bình thường, cứ rủ bạn vào chơi thoải mái nha!',
   ] },

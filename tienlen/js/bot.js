@@ -1,4 +1,4 @@
-// Bot Tiến Lên: 4 cấp – easy (🐣 Gà mờ), normal (🙂 Vừa), hard (😈 Cao thủ), master (👑 Huyền thoại)
+// Bot Tiến Lên: 4 cấp – easy (🐣 Gà mờ), normal (🙂 Vừa) dùng luật kinh nghiệm; hard (😈 Cao thủ), master (👑 Huyền thoại) chơi thử trong đầu (Monte Carlo)
 import { classify, legalFor, rankOf, HEO, isHang, isHeoCombo, isChop, getPlayer, current, applyAction } from './engine.js?v=5';
 
 export const LEVELS = { easy: '🐣 Gà mờ', normal: '🙂 Vừa', hard: '😈 Cao thủ', master: '👑 Huyền thoại' };
@@ -136,7 +136,9 @@ export function rankPlays(s, pid, level = 'normal') {
 export function botAction(s, pid, level = 'normal') {
   if (!s || s.phase !== 'playing') return null;
   const p = getPlayer(s, pid); if (!p || current(s) !== p) return null;
-  if (level === 'master') return masterAction(s, pid);
+  if (level === 'master') return searchAction(s, pid, 40, 200); /* 👑 nghĩ kỹ: ≥ 40 ván thử, tối đa ~0,2 giây */
+  if (level === 'hard') return searchAction(s, pid, 12, 0); /* 😈 nghĩ nhanh: 12 ván thử */
+  if (level === 'heur') level = 'hard'; /* luật kinh nghiệm của cấp khó cũ – dùng khi chơi thử trong đầu */
   const r = rankPlays(s, pid, level);
   if (!s.table) {
     if (!r.length) return null; // không thể xảy ra (cầm cái luôn có lá lẻ)
@@ -178,21 +180,21 @@ function sampleWorld(s, pid) {
 function rollout(w, pid) {
   let k = 0;
   while (w.phase === 'playing' && k++ < 400) {
-    const c = current(w), a = botAction(w, c.id, c.id === pid ? 'hard' : 'normal');
+    const c = current(w), a = botAction(w, c.id, c.id === pid ? 'heur' : 'normal');
     if (!a || !applyAction(w, c.id, a).ok) break;
   }
   const me = w.players.find(p => p.id === pid);
   return (w.delta[pid] || 0) / ((w.opts && w.opts.bet) || 1) + (me && me.place === 1 ? 0.5 : 0);
 }
-function masterAction(s, pid) {
+function searchAction(s, pid, minWorlds, budget) {
   const r = rankPlays(s, pid, 'hard');
   if (!r.length) return s.table ? { type: 'pass' } : null;
   if (r.length === 1 && !s.table) return { type: 'play', cards: r[0].ids };
   const cands = r.slice(0, s.table ? 6 : 8).map(x => ({ a: { type: 'play', cards: x.ids }, sum: 0, n: 0 }));
   if (s.table) cands.push({ a: { type: 'pass' }, sum: 0, n: 0 });
-  const t0 = Date.now(), BUDGET = 220;
+  const t0 = Date.now();
   let worlds = 0;
-  while (worlds < 400 && (worlds < 12 || Date.now() - t0 < BUDGET)) {
+  while (worlds < 120 && (worlds < minWorlds || Date.now() - t0 < budget)) {
     const w = sampleWorld(s, pid); worlds++;
     for (const c of cands) {
       const x = cloneState(w);

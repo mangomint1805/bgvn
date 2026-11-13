@@ -10,7 +10,7 @@ import { encodeGif } from './gif.js?v=5';
 import { opsBytes, simplifyOps } from './ops.js?v=5';
 import * as fx from './fx.js?v=6';
 import { guideHTML } from './guide.js?v=9';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=130';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=131';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
