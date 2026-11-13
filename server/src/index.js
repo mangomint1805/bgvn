@@ -183,10 +183,14 @@ export class Room extends DurableObject {
     const a = ws.deserializeAttachment() || {};
     if (a.role === 'host') {
       let m; try { m = JSON.parse(msg); } catch (e) { return; }
-      if (!m || typeof m.to !== 'string') return;
-      const c = this.client(m.to); if (!c) { if (!m.bye) ws.send(JSON.stringify({ f: m.to, bye: 1 })); return; }
-      if (m.bye) { try { c.send('{"x":"gone"}'); c.close(1000, 'bye'); } catch (e) {} return; }
-      if (typeof m.s === 'string') try { c.send(m.s); } catch (e) {}
+      if (!m) return;
+      /* gói gộp: chủ phòng gửi tin cho nhiều người trong 1 khung → chỉ tính 1 tin vào hạn mức thay vì mỗi người 1 tin */
+      for (const x of Array.isArray(m.b) ? m.b.slice(0, 64) : [m]) {
+        if (!x || typeof x.to !== 'string') continue;
+        const c = this.client(x.to); if (!c) { if (!x.bye) ws.send(JSON.stringify({ f: x.to, bye: 1 })); continue; }
+        if (x.bye) { try { c.send('{"x":"gone"}'); c.close(1000, 'bye'); } catch (e) {} continue; }
+        if (typeof x.s === 'string') try { c.send(x.s); } catch (e) {}
+      }
     } else if (a.role === 'c') {
       const h = this.host(); if (!h) { try { ws.send('{"x":"gone"}'); ws.close(1000, 'gone'); } catch (e) {} return; }
       try { h.send(JSON.stringify({ f: a.id, s: msg })); } catch (e) {}
