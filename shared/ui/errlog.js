@@ -22,7 +22,7 @@ function report(msg, at) {
   const k = (msg + '|' + at).slice(0, 120); if (seen[k]) return;
   seen[k] = 1; sent++; ls.set('bgvn-errs', JSON.stringify({ d: day, k: seen }));
   const game = location.pathname.replace(/\/+$/, '').split('/').filter(Boolean)[0] || 'hub';
-  import('../net/cfrelay.js?v=4').then(m => fetch(m.cfHttp() + '/err', { method: 'POST', keepalive: true, headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ game, msg, at, page: location.pathname }) })).catch(() => {});
+  import('../net/cfrelay.js?v=5').then(m => fetch(m.cfHttp() + '/err', { method: 'POST', keepalive: true, headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ game, msg, at, page: location.pathname }) })).catch(() => {});
 }
 addEventListener('error', e => { if (e && e.message && (!e.filename || e.filename.startsWith(location.origin + '/')) && !/^(chrome|moz|safari)-extension:/.test(e.filename || '')) report(e.message, (e.filename || '') + ':' + (e.lineno || 0) + ':' + (e.colno || 0)); });
 addEventListener('unhandledrejection', e => { const r = e && e.reason; if (!r) return; const st = String((r && r.stack) || ''); if (!st.includes(location.origin)) return; /* chỉ ghi lỗi phát ra từ code của web */ const m = st.match(/(https?:\/\/[^\s)]+:\d+:\d+)/); report((r && r.message) || String(r), m ? m[1] : 'promise'); });

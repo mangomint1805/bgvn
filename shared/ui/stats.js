@@ -81,7 +81,7 @@ export function watch(game, handlers, getId) {
 }
 // ☁️ có đăng nhập thì nạp phần đồng bộ hồ sơ theo tài khoản (khách không nạp gì thêm)
 const hasAuth = () => { try { return !!JSON.parse(ls.get('bgvn-auth') || 'null'); } catch (e) { return false; } };
-let syncOn = false; const startSync = () => { if (syncOn || !hasAuth()) return; syncOn = true; import('./sync.js?v=4').catch(() => { syncOn = false; }); };
+let syncOn = false; const startSync = () => { if (syncOn || !hasAuth()) return; syncOn = true; import('./sync.js?v=5').catch(() => { syncOn = false; }); };
 try { startSync(); addEventListener('bgvn-auth', startSync); } catch (e) {}
 // 📸 nút "Khoe kết quả" sau ván thắng (shared/ui/brag.js)
-try { if (typeof document !== 'undefined') import('./brag.js?v=1').catch(() => {}); } catch (e) {}
+try { if (typeof document !== 'undefined') import('./brag.js?v=2').catch(() => {}); } catch (e) {}

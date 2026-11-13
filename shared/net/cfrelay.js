@@ -69,8 +69,7 @@ export class CfHost {
         const id = m.f;
         conn = new FakeConn('cf:' + id, msg => {
           if (!this.ws || this.ws.readyState !== 1) return;
-          if (msg && msg.t === '__bye') { this.ws.send(enc({ to: id, bye: 1 })); return; }
-          this.ws.send(enc({ to: id, s: enc(msg) }));
+          this.push(msg && msg.t === '__bye' ? { to: id, bye: 1 } : { to: id, s: enc(msg) });
         });
         this.conns.set(id, conn); this.onConn(conn);
       }
@@ -84,6 +83,17 @@ export class CfHost {
       if (!this.taken) this.retry();
     };
     ws.onerror = () => {};
+  }
+  // gom mọi tin gửi đi trong cùng 1 nhịp (vd. chủ phòng gửi bàn cờ cho 4 người) thành 1 gói → máy chủ chỉ tính 1 tin thay vì 4
+  push(x) {
+    (this.q = this.q || []).push(x); this.qn = (this.qn || 0) + (x.s ? x.s.length : 20);
+    if (this.qn > 150000) { this.flush(); return; }
+    if (!this.qT) { this.qT = true; queueMicrotask(() => this.flush()); }
+  }
+  flush() {
+    const q = this.q || []; this.q = []; this.qn = 0; this.qT = false;
+    if (!q.length || !this.ws || this.ws.readyState !== 1) return;
+    for (let i = 0; i < q.length; i += 64) { const part = q.slice(i, i + 64); try { this.ws.send(enc(part.length === 1 ? part[0] : { b: part })); } catch (e) {} }
   }
   keep(ws) { // giữ kết nối: ping 15s/lần (máy chủ tự trả "pong" miễn phí); 40s không có pong thì nối lại
     if (ws !== this.ws || ws.readyState !== 1) return;

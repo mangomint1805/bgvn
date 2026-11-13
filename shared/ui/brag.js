@@ -1,6 +1,6 @@
 // 📸 "Khoe kết quả": thắng ván / có thành tích mới thì hiện nút nhỏ, bấm vào là tạo một tấm ảnh đẹp (kèm link web) để gửi Zalo, Facebook…
 // Tự nạp từ stats.js khi có sự kiện 'bgvn-stats'. Cũng gọi tay được: brag({ game, title, sub, lines }) – vd. Cờ thế hôm nay.
-import { load, totals, level, GAME_NAMES } from './stats.js?v=8';
+import { load, totals, level, GAME_NAMES } from './stats.js?v=9';
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } } };
 const EMOJI = { bang: '🤠', uno: '🃏', typhu: '🏙️', scribble: '🎨', meono: '💣', tamquoc: '⚔️', masoi: '🐺', camel: '🐪', cangua: '🐴', tienlen: '🐷', catte: '🂡', bacao: '👑', xidach: '🃏', poker: '♠️', solitaire: '🃏', cotuong: '♟️', thathaythach: '🎯' };
 const BG = ['#ff7a8a,#ffb23d', '#7b61ff,#3d8bff', '#2fc76f,#8fe3a8', '#ff9a3d,#ffd166', '#ff5fa2,#b06bff', '#3dc7d6,#3d8bff'];

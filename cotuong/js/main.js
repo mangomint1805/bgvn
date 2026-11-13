@@ -1,5 +1,5 @@
 // ♟️ Cờ tướng – giao diện. Luật ở engine.js, bot ở bot.js, mạng ở shared/net/simplenet.js, khung màn hình ở shared/ui/gamekit.js
-import { makeNet } from '../../shared/net/simplenet.js?v=10';
+import { makeNet } from '../../shared/net/simplenet.js?v=11';
 import * as E from './engine.js?v=1';
 import { botAction, botWants } from './bot.js?v=1';
 import { masterMove, masterReady, masterOff } from './master.js?v=1';
@@ -7,7 +7,7 @@ import { PUZZLES } from './puzzles.js?v=1';
 import { today, state as dailyState, markSolved } from './today.js?v=1';
 import { gameKit, $, $$, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=3';
 import { confirmBox, promptBox, toast as tip } from '../../shared/ui/dialog.js?v=1';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=136';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=137';
 
 const LV = { easy: ['🌱 Dễ', 'Mới tập chơi'], normal: ['⚔️ Vừa', 'Biết đánh, có sơ hở'], hard: ['🔥 Khó', 'Tính trước 4–5 nước'], master: ['👑 Đại sư', 'Động cơ Fairy-Stockfish'] };
 const GLYPH = { han: { K: '帥', A: '仕', E: '相', R: '俥', H: '傌', C: '炮', P: '兵', k: '將', a: '士', e: '象', r: '車', h: '馬', c: '砲', p: '卒' }, viet: { K: 'Tướng', A: 'Sĩ', E: 'Tượng', R: 'Xe', H: 'Mã', C: 'Pháo', P: 'Tốt' } };
@@ -227,7 +227,7 @@ function showEnd(v) {
   if (v.puzzle) { const ok = w && w.id === 'host' && Math.ceil(v.nMoves / 2) <= v.puzzle.n; if (ok && v.puzzle.daily) daily = markSolved(v.puzzle.daily); if (ok && !v.puzzle.daily) { const d = solved(); d[v.puzzle.id] = 1; ls.set('cotuong-pz', JSON.stringify(d)); nextPz = PUZZLES[PUZZLES.findIndex(x => x.id === v.puzzle.id) + 1] || null; } extra = `<p style="text-align:center">${ok && daily ? `🎉 Giải xong Cờ thế hôm nay!<br>🔥 Chuỗi <b>${daily.streak}</b> ngày liên tiếp${daily.best > daily.streak ? ` (kỷ lục ${daily.best})` : ''}` : ok ? `🎉 Giải đúng trong ${Math.ceil(v.nMoves / 2)} nước!` : w && w.id === 'host' ? `Thắng rồi, nhưng đề yêu cầu chiếu bí trong <b>${v.puzzle.n}</b> nước. Thử lại nha!` : 'Chưa đúng – thử lại nha 💪'}</p>`; }
   ui.openModal(`<h2>${!w ? '🤝 Hoà cờ' : iWon ? '🏆 Bạn thắng!' : iLost ? '😵 Bạn thua rồi' : `🏆 ${esc(cleanName(w.name))} thắng`}</h2><p style="text-align:center;color:var(--muted);font-weight:800">${E.RESULT_TEXT[v.result.kind] || ''} · ${Math.ceil(v.nMoves / 2)} nước</p>${extra}<div class="btns">${daily ? '<button class="btn pri" id="m-brag">📸 Khoe</button>' : ''}${nextPz ? '<button class="btn pri" id="m-next">🧩 Bài tiếp theo</button>' : ''}<button class="btn" id="m-close">Xem lại bàn cờ</button></div>`);
   $('#m-close').onclick = ui.closeModal;
-  if (daily) $('#m-brag').onclick = () => { ui.closeModal(); /* đóng hộp kết quả để thẻ khoe hiện rõ */ return import('../../shared/ui/brag.js?v=1').then(m => m.brag({ game: 'cotuong', title: `Mình giải xong Cờ thế #${v.puzzle.no}!`, sub: `🔥 Chuỗi ${daily.streak} ngày`, lines: [`Chiếu bí trong ${v.puzzle.n} nước`, 'Mỗi ngày một bài mới – thử sức đi!'] })); };
+  if (daily) $('#m-brag').onclick = () => { ui.closeModal(); /* đóng hộp kết quả để thẻ khoe hiện rõ */ return import('../../shared/ui/brag.js?v=2').then(m => m.brag({ game: 'cotuong', title: `Mình giải xong Cờ thế #${v.puzzle.no}!`, sub: `🔥 Chuỗi ${daily.streak} ngày`, lines: [`Chiếu bí trong ${v.puzzle.n} nước`, 'Mỗi ngày một bài mới – thử sức đi!'] })); };
   if (nextPz) $('#m-next').onclick = () => { ui.closeModal(); ui.leave(); startPuzzle(nextPz); };
 }
 // ---------- biên bản, luật ----------

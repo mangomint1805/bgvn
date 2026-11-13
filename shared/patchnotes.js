@@ -7,6 +7,9 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261114-1', date: '14/11/2026', game: 'all', title: '⚡ Máy chủ nhẹ gánh hơn', items: [
+    '⚡ Chủ phòng giờ gom tin gửi cho cả bàn thành một gói – máy chủ đỡ tốn lượt, phòng đông vẫn mượt, web chịu được nhiều người chơi hơn mỗi ngày.',
+  ] },
   { id: '20261113-5', date: '13/11/2026', game: 'all', title: '💬 Chat trong phòng', items: [
     '💬 Phòng online nào giờ cũng có chat: bấm cái "tai" 💬 ở mép trái màn hình để nhắn cả phòng (kéo nó lên xuống được nếu vướng).',
     '📱 Trên điện thoại hộp chat nằm gọn phía trên, không che bài trên tay nên vừa chat vừa đánh được.',

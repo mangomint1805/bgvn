@@ -7,8 +7,8 @@
 import { peerOptions, keepAlive } from './ice.js';
 import { RelayHost, relayConnect } from './relay.js';
 import { FbHost, fbConnect, fbEnabled } from './fbrelay.js';
-import { CfHost, cfConnect, cfEnabled } from './cfrelay.js?v=4';
-import { announceRoom } from './api.js?v=5';
+import { CfHost, cfConnect, cfEnabled } from './cfrelay.js?v=5';
+import { announceRoom } from './api.js?v=6';
 
 // 💬 Chat trong phòng (shared/ui/roomchat.js): chạy ngay ở lớp kết nối nên game nào cũng có, không phải sửa từng game.
 //   người chơi → chủ phòng : {t:'__chat', text}

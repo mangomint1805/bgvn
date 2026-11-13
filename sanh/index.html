@@ -44,15 +44,15 @@ h1 span{background:linear-gradient(90deg,#7b61ff,#3d8bff,#2fc76f);-webkit-backgr
   <div id="lobby"></div>
 </main>
 <script type="module">
-import { mountAccount } from '../shared/ui/account.js?v=12';
-import { mountLobby } from '../shared/ui/lobby.js?v=12';
-import { mountOnline } from '../shared/net/presence.js?v=12';
+import { mountAccount } from '../shared/ui/account.js?v=13';
+import { mountLobby } from '../shared/ui/lobby.js?v=13';
+import { mountOnline } from '../shared/net/presence.js?v=13';
 mountOnline(document.getElementById('online'));
 mountAccount(document.getElementById('acct'));
 const g = new URLSearchParams(location.search).get('game');
 const L = mountLobby(document.getElementById('lobby'), {});
 if (g) setTimeout(() => document.querySelector(`.lb-gf button[data-g="${CSS.escape(g)}"]`)?.click(), 0);
 </script>
-<script type="module" async src="../shared/ui/feel.js?v=16"></script>
+<script type="module" async src="../shared/ui/feel.js?v=17"></script>
 </body>
 </html>

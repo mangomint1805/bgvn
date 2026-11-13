@@ -1,9 +1,9 @@
 // 🎯 Thật hay Thách – giao diện. Luật ở engine.js, bộ câu hỏi ở cards.js, phòng/mạng dùng shared/net/simplenet.js.
-import { makeNet } from '../../shared/net/simplenet.js?v=10';
+import { makeNet } from '../../shared/net/simplenet.js?v=11';
 import * as E from './engine.js?v=1';
 import { gameKit, $, esc, ls, avatar, cleanName } from '../../shared/ui/gamekit.js?v=3';
 import { confirmBox, promptBox, toast as tip } from '../../shared/ui/dialog.js?v=1';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=136';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=137';
 
 const TOPIC = Object.fromEntries(E.TOPICS.map(t => [t.id, t])); TOPIC.tuviet = { id: 'tuviet', e: '✍️', name: 'Tự viết' };
 const KIND = { t: ['💬', 'THẬT'], d: ['🔥', 'THÁCH'] };
