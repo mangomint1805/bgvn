@@ -7,6 +7,9 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261113-1', date: '13/11/2026', game: 'all', title: '✅ Máy chủ vẫn khoẻ re', items: [
+    '✅ Sửa thông báo "máy chủ hết lượt miễn phí" hiện nhầm mấy hôm nay – thật ra máy chủ chính vẫn chạy bình thường, cứ rủ bạn vào chơi thoải mái nha!',
+  ] },
   { id: '20261112-7', date: '12/11/2026', game: 'all', title: '⚡ Mượt hơn trên máy tính & điện thoại', items: [
     '⚡ Trang chủ không còn bị nhảy chữ, nhảy ô lúc mới mở (số người online, ô Thử thách hôm nay, ô game nổi bật đã giữ chỗ sẵn).',
     '🎓 Màn Học chơi nhanh hiện ra là có ngay hình, không còn giật khung.',
