@@ -10,6 +10,18 @@ import { FbHost, fbConnect, fbEnabled } from './fbrelay.js';
 import { CfHost, cfConnect, cfEnabled } from './cfrelay.js?v=4';
 import { announceRoom } from './api.js?v=5';
 
+// 💬 Chat trong phòng (shared/ui/roomchat.js): chạy ngay ở lớp kết nối nên game nào cũng có, không phải sửa từng game.
+//   người chơi → chủ phòng : {t:'__chat', text}
+//   chủ phòng → mọi người  : {t:'__chat', id, from, text}   (tên do CHỦ PHÒNG gán theo tin 'join' của kết nối đó, không tin client)
+// Ma Sói và Vẽ đoán đã có chat riêng gắn với luật (chat ban đêm, đoán chữ) nên không bật ở đây.
+const NO_CHAT = ['masoi', 'scribble'];
+const gameOf = ns => String(ns || '').replace(/^bgvn-/, '');
+const chatOn = ns => !NO_CHAT.includes(gameOf(ns));
+const chatText = t => String(t == null ? '' : t).replace(/\s+/g, ' ').trim().slice(0, 140);
+function chatUi(api) { try { window.__bgvnChat = api; import('../ui/roomchat.js?v=1').then(m => m.mountRoomChat(api)).catch(() => {}); } catch (e) {} }
+const chatBuf = []; /* tin gần đây – để hộp chat nạp xong muộn vẫn có đủ */
+function chatEmit(m) { if (m.reset) chatBuf.length = 0; else { chatBuf.push(m); if (chatBuf.length > 40) chatBuf.shift(); } try { dispatchEvent(new CustomEvent('bgvn-chat', { detail: m })); } catch (e) {} }
+
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export function makeCode() { let s = ''; for (let i = 0; i < 5; i++) s += ALPHABET[Math.floor(Math.random() * ALPHABET.length)]; return s; }
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
@@ -33,7 +45,10 @@ export class RoomHost {
     this.o = opts; this.code = opts.code || makeCode(); this.opened = !!opts.keepCode;
     this.conns = new Set();
     const inner = opts.onConn; // theo dõi mọi kết nối để gửi nhịp tim
-    this.o = { ...opts, onConn: c => { this.conns.add(c); const del = () => this.conns.delete(c); c.on('close', del); c.on('error', del); inner(c); } };
+    this.o = { ...opts, onConn: c => { this.conns.add(c); const del = () => this.conns.delete(c); c.on('close', del); c.on('error', del); this.chatHook(c); inner(c); } };
+    this.chatLog = []; this.chatN = 0; chatBuf.length = 0;
+    import('../../server/src/filter.js').then(m => { this.chatClean = m.clean; }).catch(() => {}); /* dùng chung bộ lọc từ tục với chat Sảnh */
+    if (chatOn(opts.ns)) chatUi({ game: gameOf(opts.ns), host: true, send: t => this.chatSay(null, t), history: () => chatBuf.slice(), alive: () => !this.dead });
     this.open();
     this.stopKeep = keepAlive(() => this.peer);
     // phòng công khai (hiện ở Sảnh chung) – bật bằng nút "🌐 Công khai" (shared/ui/homebtn.js)
@@ -43,6 +58,26 @@ export class RoomHost {
     try { addEventListener('pagehide', this._unload); } catch (e) {}
     // nhịp tim: người chơi không nghe gì 8 giây thì tự vào lại (rớt mạng âm thầm, chủ phòng đã đóng chỗ…)
     this.hb = setInterval(() => { for (const c of this.conns) if (c.open && !String(c.peer || '').startsWith('cf:')) try { c.send({ t: '__hb' }); } catch (e) {} }, 2500); // đường Cloudflare tự giữ kết nối bằng ping/pong miễn phí
+  }
+  // nghe tin chat của từng kết nối; tin '__chat' không chuyển xuống game
+  chatHook(c) {
+    const on = c.on.bind(c);
+    on('data', m => {
+      if (!m) return;
+      if (m.t === 'join') { const first = !c._chatName; c._chatName = String(m.name || 'Khách').slice(0, 20); if (first && this.chatLog.length) setTimeout(() => { try { if (c.open) c.send({ t: '__chat', hist: this.chatLog }); } catch (e) {} }, 600); }
+      else if (m.t === '__chat') this.chatSay(c, m.text);
+    });
+    c.on = (ev, fn) => on(ev, ev === 'data' ? m => { if (m && m.t === '__chat') return; fn(m); } : fn);
+  }
+  chatSay(c, text) {
+    if (this.dead || !chatOn(this.o.ns)) return;
+    text = chatText(text); if (!text) return;
+    if (this.chatClean) try { text = this.chatClean(text).text; } catch (e) {}
+    if (c) { if (!c._chatName) return; const now = Date.now(); if (now - (c._chatAt || 0) < 700) return; c._chatAt = now; } /* chưa vào phòng thì không được nói; chống spam */
+    const m = { t: '__chat', id: ++this.chatN, from: c ? c._chatName : (localStorage.getItem('bgvn-name') || 'Chủ phòng'), host: !c, text };
+    this.chatLog.push(m); if (this.chatLog.length > 40) this.chatLog.shift();
+    for (const x of this.conns) if (x.open && x._chatName) try { x.send(m); } catch (e) {}
+    chatEmit(m);
   }
   startRelays() {
     if (this.relayCode === this.code) return;
@@ -138,7 +173,8 @@ export class RoomClient {
       if (conn !== this.conn || !msg) return;
       this.lastSeen = Date.now();
       if (msg.t === '__hb') return;
-      if (msg.t === 'welcome') { clearTimeout(this.joinTimer); this.id = msg.id; this.tries = 0; this.wasIn = true; this.watch(conn, lost); this.status('Đã vào phòng', 'ok'); this.o.onWelcome && this.o.onWelcome(msg.id, msg); emit('welcome', this.code); return; }
+      if (msg.t === '__chat') { if (msg.hist) { chatEmit({ reset: true }); for (const h of msg.hist) chatEmit({ ...h, old: true }); } else chatEmit(msg); return; }
+      if (msg.t === 'welcome') { if (chatOn(this.o.ns)) chatUi({ game: gameOf(this.o.ns), host: false, send: t => this.send({ t: '__chat', text: chatText(t) }), history: () => chatBuf.slice(), alive: () => !this.dead && !!this.id }); clearTimeout(this.joinTimer); this.id = msg.id; this.tries = 0; this.wasIn = true; this.watch(conn, lost); this.status('Đã vào phòng', 'ok'); this.o.onWelcome && this.o.onWelcome(msg.id, msg); emit('welcome', this.code); return; }
       this.o.onMsg(msg);
       if (msg.t === 'error' && !this.id && !this.wasIn && !this.dead) emit('reject', this.code, msg.msg); // chủ phòng từ chối (đủ người, ván đang chơi…)
     });

@@ -7,6 +7,11 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261113-5', date: '13/11/2026', game: 'all', title: '💬 Chat trong phòng', items: [
+    '💬 Phòng online nào giờ cũng có chat: bấm cái "tai" 💬 ở mép trái màn hình để nhắn cả phòng (kéo nó lên xuống được nếu vướng).',
+    '🔴 Đang đóng hộp chat mà có tin mới thì hiện chấm đỏ + dòng xem nhanh. Từ tục được lọc như chat ở Sảnh.',
+    'ℹ️ Ma Sói và Vẽ đoán vẫn dùng chat riêng của game như cũ.',
+  ] },
   { id: '20261113-4', date: '13/11/2026', game: 'uno', title: '🚫 Tự chọn bỏ lá trong UNÔ', items: [
     '🚫 Chủ phòng giờ bỏ được loại lá mình không thích (ví dụ +4, No U, Đổi tay…): ở phòng chờ, mục "Bỏ bớt lá", bấm vào lá nào là ván đó không có lá ấy.',
   ] },

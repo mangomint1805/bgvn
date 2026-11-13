@@ -3,10 +3,10 @@ import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { CARD_INFO, GENERALS, SKILLS, KINGDOMS, ROLES, SUIT_SYMBOL, SUIT_NAME, cardLabel, cardName, rankLabel, rolesFor, infoOf } from './cards.js?v=7';
 import { JUDGE_TEXT } from './engine.js?v=9';
-import { Host, Client, loadSnapshot, session, MAX, MIN, TQ_PHRASES, TRAIN_OPTS } from './net.js?v=22';
+import { Host, Client, loadSnapshot, session, MAX, MIN, TQ_PHRASES, TRAIN_OPTS } from './net.js?v=24';
 import { createReactions } from '../../shared/ui/react.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=134';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=135';
 import { syncPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
 import { portrait, blankPortrait, cardHTML, backHTML, generalCardHTML, kindTag, iconsFor, emoOf } from './art.js?v=9';
 import * as fx from './fx.js?v=8';
