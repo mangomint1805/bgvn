@@ -1,23 +1,22 @@
 // 📊 Ước tính hạn mức Cloudflare (gói Free: 13.000 GB-s + 100.000 request Durable Object mỗi ngày, làm mới 0h UTC = 7h sáng VN).
-// Durable Object bị tính giờ khi đang "thức" (128 MB = 0,125 GB). Sau tin cuối ~10 giây thì nó ngủ (hibernation) → không tính.
+// Durable Object dùng WebSocket ngủ đông chỉ bị tính giờ trong lúc đang XỬ LÝ sự kiện (128 MB = 0,125 GB) – xử lý xong là hết tính,
+// không phải chờ ~10 giây như bản đo cũ (bản cũ đếm dư khoảng 10 lần). Đối chiếu số thật trên Cloudflare: trung bình ~50 ms / sự kiện.
 // Tin WebSocket gửi lên: 20 tin = 1 request. Đây là số ƯỚC TÍNH tự đo – số chính xác xem ở trang Cloudflare.
-export const IDLE = 10000, GB = 0.125;
+export const PER_EVENT = 50, GB = 0.125;
 export const LIMITS = {
   free: { gbs: 13000, req: 100000, per: 'day' },
   paid: { gbs: 400000, req: 1000000, per: 'month' },
 };
 export class Meter {
-  constructor(flush) { this.flush = flush; this.seg = null; this.ms = 0; this.req = 0; this.msg = 0; this.lastFlush = Date.now(); }
+  constructor(flush) { this.flush = flush; this.ms = 0; this.req = 0; this.msg = 0; this.lastFlush = Date.now(); }
   // kind: 'req' (kết nối / gọi RPC) | 'msg' (tin WebSocket gửi lên)
   async tick(kind = 'req') {
     const t = Date.now();
-    if (!this.seg || t - this.seg.last > IDLE) { if (this.seg) this.ms += this.seg.last - this.seg.from + IDLE; this.seg = { from: t, last: t }; }
-    else this.seg.last = t;
+    this.ms += PER_EVENT;
     if (kind === 'msg') this.msg++; else this.req++;
     if (t - this.lastFlush > 60000) await this.out(t);
   }
-  async out(t = Date.now(), tail = 0) { // gửi số đã đo; tail = cộng thêm thời gian chờ ngủ (khi phòng sắp vắng)
-    if (this.seg) { this.ms += t - this.seg.from + tail; this.seg = tail ? null : { from: t, last: this.seg.last }; }
+  async out(t = Date.now()) { // gửi số đã đo
     const ms = this.ms, req = this.req + Math.floor(this.msg / 20);
     this.msg %= 20; this.ms = 0; this.req = 0; this.lastFlush = t;
     if (ms > 0 || req > 0) try { await this.flush(ms, req); } catch (e) {}

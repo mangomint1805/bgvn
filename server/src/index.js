@@ -12,7 +12,7 @@
 import { DurableObject } from 'cloudflare:workers';
 export { Users } from './users.js';
 export { Lobby } from './lobby.js';
-import { Meter, IDLE } from './meter.js';
+import { Meter } from './meter.js';
 
 const ORIGINS = [/^https:\/\/(www\.)?boardgamevui\.com$/, /^https:\/\/mangomint1805\.github\.io$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/];
 const okOrigin = o => !o || ORIGINS.some(r => r.test(o)); // không có Origin (app/test) thì cho qua – chỉ chặn web lạ nhúng
@@ -198,7 +198,7 @@ export class Room extends DurableObject {
   async bye(ws) { // phòng vắng hẳn → gửi nốt số đo (cộng ~10 giây chờ ngủ)
     if ((ws.deserializeAttachment() || {}).role) await this.liveSync(ws);
     if (this.ctx.getWebSockets().some(w => w !== ws && w.readyState === 1)) return this.m.tick('msg');
-    await this.m.out(Date.now(), IDLE);
+    await this.m.out();
   }
   gone(ws) {
     this.rate.delete(ws);

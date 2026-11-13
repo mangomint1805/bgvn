@@ -22,6 +22,7 @@ export class Lobby extends DurableObject {
     this.sql.exec(`CREATE TABLE IF NOT EXISTS stat (k TEXT PRIMARY KEY, v INTEGER)`);
     try { this.sql.exec("ALTER TABLE live ADD COLUMN g TEXT DEFAULT ''"); } catch (e) {} // game của phòng
     if (!this.sql.exec("SELECT v FROM stat WHERE k = 'live-v'").toArray().length) { this.sql.exec('DELETE FROM live'); this.sql.exec("INSERT INTO stat (k, v) VALUES ('live-v', 2)"); } // bỏ số cũ (kiểu đếm trước)
+    if (!this.sql.exec("SELECT v FROM stat WHERE k = 'meter-v'").toArray().length) { this.sql.exec('UPDATE usage10 SET ms = ms / 10'); this.sql.exec("INSERT INTO stat (k, v) VALUES ('meter-v', 2)"); } // bản đo cũ đếm dư ~10 lần → chia lại số cũ cho khớp số thật trên Cloudflare
     this.last = new Map(); // ai → lúc gửi tin gần nhất (chống spam)
     this.m = new Meter((ms, req) => this.addUsage(ms, req));
   }
