@@ -1,6 +1,6 @@
 // Lớp mạng UNO: host giữ state, client chỉ gửi action. Kết nối dùng chung ở shared/net/room.js
-import { createGame, applyAction, viewFor, current, MODES, newMatch, recordRound, MATCH_TARGETS } from './engine.js?v=19';
-import { botAction, botCatch } from './bot.js?v=19';
+import { createGame, applyAction, viewFor, current, MODES, newMatch, recordRound, MATCH_TARGETS, CARD_NAME } from './engine.js?v=21';
+import { botAction, botCatch } from './bot.js?v=21';
 import { S } from './ufx.js?v=20';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=9';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
@@ -29,12 +29,12 @@ export class Host {
     this.h = watch(GAME, handlers, () => 'host'); this.offline = offline;
     this.players = [{ id: 'host', name, isBot: false, token: token(), conn: null, connected: true }];
     this.state = null; this.conns = new Map(); this.botTimer = null; this.catchTimer = null;
-    this.mode = CFG.mode; this.rules = modeRules(CFG.mode);
+    this.mode = CFG.mode; this.rules = modeRules(CFG.mode); this.ban = []; /* loại lá bị bỏ khỏi bộ bài */
     this.match = newMatch(CFG.match, CFG.matchTarget); // "Tính điểm tới 500": điểm từng người qua nhiều ván
     this.lim = hostLimiter(); this.botReactAt = 0;
     if (restore) {
       this.players = restore.players.map(p => ({ ...p, conn: null, connected: p.isBot || p.id === 'host' }));
-      this.state = restore.state; this.code = restore.code; this.mode = restore.mode || this.mode; this.rules = restore.rules || this.rules;
+      this.state = restore.state; this.code = restore.code; this.mode = restore.mode || this.mode; this.rules = restore.rules || this.rules; this.ban = Array.isArray(restore.ban) ? restore.ban : [];
       if (restore.match) this.match = restore.match;
     }
     if (offline) { this.code = 'OFFLINE'; setTimeout(() => { this.pushLobby(); if (this.state) { this.scheduleBots(); this.broadcast(); } }, 0); return; }
@@ -44,7 +44,7 @@ export class Host {
   }
   saveSnap() {
     clearTimeout(this.snapT);
-    this.snapT = setTimeout(() => { try { localStorage.setItem(SNAP, JSON.stringify({ ts: Date.now(), code: this.code, offline: this.offline, mode: this.mode, rules: this.rules, match: this.match, players: this.players.map(({ conn, ...p }) => p), state: this.state })); } catch (e) {} }, 300);
+    this.snapT = setTimeout(() => { try { localStorage.setItem(SNAP, JSON.stringify({ ts: Date.now(), code: this.code, offline: this.offline, mode: this.mode, rules: this.rules, ban: this.ban, match: this.match, players: this.players.map(({ conn, ...p }) => p), state: this.state })); } catch (e) {} }, 300);
   }
   attach(conn) {
     conn.on('data', msg => this.onMsg(conn, msg));
@@ -77,13 +77,14 @@ export class Host {
     this.pushLobby(); this.scheduleBots();
   }
   inGame(id) { return !this.state || this.state.players.some(q => q.id === id); } // người vào giữa ván: chỉ xem, ván sau mới chơi
-  lobbyInfo() { return { players: this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot, connected: p.connected, wait: !this.inGame(p.id) })), mode: this.mode, rules: this.rules, match: this.match }; }
+  lobbyInfo() { return { players: this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot, connected: p.connected, wait: !this.inGame(p.id) })), mode: this.mode, rules: this.rules, ban: this.ban, match: this.match }; }
   pushLobby() {
     const info = this.lobbyInfo();
     this.h.onLobby(info, this.code, !!this.state); this.saveSnap();
     for (const p of this.players) if (p.conn) try { p.conn.send({ t: 'lobby', info, code: this.code, started: !!this.state }); } catch (e) {}
   }
   setMode(mode) { if (this.state || !MODES[mode]) return; this.mode = mode; this.rules = modeRules(mode); this.pushLobby(); }
+  setBan(type, on) { if (this.state || type === 'n' || !(type in CARD_NAME)) return; this.ban = this.ban.filter(t => t !== type); if (on) this.ban.push(type); this.pushLobby(); }
   setRule(k, v) { if (this.state || !(k in MODES.classic.rules)) return; this.rules[k] = !!v; this.pushLobby(); }
   // Tính điểm nhiều ván: đổi tuỳ chọn thì xoá bảng điểm cũ
   setMatch(on, target = this.match.target) { if (this.state) return; if (!MATCH_TARGETS.includes(+target)) target = CFG.matchTarget; this.match = newMatch(on, target); this.pushLobby(); }
@@ -104,7 +105,7 @@ export class Host {
   start() {
     if (this.players.length < 2) { this.h.onError('Cần ít nhất 2 người chơi (thêm bot nhé).'); return; }
     if (this.match.champion) this.match = newMatch(this.match.on, this.match.target); // đã có vô địch: giải mới
-    this.state = createGame(this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot })), this.mode, this.rules);
+    this.state = createGame(this.players.map(p => ({ id: p.id, name: p.name, isBot: p.isBot })), this.mode, { ...this.rules, ban: this.ban });
     if (this.match.on) this.state.log[this.state.log.length - 1] = `Ván ${this.match.round + 1} (tính điểm tới ${this.match.target}). ` + this.state.log[this.state.log.length - 1];
     this.graceUntil = Date.now() + 3200 * S();
     this.pushLobby(); this.scheduleBots(); this.broadcast();

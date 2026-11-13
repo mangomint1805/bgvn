@@ -348,3 +348,9 @@ svg.arc .arc-ln{fill:none;stroke-width:5;stroke-linecap:round}
 #chain-layer .chain-live{animation:chainPulse 1.2s ease-in-out infinite}
 @keyframes chainPulse{50%{stroke-width:6}}
 @media (prefers-reduced-motion: reduce){#chain-layer .chain-live{animation:none}}
+/* 🚫 bỏ bớt loại lá */
+.ban{display:flex;flex-wrap:wrap;gap:6px}
+.ban-note{margin:0 0 6px;color:var(--muted);font-weight:700;font-size:13px}
+.banchip{border:2px solid #e6dcf5;background:#faf6ff;border-radius:999px;padding:6px 11px;font:800 13px/1.2 inherit;color:inherit;cursor:pointer;min-height:36px}
+.banchip.off{background:#fff0f0;border-color:#f3b4b4;color:#b23a3a;text-decoration:line-through}
+.banchip:disabled{cursor:default;opacity:.8}

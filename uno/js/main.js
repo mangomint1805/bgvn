@@ -1,10 +1,10 @@
-import { Host, Client, MAX, loadSnapshot, session, UNO_PHRASES } from './net.js?v=33';
+import { Host, Client, MAX, loadSnapshot, session, UNO_PHRASES } from './net.js?v=35';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';
-import { openNews, newsBadge } from '../../shared/ui/news.js?v=133';
+import { openNews, newsBadge } from '../../shared/ui/news.js?v=134';
 import { startPick, endPick, pickActive } from '../../shared/ui/seatpick.js?v=1';
-import { MODES, COLOR_NAME, cardText, DRAW_VALUE, CARD_NAME, MATCH_TARGETS } from './engine.js?v=19';
+import { MODES, COLOR_NAME, cardText, DRAW_VALUE, CARD_NAME, MATCH_TARGETS, deckTypes } from './engine.js?v=21';
 import * as fx from './ufx.js?v=20';
 import { openGuide, CARD_HELP, NEW_TYPES } from './guide.js?v=21';
 
@@ -112,6 +112,12 @@ function renderLobby() {
   $$('#modes [data-mode]').forEach(b => b.onclick = () => net && net.setMode(b.dataset.mode));
   $('#rules').innerHTML = Object.entries(RULE_INFO).map(([k, [t, d]]) => `<label class="rule"><input type="checkbox" data-rule="${k}" ${lobby.rules[k] ? 'checked' : ''} ${isHost ? '' : 'disabled'}><span><b>${t}</b><small>${d}</small></span></label>`).join('');
   $$('#rules [data-rule]').forEach(i => i.onchange = () => net && net.setRule(i.dataset.rule, i.checked));
+  { /* 🚫 bỏ bớt loại lá: bấm vào lá nào thì lá đó không có trong bộ bài ván này */
+    const ban = lobby.ban || [], types = deckTypes(lobby.mode, lobby.rules);
+    $('#ban').innerHTML = types.map(t => `<button class="banchip ${ban.includes(t) ? 'off' : ''}" data-ban="${t}" ${isHost ? '' : 'disabled'} aria-pressed="${ban.includes(t)}">${ban.includes(t) ? '🚫' : '✅'} ${esc(CARD_NAME[t])}</button>`).join('');
+    $('#ban-note').textContent = ban.filter(t => types.includes(t)).length ? `Đang bỏ ${ban.filter(t => types.includes(t)).length} loại lá.` : 'Bấm vào loại lá muốn bỏ khỏi bộ bài (lá số luôn có).';
+    $$('#ban [data-ban]').forEach(b => b.onclick = () => isHost && net && net.setBan && net.setBan(b.dataset.ban, !b.classList.contains('off')));
+  }
   renderMatchOpt();
   $('#btn-start').style.display = isHost ? '' : 'none';
   $('#wait-msg').style.display = isHost ? 'none' : '';

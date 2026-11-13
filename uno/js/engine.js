@@ -40,8 +40,11 @@ function buildDeck(mode, rules = {}) {
     for (const c of COLORS) { add(c, 'tornado'); if (mode !== 'nomercy') add(c, 'discall'); add(c, 'nou'); add(c, 'gift'); add(c, 'steal'); add('W', 'dq'); }
     for (let i = 0; i < 2; i++) { add('W', 'wtd4'); add('W', 'wup'); add('W', 'wswap'); add('W', 'shield'); add('W', 'shield'); }
   }
-  return shuffle(d);
+  const ban = Array.isArray(rules.ban) ? rules.ban.filter(t => t !== 'n') : []; /* 🚫 chủ phòng bỏ bớt loại lá (không bỏ được lá số) */
+  return shuffle(ban.length ? d.filter(c => !ban.includes(c.type)) : d);
 }
+// các loại lá chức năng có trong bộ bài của chế độ + luật hiện tại (để chủ phòng chọn bỏ)
+export function deckTypes(mode, rules = {}) { return [...new Set(buildDeck(mode, { ...rules, ban: [] }).map(c => c.type))].filter(t => t !== 'n').sort((x, y) => Object.keys(CARD_NAME).indexOf(x) - Object.keys(CARD_NAME).indexOf(y)); }
 
 export function cardText(c) {
   if (c.type === 'n') return `${COLOR_NAME[c.color]} ${c.num}`;

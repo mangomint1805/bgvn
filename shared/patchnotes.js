@@ -7,6 +7,9 @@ export const GAMES = {
   cotuong: '♟️ Cờ tướng', thathaythach: '🎯 Thật hay Thách',
 };
 export const NOTES = [
+  { id: '20261113-4', date: '13/11/2026', game: 'uno', title: '🚫 Tự chọn bỏ lá trong UNÔ', items: [
+    '🚫 Chủ phòng giờ bỏ được loại lá mình không thích (ví dụ +4, No U, Đổi tay…): ở phòng chờ, mục "Bỏ bớt lá", bấm vào lá nào là ván đó không có lá ấy.',
+  ] },
   { id: '20261113-3', date: '13/11/2026', game: 'all', title: '💌 Sửa theo góp ý của mọi người', items: [
     '🐺 Ma Sói: 🎓 Ván tập giờ giữ đúng lựa chọn "Lộ vai khi chết" của bạn (trước đây tự bật lên dù đang tắt).',
     '⚔️ Tam Quốc Sát: thong thả hơn – 30 giây để đáp trả (trước 20), 5 giây cho Vô giải (trước 3), bot ra bài chậm lại một nhịp. Muốn chậm nữa thì chọn ⏱ Chậm trong cài đặt.',
