@@ -95,15 +95,18 @@ export class Lobby extends DurableObject {
   // ---------- kết nối ----------
   // ---------- số người đang online (mọi trang BGVN mở 1 WebSocket "presence") ----------
   online() { return this.ctx.getWebSockets('p').length; } // chỉ đếm kết nối presence (trang nào cũng có đúng 1)
-  bumpOnline() { // gom thay đổi, tối đa 1 lần / 4 giây để đỡ tốn
+  bumpOnline() { // gom thay đổi, tối đa 1 lần / 8 giây để đỡ tốn (mỗi lần hẹn giờ = 1 lượt ghi + 1 lượt gọi tính vào hạn mức)
     if (this.pending) return; this.pending = true;
-    const due = Math.max(0, (this.lastPush || 0) + 4000 - now());
+    const due = Math.max(0, (this.lastPush || 0) + 8000 - now());
     this.ctx.storage.setAlarm(now() + due + 50);
   }
   async alarm() {
     this.pending = false; this.lastPush = now(); await this.m.tick('req');
     const n0 = this.online(), pk = 'peak:' + new Date().toISOString().slice(0, 10);
-    this.sql.exec('INSERT INTO stat (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = MAX(v, excluded.v)', pk, n0);
+    if (this.peakK !== pk || n0 > this.peakV) { /* chỉ ghi khi lập đỉnh mới: gói Free giới hạn 100.000 dòng ghi/ngày, trước đây chỗ này ghi mỗi 4 giây */
+      this.sql.exec('INSERT INTO stat (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = MAX(v, excluded.v)', pk, n0);
+      this.peakK = pk; this.peakV = Math.max(n0, this.sql.exec('SELECT v FROM stat WHERE k = ?', pk).one().v);
+    }
     const lv = this.liveNow(), m = JSON.stringify({ t: 'online', n: n0, rooms: lv.rooms, players: lv.players, games: lv.games });
     for (const ws of this.ctx.getWebSockets()) try { ws.send(m); } catch (e) {}
   }
