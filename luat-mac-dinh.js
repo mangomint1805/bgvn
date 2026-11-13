@@ -179,7 +179,7 @@ export default {
     spadeEvery: false, // Ván nào cũng 3♠ đi trước — Tắt: ván sau người về nhất được đi trước. · Chọn: true = Bật | false = Tắt
     turnTime: 30, // Giờ mỗi lượt — Hết giờ máy đánh thay. · Chọn: 20 = 20 giây | 30 = 30 giây | 60 = 60 giây
     veHeo: 'heoHang', // Về heo — Có được đánh nước cuối bằng heo/hàng không. · Chọn: 'heoHang' = Cấm về heo + hàng | 'heo' = Cấm về heo | 'free' = Cho phép
-    botLevel: 'normal', // Độ khó bot mới thêm — Độ khó của bot khi bấm Thêm bot (vẫn đổi từng bot được). · Chọn: 'easy' = Gà mờ | 'normal' = Vừa | 'hard' = Cao thủ
+    botLevel: 'normal', // Độ khó bot mới thêm — Độ khó của bot khi bấm Thêm bot (vẫn đổi từng bot được). · Chọn: 'easy' = Gà mờ | 'normal' = Vừa | 'hard' = Cao thủ | 'master' = Huyền thoại
   },
 
   // ===== 🎴 Cát Tê =====

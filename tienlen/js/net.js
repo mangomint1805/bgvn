@@ -1,6 +1,6 @@
 // Lớp mạng Tiến Lên: chủ phòng giữ state, người vào chỉ gửi action. Kết nối dùng chung shared/net/room.js
 import { createGame, applyAction, viewFor, current, mustAutoPass, VE_HEO, DEFAULT_OPTS, BETS, TURN_TIMES, START_CHIPS } from './engine.js?v=5';
-import { botAction, LEVELS } from './bot.js?v=5';
+import { botAction, LEVELS } from './bot.js?v=6';
 import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=9';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
 import { watch } from '../../shared/ui/stats.js?v=8';
@@ -8,7 +8,7 @@ import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';
 import { rulesFor } from '../../shared/rules.js?v=1';
 // ⚙️ Luật mặc định khi tạo phòng mới: lấy từ luat-mac-dinh.js (gốc repo); giá trị sai/thiếu → giữ luật gốc trong code
 const B2 = [true, false];
-const CFG = rulesFor('tienlen', { ...DEFAULT_OPTS, botLevel: 'normal' }, { bet: BETS, toiTrang: B2, thoiHang: B2, chatChong: B2, spadeEvery: B2, turnTime: TURN_TIMES, veHeo: Object.keys(VE_HEO), botLevel: ['easy', 'normal', 'hard'] });
+const CFG = rulesFor('tienlen', { ...DEFAULT_OPTS, botLevel: 'normal' }, { bet: BETS, toiTrang: B2, thoiHang: B2, chatChong: B2, spadeEvery: B2, turnTime: TURN_TIMES, veHeo: Object.keys(VE_HEO), botLevel: ['easy', 'normal', 'hard', 'master'] });
 const NS = 'bgvn-tienlen', PREFIX = 'bgvn-tienlen-', GAME = 'tienlen';
 const SNAP = 'bgvn-hostsnap-' + GAME;
 export function loadSnapshot() { try { const d = JSON.parse(localStorage.getItem(SNAP)); return d && Date.now() - d.ts < 3 * 3600e3 ? d : null; } catch (e) { return null; } }
