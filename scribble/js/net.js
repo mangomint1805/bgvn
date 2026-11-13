@@ -1,7 +1,7 @@
 // Lớp mạng Scribble it!: chủ phòng giữ state + đồng hồ, máy khách gửi hành động & nét vẽ.
 // Nét vẽ đi riêng (tin 'draw' theo lô ~100ms, chủ phòng chuyển tiếp), người vào muộn nhận lại cả lịch sử ('canvas').
 import { createGame, applyAction, viewFor, tick, addDraw, addPlayer, setOnline, bookItems, shiftTime, cleanOpts, DEFAULT_OPTS, maxPlayers, MAX_CROWD, MAX_NORMAL, checkTease } from './engine.js?v=7';
-import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=13';
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=14';
 import { watch } from '../../shared/ui/stats.js?v=9';
 import { isReact, hostLimiter } from '../../shared/ui/react.js?v=2';
 import { CATS } from './words.js?v=5';

@@ -1,4 +1,4 @@
-import { Host, Client, MAX, loadSnapshot, session, BC_PHRASES, setSpeedFn } from './net.js?v=15';
+import { Host, Client, MAX, loadSnapshot, session, BC_PHRASES, setSpeedFn } from './net.js?v=16';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { netStatus } from '../../shared/ui/status.js';
 import { createReactions } from '../../shared/ui/react.js?v=2';

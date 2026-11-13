@@ -6,7 +6,7 @@ import { Meter, LIMITS, GB } from './meter.js';
 
 const GAMES = ['bang', 'uno', 'typhu', 'tamquoc', 'meono', 'masoi', 'scribble', 'tienlen', 'poker', 'xidach', 'catte', 'bacao', 'cangua', 'camel', 'cotuong', 'thathaythach'];
 const CHANNELS = new Set(['all', ...GAMES]);
-const ROOM_TTL = 75e3, HIST = 60, MSG_MAX = 300, SLOW = 1500, MAX_SOCKS = 2000;
+const ROOM_TTL = 150e3, HIST = 60, MSG_MAX = 300, SLOW = 1500, MAX_SOCKS = 2000;
 const now = () => Date.now();
 
 export class Lobby extends DurableObject {
@@ -95,9 +95,9 @@ export class Lobby extends DurableObject {
   // ---------- kết nối ----------
   // ---------- số người đang online (mọi trang BGVN mở 1 WebSocket "presence") ----------
   online() { return this.ctx.getWebSockets('p').length; } // chỉ đếm kết nối presence (trang nào cũng có đúng 1)
-  bumpOnline() { // gom thay đổi, tối đa 1 lần / 8 giây để đỡ tốn (mỗi lần hẹn giờ = 1 lượt ghi + 1 lượt gọi tính vào hạn mức)
+  bumpOnline() { // gom thay đổi, tối đa 1 lần / 15 giây để đỡ tốn (mỗi lần hẹn giờ = 1 lượt ghi + 1 lượt gọi tính vào hạn mức)
     if (this.pending) return; this.pending = true;
-    const due = Math.max(0, (this.lastPush || 0) + 8000 - now());
+    const due = Math.max(0, (this.lastPush || 0) + 15000 - now()); /* mỗi lần hẹn giờ = 1 lượt gọi tính vào hạn mức */
     this.ctx.storage.setAlarm(now() + due + 50);
   }
   async alarm() {

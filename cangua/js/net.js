@@ -3,7 +3,7 @@
 import { createGame, applyAction, viewFor, actorOf, P } from './engine.js?v=3';
 import { botAction } from './bot.js?v=3';
 import { S } from './fx.js?v=3';
-import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=13';
+import { RoomHost, RoomClient, token, session } from '../../shared/net/room.js?v=14';
 import { specBanner } from '../../shared/ui/spectate.js?v=1';
 import { watch } from '../../shared/ui/stats.js?v=9';
 import { isReact, hostLimiter, pickReact } from '../../shared/ui/react.js?v=2';

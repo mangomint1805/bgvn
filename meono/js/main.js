@@ -1,4 +1,4 @@
-import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, MEO_PHRASES } from './net.js?v=25';
+import { Host, Client, MAX, loadSnapshot, session, setSpeedFn, MEO_PHRASES } from './net.js?v=26';
 import { hintsAllowed, lockToggle, BOT_ONLY_NOTE } from '../../shared/ui/botonly.js?v=1';
 import { linkCode, clearLinkCode, inviteUrl, joinByLink } from '../../shared/net/joinlink.js?v=2';
 import { createReactions } from '../../shared/ui/react.js?v=2';

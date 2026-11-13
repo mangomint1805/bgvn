@@ -108,7 +108,7 @@ export class RoomHost {
   announce(open) { try { announceRoom({ game: this.game, code: this.code, k: this.pubK, host: localStorage.getItem('bgvn-name') || 'Ai đó', n: this.conns.size + 1, open }); } catch (e) {} }
   setPublic(on) {
     this.pub = !!on; clearInterval(this.pubT);
-    if (this.pub) { this.announce(true); this.pubT = setInterval(() => { if (!this.dead) this.announce(true); }, 30000); }
+    if (this.pub) { this.announce(true); this.pubT = setInterval(() => { if (!this.dead) this.announce(true); }, 60000); /* báo phòng công khai 1 phút/lần (máy chủ giữ 150 giây) */ }
     else this.announce(false);
   }
   destroy() { if (this.pub) { this.pub = false; clearInterval(this.pubT); this.announce(false); } try { removeEventListener('pagehide', this._unload); if (window.__bgvnHost === this) window.__bgvnHost = null; } catch (e) {}

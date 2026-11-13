@@ -14,7 +14,7 @@ export class Meter {
     const t = Date.now();
     this.ms += PER_EVENT;
     if (kind === 'msg') this.msg++; else this.req++;
-    if (t - this.lastFlush > 60000) await this.out(t);
+    if (t - this.lastFlush > 600000 /* 10 phút gửi số đo 1 lần: mỗi lần gửi là 1 lượt gọi Durable Object (gói Free chỉ 100.000 lượt/ngày) */) await this.out(t);
   }
   async out(t = Date.now()) { // gửi số đã đo
     const ms = this.ms, req = this.req + Math.floor(this.msg / 20);
